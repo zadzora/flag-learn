@@ -4,6 +4,10 @@ An interactive geography quiz game built with React, TypeScript, and Tailwind CS
 
 ---
 
+### 🚀 **Live Demo:** [https://flag-learn-red.vercel.app/](https://flag-learn-red.vercel.app/)
+
+---
+
 ## ✨ Features
 
 - **Learn Mode:** Guess flags in batches of 10. Prioritizes major countries first.

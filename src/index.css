@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Toto je kľúčové pre Tailwind v4 - povie mu, aby dark mode fungoval cez triedu .dark */
+@custom-variant dark (&:where(.dark, .dark *));

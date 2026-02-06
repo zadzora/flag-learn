@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw } from "lucide-react"
 import flagsData from "../data/flags.json"
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 // --- TYPES ---
 type Flag = {
@@ -96,7 +96,7 @@ export default function App() {
                 if (parsed.current && !parsed.isPracticeMode) {
                     setCurrent(parsed.current)
                 }
-            } catch (error) {
+            } catch {
                 initFresh()
             }
         } else {
@@ -759,6 +759,7 @@ export default function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <Analytics />
         </div>
     )
 }

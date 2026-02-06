@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Zap, Trophy } from "lucide-react"
+import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy } from "lucide-react"
 import flagsData from "../data/flags.json"
 
 // --- TYPES ---
@@ -133,7 +133,7 @@ export default function App() {
     }
 
     // --- CHEAT FUNCTION (TEMP) ---
-    function cheatMasterAll() {
+    /* function cheatMasterAll() {
         if (confirm("CHEAT: Mark all flags as mastered?")) {
             const newProgress: Record<string, FlagProgress> = {}
             flagsData.forEach(f => {
@@ -145,6 +145,7 @@ export default function App() {
             setShowGallery(false) // Close gallery to see result
         }
     }
+    */
 
     // --- STANDARD GAME LOGIC (UPDATED) ---
 

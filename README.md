@@ -28,7 +28,7 @@ An interactive geography quiz game built with React, TypeScript, and Tailwind CS
 
 1. Clone the repository
    ```bash
-   git clone [https://github.com/zadzora/flag-learn.git](https://github.com/zadzora/flag-learn.git)
+   git clone https://github.com/zadzora/flag-learn.git
 Install dependencies
 
 Bash

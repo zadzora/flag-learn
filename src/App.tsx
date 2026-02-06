@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy } from "lucide-react"
+import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw } from "lucide-react"
 import flagsData from "../data/flags.json"
 
 // --- TYPES ---
@@ -8,6 +8,7 @@ type Flag = {
     code: string
     name: string | string[]
     image: string
+    difficulty?: number // 0 = Easy (Default), 1 = Medium, 2 = Hard, 3 = Expert
 }
 
 type FlagProgress = {
@@ -16,7 +17,7 @@ type FlagProgress = {
 }
 
 const TARGET_STREAK = 3
-const BATCH_SIZE = 10
+const BATCH_SIZE = 13 // ZMENA NA 13
 const STORAGE_KEY = "flag-master-v1"
 const THEME_KEY = "flag-master-theme"
 
@@ -32,6 +33,12 @@ export default function App() {
     const [showGallery, setShowGallery] = useState(false)
     const [progress, setProgress] = useState<Record<string, FlagProgress>>({})
     const [isLoaded, setIsLoaded] = useState(false)
+
+    // Nový state: Určuje, či je aktuálna vlajka len na "opakovanie"
+    const [isReview, setIsReview] = useState(false)
+
+    // Session Streak
+    const [sessionStreak, setSessionStreak] = useState(0)
 
     // Dark Mode State
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -117,7 +124,7 @@ export default function App() {
         }
     }, [progress, current, isLoaded, isPracticeMode])
 
-    // 3. PICK FLAG
+    // 3. PICK FLAG ON LOAD
     useEffect(() => {
         if (isLoaded && Object.keys(progress).length > 0 && !current && !isPracticeMode) {
             pickRandomFlag(progress)
@@ -128,31 +135,41 @@ export default function App() {
     function resetProgress() {
         if (confirm("Are you sure you want to reset all progress?")) {
             localStorage.removeItem(STORAGE_KEY)
+            setSessionStreak(0)
             window.location.reload()
         }
     }
 
-    // --- CHEAT FUNCTION (TEMP) ---
-    /* function cheatMasterAll() {
-        if (confirm("CHEAT: Mark all flags as mastered?")) {
-            const newProgress: Record<string, FlagProgress> = {}
-            flagsData.forEach(f => {
-                newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
-            })
-            setProgress(newProgress)
-            setCurrent(null) // Force refresh to trigger game over state
-            setFeedbackMsg(null)
-            setShowGallery(false) // Close gallery to see result
-        }
+    // --- WEIGHTED RANDOM LOGIC ---
+    function getDifficultyWeights(percentMastered: number) {
+        if (percentMastered < 25) return [0.60, 0.25, 0.10, 0.05]
+        if (percentMastered < 50) return [0.30, 0.40, 0.20, 0.10]
+        if (percentMastered < 75) return [0.10, 0.20, 0.40, 0.30]
+        return [0.05, 0.10, 0.25, 0.60]
     }
-    */
 
-    // --- STANDARD GAME LOGIC (UPDATED) ---
-
+    // --- STANDARD GAME LOGIC (UPDATED WITH REVIEW & BATCH 13) ---
     function pickRandomFlag(currentProgress: Record<string, FlagProgress>) {
-        const inProgressFlags: Flag[] = []
 
-        // 1. Zbierame rozrobené vlajky (streak < 3 a už videné)
+        // 1. Získame zoznam Mastered vlajok pre Review mechaniku
+        const masteredFlags = flagsData.filter(f => (currentProgress[f.code]?.streak || 0) >= TARGET_STREAK)
+
+        // REVIEW LOGIC: 5% šanca, ak máme čo opakovať
+        if (masteredFlags.length > 0 && Math.random() < 0.05) {
+            const randomReviewFlag = masteredFlags[Math.floor(Math.random() * masteredFlags.length)]
+            setCurrent(randomReviewFlag)
+            setIsReview(true) // Nastavíme režim opakovania
+            setInput("")
+            setStatus('idle')
+            setFeedbackMsg(null)
+            setTimeout(() => inputRef.current?.focus(), 50)
+            return
+        }
+
+        // Ak nie je review, ideme štandardný flow (Review je false)
+        setIsReview(false)
+
+        const inProgressFlags: Flag[] = []
         flagsData.forEach(f => {
             const p = currentProgress[f.code]
             if (p.streak < TARGET_STREAK && p.seen > 0) {
@@ -160,25 +177,19 @@ export default function App() {
             }
         })
 
-        // Zistíme počet úplne nových vlajok
-        const unseenCount = flagsData.filter(f => (currentProgress[f.code]?.seen || 0) === 0).length
+        const unseenFlags = flagsData.filter(f => (currentProgress[f.code]?.seen || 0) === 0)
 
         // Game Over kontrola
-        if (inProgressFlags.length === 0 && unseenCount === 0) {
+        if (inProgressFlags.length === 0 && unseenFlags.length === 0) {
             setCurrent(null)
             return
         }
 
         let pool = [...inProgressFlags]
 
-        // 2. Dopĺňame pool do BATCH_SIZE (10), ak treba
         if (pool.length < BATCH_SIZE) {
             const needed = BATCH_SIZE - pool.length
-
-            // A. Starter Pack: Prvých 10 vlajok v JSONe (index 0-9), ktoré sú ešte nevidené
             const starterPack = flagsData.slice(0, BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
-
-            // B. Zvyšok sveta: Všetky ostatné nevidené vlajky (index 10+)
             const restOfWorld = flagsData.slice(BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
 
             let selectedNew: Flag[] = []
@@ -188,10 +199,43 @@ export default function App() {
                 selectedNew = [...takeFromStarter]
             }
 
-            if (selectedNew.length < needed) {
+            if (selectedNew.length < needed && restOfWorld.length > 0) {
                 const remainingNeeded = needed - selectedNew.length
-                const shuffledRest = [...restOfWorld].sort(() => 0.5 - Math.random())
-                selectedNew = [...selectedNew, ...shuffledRest.slice(0, remainingNeeded)]
+
+                const totalFlags = flagsData.length
+                const masteredCount = Object.values(currentProgress).filter(p => p.streak >= TARGET_STREAK).length
+                const percentMastered = (masteredCount / totalFlags) * 100
+
+                const weights = getDifficultyWeights(percentMastered)
+
+                for (let i = 0; i < remainingNeeded; i++) {
+                    if (restOfWorld.length === 0) break
+
+                    const r = Math.random()
+                    let cumulative = 0
+                    let selectedDiff = 0
+                    for (let w = 0; w < weights.length; w++) {
+                        cumulative += weights[w]
+                        if (r <= cumulative) {
+                            selectedDiff = w
+                            break
+                        }
+                    }
+
+                    let candidates = restOfWorld.filter(f => (f.difficulty ?? 0) === selectedDiff)
+                    if (candidates.length === 0) {
+                        candidates = restOfWorld
+                    }
+
+                    const winnerIndex = Math.floor(Math.random() * candidates.length)
+                    const winner = candidates[winnerIndex]
+
+                    selectedNew.push(winner)
+                    const indexInRest = restOfWorld.findIndex(f => f.code === winner.code)
+                    if (indexInRest > -1) {
+                        restOfWorld.splice(indexInRest, 1)
+                    }
+                }
             }
 
             pool = [...pool, ...selectedNew]
@@ -247,7 +291,13 @@ export default function App() {
             isCorrect = normalize(current.name) === userAns
         }
 
-        // Branch 1: Practice
+        if (isCorrect) {
+            setSessionStreak(prev => prev + 1)
+        } else {
+            setSessionStreak(0)
+        }
+
+        // Branch 1: Practice Mode
         if (isPracticeMode) {
             if (isCorrect) {
                 setStatus('correct')
@@ -263,7 +313,30 @@ export default function App() {
             return
         }
 
-        // Branch 2: Learning
+        // Branch 2: REVIEW MODE (Náhodné preskúšanie)
+        if (isReview) {
+            if (isCorrect) {
+                // Uhádol review - len pochvala, progress sa nemení (stále je mastered)
+                setStatus('correct')
+                setFeedbackMsg("Sharp memory! 🧠")
+                setTimeout(() => pickRandomFlag(progress), 1000)
+            } else {
+                // Neuhádol review - degradácia
+                setStatus('error')
+                setFeedbackMsg(`Wrong ❌ Returned to pool.`)
+
+                const currentP = progress[current.code]
+                const newProgress = { ...progress }
+                // Nastavíme streak na (TARGET - 1), takže stačí 1 úspech na návrat
+                newProgress[current.code] = { ...currentP, streak: Math.max(0, TARGET_STREAK - 1) }
+
+                setProgress(newProgress)
+                setTimeout(() => pickRandomFlag(newProgress), 2000)
+            }
+            return
+        }
+
+        // Branch 3: Standard Learning Mode
         const currentP = progress[current.code]
         const isFirstTime = currentP.seen === 0
 
@@ -278,7 +351,7 @@ export default function App() {
                 setFeedbackMsg("Mastered! 🏆")
                 setTimeout(() => {
                     setProgress(newProgress)
-                    setTimeout(() => pickRandomFlag(newProgress), 200)
+                    setTimeout(() => pickRandomFlag(newProgress), 600)
                 }, 600)
             } else {
                 setStatus('correct')
@@ -301,6 +374,34 @@ export default function App() {
         const mastered = Object.values(progress).filter(p => p.streak >= TARGET_STREAK).length
         return { total, mastered, percent: Math.round((mastered / total) * 100) }
     }, [progress])
+
+    // --- ANIMATION VARIANTS FOR FIRE ---
+    const fireVariants = {
+        idle: { scale: 1, rotate: 0 },
+        low: {
+            scale: [1, 1.1, 1],
+            transition: { repeat: Infinity, duration: 1.5 }
+        },
+        medium: {
+            scale: [1, 1.2, 1],
+            rotate: [0, 5, -5, 0],
+            textShadow: "0px 0px 8px rgba(255, 165, 0, 0.8)",
+            transition: { repeat: Infinity, duration: 0.8 }
+        },
+        high: {
+            scale: [1, 1.3, 1],
+            rotate: [0, 10, -10, 0],
+            textShadow: "0px 0px 15px rgba(255, 69, 0, 1)",
+            transition: { repeat: Infinity, duration: 0.4 }
+        }
+    }
+
+    const getFireLevel = (streak: number) => {
+        if (streak >= 10) return "high"
+        if (streak >= 5) return "medium"
+        if (streak >= 2) return "low"
+        return "idle"
+    }
 
     if (!isLoaded) return null
 
@@ -363,12 +464,36 @@ export default function App() {
                         animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}}
                         transition={{ delay: 0.4, duration: 0.3 }}
                     >
-                        <div className="flex justify-between items-end px-1 mb-2">
+                        <div className="flex justify-between items-center px-1 mb-2">
                             <h1 className="text-2xl font-bold tracking-tight text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                FlagLearn <BookOpen size={20} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors"/>
+                                Flag Master <BookOpen size={20} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors"/>
                             </h1>
-                            <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-colors">
-                                {totalStats.mastered} / {totalStats.total} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {totalStats.percent}%
+
+                            <div className="flex items-center gap-3">
+                                {/* FIRE STREAK BADGE */}
+                                <AnimatePresence>
+                                    {sessionStreak >= 2 && (
+                                        <motion.div
+                                            initial={{ scale: 0, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0, opacity: 0 }}
+                                            className={`flex items-center gap-1 px-3 py-1 rounded-full font-bold shadow-sm border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 select-none`}
+                                        >
+                                            <motion.span
+                                                variants={fireVariants}
+                                                animate={getFireLevel(sessionStreak)}
+                                                className="text-lg"
+                                            >
+                                                🔥
+                                            </motion.span>
+                                            <span className="text-sm">{sessionStreak}</span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-colors">
+                                    {totalStats.mastered} / {totalStats.total} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {totalStats.percent}%
+                                </div>
                             </div>
                         </div>
                         <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-300/50 dark:ring-slate-700 group-hover:ring-indigo-300 transition-all relative">
@@ -383,10 +508,8 @@ export default function App() {
                         <motion.div
                             key={current.code}
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-                            // ZMENA: rounded-t-xl rounded-b-3xl
                             className="bg-white dark:bg-slate-800 p-6 sm:p-10 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-8 relative z-0 mb-8 transition-colors duration-300"
                         >
-                            {/* ZMENA: rounded-t-xl aj pre gradient bar */}
                             <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r 
                                 ${isPracticeMode
                                 ? 'from-indigo-600 via-blue-500 to-indigo-600'
@@ -402,19 +525,31 @@ export default function App() {
                                     <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />
                                 )}
 
-                                {!isPracticeMode && (
+                                {/* --- BADGES --- */}
+
+                                {/* 1. Standard Progress Badge */}
+                                {!isPracticeMode && !isReview && (
                                     <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
                                         🔥 {progress[current.code]?.streak || 0}/3
                                     </div>
                                 )}
+
+                                {/* 2. Practice Mode Badge */}
                                 {isPracticeMode && (
                                     <div className="absolute -top-3 -right-3 bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
                                         <Dumbbell size={12} /> Practice
                                     </div>
                                 )}
+
+                                {/* 3. Review Mode Badge */}
+                                {!isPracticeMode && isReview && (
+                                    <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
+                                        <RefreshCw size={12} /> Review
+                                    </div>
+                                )}
                             </div>
 
-                            {!isPracticeMode && progress[current.code]?.seen === 0 && (
+                            {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
                                 <div className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col items-center animate-pulse">
                                     <span className="text-xs uppercase tracking-wider font-bold opacity-70 mb-1">New Flag!</span>
                                     <div className="text-lg">
@@ -430,7 +565,11 @@ export default function App() {
                                     onChange={e => setInput(e.target.value)}
                                     onKeyDown={e => { if (e.key === "Enter") handleCheck() }}
                                     disabled={status !== 'idle'}
-                                    placeholder={(!isPracticeMode && progress[current.code]?.seen === 0) ? `Type: ${getDisplayName(current)}` : "Type country name..."}
+                                    placeholder={
+                                        (!isPracticeMode && !isReview && progress[current.code]?.seen === 0)
+                                            ? `Type: ${getDisplayName(current)}`
+                                            : "Type country name..."
+                                    }
                                     className={`
                                         w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all duration-200 shadow-sm
                                         dark:bg-slate-900 dark:text-white
@@ -564,17 +703,6 @@ export default function App() {
                                     )}
 
                                     <div className="flex gap-1 ml-2">
-                                        {/* CHEAT BUTTON (COMMENTED OUT) */}
-                                        {/*
-                                        <button
-                                            onClick={cheatMasterAll}
-                                            className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 text-yellow-500 hover:text-yellow-600 rounded-full transition-colors"
-                                            title="CHEAT: Master All"
-                                        >
-                                            <Zap size={20} />
-                                        </button>
-                                        */}
-
                                         <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress">
                                             <RotateCcw size={20} />
                                         </button>

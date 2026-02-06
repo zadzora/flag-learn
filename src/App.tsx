@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw } from "lucide-react"
 import flagsData from "../data/flags.json"
+import { Analytics } from "@vercel/analytics/next"
 
 // --- TYPES ---
 type Flag = {

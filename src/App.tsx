@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, X, Check, BookOpen, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw } from "lucide-react"
 import flagsData from "../data/flags.json"
-import { Analytics } from "@vercel/analytics/next"
 
 // --- TYPES ---
 type Flag = {
@@ -155,8 +154,8 @@ export default function App() {
         // 1. Získame zoznam Mastered vlajok pre Review mechaniku
         const masteredFlags = flagsData.filter(f => (currentProgress[f.code]?.streak || 0) >= TARGET_STREAK)
 
-        // REVIEW LOGIC: 5% šanca, ak máme čo opakovať
-        if (masteredFlags.length > 0 && Math.random() < 0.05) {
+        // REVIEW LOGIC: 10% šanca, ak máme čo opakovať
+        if (masteredFlags.length > 0 && Math.random() < 0.1) {
             const randomReviewFlag = masteredFlags[Math.floor(Math.random() * masteredFlags.length)]
             setCurrent(randomReviewFlag)
             setIsReview(true) // Nastavíme režim opakovania

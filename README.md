@@ -1,6 +1,8 @@
 # 🌍 Flag Learn
 
-An interactive geography quiz game built with React, TypeScript, and Tailwind CSS. Test your knowledge of world flags!
+An interactive geography quiz game built with React, TypeScript, and Tailwind CSS. Test your knowledge of world flags or start learning now!
+
+---
 
 ## ✨ Features
 
@@ -10,6 +12,8 @@ An interactive geography quiz game built with React, TypeScript, and Tailwind CS
 - **Dark Mode:** Fully supported dark/light theme.
 - **Animations:** Smooth transitions using Framer Motion.
 
+---
+
 ## 🛠️ Tech Stack
 
 - React (Vite)
@@ -18,11 +22,13 @@ An interactive geography quiz game built with React, TypeScript, and Tailwind CS
 - Framer Motion
 - Lucide React (Icons)
 
+---
+
 ## 🚀 How to run locally
 
 1. Clone the repository
    ```bash
-   git clone [https://github.com/TVOJE_MENO/flag-master-react.git](https://github.com/TVOJE_MENO/flag-master-react.git)
+   git clone [https://github.com/zadzora/flag-learn.git](https://github.com/zadzora/flag-learn.git)
 Install dependencies
 
 Bash
@@ -31,8 +37,15 @@ Run the development server
 
 Bash
 npm run dev
-☕ Support
+
+---
+
+## ☕ Support
 If you like this project, you can buy me a coffee!
 
-📄 License
+[![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://coff.ee/davidzadzora)
+
+---
+
+## 📄 License
 This project is licensed under the MIT License. Flags provided by Flagpedia.net.

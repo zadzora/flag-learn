@@ -465,9 +465,13 @@ export default function App() {
                         transition={{ delay: 0.4, duration: 0.3 }}
                     >
                         <div className="flex justify-between items-center px-1 mb-2">
-                            <h1 className="text-2xl font-bold tracking-tight text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                Flag Learn <BookOpen size={20} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors"/>
-                            </h1>
+                            <div className="flex items-center gap-2">
+                                <img
+                                    src={theme === 'dark' ? '/logo_dark.png' : '/logo_white.png'}
+                                    alt="Flag Learn Logo"
+                                    className="h-15 w-auto object-contain" // h-10 (40px) je dobrá výška, w-auto zachová pomer
+                                />
+                            </div>
 
                             <div className="flex items-center gap-3">
                                 {/* FIRE STREAK BADGE */}

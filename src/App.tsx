@@ -676,6 +676,15 @@ export default function App() {
                 >
                     Flags provided by Flagpedia.net <ExternalLink size={12} />
                 </a>
+
+                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-400 text-sm px-4 pb-8">
+                    <h2 className="font-bold text-slate-600 dark:text-slate-300 mb-2">About Flag Learn</h2>
+                    <p>
+                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong> effectively. Unlike other <strong>flag games</strong>,
+                        we use spaced repetition and streak mechanics to make learning fun.
+                        Perfect for students, travelers, and geography enthusiasts.
+                    </p>
+                </section>
             </footer>
 
             {/* --- GALLERY MODAL --- */}

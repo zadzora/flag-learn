@@ -323,7 +323,7 @@ export default function App() {
             } else {
                 // Neuhádol review - degradácia
                 setStatus('error')
-                setFeedbackMsg(`Wrong ❌ Returned to pool.`)
+                setFeedbackMsg(`Wrong ❌ It was: ${getDisplayName(current)}.\nReturned to pool.`)
 
                 const currentP = progress[current.code]
                 const newProgress = { ...progress }
@@ -593,14 +593,15 @@ export default function App() {
                                     autoFocus
                                     autoComplete="off"
                                 />
-                                <div className="h-6 text-center">
+                                <div className="min-h-[3.5rem] flex items-center justify-center text-center px-2">
                                     <AnimatePresence mode="wait">
                                         {feedbackMsg && (
                                             <motion.div
                                                 key={feedbackMsg}
                                                 initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                                className={`font-bold flex items-center justify-center gap-2 
-                                                    ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                                                // ZMENA: pridané 'whitespace-pre-line' a odstránený 'flex', aby fungovalo zalamovanie
+                                                className={`font-bold whitespace-pre-line leading-tight
+                    ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
                                             >
                                                 {feedbackMsg}
                                             </motion.div>

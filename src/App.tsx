@@ -453,7 +453,7 @@ export default function App() {
                 )}
             </AnimatePresence>
 
-            <div className={`w-full flex-1 flex flex-col items-center px-4 ${isPracticeMode ? 'mt-12' : ''}`}>
+            <div className={`pb-5 w-full flex-1 flex flex-col items-center px-4 ${isPracticeMode ? 'mt-12' : ''}`}>
 
                 {/* --- HEADER --- */}
                 {!isPracticeMode && (
@@ -677,8 +677,8 @@ export default function App() {
                     Flags provided by Flagpedia.net <ExternalLink size={12} />
                 </a>
 
-                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-400 text-sm px-4 pb-8">
-                    <h2 className="font-bold text-slate-600 dark:text-slate-300 mb-2">About Flag Learn</h2>
+                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2">
+                    <h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2>
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong> effectively. Unlike other <strong>flag games</strong>,
                         we use spaced repetition and streak mechanics to make learning fun.

@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-
 import { Analytics } from "@vercel/analytics/react"
-import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp } from "lucide-react" // Pridané ArrowUp
-// Grid, Zap
-import flagsData from "../data/flags.json"
+import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, Grid, Zap, ArrowUp, Globe, Map } from "lucide-react"
+import worldData from "../data/flags.json"
+import usData from "../data/us_states.json"
 
 // --- TYPES ---
 type Flag = {
@@ -19,13 +18,29 @@ type FlagProgress = {
     seen: number
 }
 
+type GameMode = 'world' | 'us'
+
 const TARGET_STREAK = 3
 const BATCH_SIZE = 13
-const STORAGE_KEY = "flag-master-v1"
 const THEME_KEY = "flag-master-theme"
-const TUTORIAL_KEY = "flag-master-tutorial-dismissed" // Nový kľúč pre localStorage
+const TUTORIAL_KEY = "flag-master-tutorial-dismissed"
+// Storage keys pre rôzne módy
+const STORAGE_KEY_WORLD = "flag-master-v1"
+const STORAGE_KEY_US = "flag-master-us-v1"
 
 export default function App() {
+    // --- GAME MODE STATE ---
+    const [gameMode, setGameMode] = useState<GameMode>(() => {
+        if (typeof window !== 'undefined') {
+            return (localStorage.getItem("flag-master-last-mode") as GameMode) || 'world'
+        }
+        return 'world'
+    })
+
+    // Dynamický výber dát podľa módu
+    const activeData = gameMode === 'world' ? worldData : usData
+    const activeStorageKey = gameMode === 'world' ? STORAGE_KEY_WORLD : STORAGE_KEY_US
+
     const [current, setCurrent] = useState<Flag | null>(null)
     const [input, setInput] = useState("")
 
@@ -38,15 +53,11 @@ export default function App() {
     const [progress, setProgress] = useState<Record<string, FlagProgress>>({})
     const [isLoaded, setIsLoaded] = useState(false)
 
-    // Tutorial State
+    // Tutorial & Selection
     const [tutorialDismissed, setTutorialDismissed] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return !!localStorage.getItem(TUTORIAL_KEY)
-        }
+        if (typeof window !== 'undefined') return !!localStorage.getItem(TUTORIAL_KEY)
         return false
     })
-
-    // Selection State
     const [selectedFlags, setSelectedFlags] = useState<string[]>([])
 
     const [isReview, setIsReview] = useState(false)
@@ -54,9 +65,7 @@ export default function App() {
     const [practiceMistakes, setPracticeMistakes] = useState(0)
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
-        }
+        if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
         return 'light'
     })
 
@@ -68,16 +77,30 @@ export default function App() {
     // --- DARK MODE LOGIC ---
     useEffect(() => {
         const root = window.document.documentElement
-        if (theme === 'dark') {
-            root.classList.add('dark')
-        } else {
-            root.classList.remove('dark')
-        }
+        if (theme === 'dark') root.classList.add('dark')
+        else root.classList.remove('dark')
         localStorage.setItem(THEME_KEY, theme)
     }, [theme])
 
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light')
+    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
+
+    // --- MODE SWITCHING LOGIC ---
+    const switchGameMode = (mode: GameMode) => {
+        if (mode === gameMode) return
+        setGameMode(mode)
+        localStorage.setItem("flag-master-last-mode", mode)
+
+        // BUG FIX: Kompletny reset stavov pri prepnuti
+        setIsLoaded(false)
+        setSessionStreak(0)
+        setIsPracticeMode(false)
+        setShowGallery(false)
+        setSelectedFlags([])
+        setCurrent(null)
+        setStatus('idle')
+        setFeedbackMsg(null)
+        setInput("")
+        setIsReview(false)
     }
 
     // --- HELPERS ---
@@ -92,19 +115,22 @@ export default function App() {
 
     // 1. INITIALIZATION
     useEffect(() => {
-        const savedData = localStorage.getItem(STORAGE_KEY)
+        const savedData = localStorage.getItem(activeStorageKey)
         if (savedData) {
             try {
                 const parsed = JSON.parse(savedData)
                 const mergedProgress = { ...parsed.progress }
-                flagsData.forEach(f => {
+                activeData.forEach(f => {
                     if (!mergedProgress[f.code]) {
                         mergedProgress[f.code] = { streak: 0, seen: 0 }
                     }
                 })
                 setProgress(mergedProgress)
                 if (parsed.current && !parsed.isPracticeMode) {
-                    setCurrent(parsed.current)
+                    const validCurrent = activeData.find(f => f.code === parsed.current.code)
+                    setCurrent(validCurrent || null)
+                } else {
+                    setCurrent(null)
                 }
             } catch (error) {
                 initFresh()
@@ -113,11 +139,12 @@ export default function App() {
             initFresh()
         }
         setIsLoaded(true)
-    }, [])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameMode])
 
     function initFresh() {
         const initial: Record<string, FlagProgress> = {}
-        flagsData.forEach(f => {
+        activeData.forEach(f => {
             initial[f.code] = { streak: 0, seen: 0 }
         })
         setProgress(initial)
@@ -131,9 +158,9 @@ export default function App() {
                 progress,
                 current: isPracticeMode ? null : current
             }
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+            localStorage.setItem(activeStorageKey, JSON.stringify(dataToSave))
         }
-    }, [progress, current, isLoaded, isPracticeMode])
+    }, [progress, current, isLoaded, isPracticeMode, activeStorageKey])
 
     // 3. PICK FLAG ON LOAD
     useEffect(() => {
@@ -144,50 +171,44 @@ export default function App() {
     }, [isLoaded, progress, isPracticeMode])
 
     function resetProgress() {
-        if (confirm("Are you sure you want to reset all progress?")) {
-            localStorage.removeItem(STORAGE_KEY)
-            localStorage.removeItem(TUTORIAL_KEY) // Reset aj tutorial
+        if (confirm(`Reset all progress for ${gameMode === 'world' ? 'World' : 'US States'} mode?`)) {
+            localStorage.removeItem(activeStorageKey)
+            if (gameMode === 'world') localStorage.removeItem(TUTORIAL_KEY)
             setSessionStreak(0)
             window.location.reload()
         }
     }
 
-    // --- HANDLE GALLERY OPEN (Dismiss Tutorial) ---
     function handleOpenGallery() {
         setShowGallery(true)
-        if (!tutorialDismissed) {
+        if (!tutorialDismissed && gameMode === 'world') {
             setTutorialDismissed(true)
             localStorage.setItem(TUTORIAL_KEY, "true")
         }
     }
 
-    // --- CHEAT FUNCTION ---
-    // function cheatMasterAll() {
-    //     if (confirm("⚡ CHEAT: Mark all flags as mastered?")) {
-    //         const newProgress: Record<string, FlagProgress> = {}
-    //         flagsData.forEach(f => {
-    //             newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
-    //         })
-    //         setProgress(newProgress)
-    //         setCurrent(null)
-    //         setShowGallery(false)
-    //         setFeedbackMsg(null)
-    //     }
-    // }
+    function cheatMasterAll() {
+        if (confirm("⚡ CHEAT: Mark all flags as mastered?")) {
+            const newProgress: Record<string, FlagProgress> = {}
+            activeData.forEach(f => {
+                newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
+            })
+            setProgress(newProgress)
+            setCurrent(null)
+            setShowGallery(false)
+            setFeedbackMsg(null)
+        }
+    }
 
-    // --- SELECTION LOGIC ---
     function toggleFlagSelection(code: string) {
         setSelectedFlags(prev => {
-            if (prev.includes(code)) {
-                return prev.filter(c => c !== code)
-            } else {
-                return [...prev, code]
-            }
+            if (prev.includes(code)) return prev.filter(c => c !== code)
+            return [...prev, code]
         })
     }
 
     function selectAllMastered() {
-        const mastered = flagsData.filter(f => (progress[f.code]?.streak || 0) >= TARGET_STREAK).map(f => f.code)
+        const mastered = activeData.filter(f => (progress[f.code]?.streak || 0) >= TARGET_STREAK).map(f => f.code)
         setSelectedFlags(mastered)
     }
 
@@ -195,7 +216,6 @@ export default function App() {
         setSelectedFlags([])
     }
 
-    // --- WEIGHTED RANDOM LOGIC ---
     function getDifficultyWeights(percentMastered: number) {
         if (percentMastered < 25) return [0.60, 0.25, 0.10, 0.05]
         if (percentMastered < 50) return [0.30, 0.40, 0.20, 0.10]
@@ -203,10 +223,19 @@ export default function App() {
         return [0.05, 0.10, 0.25, 0.60]
     }
 
-    // --- STANDARD GAME LOGIC ---
     function pickRandomFlag(currentProgress: Record<string, FlagProgress>) {
-        const masteredFlags = flagsData.filter(f => (currentProgress[f.code]?.streak || 0) >= TARGET_STREAK)
+        // Victory Check
+        const totalFlags = activeData.length
+        const masteredCount = Object.values(currentProgress).filter(p => p.streak >= TARGET_STREAK).length
 
+        if (masteredCount === totalFlags) {
+            setCurrent(null)
+            return
+        }
+
+        const masteredFlags = activeData.filter(f => (currentProgress[f.code]?.streak || 0) >= TARGET_STREAK)
+
+        // Review Logic
         if (masteredFlags.length > 0 && Math.random() < 0.1) {
             const randomReviewFlag = masteredFlags[Math.floor(Math.random() * masteredFlags.length)]
             setCurrent(randomReviewFlag)
@@ -221,14 +250,14 @@ export default function App() {
         setIsReview(false)
 
         const inProgressFlags: Flag[] = []
-        flagsData.forEach(f => {
+        activeData.forEach(f => {
             const p = currentProgress[f.code]
             if (p.streak < TARGET_STREAK && p.seen > 0) {
                 inProgressFlags.push(f)
             }
         })
 
-        const unseenFlags = flagsData.filter(f => (currentProgress[f.code]?.seen || 0) === 0)
+        const unseenFlags = activeData.filter(f => (currentProgress[f.code]?.seen || 0) === 0)
 
         if (inProgressFlags.length === 0 && unseenFlags.length === 0) {
             setCurrent(null)
@@ -239,8 +268,8 @@ export default function App() {
 
         if (pool.length < BATCH_SIZE) {
             const needed = BATCH_SIZE - pool.length
-            const starterPack = flagsData.slice(0, BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
-            const restOfWorld = flagsData.slice(BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
+            const starterPack = activeData.slice(0, BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
+            const restOfWorld = activeData.slice(BATCH_SIZE).filter(f => (currentProgress[f.code]?.seen || 0) === 0)
             let selectedNew: Flag[] = []
 
             if (starterPack.length > 0) {
@@ -250,8 +279,6 @@ export default function App() {
 
             if (selectedNew.length < needed && restOfWorld.length > 0) {
                 const remainingNeeded = needed - selectedNew.length
-                const totalFlags = flagsData.length
-                const masteredCount = Object.values(currentProgress).filter(p => p.streak >= TARGET_STREAK).length
                 const percentMastered = (masteredCount / totalFlags) * 100
                 const weights = getDifficultyWeights(percentMastered)
 
@@ -268,16 +295,13 @@ export default function App() {
                         }
                     }
                     let candidates = restOfWorld.filter(f => (f.difficulty ?? 0) === selectedDiff)
-                    if (candidates.length === 0) {
-                        candidates = restOfWorld
-                    }
+                    if (candidates.length === 0) candidates = restOfWorld
+
                     const winnerIndex = Math.floor(Math.random() * candidates.length)
                     const winner = candidates[winnerIndex]
                     selectedNew.push(winner)
                     const indexInRest = restOfWorld.findIndex(f => f.code === winner.code)
-                    if (indexInRest > -1) {
-                        restOfWorld.splice(indexInRest, 1)
-                    }
+                    if (indexInRest > -1) restOfWorld.splice(indexInRest, 1)
                 }
             }
             pool = [...pool, ...selectedNew]
@@ -291,14 +315,12 @@ export default function App() {
         setTimeout(() => inputRef.current?.focus(), 50)
     }
 
-    // --- PRACTICE MODE ---
     function startPracticeMode(customPool?: Flag[]) {
         let poolToUse: Flag[] = []
-
         if (customPool && customPool.length > 0) {
             poolToUse = customPool
         } else {
-            poolToUse = flagsData.filter(f => progress[f.code]?.streak >= TARGET_STREAK)
+            poolToUse = activeData.filter(f => progress[f.code]?.streak >= TARGET_STREAK)
         }
 
         if (poolToUse.length === 0) return
@@ -332,7 +354,6 @@ export default function App() {
         setPracticeMistakes(0)
     }
 
-    // --- CHECK LOGIC ---
     function handleCheck() {
         if (!current || status !== 'idle') return
 
@@ -350,7 +371,6 @@ export default function App() {
             setSessionStreak(0)
         }
 
-        // Branch 1: Practice Mode
         if (isPracticeMode) {
             if (isCorrect) {
                 setStatus('correct')
@@ -367,7 +387,6 @@ export default function App() {
             return
         }
 
-        // Branch 2: REVIEW MODE
         if (isReview) {
             if (isCorrect) {
                 setStatus('correct')
@@ -385,7 +404,6 @@ export default function App() {
             return
         }
 
-        // Branch 3: Standard Learning Mode
         const currentP = progress[current.code]
         const isFirstTime = currentP.seen === 0
 
@@ -418,11 +436,10 @@ export default function App() {
         }
     }
 
-    // --- SHARE LOGIC ---
     const handleShare = async () => {
         const shareData = {
             title: 'Flag Learn 🌍',
-            text: `🏆 I just mastered ${totalStats.total} world flags in Flag Learn! Can you beat match me? 🔥`,
+            text: `🏆 I just mastered ${totalStats.total} ${gameMode === 'world' ? 'world' : 'US state'} flags in Flag Learn! Can you match me? 🔥`,
             url: 'https://flag-learn-red.vercel.app/'
         }
 
@@ -440,12 +457,11 @@ export default function App() {
     }
 
     const totalStats = useMemo(() => {
-        const total = flagsData.length
+        const total = activeData.length
         const mastered = Object.values(progress).filter(p => p.streak >= TARGET_STREAK).length
         return { total, mastered, percent: Math.round((mastered / total) * 100) }
-    }, [progress])
+    }, [progress, activeData])
 
-    // --- ANIMATION VARIANTS FOR FIRE ---
     const fireVariants = {
         idle: { scale: 1, rotate: 0 },
         low: { scale: [1, 1.1, 1], transition: { repeat: Infinity, duration: 1.5 } },
@@ -470,11 +486,40 @@ export default function App() {
         }`}
         >
 
-            {/* --- DARK MODE TOGGLE --- */}
-            <div className="absolute top-4 right-4 z-40">
+            {/* --- TOP RIGHT CONTROLS --- */}
+            <div className="absolute top-4 right-4 z-40 flex items-center gap-2 sm:gap-3">
+
+                {/* MODE SWITCHER - PILL DESIGN */}
+                {!isPracticeMode && (
+                    <div className="flex bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-1 gap-1 shadow-sm border border-slate-300/50 dark:border-slate-700">
+                        <button
+                            onClick={() => switchGameMode('world')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs sm:text-sm font-bold
+                                ${gameMode === 'world'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}
+                        >
+                            <Globe size={16} />
+                            <span>World</span>
+                        </button>
+                        <button
+                            onClick={() => switchGameMode('us')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs sm:text-sm font-bold
+                                ${gameMode === 'us'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}
+                        >
+                            <Map size={16} />
+                            <span>USA</span>
+                        </button>
+                    </div>
+                )}
+
                 <button
                     onClick={toggleTheme}
-                    className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                    className="p-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
@@ -519,7 +564,7 @@ export default function App() {
                 {!isPracticeMode && (
                     <motion.div
                         layout
-                        onClick={handleOpenGallery} // ZMENA: Voláme našu funkciu
+                        onClick={handleOpenGallery}
                         className="w-full max-w-lg mb-12 cursor-pointer group z-20 relative select-none"
                         animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}}
                         transition={{ delay: 0.4, duration: 0.3 }}
@@ -564,19 +609,16 @@ export default function App() {
                             <motion.div className="h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
                         </div>
 
-                        {/* --- TUTORIAL HINT (NEW) --- */}
-                        {!tutorialDismissed && totalStats.mastered >= 1 && (
+                        {!tutorialDismissed && totalStats.mastered >= 1 && gameMode === 'world' && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
                                 className="absolute top-full mt-3 right-0 z-50 flex flex-col items-end"
                             >
-                                {/* Šípka hore */}
                                 <div className="mr-8 text-indigo-600 dark:text-indigo-500">
                                     <ArrowUp size={24} className="animate-bounce" />
                                 </div>
-                                {/* Bublina */}
                                 <div className="bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg border-2 border-white dark:border-slate-800 animate-pulse">
                                     Tap here to see your collection!
                                 </div>
@@ -705,7 +747,7 @@ export default function App() {
                                 <div>
                                     <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Flag Master!</h2>
                                     <p className="text-slate-500 dark:text-slate-400">
-                                        Incredible! You have mastered all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> flags of the world!
+                                        Incredible! You have mastered all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> {gameMode === 'world' ? 'flags of the world' : 'US state flags'}!
                                     </p>
                                 </div>
 
@@ -765,7 +807,7 @@ export default function App() {
                 <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2">
                     <h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2>
                     <p>
-                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong> effectively. Unlike other <strong>flag games</strong>,
+                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : 'US state flags'}</strong> effectively. Unlike other <strong>flag games</strong>,
                         we use spaced repetition and streak mechanics to make learning fun.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>
@@ -792,14 +834,16 @@ export default function App() {
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                                     <div>
                                         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Flag Collection</h2>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm">Select flags to create custom practice session.</p>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                                            {gameMode === 'world' ? 'World Flags' : 'US State Flags'} - Select to practice.
+                                        </p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
                                                 if (selectedFlags.length > 0) {
-                                                    const customPool = flagsData.filter(f => selectedFlags.includes(f.code))
+                                                    const customPool = activeData.filter(f => selectedFlags.includes(f.code))
                                                     startPracticeMode(customPool)
                                                 } else {
                                                     startPracticeMode()
@@ -821,13 +865,15 @@ export default function App() {
                                         </button>
 
                                         <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
-                                            {/*<button*/}
-                                            {/*    onClick={cheatMasterAll}*/}
-                                            {/*    className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 text-yellow-500 hover:text-yellow-600 rounded-full transition-colors"*/}
-                                            {/*    title="CHEAT: Master All"*/}
-                                            {/*>*/}
-                                            {/*    <Zap size={20} />*/}
-                                            {/*</button>*/}
+                                            {/* CHEAT BUTTON - HIDDEN
+                                            <button
+                                                onClick={cheatMasterAll}
+                                                className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 text-yellow-500 hover:text-yellow-600 rounded-full transition-colors"
+                                                title="CHEAT: Master All"
+                                            >
+                                                <Zap size={20} />
+                                            </button>
+                                            */}
 
                                             <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress">
                                                 <RotateCcw size={20} />
@@ -862,7 +908,7 @@ export default function App() {
                             {/* GALLERY GRID */}
                             <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-slate-950">
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                                    {flagsData.map(flag => {
+                                    {activeData.map(flag => {
                                         const p = progress[flag.code] || { streak: 0, seen: 0 }
                                         const isMastered = p.streak >= TARGET_STREAK
                                         const isSeen = p.seen > 0

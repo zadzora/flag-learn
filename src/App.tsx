@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
-import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, Grid, Zap, ArrowUp, Globe, Map } from "lucide-react"
+import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp, Globe, Map } from "lucide-react"
+// Grid, Zap
 import worldData from "../data/flags.json"
 import usData from "../data/us_states.json"
 
@@ -187,18 +188,18 @@ export default function App() {
         }
     }
 
-    function cheatMasterAll() {
-        if (confirm("⚡ CHEAT: Mark all flags as mastered?")) {
-            const newProgress: Record<string, FlagProgress> = {}
-            activeData.forEach(f => {
-                newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
-            })
-            setProgress(newProgress)
-            setCurrent(null)
-            setShowGallery(false)
-            setFeedbackMsg(null)
-        }
-    }
+    // function cheatMasterAll() {
+    //     if (confirm("⚡ CHEAT: Mark all flags as mastered?")) {
+    //         const newProgress: Record<string, FlagProgress> = {}
+    //         activeData.forEach(f => {
+    //             newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
+    //         })
+    //         setProgress(newProgress)
+    //         setCurrent(null)
+    //         setShowGallery(false)
+    //         setFeedbackMsg(null)
+    //     }
+    // }
 
     function toggleFlagSelection(code: string) {
         setSelectedFlags(prev => {

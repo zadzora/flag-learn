@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+
+import { Analytics } from "@vercel/analytics/react"
 import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp } from "lucide-react" // Pridané ArrowUp
 // Grid, Zap
 import flagsData from "../data/flags.json"
@@ -920,6 +922,7 @@ export default function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <Analytics />
         </div>
     )
 }

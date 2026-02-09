@@ -15,7 +15,7 @@ export default function CreateGame() {
     const [region, setRegion] = useState<'world' | 'us'>('world')
     const [nickname, setNickname] = useState("")
 
-    // Načítanie mena z localStorage
+    //Loading nickname from local storage
     useEffect(() => {
         const savedName = localStorage.getItem("flag-master-nickname")
         if (savedName) setNickname(savedName)
@@ -27,13 +27,14 @@ export default function CreateGame() {
             return
         }
 
-        // Uložiť meno pre budúcnosť
+        // Save name
         localStorage.setItem("flag-master-nickname", nickname)
 
         setIsCreating(true)
 
         const gameId = Math.random().toString(36).substring(2, 8)
-        // Host ID bude unikátne pre tento session
+
+        // Host ID - unique for session
         const hostId = "host_" + Math.random().toString(36).substring(2, 9)
         localStorage.setItem("flag-master-my-id", hostId) // Uložíme ID, aby sme sa spoznali v PvPGame
 
@@ -43,7 +44,7 @@ export default function CreateGame() {
 
         const gameData = {
             id: gameId,
-            hostId: hostId, // Uložíme ID hosta, aby mal právo spustiť hru
+            hostId: hostId, // Host ID - can start game
             settings: {
                 roundCount,
                 region,
@@ -54,7 +55,7 @@ export default function CreateGame() {
             status: 'waiting',
             startTime: 0,
             players: {
-                [hostId]: { // Dynamický kľúč pre hosta
+                [hostId]: { // Dynamic key for host
                     name: nickname,
                     score: 0,
                     currentIndex: 0,
@@ -68,7 +69,7 @@ export default function CreateGame() {
 
         try {
             await set(ref(db, 'games/' + gameId), gameData)
-            navigate(`/pvp/${gameId}`) // Už nepotrebujeme ?role=host, spoznáme sa podľa ID v localStorage
+            navigate(`/pvp/${gameId}`)
         } catch (error) {
             console.error("Error creating game:", error)
             alert("Failed to create game.")

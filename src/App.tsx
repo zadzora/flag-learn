@@ -9,10 +9,8 @@ export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Hlavné Menu */}
                 <Route path="/" element={<Home />} />
 
-                {/* Samotná hra */}
                 <Route path="/play" element={<Game />} />
                 <Route path="/pvp/create" element={<CreateGame />} />
                  <Route path="/pvp/:gameId" element={<PvPGame />} />

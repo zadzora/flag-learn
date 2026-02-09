@@ -68,7 +68,7 @@ export default function PvPGame() {
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
 
-    // --- 1. PRIPOJENIE ---
+    // --- 1. CONNECT ---
     useEffect(() => {
         if (!gameId) return
 
@@ -168,7 +168,7 @@ export default function PvPGame() {
         setNeedsName(false)
     }
 
-    // --- 2. ČASOVAČ ---
+    // --- 2. TIMER ---
     useEffect(() => {
         if (!gameData || gameData.status !== 'playing') return
 
@@ -188,7 +188,7 @@ export default function PvPGame() {
     }, [gameData, myId])
 
 
-    // --- HELPERY ---
+    // --- HELPERS ---
     const activeData = gameData?.settings.region === 'us' ? usData : worldData
 
     function normalize(str: string) {
@@ -209,7 +209,7 @@ export default function PvPGame() {
         return activeData.find(f => f.code === code)?.image
     }
 
-    // --- LOGIKA ---
+    // --- LOGIC ---
     const copyLink = () => {
         const url = window.location.origin + `/pvp/${gameId}`
         navigator.clipboard.writeText(url)
@@ -301,7 +301,7 @@ export default function PvPGame() {
                     finishMyGame()
                 }
             })
-        }, 600) // <--- TU JE ZMENA ČASU
+        }, 600)
     }
 
     // --- RENDER ---

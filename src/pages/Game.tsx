@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp, Globe, Map, ArrowLeft, Timer, Repeat } from "lucide-react"
+import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 
@@ -10,6 +10,7 @@ import usData from "../../data/us_states.json"
 type Flag = {
     code: string
     name: string | string[]
+    capital?: string[] | null
     image: string
     difficulty?: number
 }
@@ -19,7 +20,7 @@ type FlagProgress = {
     seen: number
 }
 
-type GameMode = 'world' | 'us'
+type GameMode = 'world' | 'us' | 'capitals'
 
 const TARGET_STREAK = 3
 const BATCH_SIZE = 13
@@ -27,6 +28,7 @@ const THEME_KEY = "flag-master-theme"
 const TUTORIAL_KEY = "flag-master-tutorial-dismissed"
 const STORAGE_KEY_WORLD = "flag-master-v1"
 const STORAGE_KEY_US = "flag-master-us-v1"
+const STORAGE_KEY_CAPITALS = "flag-master-capitals-v1"
 
 export default function Game() {
     // --- GAME MODE STATE ---
@@ -37,8 +39,20 @@ export default function Game() {
         return 'world'
     })
 
-    const activeData = gameMode === 'world' ? worldData : usData
-    const activeStorageKey = gameMode === 'world' ? STORAGE_KEY_WORLD : STORAGE_KEY_US
+    // Determine active dataset and storage key based on mode
+    const activeData = useMemo(() => {
+        if (gameMode === 'us') return usData
+        if (gameMode === 'capitals') {
+            return worldData.filter(f => f.capital && f.capital[0] !== null)
+        }
+        return worldData
+    }, [gameMode])
+
+    const activeStorageKey = useMemo(() => {
+        if (gameMode === 'us') return STORAGE_KEY_US
+        if (gameMode === 'capitals') return STORAGE_KEY_CAPITALS
+        return STORAGE_KEY_WORLD
+    }, [gameMode])
 
     const [current, setCurrent] = useState<Flag | null>(null)
     const [input, setInput] = useState("")
@@ -63,11 +77,11 @@ export default function Game() {
     const [sessionStreak, setSessionStreak] = useState(0)
     const [practiceMistakes, setPracticeMistakes] = useState(0)
 
-    // --- TIMER & RESULTS STATE ---
+    // Timer & Results State
     const [practiceStartTime, setPracticeStartTime] = useState<number>(0)
     const [practiceElapsedTime, setPracticeElapsedTime] = useState(0)
     const [practiceResults, setPracticeResults] = useState<{ mistakes: number, time: string, count: number } | null>(null)
-    const [lastPracticePool, setLastPracticePool] = useState<Flag[]>([]) // Aby sme mohli dať "Practice Again"
+    const [lastPracticePool, setLastPracticePool] = useState<Flag[]>([])
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
@@ -114,7 +128,7 @@ export default function Game() {
         setIsLoaded(false)
         setSessionStreak(0)
         setIsPracticeMode(false)
-        setPracticeResults(null) // Reset results
+        setPracticeResults(null)
         setShowGallery(false)
         setSelectedFlags([])
         setCurrent(null)
@@ -125,7 +139,15 @@ export default function Game() {
     }
 
     // --- HELPERS ---
-    function getDisplayName(flag: Flag): string {
+    function getCorrectAnswerDisplay(flag: Flag): string {
+        if (gameMode === 'capitals' && flag.capital) {
+            return flag.capital[0]
+        }
+        if (Array.isArray(flag.name)) return flag.name[0]
+        return flag.name
+    }
+
+    function getCountryName(flag: Flag): string {
         if (Array.isArray(flag.name)) return flag.name[0]
         return flag.name
     }
@@ -160,7 +182,7 @@ export default function Game() {
             initFresh()
         }
         setIsLoaded(true)
-    }, [gameMode])
+    }, [gameMode, activeStorageKey, activeData])
 
     function initFresh() {
         const initial: Record<string, FlagProgress> = {}
@@ -190,7 +212,11 @@ export default function Game() {
     }, [isLoaded, progress, isPracticeMode, practiceResults])
 
     function resetProgress() {
-        if (confirm(`Reset all progress for ${gameMode === 'world' ? 'World' : 'US States'} mode?`)) {
+        let modeName = "World Flags"
+        if (gameMode === 'us') modeName = "US States"
+        if (gameMode === 'capitals') modeName = "World Capitals"
+
+        if (confirm(`Reset all progress for ${modeName} mode?`)) {
             localStorage.removeItem(activeStorageKey)
             if (gameMode === 'world') localStorage.removeItem(TUTORIAL_KEY)
             setSessionStreak(0)
@@ -230,7 +256,7 @@ export default function Game() {
     }
 
     function pickRandomFlag(currentProgress: Record<string, FlagProgress>) {
-        if (practiceResults) return // Nechceme random flagu ak pozeráme výsledky
+        if (practiceResults) return
 
         const totalFlags = activeData.length
         const masteredCount = Object.values(currentProgress).filter(p => p.streak >= TARGET_STREAK).length
@@ -331,26 +357,20 @@ export default function Game() {
 
         if (poolToUse.length === 0) return
 
-        // Ulož pool pre "Practice Again"
         setLastPracticePool([...poolToUse])
-
         const shuffled = [...poolToUse].sort(() => 0.5 - Math.random())
         setPracticePool(shuffled)
         setIsPracticeMode(true)
-        setPracticeResults(null) // Skry výsledky
+        setPracticeResults(null)
         setPracticeMistakes(0)
-
-        // RESET TIMER
         setPracticeStartTime(Date.now())
         setPracticeElapsedTime(0)
-
         setShowGallery(false)
         pickPracticeFlag(shuffled)
     }
 
     function pickPracticeFlag(pool: Flag[]) {
         if (pool.length === 0) {
-            // HOTOVO - Ukáž výsledky
             const totalTime = Math.floor((Date.now() - practiceStartTime) / 1000)
             setPracticeResults({
                 mistakes: practiceMistakes,
@@ -378,8 +398,6 @@ export default function Game() {
         setPracticeMistakes(0)
         setPracticeStartTime(0)
         setPracticeResults(null)
-
-        // Vráť sa do bežného módu
         setTimeout(() => pickRandomFlag(progress), 100)
     }
 
@@ -388,10 +406,17 @@ export default function Game() {
 
         const userAns = normalize(input)
         let isCorrect = false
-        if (Array.isArray(current.name)) {
-            isCorrect = current.name.some(n => normalize(n) === userAns)
+
+        if (gameMode === 'capitals') {
+            if (current.capital && Array.isArray(current.capital)) {
+                isCorrect = current.capital.some(c => normalize(c) === userAns)
+            }
         } else {
-            isCorrect = normalize(current.name) === userAns
+            if (Array.isArray(current.name)) {
+                isCorrect = current.name.some(n => normalize(n) === userAns)
+            } else {
+                isCorrect = normalize(current.name) === userAns
+            }
         }
 
         if (isCorrect) {
@@ -410,7 +435,7 @@ export default function Game() {
             } else {
                 setStatus('error')
                 setPracticeMistakes(prev => prev + 1)
-                setFeedbackMsg(`Wrong ❌ It was: ${getDisplayName(current)}`)
+                setFeedbackMsg(`Wrong ❌ It was: ${getCorrectAnswerDisplay(current)}`)
                 setTimeout(() => pickPracticeFlag(practicePool), 2000)
             }
             return
@@ -423,7 +448,7 @@ export default function Game() {
                 setTimeout(() => pickRandomFlag(progress), 1000)
             } else {
                 setStatus('error')
-                setFeedbackMsg(`Wrong ❌ It was: ${getDisplayName(current)}.\nReturned to pool.`)
+                setFeedbackMsg(`Wrong ❌ It was: ${getCorrectAnswerDisplay(current)}.\nReturned to pool.`)
                 const currentP = progress[current.code]
                 const newProgress = { ...progress }
                 newProgress[current.code] = { ...currentP, streak: Math.max(0, TARGET_STREAK - 1) }
@@ -457,7 +482,7 @@ export default function Game() {
             }
         } else {
             setStatus('error')
-            setFeedbackMsg(`Wrong ❌ It was: ${getDisplayName(current)}`)
+            setFeedbackMsg(`Wrong ❌ It was: ${getCorrectAnswerDisplay(current)}`)
             const newProgress = { ...progress }
             newProgress[current.code] = { ...currentP, seen: 1, streak: 0 }
             setProgress(newProgress)
@@ -466,9 +491,13 @@ export default function Game() {
     }
 
     const handleShare = async () => {
+        let modeTitle = "world"
+        if (gameMode === 'us') modeTitle = "US state"
+        if (gameMode === 'capitals') modeTitle = "capital city"
+
         const shareData = {
             title: 'Flag Learn 🌍',
-            text: `🏆 I just mastered ${totalStats.total} ${gameMode === 'world' ? 'world' : 'US state'} flags in Flag Learn! Can you match me? 🔥`,
+            text: `🏆 I just mastered ${totalStats.total} ${modeTitle} flags in Flag Learn! Can you match me? 🔥`,
             url: 'https://flag-learn-red.vercel.app/'
         }
 
@@ -525,28 +554,9 @@ export default function Game() {
             <div className="absolute top-4 right-4 z-40 flex items-center gap-2 sm:gap-3">
                 {!isPracticeMode && (
                     <div className="flex bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-1 gap-1 shadow-sm border border-slate-300/50 dark:border-slate-700">
-                        <button
-                            onClick={() => switchGameMode('world')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs sm:text-sm font-bold
-                                ${gameMode === 'world'
-                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                            }`}
-                        >
-                            <Globe size={16} />
-                            <span>World</span>
-                        </button>
-                        <button
-                            onClick={() => switchGameMode('us')}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs sm:text-sm font-bold
-                                ${gameMode === 'us'
-                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                            }`}
-                        >
-                            <Map size={16} />
-                            <span>USA</span>
-                        </button>
+                        <button onClick={() => switchGameMode('world')} className={`p-2 rounded-lg transition-all ${gameMode === 'world' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Flags"><Globe size={20} /></button>
+                        <button onClick={() => switchGameMode('us')} className={`p-2 rounded-lg transition-all ${gameMode === 'us' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="US States"><Map size={20} /></button>
+                        <button onClick={() => switchGameMode('capitals')} className={`p-2 rounded-lg transition-all ${gameMode === 'capitals' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Capitals"><Landmark size={20} /></button>
                     </div>
                 )}
 
@@ -566,30 +576,12 @@ export default function Game() {
                         exit={{ y: -50, opacity: 0 }}
                         className="absolute top-0 w-full bg-indigo-600 dark:bg-indigo-800 text-white p-2 flex justify-between items-center px-4 sm:px-8 z-30 shadow-md"
                     >
-                        <button
-                            onClick={() => exitPracticeMode()}
-                            className="flex items-center gap-1 text-xs bg-indigo-700 dark:bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full transition-colors"
-                        >
-                            <LogOut size={14} /> Exit
-                        </button>
-
+                        <button onClick={() => exitPracticeMode()} className="flex items-center gap-1 text-xs bg-indigo-700 dark:bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full transition-colors"><LogOut size={14} /> Exit</button>
                         <div className="flex items-center gap-4 mr-12 sm:mr-0">
-                            {/* --- NOVÝ TIMER --- */}
-                            <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-bold text-indigo-100">
-                                <Timer size={16} />
-                                {formatTime(practiceElapsedTime)}
-                            </div>
-
-                            <div className="flex items-center gap-2 font-bold hidden sm:flex">
-                                <Dumbbell size={20} />
-                                <span>Practice Mode</span>
-                            </div>
-                            <div className="text-sm font-medium opacity-80 hidden sm:block">
-                                Remaining: {practicePool.length}
-                            </div>
-                            <div className="text-sm font-bold text-red-200 bg-red-900/30 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/30">
-                                <X size={14} /> {practiceMistakes}
-                            </div>
+                            <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-bold text-indigo-100"><Timer size={16} />{formatTime(practiceElapsedTime)}</div>
+                            <div className="flex items-center gap-2 font-bold hidden sm:flex"><Dumbbell size={20} /><span>Practice Mode</span></div>
+                            <div className="text-sm font-medium opacity-80 hidden sm:block">Remaining: {practicePool.length}</div>
+                            <div className="text-sm font-bold text-red-200 bg-red-900/30 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/30"><X size={14} /> {practiceMistakes}</div>
                         </div>
                         <div className="w-10 hidden sm:block"></div>
                     </motion.div>
@@ -597,119 +589,55 @@ export default function Game() {
             </AnimatePresence>
 
             <div className={`w-full flex-1 flex flex-col items-center px-4 mt-16 sm:mt-12 mb-8`}>
-
                 {!isPracticeMode && !practiceResults && (
-                    <motion.div
-                        layout
-                        onClick={handleOpenGallery}
-                        className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none"
-                        animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}}
-                        transition={{ delay: 0.4, duration: 0.3 }}
-                    >
+                    <motion.div layout onClick={handleOpenGallery} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none" animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}} transition={{ delay: 0.4, duration: 0.3 }}>
                         <div className="flex justify-between items-center px-1 mb-2">
                             <div className="flex items-center gap-2">
-                                <img
-                                    src={theme === 'dark' ? '/logo_dark.png' : '/logo_white.png'}
-                                    alt="Flag Learn Logo"
-                                    className="h-10 w-auto object-contain"
-                                />
+                                <img src={theme === 'dark' ? '/logo_dark.png' : '/logo_white.png'} alt="Logo" className="h-10 w-auto object-contain" />
+                                {gameMode === 'capitals' && <span className="text-xs font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded">Capitals</span>}
                             </div>
-
                             <div className="flex items-center gap-3">
                                 <AnimatePresence>
                                     {sessionStreak >= 2 && (
-                                        <motion.div
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0, opacity: 0 }}
-                                            className={`flex items-center gap-1 px-3 py-1 rounded-full font-bold shadow-sm border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 select-none`}
-                                        >
-                                            <motion.span
-                                                variants={fireVariants}
-                                                animate={getFireLevel(sessionStreak)}
-                                                className="text-lg"
-                                            >
-                                                🔥
-                                            </motion.span>
-                                            <span className="text-sm">{sessionStreak}</span>
+                                        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} className={`flex items-center gap-1 px-3 py-1 rounded-full font-bold shadow-sm border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 select-none`}>
+                                            <motion.span variants={fireVariants} animate={getFireLevel(sessionStreak)} className="text-lg">🔥</motion.span><span className="text-sm">{sessionStreak}</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
-
                                 <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-colors">
                                     {totalStats.mastered} / {totalStats.total} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {totalStats.percent}%
                                 </div>
                             </div>
                         </div>
-
                         <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-300/50 dark:ring-slate-700 group-hover:ring-indigo-300 transition-all relative">
                             <motion.div className="h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
                         </div>
-
-                        {!tutorialDismissed && totalStats.mastered >= 1 && gameMode === 'world' && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute top-full mt-3 right-0 z-50 flex flex-col items-end"
-                            >
-                                <div className="mr-8 text-indigo-600 dark:text-indigo-500">
-                                    <ArrowUp size={24} className="animate-bounce" />
-                                </div>
-                                <div className="bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg border-2 border-white dark:border-slate-800 animate-pulse">
-                                    Tap here to see your collection!
-                                </div>
-                            </motion.div>
-                        )}
-
                     </motion.div>
                 )}
 
                 <AnimatePresence mode="wait">
                     {current ? (
-                        <motion.div
-                            key={current.code}
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            transition={{ duration: isPracticeMode ? 0.05 : 0.2 }}
-                            className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300"
-                        >
-                            <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r 
-                                ${isPracticeMode
-                                ? 'from-indigo-600 via-blue-500 to-indigo-600'
-                                : 'from-indigo-500 via-purple-500 to-pink-500'
-                            }`}
-                            ></div>
+                        <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isPracticeMode ? 0.05 : 0.2 }} className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300">
+                            <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r ${isPracticeMode ? 'from-indigo-600 via-blue-500 to-indigo-600' : 'from-indigo-500 via-purple-500 to-pink-500'}`}></div>
 
                             <div className="relative group w-full flex justify-center h-48 sm:h-56">
-                                {status !== 'mastered' && (
-                                    <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />
-                                )}
-                                {status === 'mastered' && (
-                                    <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />
-                                )}
+                                {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />}
+                                {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />}
 
                                 {!isPracticeMode && !isReview && (
-                                    <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
-                                        🔥 {progress[current.code]?.streak || 0}/3
-                                    </div>
-                                )}
-                                {isPracticeMode && (
-                                    <div className="absolute -top-3 -right-3 bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
-                                        <Dumbbell size={12} /> Practice
-                                    </div>
-                                )}
-                                {!isPracticeMode && isReview && (
-                                    <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">
-                                        <RefreshCw size={12} /> Review
-                                    </div>
+                                    <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">🔥 {progress[current.code]?.streak || 0}/3</div>
                                 )}
                             </div>
 
                             {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
                                 <div className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col items-center animate-pulse">
                                     <span className="text-xs uppercase tracking-wider font-bold opacity-70 mb-1">New Flag!</span>
-                                    <div className="text-lg">
-                                        Type: <span className="font-extrabold text-blue-900 dark:text-blue-200">{getDisplayName(current)}</span>
+                                    <div className="text-lg text-center">
+                                        {gameMode === 'capitals' ? 'Capital of ' : 'Type: '}
+                                        <span className="font-extrabold text-blue-900 dark:text-blue-200">
+                                            {gameMode === 'capitals' ? getCountryName(current) : getCorrectAnswerDisplay(current)}
+                                        </span>
+                                        {gameMode === 'capitals' && <div className="mt-1 text-sm">is <span className="font-bold">{getCorrectAnswerDisplay(current)}</span></div>}
                                     </div>
                                 </div>
                             )}
@@ -724,127 +652,45 @@ export default function Game() {
                                     disabled={status !== 'idle'}
                                     placeholder={
                                         (!isPracticeMode && !isReview && progress[current.code]?.seen === 0)
-                                            ? `Type: ${getDisplayName(current)}`
-                                            : "Type country name..."
+                                            ? `Type: ${getCorrectAnswerDisplay(current)}`
+                                            : (gameMode === 'capitals' ? `Capital of ${getCountryName(current)}...` : "Type country name...")
                                     }
-                                    className={`
-                                        w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all duration-200 shadow-sm
-                                        dark:bg-slate-900 dark:text-white
-                                        ${status === 'error'
-                                        ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200'
-                                        : ''
-                                    }
-                                        ${status === 'correct' || status === 'mastered'
-                                        ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
-                                        : ''
-                                    }
-                                        ${status === 'idle'
-                                        ? 'border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500'
-                                        : ''
-                                    }
-                                    `}
+                                    className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all duration-200 shadow-sm dark:bg-slate-900 dark:text-white ${status === 'error' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200' : ''} ${status === 'correct' || status === 'mastered' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200' : ''} ${status === 'idle' ? 'border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500' : ''}`}
                                     autoFocus
                                     autoComplete="off"
                                 />
                                 <div className="min-h-[3.5rem] flex items-center justify-center text-center px-2">
                                     <AnimatePresence mode="wait">
                                         {feedbackMsg && (
-                                            <motion.div
-                                                key={feedbackMsg}
-                                                initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                                className={`font-bold whitespace-pre-line leading-tight
-                    ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
-                                            >
-                                                {feedbackMsg}
-                                            </motion.div>
+                                            <motion.div key={feedbackMsg} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`font-bold whitespace-pre-line leading-tight ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{feedbackMsg}</motion.div>
                                         )}
                                     </AnimatePresence>
                                 </div>
-                                <button
-                                    onClick={handleCheck}
-                                    disabled={status !== 'idle' || !input}
-                                    className={`
-                                        w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all
-                                        ${status === 'idle' && input ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 active:scale-95' : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'}
-                                    `}
-                                >
-                                    {status === 'idle' ? 'Check Answer' : 'Checking...'}
-                                </button>
+                                <button onClick={handleCheck} disabled={status !== 'idle' || !input} className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all ${status === 'idle' && input ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 active:scale-95' : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'}`}>{status === 'idle' ? 'Check Answer' : 'Checking...'}</button>
                             </div>
                         </motion.div>
                     ) : practiceResults ? (
-                        // --- PRACTICE RESULTS SCREEN (NOVÉ) ---
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4"
-                        >
-                            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full text-indigo-500 dark:text-indigo-400">
-                                <Dumbbell size={64} />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Practice Complete!</h2>
-                                <p className="text-slate-500 dark:text-slate-400">
-                                    You reviewed <strong className="text-indigo-600 dark:text-indigo-400">{practiceResults.count}</strong> flags.
-                                </p>
-                            </div>
-
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full text-indigo-500 dark:text-indigo-400"><Dumbbell size={64} /></div>
+                            <div><h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Practice Complete!</h2><p className="text-slate-500 dark:text-slate-400">You reviewed <strong className="text-indigo-600 dark:text-indigo-400">{practiceResults.count}</strong> flags.</p></div>
                             <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800">
-                                    <div className="text-xs uppercase font-bold text-red-400 mb-1">Mistakes</div>
-                                    <div className="text-3xl font-bold text-red-600 dark:text-red-300">{practiceResults.mistakes}</div>
-                                </div>
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
-                                    <div className="text-xs uppercase font-bold text-blue-400 mb-1">Time</div>
-                                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-300">{practiceResults.time}</div>
-                                </div>
+                                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800"><div className="text-xs uppercase font-bold text-red-400 mb-1">Mistakes</div><div className="text-3xl font-bold text-red-600 dark:text-red-300">{practiceResults.mistakes}</div></div>
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800"><div className="text-xs uppercase font-bold text-blue-400 mb-1">Time</div><div className="text-3xl font-bold text-blue-600 dark:text-blue-300">{practiceResults.time}</div></div>
                             </div>
-
                             <div className="w-full flex flex-col gap-3">
-                                <button
-                                    onClick={() => startPracticeMode(lastPracticePool)}
-                                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <Repeat size={20} /> Practice Again
-                                </button>
-
-                                <button
-                                    onClick={exitPracticeMode}
-                                    className="w-full py-3.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95"
-                                >
-                                    Back to Overview
-                                </button>
+                                <button onClick={() => startPracticeMode(lastPracticePool)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Repeat size={20} /> Practice Again</button>
+                                <button onClick={exitPracticeMode} className="w-full py-3.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">Back to Overview</button>
                             </div>
                         </motion.div>
                     ) : (
                         totalStats.percent === 100 && !isPracticeMode && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                                className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4"
-                            >
-                                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce">
-                                    <Trophy size={64} />
-                                </div>
-                                <div>
-                                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Flag Master!</h2>
-                                    <p className="text-slate-500 dark:text-slate-400">
-                                        Incredible! You have mastered all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> {gameMode === 'world' ? 'flags of the world' : 'US state flags'}!
-                                    </p>
-                                </div>
-
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4">
+                                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce"><Trophy size={64} /></div>
+                                <div><h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Flag Master!</h2><p className="text-slate-500 dark:text-slate-400">Incredible! You have mastered all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> {gameMode === 'world' ? 'flags of the world' : 'US state flags'}!
+                                </p></div>
                                 <div className="w-full flex flex-col gap-3">
-                                    <button
-                                        onClick={handleShare}
-                                        className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        <Share2 size={20} /> Share Success
-                                    </button>
-
-                                    <button
-                                        onClick={() => startPracticeMode()}
-                                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        <Dumbbell size={20} /> Keep Practicing
-                                    </button>
+                                    <button onClick={handleShare} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Share2 size={20} /> Share Success</button>
+                                    <button onClick={() => startPracticeMode()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Dumbbell size={20} /> Keep Practicing</button>
                                 </div>
                             </motion.div>
                         )
@@ -852,126 +698,37 @@ export default function Game() {
                 </AnimatePresence>
             </div>
 
+            {/* ... Footer ... */}
             <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2 mt-auto">
                 <div className="flex items-center gap-3">
-                    <p className="flex items-center gap-1">
-                        Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning
-                    </p>
-
-                    <a
-                        href="https://buymeacoffee.com/davidzadzora"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Buy me a coffee"
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]"
-                    >
-                        <Coffee size={14} className="text-black/80" />
-                        <span>Buy me a coffee</span>
-                        <ExternalLink size={10} className="opacity-60" />
-                    </a>
+                    <p className="flex items-center gap-1">Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning</p>
+                    <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]"><Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" /></a>
                 </div>
-
-                <a
-                    href="https://flagpedia.net"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-                >
-                    Flags provided by Flagpedia.net <ExternalLink size={12} />
-                </a>
-
-                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2">
-                    <h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2>
-                    <p>
-                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : 'US state flags'}</strong> effectively. Unlike other <strong>flag games</strong>,
-                        we use spaced repetition and streak mechanics to make learning fun.
-                        Perfect for students, travelers, and geography enthusiasts.
-                    </p>
-                </section>
+                <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Flags provided by Flagpedia.net <ExternalLink size={12} /></a>
+                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2"><h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2><p>Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively. Unlike other <strong>flag games</strong>, we use spaced repetition and streak mechanics to make learning fun.</p></section>
             </footer>
 
             {/* --- GALLERY MODAL --- */}
             <AnimatePresence>
                 {showGallery && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowGallery(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {/* GALLERY HEADER */}
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900 gap-4">
-
-                                {/* Top Row: Title & Close */}
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Flag Collection</h2>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                            {gameMode === 'world' ? 'World Flags' : 'US State Flags'} - Select to practice.
-                                        </p>
-                                    </div>
-
+                                    <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Collection</h2><p className="text-slate-500 dark:text-slate-400 text-sm">{gameMode === 'world' ? 'World Flags' : (gameMode === 'us' ? 'US State Flags' : 'World Capitals')} - Select to practice.</p></div>
                                     <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedFlags.length > 0) {
-                                                    const customPool = activeData.filter(f => selectedFlags.includes(f.code))
-                                                    startPracticeMode(customPool)
-                                                } else {
-                                                    startPracticeMode()
-                                                }
-                                            }}
-                                            disabled={selectedFlags.length === 0 && totalStats.mastered < 5}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all 
-                                                ${selectedFlags.length > 0
-                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed')
-                                            }
-                                            `}
-                                        >
-                                            <Dumbbell size={16} />
-                                            {selectedFlags.length > 0
-                                                ? `Practice Selected (${selectedFlags.length})`
-                                                : `Practice Mastered (${totalStats.mastered})`
-                                            }
-                                        </button>
-
+                                        <button onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }} disabled={selectedFlags.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedFlags.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}</button>
                                         <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
-                                            <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress">
-                                                <RotateCcw size={20} />
-                                            </button>
-                                            <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                                <X size={24} className="text-slate-500 dark:text-slate-400" />
-                                            </button>
+                                            <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress"><RotateCcw size={20} /></button>
+                                            <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"><X size={24} className="text-slate-500 dark:text-slate-400" /></button>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Bottom Row: Selection Controls */}
                                 <div className="flex items-center gap-3 text-sm pt-2 border-t border-slate-200 dark:border-slate-800">
-                                    <button
-                                        onClick={selectAllMastered}
-                                        className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                                    >
-                                        <CheckSquare size={16} /> Select All Mastered
-                                    </button>
-                                    <button
-                                        onClick={deselectAll}
-                                        className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                                    >
-                                        <Square size={16} /> Clear Selection
-                                    </button>
-                                    <span className="ml-auto text-xs text-slate-400 hidden sm:block">
-                                        Tip: Click flags to toggle selection
-                                    </span>
+                                    <button onClick={selectAllMastered} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><CheckSquare size={16} /> Select All Mastered</button>
+                                    <button onClick={deselectAll} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><Square size={16} /> Clear Selection</button>
                                 </div>
                             </div>
-
-                            {/* GALLERY GRID */}
                             <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-slate-950">
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                     {activeData.map(flag => {
@@ -979,7 +736,8 @@ export default function Game() {
                                         const isMastered = p.streak >= TARGET_STREAK
                                         const isSeen = p.seen > 0
                                         const isLocked = !isSeen
-                                        const displayName = getDisplayName(flag)
+
+                                        const displayName = gameMode === 'capitals' ? getCorrectAnswerDisplay(flag) : getCountryName(flag)
                                         const isSelected = selectedFlags.includes(flag.code)
                                         const canSelect = isMastered
 
@@ -987,13 +745,11 @@ export default function Game() {
                                             <div key={flag.code}
                                                  onClick={() => canSelect && toggleFlagSelection(flag.code)}
                                                  className={`relative aspect-[4/3] rounded-xl overflow-hidden shadow-sm border transition-all duration-200 group 
-                                                    ${isSelected
-                                                     ? 'ring-4 ring-blue-500 border-blue-600 z-10 scale-[1.02] cursor-pointer'
-                                                     : (isMastered
-                                                         ? 'border-emerald-200 dark:border-emerald-800 shadow-emerald-100 dark:shadow-none ring-2 ring-emerald-500/20 cursor-pointer'
-                                                         : (isLocked ? 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 cursor-default' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-80 cursor-default'))
-                                                 }
-                                                `}>
+                                                    ${isSelected ? 'ring-4 ring-blue-500 border-blue-600 z-10 scale-[1.02] cursor-pointer'
+                                                     : (isMastered ? 'border-emerald-200 dark:border-emerald-800 shadow-emerald-100 dark:shadow-none ring-2 ring-emerald-500/20 cursor-pointer'
+                                                         : (isLocked ? 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 cursor-default' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-80 cursor-default'))}
+                                                 `}
+                                            >
                                                 {isLocked ? (
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 gap-2">
                                                         <Lock size={24} />
@@ -1001,28 +757,24 @@ export default function Game() {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <img src={flag.image} alt={displayName} className={`w-full h-full object-cover transition-all ${isSelected ? 'opacity-100' : (isMastered ? 'opacity-100' : 'opacity-80 grayscale-[0.3]')}`} loading="lazy" />
+                                                        <img
+                                                            src={flag.image}
+                                                            alt={isMastered ? displayName : "Flag"}
+                                                            className={`w-full h-full object-cover transition-all ${isSelected ? 'opacity-100' : (isMastered ? 'opacity-100' : 'opacity-80 grayscale-[0.3]')}`}
+                                                            loading="lazy"
+                                                        />
 
-                                                        {isSelected && (
-                                                            <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                                                                <div className="bg-blue-500 text-white rounded-full p-1.5 shadow-lg">
-                                                                    <Check size={20} strokeWidth={4} />
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        {isSelected && <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center"><div className="bg-blue-500 text-white rounded-full p-1.5 shadow-lg"><Check size={20} strokeWidth={4} /></div></div>}
 
-                                                        {!isSelected && isMastered && (
-                                                            <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-1 shadow-sm"><Check size={12} strokeWidth={4} /></div>
-                                                        )}
-                                                        {!isSelected && !isMastered && isSeen && (
-                                                            <div className="absolute bottom-0 w-full bg-slate-900/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">{p.streak}/3</div>
-                                                        )}
+                                                        {!isSelected && isMastered && <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-1 shadow-sm"><Check size={12} strokeWidth={4} /></div>}
+
+                                                        {!isSelected && !isMastered && isSeen && <div className="absolute bottom-0 w-full bg-slate-900/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">{p.streak}/3</div>}
                                                     </>
                                                 )}
 
                                                 {!isLocked && (
                                                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                                                        <span className="text-white text-xs font-bold text-center">{displayName}</span>
+                                                        <span className="text-white text-xs font-bold text-center">{isMastered ? displayName : "Yet to learn"}</span>
                                                     </div>
                                                 )}
                                             </div>

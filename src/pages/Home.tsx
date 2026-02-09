@@ -18,7 +18,6 @@ export default function Home() {
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
 
     return (
-        // ZMENA 1: flex a flex-col na hlavnom wrappri
         <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
             <button
@@ -28,8 +27,6 @@ export default function Home() {
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
-            {/* ZMENA 2: Tento div má flex-1, čo znamená "zober všetko voľné miesto".
-                Tým pádom vytlačí footer dole a obsah vycentruje. */}
             <div className="flex-1 flex flex-col items-center justify-center w-full px-4 py-12">
                 <div className="text-center mb-12">
                     <img src="/logo_white.png" alt="Logo" className="h-24 w-auto mx-auto mb-4 dark:hidden" />
@@ -60,7 +57,6 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* ZMENA 3: Footer je teraz na spodku vďaka flex-1 vyššie */}
             <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2">
                 <div className="flex items-center gap-3">
                     <p className="flex items-center gap-1">

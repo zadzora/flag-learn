@@ -410,7 +410,8 @@ export default function Game() {
 
         if (gameMode === 'capitals') {
             if (current.capital && Array.isArray(current.capital)) {
-                isCorrect = current.capital.some(c => normalize(c) === userAns)
+                // OPRAVA: Pridaná kontrola (typeof c === 'string'), aby sme si boli istí, že to nie je null
+                isCorrect = current.capital.some(c => (typeof c === 'string') && normalize(c) === userAns)
             }
         } else {
             if (Array.isArray(current.name)) {

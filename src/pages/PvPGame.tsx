@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { db } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
-import { ArrowLeft, Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, UserX, AlertTriangle, WifiOff, Moon, Sun } from "lucide-react"
+import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -180,7 +180,7 @@ export default function PvPGame() {
             setTimeLeft(remaining)
 
             if (remaining === 0 && myId && gameData.players[myId] && !gameData.players[myId].finished) {
-                finishMyGame(false)
+                finishMyGame()
             }
         }, 1000)
 
@@ -235,7 +235,7 @@ export default function PvPGame() {
         }
     }
 
-    const finishMyGame = (completedAll: boolean) => {
+    const finishMyGame = () => {
         if (!myId || !gameData) return
 
         const updates: any = {}
@@ -245,8 +245,7 @@ export default function PvPGame() {
         update(ref(db, `games/${gameId}`), updates)
 
         const allPlayers = Object.values(gameData.players)
-        const activePlayers = allPlayers.filter(p => !p.left)
-        const finishedPlayers = activePlayers.filter(p => p.finished)
+        const finishedPlayers = allPlayers.filter(p => p.finished)
 
         if (finishedPlayers.length >= allPlayers.length) {
             update(ref(db, `games/${gameId}`), { status: 'finished' })
@@ -299,7 +298,7 @@ export default function PvPGame() {
                 setTimeout(() => inputRef.current?.focus(), 50)
 
                 if (finished) {
-                    finishMyGame(true)
+                    finishMyGame()
                 }
             })
         }, 600) // <--- TU JE ZMENA ČASU

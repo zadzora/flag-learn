@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, RefreshCw, Share2, CheckSquare, Square, ArrowUp, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
+import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 

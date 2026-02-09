@@ -11,11 +11,10 @@ export default function CreateGame() {
     const [isCreating, setIsCreating] = useState(false)
     const [roundCount, setRoundCount] = useState(10)
     const [timeLimit, setTimeLimit] = useState(60)
-    const [maxPlayers, setMaxPlayers] = useState(2) // Default 2
-    const [region, setRegion] = useState<'world' | 'us'>('world')
+    const [maxPlayers, setMaxPlayers] = useState(2)
+    const [region, setRegion] = useState<'world' | 'us' | 'capitals'>('world')
     const [nickname, setNickname] = useState("")
 
-    //Loading nickname from local storage
     useEffect(() => {
         const savedName = localStorage.getItem("flag-master-nickname")
         if (savedName) setNickname(savedName)
@@ -27,24 +26,30 @@ export default function CreateGame() {
             return
         }
 
-        // Save name
         localStorage.setItem("flag-master-nickname", nickname)
-
         setIsCreating(true)
 
         const gameId = Math.random().toString(36).substring(2, 8)
-
-        // Host ID - unique for session
         const hostId = "host_" + Math.random().toString(36).substring(2, 9)
-        localStorage.setItem("flag-master-my-id", hostId) // Uložíme ID, aby sme sa spoznali v PvPGame
+        localStorage.setItem("flag-master-my-id", hostId)
 
-        const dataSet = region === 'world' ? worldData : usData
+        // Logic to select correct dataset
+        let dataSet: any[] = []
+        if (region === 'us') {
+            dataSet = usData
+        } else if (region === 'capitals') {
+            // Filter out entries without capitals (like Antarctica)
+            dataSet = worldData.filter((f: any) => f.capital && f.capital[0] !== null)
+        } else {
+            dataSet = worldData
+        }
+
         const shuffled = [...dataSet].sort(() => 0.5 - Math.random())
         const selectedFlags = shuffled.slice(0, roundCount).map(f => f.code)
 
         const gameData = {
             id: gameId,
-            hostId: hostId, // Host ID - can start game
+            hostId: hostId,
             settings: {
                 roundCount,
                 region,
@@ -55,7 +60,7 @@ export default function CreateGame() {
             status: 'waiting',
             startTime: 0,
             players: {
-                [hostId]: { // Dynamic key for host
+                [hostId]: {
                     name: nickname,
                     score: 0,
                     currentIndex: 0,
@@ -121,12 +126,28 @@ export default function CreateGame() {
                         </div>
                     </div>
 
-                    {/* Region */}
+                    {/* Region - UPDATED UI */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1">Region</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => setRegion('world')} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${region === 'world' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>World</button>
-                            <button onClick={() => setRegion('us')} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${region === 'us' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>USA States</button>
+                        <label className="block text-sm font-bold mb-2 ml-1">Game Mode</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                onClick={() => setRegion('world')}
+                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'world' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
+                            >
+                                World
+                            </button>
+                            <button
+                                onClick={() => setRegion('us')}
+                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'us' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
+                            >
+                                USA
+                            </button>
+                            <button
+                                onClick={() => setRegion('capitals')}
+                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'capitals' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
+                            >
+                                Capitals
+                            </button>
                         </div>
                     </div>
 

@@ -1,11 +1,18 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { db } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
-import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun } from "lucide-react"
+import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun, Landmark } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+
+type Flag = {
+    code: string
+    name: string | string[]
+    capital?: (string | null)[] | null
+    image: string
+}
 
 type PlayerState = {
     name: string
@@ -24,7 +31,7 @@ type GameData = {
     flags: string[]
     settings: {
         roundCount: number
-        region: 'world' | 'us'
+        region: 'world' | 'us' | 'capitals'
         timeLimit: number
         maxPlayers: number
     }
@@ -68,7 +75,7 @@ export default function PvPGame() {
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
 
-    // --- 1. CONNECT ---
+    // --- 1. Connect ---
     useEffect(() => {
         if (!gameId) return
 
@@ -168,7 +175,7 @@ export default function PvPGame() {
         setNeedsName(false)
     }
 
-    // --- 2. TIMER ---
+    // --- 2. Timer ---
     useEffect(() => {
         if (!gameData || gameData.status !== 'playing') return
 
@@ -189,7 +196,14 @@ export default function PvPGame() {
 
 
     // --- HELPERS ---
-    const activeData = gameData?.settings.region === 'us' ? usData : worldData
+    const activeData = useMemo(() => {
+        if (!gameData) return []
+        if (gameData.settings.region === 'us') return usData as unknown as Flag[]
+        if (gameData.settings.region === 'capitals') {
+            return (worldData as unknown as Flag[]).filter(f => f.capital && f.capital[0] !== null)
+        }
+        return worldData as unknown as Flag[]
+    }, [gameData])
 
     function normalize(str: string) {
         return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
@@ -199,17 +213,27 @@ export default function PvPGame() {
         return activeData.find(f => f.code === code)
     }
 
-    function getFlagDisplayName(code: string) {
+    function getFlagImage(code: string) {
+        return activeData.find(f => f.code === code)?.image
+    }
+
+    function getCorrectAnswerDisplay(code: string) {
+        const flag = getFlagObject(code)
+        if (!flag) return "Unknown"
+
+        if (gameData?.settings.region === 'capitals' && flag.capital) {
+            return flag.capital[0] || "Unknown"
+        }
+
+        return Array.isArray(flag.name) ? flag.name[0] : flag.name
+    }
+
+    function getCountryName(code: string) {
         const flag = getFlagObject(code)
         if (!flag) return "Unknown"
         return Array.isArray(flag.name) ? flag.name[0] : flag.name
     }
 
-    function getFlagImage(code: string) {
-        return activeData.find(f => f.code === code)?.image
-    }
-
-    // --- LOGIC ---
     const copyLink = () => {
         const url = window.location.origin + `/pvp/${gameId}`
         navigator.clipboard.writeText(url)
@@ -259,15 +283,20 @@ export default function PvPGame() {
         const currentFlagCode = gameData.flags[myPlayer.currentIndex]
 
         const flagObject = getFlagObject(currentFlagCode)
-        const displayName = getFlagDisplayName(currentFlagCode)
         const userAns = normalize(input)
 
         let isCorrect = false
         if (flagObject) {
-            if (Array.isArray(flagObject.name)) {
-                isCorrect = flagObject.name.some(n => normalize(n) === userAns)
+            if (gameData.settings.region === 'capitals') {
+                if (flagObject.capital && Array.isArray(flagObject.capital)) {
+                    isCorrect = flagObject.capital.some(c => (typeof c === 'string') && normalize(c) === userAns)
+                }
             } else {
-                isCorrect = normalize(flagObject.name) === userAns
+                if (Array.isArray(flagObject.name)) {
+                    isCorrect = flagObject.name.some(n => normalize(n) === userAns)
+                } else {
+                    isCorrect = normalize(flagObject.name) === userAns
+                }
             }
         }
 
@@ -275,11 +304,10 @@ export default function PvPGame() {
             setFeedback("Correct! ✅")
             setFeedbackStatus('correct')
         } else {
-            setFeedback(`Wrong ❌ It was: ${displayName}`)
+            setFeedback(`Wrong ❌ It was: ${getCorrectAnswerDisplay(currentFlagCode)}`)
             setFeedbackStatus('error')
         }
 
-        // ZMENA: Rýchlejšia odozva (600ms namiesto 1500ms)
         setTimeout(() => {
             if (!gameData || !myId) return
 
@@ -394,9 +422,17 @@ export default function PvPGame() {
 
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center max-w-md w-full border border-slate-200 dark:border-slate-700">
                     <div className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full inline-block mb-4 text-indigo-600 dark:text-indigo-400">
-                        <Users size={48} />
+                        {gameData.settings.region === 'capitals' ? <Landmark size={48} /> : <Users size={48} />}
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Game Lobby</h1>
+
+                    {/* Zobrazenie zvoleneho modu v lobby */}
+                    <div className="mb-4">
+                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                            {gameData.settings.region === 'capitals' ? 'Capitals Mode' : (gameData.settings.region === 'us' ? 'USA Mode' : 'World Mode')}
+                        </span>
+                    </div>
+
                     <div className="flex justify-center items-center gap-4 text-slate-500 dark:text-slate-400 mb-6 text-sm">
                         <span className="flex items-center gap-1"><Users size={14}/> {activePlayersCount}/{gameData.settings.maxPlayers}</span>
                         <span className="flex items-center gap-1"><Trophy size={14}/> {gameData.settings.roundCount} Flags</span>
@@ -446,7 +482,6 @@ export default function PvPGame() {
     }
 
     if (gameData.status === 'finished' || (myPlayer?.finished && allPlayers.every(p => p.finished))) {
-
         const sortedPlayers = [...allPlayers].sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score
             const timeA = (a.finishedAt || Infinity) - gameData.startTime
@@ -547,7 +582,7 @@ export default function PvPGame() {
                         className="h-full bg-indigo-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${(myPlayer.currentIndex / gameData.flags.length) * 100}%` }}
-                        transition={{ duration: 0.3 }} // ZMENA: Rýchlejšia animácia
+                        transition={{ duration: 0.3 }}
                     />
                 </div>
 
@@ -561,7 +596,7 @@ export default function PvPGame() {
                                 <motion.div
                                     className={`h-full ${p.finished ? 'bg-green-500' : 'bg-orange-400'}`}
                                     animate={{ width: `${(p.currentIndex / gameData.flags.length) * 100}%` }}
-                                    transition={{ duration: 0.3 }} // ZMENA: Rýchlejšia animácia
+                                    transition={{ duration: 0.3 }}
                                 />
                             </div>
                             <span className="w-4 text-right text-slate-400">{p.score}</span>
@@ -576,7 +611,7 @@ export default function PvPGame() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }} // ZMENA: Rýchlejšia animácia karty
+                    transition={{ duration: 0.2 }}
                     className="bg-white dark:bg-slate-800 p-6 sm:p-10 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-8 relative mx-4 mt-4"
                 >
                     <div className="w-full h-48 sm:h-56 flex justify-center">
@@ -584,13 +619,18 @@ export default function PvPGame() {
                     </div>
 
                     <div className="w-full space-y-4">
+                        {/* Zobrazenie napovedy */}
+                        <div className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
+                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode)}` : "Identify the Flag"}
+                        </div>
+
                         <input
                             ref={inputRef}
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCheck()}
                             disabled={feedbackStatus !== 'idle'}
-                            placeholder="Type country name..."
+                            placeholder={gameData.settings.region === 'capitals' ? "Type capital city..." : "Type country name..."}
                             className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all
                                 dark:bg-slate-900 dark:text-white
                                 ${feedbackStatus === 'error' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200' : ''}

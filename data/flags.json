@@ -46,7 +46,7 @@
   { "code": "cn", "name": ["China", "PRC"], "image": "/flags/cn.svg" ,"difficulty": 0},
   { "code": "co", "name": "Colombia", "image": "/flags/co.svg" ,"difficulty": 1},
   { "code": "km", "name": "Comoros", "image": "/flags/km.svg" ,"difficulty": 3},
-  { "code": "cg", "name": ["Congo", "Republic of the Congo"], "image": "/flags/cg.svg" ,"difficulty": 2},
+  { "code": "cg", "name": ["Congo", "Republic of the Congo", "Democratic Republic Congo", "Democratic Republic of the Congo"], "image": "/flags/cg.svg" ,"difficulty": 2},
   { "code": "cd", "name": ["DR Congo", "Democratic Republic of the Congo", "DRC"], "image": "/flags/cd.svg" ,"difficulty": 3},
   { "code": "cr", "name": "Costa Rica", "image": "/flags/cr.svg" ,"difficulty": 1},
   { "code": "hr", "name": "Croatia", "image": "/flags/hr.svg" ,"difficulty": 0},

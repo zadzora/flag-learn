@@ -10,7 +10,7 @@ import usData from "../../data/us_states.json"
 type Flag = {
     code: string
     name: string | string[]
-    capital?: string[] | null
+    capital?: (string | null)[] | null
     image: string
     difficulty?: number
 }
@@ -41,11 +41,11 @@ export default function Game() {
 
     // Determine active dataset and storage key based on mode
     const activeData = useMemo(() => {
-        if (gameMode === 'us') return usData
+        if (gameMode === 'us') return usData as unknown as Flag[]
         if (gameMode === 'capitals') {
-            return worldData.filter(f => f.capital && f.capital[0] !== null)
+            return (worldData as unknown as Flag[]).filter(f => f.capital && f.capital[0] !== null)
         }
-        return worldData
+        return worldData as unknown as Flag[] // Pridany cast
     }, [gameMode])
 
     const activeStorageKey = useMemo(() => {
@@ -141,7 +141,8 @@ export default function Game() {
     // --- HELPERS ---
     function getCorrectAnswerDisplay(flag: Flag): string {
         if (gameMode === 'capitals' && flag.capital) {
-            return flag.capital[0]
+            // Pridame || "" pre istotu, aby sme vratili string
+            return flag.capital[0] || ""
         }
         if (Array.isArray(flag.name)) return flag.name[0]
         return flag.name

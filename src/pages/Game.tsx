@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
+import { Lock, X, Check,RefreshCw , RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 
@@ -626,11 +626,23 @@ export default function Game() {
                                 {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />}
                                 {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />}
 
+                                {/* Standard Streak Badge */}
                                 {!isPracticeMode && !isReview && (
                                     <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">🔥 {progress[current.code]?.streak || 0}/3</div>
                                 )}
+
+                                {/* Practice Mode Badge (Chybal) */}
+                                {isPracticeMode && (
+                                    <div className="absolute -top-3 -right-3 bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><Dumbbell size={12} /> Practice</div>
+                                )}
+
+                                {/* Review Badge (Chybal - toto je to, co si hladal) */}
+                                {!isPracticeMode && isReview && (
+                                    <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Review</div>
+                                )}
                             </div>
 
+                            {/* New Flag Banner */}
                             {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
                                 <div className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col items-center animate-pulse">
                                     <span className="text-xs uppercase tracking-wider font-bold opacity-70 mb-1">New Flag!</span>

@@ -675,7 +675,10 @@ export default function PvPGame() {
                         <img
                             src={getFlagImage(currentFlagCode!)}
                             alt="Flag"
-                            style={{ filter: `blur(${blurAmount}px)`, transition: 'filter 0.1s linear' }}
+                            style={{
+                                filter: `blur(${blurAmount}px) grayscale(${(blurAmount / 20) * 100}%)`,
+                                transition: 'filter 0.1s linear'
+                            }}
                             className="h-full w-auto object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700"
                         />
                     </div>

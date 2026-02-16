@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { ArrowLeft, Swords, Loader2, Clock, Users, User } from "lucide-react"
+import { ArrowLeft, Swords, Loader2, Clock, Users, User, EyeOff } from "lucide-react" // Pridane EyeOff
 import { db } from "../../lib/firebase"
 import { ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
@@ -10,9 +10,11 @@ export default function CreateGame() {
     const navigate = useNavigate()
     const [isCreating, setIsCreating] = useState(false)
     const [roundCount, setRoundCount] = useState(10)
-    const [timeLimit, setTimeLimit] = useState(60)
+    const [timeLimit, setTimeLeft] = useState(60)
     const [maxPlayers, setMaxPlayers] = useState(2)
     const [region, setRegion] = useState<'world' | 'us' | 'capitals'>('world')
+    // ZMENA 1: Novy state pre Blur Mode
+    const [isBlurMode, setIsBlurMode] = useState(false)
     const [nickname, setNickname] = useState("")
 
     useEffect(() => {
@@ -33,12 +35,10 @@ export default function CreateGame() {
         const hostId = "host_" + Math.random().toString(36).substring(2, 9)
         localStorage.setItem("flag-master-my-id", hostId)
 
-        // Logic to select correct dataset
         let dataSet: any[] = []
         if (region === 'us') {
             dataSet = usData
         } else if (region === 'capitals') {
-            // Filter out entries without capitals (like Antarctica)
             dataSet = worldData.filter((f: any) => f.capital && f.capital[0] !== null)
         } else {
             dataSet = worldData
@@ -54,7 +54,8 @@ export default function CreateGame() {
                 roundCount,
                 region,
                 timeLimit,
-                maxPlayers
+                maxPlayers,
+                isBlurMode // ZMENA 2: Ulozime nastavenie
             },
             flags: selectedFlags,
             status: 'waiting',
@@ -101,7 +102,7 @@ export default function CreateGame() {
 
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 space-y-5">
 
-                    {/* Nickname Input */}
+                    {/* Nickname */}
                     <div>
                         <label className="block text-sm font-bold mb-2 ml-1 flex items-center gap-2"><User size={16}/> Your Name</label>
                         <input
@@ -126,28 +127,13 @@ export default function CreateGame() {
                         </div>
                     </div>
 
-                    {/* Region - UPDATED UI */}
+                    {/* Region */}
                     <div>
                         <label className="block text-sm font-bold mb-2 ml-1">Game Mode</label>
                         <div className="grid grid-cols-3 gap-2">
-                            <button
-                                onClick={() => setRegion('world')}
-                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'world' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
-                            >
-                                World
-                            </button>
-                            <button
-                                onClick={() => setRegion('us')}
-                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'us' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
-                            >
-                                USA
-                            </button>
-                            <button
-                                onClick={() => setRegion('capitals')}
-                                className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'capitals' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}
-                            >
-                                Capitals
-                            </button>
+                            <button onClick={() => setRegion('world')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'world' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>World</button>
+                            <button onClick={() => setRegion('us')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'us' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>USA</button>
+                            <button onClick={() => setRegion('capitals')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'capitals' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>Capitals</button>
                         </div>
                     </div>
 
@@ -166,9 +152,23 @@ export default function CreateGame() {
                         <label className="block text-sm font-bold mb-2 ml-1 flex items-center gap-2"><Clock size={16}/> Time Limit</label>
                         <div className="grid grid-cols-3 gap-2">
                             {[30, 60, 120].map(sec => (
-                                <button key={sec} onClick={() => setTimeLimit(sec)} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${timeLimit === sec ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>{sec}s</button>
+                                <button key={sec} onClick={() => setTimeLeft(sec)} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${timeLimit === sec ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>{sec}s</button>
                             ))}
                         </div>
+                    </div>
+
+                    {/* ZMENA 3: Blur Mode Toggle */}
+                    <div>
+                        <button
+                            onClick={() => setIsBlurMode(!isBlurMode)}
+                            className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-between border-2 transition-all ${isBlurMode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'}`}
+                        >
+                            <span className="flex items-center gap-2"><EyeOff size={18} /> Blur Challenge Mode</span>
+                            <div className={`w-10 h-6 rounded-full relative transition-colors ${isBlurMode ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${isBlurMode ? 'left-5' : 'left-1'}`}></div>
+                            </div>
+                        </button>
+                        <p className="text-xs text-slate-400 mt-1 ml-1">Flags start blurry and clear up over time.</p>
                     </div>
 
                     <button

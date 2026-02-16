@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Globe, Swords, Moon, Sun, Heart, Coffee, ExternalLink } from "lucide-react"
+import { Globe, Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen } from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -20,6 +20,7 @@ export default function Home() {
     return (
         <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
+            {/* Theme Toggle */}
             <button
                 onClick={toggleTheme}
                 className="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform z-10"
@@ -27,36 +28,62 @@ export default function Home() {
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
-            <div className="flex-1 flex flex-col items-center justify-center w-full px-4 py-12">
-                <div className="text-center mb-12">
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full px-4 py-8">
+
+                {/* Logo Section */}
+                <div className="text-center mb-10">
                     <img src="/logo_white.png" alt="Logo" className="h-24 w-auto mx-auto mb-4 dark:hidden" />
                     <img src="/logo_dark.png" alt="Logo" className="h-24 w-auto mx-auto mb-4 hidden dark:block" />
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">Master geography one flag at a time.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Master geography one flag at a time.</p>
                 </div>
 
-                <div className="grid gap-4 w-full max-w-sm">
-                    <Link to="/play" className="group relative flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all hover:-translate-y-1">
-                        <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                            <Globe size={32} />
-                        </div>
-                        <div>
-                            <h2 className="font-bold text-lg">Single Player</h2>
-                            <p className="text-xs text-slate-500">Learn World & US flags</p>
-                        </div>
-                    </Link>
+                <div className="w-full max-w-md space-y-8">
 
-                    <Link to="/pvp/create" className="group relative flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
-                        <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-xl text-orange-500 group-hover:scale-110 transition-transform">
-                            <Swords size={32} />
+                    {/* Learning Section */}
+                    <div>
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Learning Path</h2>
+                        <Link to="/play" className="group relative flex items-center gap-4 p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all hover:-translate-y-1">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                                <BookOpen size={32} />
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-lg">Single Player</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Practice World & US flags with timer</p>
+                            </div>
+                        </Link>
+                    </div>
+
+                    {/* Challenges Section */}
+                    <div>
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
+                        <div className="grid grid-cols-2 gap-4">
+
+                            {/* PvP Card */}
+                            <Link to="/pvp/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
+                                <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-xl text-orange-500 w-fit mb-3 group-hover:scale-110 transition-transform">
+                                    <Swords size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">PvP Battle</h3>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">Challenge friends</p>
+                            </Link>
+
+                            {/* Blur Mode Card */}
+                            <Link to="/blur" className="group flex flex-col p-4 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg text-white hover:shadow-indigo-500/25 transition-all hover:-translate-y-1">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <EyeOff size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Blur Mode</h3>
+                                <p className="text-[10px] text-indigo-100/80">Guess blurry flags</p>
+                            </Link>
+
                         </div>
-                        <div>
-                            <h2 className="font-bold text-lg">PvP Battle</h2>
-                            <p className="text-xs text-slate-500">Challenge friends</p>
-                        </div>
-                    </Link>
+                    </div>
+
                 </div>
             </div>
 
+            {/* Footer - Unchanged */}
             <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2">
                 <div className="flex items-center gap-3">
                     <p className="flex items-center gap-1">

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { db } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
-import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun, Landmark } from "lucide-react"
+import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun, Landmark, EyeOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -34,6 +34,7 @@ type GameData = {
         region: 'world' | 'us' | 'capitals'
         timeLimit: number
         maxPlayers: number
+        isBlurMode?: boolean
     }
     players: Record<string, PlayerState>
 }
@@ -59,6 +60,8 @@ export default function PvPGame() {
     const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'correct' | 'error'>('idle')
     const [copied, setCopied] = useState(false)
     const [timeLeft, setTimeLeft] = useState(0)
+
+    const [blurAmount, setBlurAmount] = useState(0)
 
     const [gameFull, setGameFull] = useState(false)
     const [gameAborted, setGameAborted] = useState(false)
@@ -106,51 +109,66 @@ export default function PvPGame() {
                 setGameData(data)
 
                 const players = Object.values(data.players || {})
-                const anyoneLeft = players.some(p => p.left)
+                const activePlayers = players.filter(p => !p.left)
+                const activeCount = activePlayers.length
 
-                if (data.status === 'aborted' || anyoneLeft) {
+                if (data.status === 'aborted') {
                     setGameAborted(true)
-                    if (data.hostId === myId && data.status !== 'aborted' && anyoneLeft) {
-                        update(ref(db, `games/${gameId}`), { status: 'aborted' })
+                } else if (data.status === 'playing') {
+                    if (activeCount < 2) {
+                        setGameAborted(true)
+                        if (data.hostId === myId) {
+                            update(ref(db, `games/${gameId}`), { status: 'aborted' })
+                        }
+                    } else {
+                        const allActiveFinished = activePlayers.every(p => p.finished)
+                        if (allActiveFinished && activePlayers.length > 0) {
+                            if (data.hostId === myId) {
+                                update(ref(db, `games/${gameId}`), { status: 'finished' })
+                            }
+                        }
                     }
                 }
             }
         })
 
         return () => unsubscribe()
-    }, [gameId, needsName])
+    }, [gameId, needsName, myId])
 
 
     const tryJoinGame = (data: GameData, playerId: string) => {
         if (hasJoinedRef.current) return
 
-        const anyoneLeft = Object.values(data.players || {}).some(p => p.left)
-        if (data.status === 'aborted' || anyoneLeft) {
+        if (data.status === 'aborted') {
             setGameAborted(true)
             return
         }
 
-        if (data.players[playerId]) {
-            hasJoinedRef.current = true
-            setupPresence(playerId)
-            return
-        }
+        const isReconnecting = !!data.players[playerId]
 
-        const activePlayers = Object.keys(data.players || {}).length
-        if (activePlayers >= data.settings.maxPlayers) {
-            setGameFull(true)
-            return
-        }
+        if (!isReconnecting) {
+            if (data.status !== 'waiting') {
+                alert("Game already started! You cannot join now.")
+                navigate("/")
+                return
+            }
 
-        if (data.status !== 'waiting') {
-            alert("Game already started!")
-            navigate("/")
-            return
+            const currentCount = Object.keys(data.players || {}).length
+            if (currentCount >= data.settings.maxPlayers) {
+                setGameFull(true)
+                return
+            }
         }
 
         hasJoinedRef.current = true
-        const playerRef = ref(db, `games/${gameId}/players/${playerId}`)
 
+        if (isReconnecting) {
+            setupPresence(playerId)
+            update(ref(db, `games/${gameId}/players/${playerId}`), { left: false })
+            return
+        }
+
+        const playerRef = ref(db, `games/${gameId}/players/${playerId}`)
         set(playerRef, {
             name: myName,
             score: 0,
@@ -249,7 +267,12 @@ export default function PvPGame() {
     }
 
     const leaveGame = async () => {
-        if(confirm("Leave game? This will cancel the match for everyone.")) {
+        const activePlayersCount = gameData ? Object.values(gameData.players).filter(p => !p.left).length : 0
+        const msg = activePlayersCount <= 2
+            ? "Leave game? Since there are only 2 players, the game will be cancelled."
+            : "Leave game? The game will continue without you."
+
+        if(confirm(msg)) {
             if (myId) {
                 const myLeftRef = ref(db, `games/${gameId}/players/${myId}/left`)
                 await onDisconnect(myLeftRef).cancel()
@@ -269,20 +292,49 @@ export default function PvPGame() {
         update(ref(db, `games/${gameId}`), updates)
 
         const allPlayers = Object.values(gameData.players)
-        const finishedPlayers = allPlayers.filter(p => p.finished)
+        const activePlayers = allPlayers.filter(p => !p.left)
+        const othersActive = activePlayers.filter(p => p.name !== myName)
+        const othersFinished = othersActive.every(p => p.finished)
 
-        if (finishedPlayers.length >= allPlayers.length) {
+        if (othersFinished) {
             update(ref(db, `games/${gameId}`), { status: 'finished' })
         }
     }
 
+    // Helper variables to be used in blur effect and render
+    const myPlayer = gameData && myId ? gameData.players[myId] : null
+    const currentFlagCode = myPlayer && gameData ? gameData.flags[myPlayer.currentIndex] : null
+
+    // Logic to handle Blur Mode (starts only when playing)
+    useEffect(() => {
+        if (!gameData?.settings.isBlurMode) {
+            setBlurAmount(0)
+            return
+        }
+
+        if (gameData.status === 'playing' && feedbackStatus === 'idle') {
+            setBlurAmount(20)
+
+            const interval = setInterval(() => {
+                setBlurAmount(prev => {
+                    if (prev <= 0) {
+                        clearInterval(interval)
+                        return 0
+                    }
+                    return Math.max(0, prev - 0.25)
+                })
+            }, 100)
+            return () => clearInterval(interval)
+        } else {
+            setBlurAmount(0)
+        }
+    }, [currentFlagCode, feedbackStatus, gameData?.settings.isBlurMode, gameData?.status])
+
+
     const handleCheck = () => {
         if (!gameData || !myId || feedbackStatus !== 'idle') return
 
-        const myPlayer = gameData.players[myId]
-        const currentFlagCode = gameData.flags[myPlayer.currentIndex]
-
-        const flagObject = getFlagObject(currentFlagCode)
+        const flagObject = getFlagObject(currentFlagCode!)
         const userAns = normalize(input)
 
         let isCorrect = false
@@ -300,11 +352,13 @@ export default function PvPGame() {
             }
         }
 
+        setBlurAmount(0)
+
         if (isCorrect) {
             setFeedback("Correct! ✅")
             setFeedbackStatus('correct')
         } else {
-            setFeedback(`Wrong ❌ It was: ${getCorrectAnswerDisplay(currentFlagCode)}`)
+            setFeedback(`Wrong ❌ It was: ${getCorrectAnswerDisplay(currentFlagCode!)}`)
             setFeedbackStatus('error')
         }
 
@@ -329,7 +383,7 @@ export default function PvPGame() {
                     finishMyGame()
                 }
             })
-        }, 600)
+        }, 1500)
     }
 
     // --- RENDER ---
@@ -375,7 +429,7 @@ export default function PvPGame() {
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Connection Lost</h1>
                     <p className="text-slate-500 mb-8">
-                        A player has disconnected or left the game.<br/>
+                        Not enough players to continue.<br/>
                         The match has been cancelled.
                     </p>
                     <Link to="/" className="block w-full py-4 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
@@ -403,7 +457,6 @@ export default function PvPGame() {
 
     const isMeHost = gameData.hostId === myId
     const allPlayers = Object.entries(gameData.players).map(([id, p]) => ({ ...p, id }))
-    const myPlayer = gameData.players[myId]
 
     if (gameData.status === 'waiting') {
         const activePlayersCount = allPlayers.filter(p => !p.left).length
@@ -426,11 +479,16 @@ export default function PvPGame() {
                     </div>
                     <h1 className="text-3xl font-bold mb-2">Game Lobby</h1>
 
-                    {/* Zobrazenie zvoleneho modu v lobby */}
                     <div className="mb-4">
-                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-bold uppercase mr-2">
                             {gameData.settings.region === 'capitals' ? 'Capitals Mode' : (gameData.settings.region === 'us' ? 'USA Mode' : 'World Mode')}
                         </span>
+                        {/* Blur mode indicator */}
+                        {gameData.settings.isBlurMode && (
+                            <span className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold uppercase inline-flex items-center gap-1">
+                                <EyeOff size={12}/> Blur
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex justify-center items-center gap-4 text-slate-500 dark:text-slate-400 mb-6 text-sm">
@@ -481,7 +539,7 @@ export default function PvPGame() {
         )
     }
 
-    if (gameData.status === 'finished' || (myPlayer?.finished && allPlayers.every(p => p.finished))) {
+    if (gameData.status === 'finished' || (myPlayer?.finished && Object.values(gameData.players).filter(p=>!p.left).every(p => p.finished))) {
         const sortedPlayers = [...allPlayers].sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score
             const timeA = (a.finishedAt || Infinity) - gameData.startTime
@@ -546,7 +604,6 @@ export default function PvPGame() {
         )
     }
 
-    const currentFlagCode = gameData.flags[myPlayer.currentIndex]
     const otherPlayers = allPlayers.filter(p => p.id !== myId).sort((a,b) => b.score - a.score)
 
     return (
@@ -615,13 +672,17 @@ export default function PvPGame() {
                     className="bg-white dark:bg-slate-800 p-6 sm:p-10 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-8 relative mx-4 mt-4"
                 >
                     <div className="w-full h-48 sm:h-56 flex justify-center">
-                        <img src={getFlagImage(currentFlagCode)} alt="Flag" className="h-full w-auto object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />
+                        <img
+                            src={getFlagImage(currentFlagCode!)}
+                            alt="Flag"
+                            style={{ filter: `blur(${blurAmount}px)`, transition: 'filter 0.1s linear' }}
+                            className="h-full w-auto object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700"
+                        />
                     </div>
 
                     <div className="w-full space-y-4">
-                        {/* Zobrazenie napovedy */}
                         <div className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
-                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode)}` : "Identify the Flag"}
+                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode!)}` : "Identify the Flag"}
                         </div>
 
                         <input

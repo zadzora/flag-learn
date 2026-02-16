@@ -301,11 +301,11 @@ export default function PvPGame() {
         }
     }
 
-    // Helper variables to be used in blur effect and render
+    // Helper variables
     const myPlayer = gameData && myId ? gameData.players[myId] : null
     const currentFlagCode = myPlayer && gameData ? gameData.flags[myPlayer.currentIndex] : null
 
-    // Logic to handle Blur Mode (starts only when playing)
+    // Logic to handle Blur Mode
     useEffect(() => {
         if (!gameData?.settings.isBlurMode) {
             setBlurAmount(0)
@@ -332,9 +332,9 @@ export default function PvPGame() {
 
 
     const handleCheck = () => {
-        if (!gameData || !myId || feedbackStatus !== 'idle') return
+        if (!gameData || !myId || feedbackStatus !== 'idle' || !currentFlagCode) return
 
-        const flagObject = getFlagObject(currentFlagCode!)
+        const flagObject = getFlagObject(currentFlagCode)
         const userAns = normalize(input)
 
         let isCorrect = false
@@ -358,7 +358,7 @@ export default function PvPGame() {
             setFeedback("Correct! ✅")
             setFeedbackStatus('correct')
         } else {
-            setFeedback(`Wrong ❌ It was: ${getCorrectAnswerDisplay(currentFlagCode!)}`)
+            setFeedback(`Wrong ❌ It was: ${getCorrectAnswerDisplay(currentFlagCode)}`)
             setFeedbackStatus('error')
         }
 
@@ -606,6 +606,15 @@ export default function PvPGame() {
 
     const otherPlayers = allPlayers.filter(p => p.id !== myId).sort((a,b) => b.score - a.score)
 
+    // THIS IS THE CRITICAL FIX: Guard clause to prevent rendering if data is missing
+    if (!myPlayer || !currentFlagCode) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
+                <Loader2 className="animate-spin mr-2"/> Connecting to game...
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen flex flex-col items-center pt-8 font-sans bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
@@ -673,7 +682,7 @@ export default function PvPGame() {
                 >
                     <div className="w-full h-48 sm:h-56 flex justify-center">
                         <img
-                            src={getFlagImage(currentFlagCode!)}
+                            src={getFlagImage(currentFlagCode)}
                             alt="Flag"
                             style={{
                                 filter: `blur(${blurAmount}px) grayscale(${(blurAmount / 20) * 100}%)`,
@@ -685,7 +694,7 @@ export default function PvPGame() {
 
                     <div className="w-full space-y-4">
                         <div className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
-                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode!)}` : "Identify the Flag"}
+                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode)}` : "Identify the Flag"}
                         </div>
 
                         <input

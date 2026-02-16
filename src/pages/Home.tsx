@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Globe, Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen } from "lucide-react"
+import { Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen } from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {

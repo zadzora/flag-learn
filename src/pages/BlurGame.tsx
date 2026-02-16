@@ -67,6 +67,18 @@ export default function BlurGame() {
         }
     }, [])
 
+    // --- AUTO FOCUS FIX ---
+    // This effect runs whenever loading finishes.
+    // It grabs focus immediately after the input becomes enabled.
+    useEffect(() => {
+        if (!isImageLoading && status === 'idle') {
+            // Small timeout to ensure the DOM has updated the 'disabled' attribute to false
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 10)
+        }
+    }, [isImageLoading, status])
+
     // --- BLUR EFFECT LOOP ---
     useEffect(() => {
         if (showIntro || status !== 'idle' || !current || isImageLoading || isGameOver) {
@@ -80,7 +92,6 @@ export default function BlurGame() {
                     return 0
                 }
                 // Calculation: 20px blur / (7000ms / 50ms) = 20 / 140 = ~0.143 per tick
-                // This ensures full clear in exactly 7 seconds
                 return Math.max(0, prev - 0.143)
             })
         }, 50)
@@ -115,7 +126,8 @@ export default function BlurGame() {
         setStatus('idle')
         setFeedbackMsg(null)
 
-        setTimeout(() => inputRef.current?.focus(), 50)
+        // Removed the setTimeout focus here, because input is disabled at this point.
+        // The new useEffect handles it when isImageLoading becomes false.
     }
 
     function normalize(str: string) {
@@ -146,7 +158,6 @@ export default function BlurGame() {
             setScore(s => s + pointsEarned)
             setFeedbackMsg(`Correct! +${pointsEarned} pts 🚀`)
 
-            // Fast transition: 0.8s
             setTimeout(() => pickNextFlag(pool), 800)
         } else {
             setStatus('error')
@@ -154,7 +165,6 @@ export default function BlurGame() {
             const correctName = Array.isArray(current.name) ? current.name[0] : current.name
             setFeedbackMsg(`Wrong ❌ It was: ${correctName}`)
 
-            // Fast transition: 1.5s
             setTimeout(() => pickNextFlag(pool), 1500)
         }
     }

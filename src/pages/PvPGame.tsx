@@ -606,7 +606,7 @@ export default function PvPGame() {
 
     const otherPlayers = allPlayers.filter(p => p.id !== myId).sort((a,b) => b.score - a.score)
 
-    // THIS IS THE CRITICAL FIX: Guard clause to prevent rendering if data is missing
+    //Guard clause to prevent rendering if data is missing
     if (!myPlayer || !currentFlagCode) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400">

@@ -83,7 +83,7 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Footer - Unchanged */}
+            {/* Footer */}
             <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2">
                 <div className="flex items-center gap-3">
                     <p className="flex items-center gap-1">

@@ -290,16 +290,12 @@ export default function BlurGame() {
                             </div>
                         )}
 
-                        {/* ZMENA TU: Pridaný grayscale filter */}
                         <img
                             key={current.code}
                             src={current.image}
                             alt="Guess the flag"
                             onLoad={() => setIsImageLoading(false)}
                             style={{
-                                // Kombinujeme filtre:
-                                // 1. blur(${blurAmount}px) - existujúce rozmazanie
-                                // 2. grayscale(${(blurAmount / MAX_BLUR) * 100}%) - čím väčší blur, tým viac je obrázok čierno-biely (na začiatku 100%, na konci 0%)
                                 filter: `blur(${blurAmount}px) grayscale(${(blurAmount / MAX_BLUR) * 100}%)`,
                                 transition: 'filter 0.1s linear',
                                 opacity: isImageLoading ? 0 : 1

@@ -13,7 +13,6 @@ export default function CreateGame() {
     const [timeLimit, setTimeLeft] = useState(60)
     const [maxPlayers, setMaxPlayers] = useState(2)
     const [region, setRegion] = useState<'world' | 'us' | 'capitals'>('world')
-    // ZMENA 1: Novy state pre Blur Mode
     const [isBlurMode, setIsBlurMode] = useState(false)
     const [nickname, setNickname] = useState("")
 
@@ -55,7 +54,7 @@ export default function CreateGame() {
                 region,
                 timeLimit,
                 maxPlayers,
-                isBlurMode // ZMENA 2: Ulozime nastavenie
+                isBlurMode
             },
             flags: selectedFlags,
             status: 'waiting',
@@ -157,7 +156,7 @@ export default function CreateGame() {
                         </div>
                     </div>
 
-                    {/* ZMENA 3: Blur Mode Toggle */}
+                    {/* Blur Mode Toggle */}
                     <div>
                         <button
                             onClick={() => setIsBlurMode(!isBlurMode)}

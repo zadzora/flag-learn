@@ -700,8 +700,26 @@ export default function Game() {
                         totalStats.percent === 100 && !isPracticeMode && (
                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4">
                                 <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce"><Trophy size={64} /></div>
-                                <div><h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Flag Master!</h2><p className="text-slate-500 dark:text-slate-400">Incredible! You have mastered all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> {gameMode === 'world' ? 'flags of the world' : 'US state flags'}!
-                                </p></div>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+                                        Flag Master!
+                                    </h2>
+
+                                    <p className="text-slate-500 dark:text-slate-400">
+                                        Incredible! You have mastered all{" "}
+                                        <strong className="text-indigo-600 dark:text-indigo-400">
+                                            {totalStats.total}
+                                        </strong>{" "}
+                                        {gameMode === "world"
+                                            ? "flags of the world"
+                                            : gameMode === "us"
+                                                ? "US state flags"
+                                                : gameMode === "capitals"
+                                                    ? "world capitals"
+                                                    : ""}
+                                        !
+                                    </p>
+                                </div>
                                 <div className="w-full flex flex-col gap-3">
                                     <button onClick={handleShare} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Share2 size={20} /> Share Success</button>
                                     <button onClick={() => startPracticeMode()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Dumbbell size={20} /> Keep Practicing</button>

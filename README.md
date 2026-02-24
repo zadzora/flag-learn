@@ -8,7 +8,7 @@ An interactive geography quiz game built with React, TypeScript, and Tailwind CS
 
 ---
 
-### 🚀 **Live Demo:** [https://flag-learn-red.vercel.app/](https://flag-learn-red.vercel.app/)
+### 🚀 **Live Demo:** [https://www.flaglearn.eu/](https://www.flaglearn.eu/)
 
 ---
 

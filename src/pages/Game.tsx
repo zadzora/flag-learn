@@ -500,7 +500,7 @@ export default function Game() {
         const shareData = {
             title: 'Flag Learn 🌍',
             text: `🏆 I just mastered ${totalStats.total} ${modeTitle} flags in Flag Learn! Can you match me? 🔥`,
-            url: 'https://flag-learn-red.vercel.app/'
+            url: 'https://www.flaglearn.eu/'
         }
 
         try {

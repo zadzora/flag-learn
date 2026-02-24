@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen } from "lucide-react"
+import { Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen, Calendar} from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -57,10 +57,19 @@ export default function Home() {
                     {/* Challenges Section */}
                     <div>
                         <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                            {/* Daily Flagle Card - Nové! */}
+                            <Link to="/daily" className="group flex flex-col p-4 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Calendar size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Daily Flagle</h3>
+                                <p className="text-[10px] text-emerald-100/90">New flag every day</p>
+                            </Link>
 
                             {/* PvP Card */}
-                            <Link to="/pvp/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
+                            <Link to="/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
                                 <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-xl text-orange-500 w-fit mb-3 group-hover:scale-110 transition-transform">
                                     <Swords size={24} />
                                 </div>

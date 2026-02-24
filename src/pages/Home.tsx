@@ -69,7 +69,7 @@ export default function Home() {
                             </Link>
 
                             {/* PvP Card */}
-                            <Link to="/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
+                            <Link to="/pvp/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
                                 <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-xl text-orange-500 w-fit mb-3 group-hover:scale-110 transition-transform">
                                     <Swords size={24} />
                                 </div>

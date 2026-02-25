@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check,RefreshCw , RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark } from "lucide-react"
+import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark, Unlock } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 
@@ -45,7 +45,7 @@ export default function Game() {
         if (gameMode === 'capitals') {
             return (worldData as unknown as Flag[]).filter(f => f.capital && f.capital[0] !== null)
         }
-        return worldData as unknown as Flag[] // Pridany cast
+        return worldData as unknown as Flag[]
     }, [gameMode])
 
     const activeStorageKey = useMemo(() => {
@@ -65,6 +65,7 @@ export default function Game() {
     const [showGallery, setShowGallery] = useState(false)
     const [progress, setProgress] = useState<Record<string, FlagProgress>>({})
     const [isLoaded, setIsLoaded] = useState(false)
+    const [showCheatConfirm, setShowCheatConfirm] = useState(false) // State pre Cheat button
 
     // Tutorial & Selection
     const [tutorialDismissed, setTutorialDismissed] = useState(() => {
@@ -130,6 +131,7 @@ export default function Game() {
         setIsPracticeMode(false)
         setPracticeResults(null)
         setShowGallery(false)
+        setShowCheatConfirm(false)
         setSelectedFlags([])
         setCurrent(null)
         setStatus('idle')
@@ -141,7 +143,6 @@ export default function Game() {
     // --- HELPERS ---
     function getCorrectAnswerDisplay(flag: Flag): string {
         if (gameMode === 'capitals' && flag.capital) {
-            // Pridame || "" pre istotu, aby sme vratili string
             return flag.capital[0] || ""
         }
         if (Array.isArray(flag.name)) return flag.name[0]
@@ -225,12 +226,36 @@ export default function Game() {
         }
     }
 
+    // --- CHEAT FUNCTION ---
+    function handleCheatProgress() {
+        if (!showCheatConfirm) {
+            setShowCheatConfirm(true)
+            // Po 5 sekundach sa tlacidlo vrati do povodneho stavu ak hrac neklikne
+            setTimeout(() => setShowCheatConfirm(false), 5000)
+        } else {
+            // Potvrdene odomknutie vsetkeho
+            const newProgress = { ...progress }
+            activeData.forEach(f => {
+                newProgress[f.code] = { streak: TARGET_STREAK, seen: 1 }
+            })
+            setProgress(newProgress)
+            setShowCheatConfirm(false)
+            setCurrent(null) // Resetneme aktualnu vlajku, aby hra videla ze je vsetko mastered
+        }
+    }
+
     function handleOpenGallery() {
         setShowGallery(true)
+        setShowCheatConfirm(false)
         if (!tutorialDismissed && gameMode === 'world') {
             setTutorialDismissed(true)
             localStorage.setItem(TUTORIAL_KEY, "true")
         }
+    }
+
+    function closeGallery() {
+        setShowGallery(false)
+        setShowCheatConfirm(false)
     }
 
     function toggleFlagSelection(code: string) {
@@ -367,6 +392,7 @@ export default function Game() {
         setPracticeStartTime(Date.now())
         setPracticeElapsedTime(0)
         setShowGallery(false)
+        setShowCheatConfirm(false)
         pickPracticeFlag(shuffled)
     }
 
@@ -410,7 +436,6 @@ export default function Game() {
 
         if (gameMode === 'capitals') {
             if (current.capital && Array.isArray(current.capital)) {
-                // OPRAVA: Pridaná kontrola (typeof c === 'string'), aby sme si boli istí, že to nie je null
                 isCorrect = current.capital.some(c => (typeof c === 'string') && normalize(c) === userAns)
             }
         } else {
@@ -626,23 +651,19 @@ export default function Game() {
                                 {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />}
                                 {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />}
 
-                                {/* Standard Streak Badge */}
                                 {!isPracticeMode && !isReview && (
                                     <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">🔥 {progress[current.code]?.streak || 0}/3</div>
                                 )}
 
-                                {/* Practice Mode Badge (Chybal) */}
                                 {isPracticeMode && (
                                     <div className="absolute -top-3 -right-3 bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><Dumbbell size={12} /> Practice</div>
                                 )}
 
-                                {/* Review Badge (Chybal - toto je to, co si hladal) */}
                                 {!isPracticeMode && isReview && (
                                     <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Review</div>
                                 )}
                             </div>
 
-                            {/* New Flag Banner */}
                             {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
                                 <div className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col items-center animate-pulse">
                                     <span className="text-xs uppercase tracking-wider font-bold opacity-70 mb-1">New Flag!</span>
@@ -743,7 +764,7 @@ export default function Game() {
             {/* --- GALLERY MODAL --- */}
             <AnimatePresence>
                 {showGallery && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeGallery}>
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900 gap-4">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -752,13 +773,26 @@ export default function Game() {
                                         <button onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }} disabled={selectedFlags.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedFlags.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}</button>
                                         <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
                                             <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress"><RotateCcw size={20} /></button>
-                                            <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"><X size={24} className="text-slate-500 dark:text-slate-400" /></button>
+                                            <button onClick={closeGallery} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"><X size={24} className="text-slate-500 dark:text-slate-400" /></button>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <div className="flex flex-wrap items-center gap-3 text-sm pt-2 border-t border-slate-200 dark:border-slate-800">
                                     <button onClick={selectAllMastered} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><CheckSquare size={16} /> Select All Mastered</button>
                                     <button onClick={deselectAll} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><Square size={16} /> Clear Selection</button>
+
+                                    {/* CHEAT BUTTON */}
+                                    <div className="ml-auto flex items-center">
+                                        {showCheatConfirm ? (
+                                            <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-bold px-3 py-1 rounded bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors animate-pulse">
+                                                <Unlock size={16} /> Unlock all flags? Click to confirm!
+                                            </button>
+                                        ) : (
+                                            <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                                                <Unlock size={16} /> Cheat Progress
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-slate-950">

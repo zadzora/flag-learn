@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 360 360">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #bfbfbf;
+        stroke-linecap: round;
+        stroke-width: 3px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke-linejoin: round;
+      }
+
+      .cls-3 {
+        fill: #fff;
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        stroke: #fff;
+        stroke-width: .8px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M138.6,93.8l-19.7,11.3s-16.6,37.7,23.1,98.9,97.1,76.7,97.1,76.7l17.3-9.1s-42.3.9-95.6-78.5c0,0-33.7-55.2-22.2-99.3Z"/>
+  <line class="cls-1" x1="162.5" y1="195.7" x2="210.7" y2="162.7"/>
+  <line class="cls-1" x1="137.3" y1="101.5" x2="252.2" y2="265.6"/>
+  <path class="cls-1" d="M245,269.5c.8-7.6,1.4-41.6-43-103.9-40.3-56.5-59.4-60-65.5-59.1"/>
+  <path class="cls-1" d="M138.6,93.8s32.6-12.6,87.1,70.1,30.6,107.7,30.6,107.7"/>
+  <polyline class="cls-2" points="197.6 150.3 140.9 98 151.6 193.4 252.2 265.6 207.2 160.1"/>
+  <circle class="cls-3" cx="151.6" cy="193.4" r="4.4" transform="translate(-43.6 342.7) rotate(-89.3)"/>
+  <circle class="cls-3" cx="252.2" cy="265.6" r="4.4" transform="translate(-16.4 514.6) rotate(-89.3)"/>
+  <circle class="cls-3" cx="140.9" cy="98" r="3.5" transform="translate(41.2 237.6) rotate(-89.3)"/>
+  <circle class="cls-3" cx="207.2" cy="160.1" r="3.5" transform="translate(44.6 365.3) rotate(-89.3)"/>
+  <circle class="cls-3" cx="197.6" cy="150.3" r="3.5" transform="translate(44.9 346) rotate(-89.3)"/>
+</svg>

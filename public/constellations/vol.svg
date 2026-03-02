@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 360 360">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #bfbfbf;
+        stroke-linecap: round;
+        stroke-width: 3px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke-linejoin: round;
+      }
+
+      .cls-3 {
+        fill: #fff;
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        stroke: #fff;
+        stroke-width: .8px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M164.7,153.9c-23.9-61.2-139.5-26.6-139.5-26.6,0,0,20.3,1,45.9,10.8,25.6,9.8,76,21.9,86,22.1"/>
+  <path class="cls-1" d="M195.6,170.3s26.9-10,35.4-14.3,37.4-2,50.7-.2,25.4-1.2,21.3-1.7-16-4.3-17.1-5.7,8.6-4.5,10-6-21.8,3.3-33.9,2.7-52.2-1.5-71.5-.2-31.4,13.8-38.4,19.6-13.3,11.3-13.3,11.3c0,0-3.5,3.3,2.8,4.8s33.3-5.3,37.4-5.5"/>
+  <path class="cls-1" d="M175.8,171.8s-5.5-3.5-3-4.8,24.3,3.7,36.9,5.8,49.7,9.1,70.5,44.4,25.4,55.5,20,52.4-44.2-34.3-66.2-48.2-58.2-49.5-58.2-49.5h0Z"/>
+  <polygon class="cls-2" points="74.4 134.6 147.8 117.9 185.2 166.1 74.4 134.6"/>
+  <polygon class="cls-2" points="285.6 216.1 282.2 162.1 185.2 166.1 285.6 216.1"/>
+  <circle class="cls-3" cx="74.4" cy="134.6" r="2.1"/>
+  <circle class="cls-3" cx="185.2" cy="166.1" r="2.1"/>
+  <circle class="cls-3" cx="285.6" cy="216.1" r="2.1"/>
+  <circle class="cls-3" cx="147.8" cy="117.9" r="2.1"/>
+  <circle class="cls-3" cx="282.2" cy="162.1" r="2.1"/>
+  <path class="cls-1" d="M188.6,144.7s.8-7.3,4-8.8,12,1,15.1,0,11.8-.3,8.6,1.2-1.8,6.8-1.8,6.8"/>
+</svg>

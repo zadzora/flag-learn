@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Swords, Moon, Sun, Heart, Coffee, ExternalLink, EyeOff, BookOpen, Calendar} from "lucide-react"
+import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy} from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -38,7 +38,7 @@ export default function Home() {
                     <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Master geography one flag at a time.</p>
                 </div>
 
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md sm:max-w-2xl space-y-8">
 
                     {/* Learning Section */}
                     <div>
@@ -59,13 +59,22 @@ export default function Home() {
                         <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-                            {/* Daily Flagle Card - Nové! */}
+                            {/* Daily Flagle Card */}
                             <Link to="/daily" className="group flex flex-col p-4 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
                                 <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
                                     <Calendar size={24} />
                                 </div>
                                 <h3 className="font-bold text-base">Daily Flagle</h3>
                                 <p className="text-[10px] text-emerald-100/90">New flag every day</p>
+                            </Link>
+
+                            {/* Map Mode Card */}
+                            <Link to="/map" className="group flex flex-col p-4 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Map size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Map Locator</h3>
+                                <p className="text-[10px] text-blue-100/90">Find countries on map</p>
                             </Link>
 
                             {/* PvP Card */}
@@ -86,9 +95,41 @@ export default function Home() {
                                 <p className="text-[10px] text-indigo-100/80">Guess blurry flags</p>
                             </Link>
 
-                        </div>
-                    </div>
+                            {/* --- ULTIMATE MODE CARD (Horizontálna širšia karta) --- */}
+                            <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
+                                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl text-white group-hover:scale-110 transition-transform shadow-md shrink-0 mt-1">
+                                    <Trophy size={36} />
+                                </div>
+                                <div className="flex flex-col text-center sm:text-left">
+                                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-2">Ultimate Mode</h2>
+                                    <p className="text-[12px] text-indigo-100/80">
+                                        The ultimate test! Locate the flag on the map, then name the country and its capital to conquer the world.
+                                    </p>
+                                </div>
+                            </Link>
 
+                        </div>
+
+                    </div>
+                    {/* EXTRAS SECTION */}
+                    <section className="w-full mt-4">
+                        <div className="flex items-center gap-2 mb-4 px-2">
+                            <Star size={20} className="text-indigo-400" />
+                            <h2 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Extras</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            <Link to="/constellations" className="group flex items-center p-4 bg-slate-900 rounded-2xl shadow-md hover:scale-[1.02] transition-all border border-slate-800">
+                                <div className="bg-indigo-900/50 p-3 rounded-xl text-indigo-400 mr-4 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                    <Star size={24} className="fill-current" />
+                                </div>
+                                <div className="flex flex-col text-left">
+                                    <h3 className="font-bold text-lg text-white">Constellations</h3>
+                                    <p className="text-xs text-slate-400">Map the night sky stars</p>
+                                </div>
+                            </Link>
+                        </div>
+                    </section>
                 </div>
             </div>
 

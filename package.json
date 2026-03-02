@@ -14,9 +14,11 @@
     "firebase": "^12.9.0",
     "framer-motion": "^12.33.0",
     "lucide-react": "^0.563.0",
+    "prop-types": "^15.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.0"
+    "react-router-dom": "^7.13.0",
+    "react-simple-maps": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -24,6 +26,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/react-simple-maps": "^3.0.6",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",

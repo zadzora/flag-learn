@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Globe, Lightbulb } from "lucide-react"
+import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Coffee, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Lightbulb } from "lucide-react"
 import constData from "../../data/constellations.json"
 
 // --- TYPES ---
@@ -184,7 +184,7 @@ export default function ConstellationGame() {
     })
 
     // Theme State
-    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const [theme] = useState<'light' | 'dark'>(() => {
         if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
         return 'light'
     })

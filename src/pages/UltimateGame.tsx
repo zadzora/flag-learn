@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, X, Timer, Repeat, Sun, Moon, MapPin, Flag as FlagIcon, Landmark, AlertTriangle } from "lucide-react"
+import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, X, Timer, Repeat, Sun, Moon, MapPin, Flag as FlagIcon, Landmark, AlertTriangle } from "lucide-react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import worldData from "../../data/flags.json"
 

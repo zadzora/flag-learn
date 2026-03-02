@@ -319,10 +319,6 @@ export default function MapGame() {
         setPosition({ coordinates: [0, 0], zoom: 1 })
     }
 
-    function handleMoveEnd(pos: any) {
-        setPosition(pos)
-    }
-
     function handleCountryClick(geo: any) {
         if (status !== 'idle' || !current) return
 

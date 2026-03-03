@@ -95,7 +95,7 @@ export default function Home() {
                                 <p className="text-[10px] text-indigo-100/80">Guess blurry flags</p>
                             </Link>
 
-                            {/* --- ULTIMATE MODE CARD (Horizontálna širšia karta) --- */}
+                            {/* --- ULTIMATE MODE CARD --- */}
                             <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
                                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl text-white group-hover:scale-110 transition-transform shadow-md shrink-0 mt-1">
                                     <Trophy size={36} />

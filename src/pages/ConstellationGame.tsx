@@ -12,7 +12,7 @@ type Constellation = {
         en: string[]
         sk: string[]
         la: string[]
-        [key: string]: string[] // Pre buduce jazyky
+        [key: string]: string[]
     }
     stars: [number, number, number?][]
     lines: [number, number][]
@@ -23,7 +23,7 @@ type Progress = { streak: number; seen: number }
 type Language = 'en' | 'sk'
 
 const TARGET_STREAK = 3
-const BATCH_SIZE = 5 // Mensie pre suhvezdia, kedze su tazsie
+const BATCH_SIZE = 8
 const THEME_KEY = "flag-master-theme"
 const LANG_KEY = "constellation-lang"
 const STORAGE_KEY = "flag-master-constellations-v1"
@@ -31,7 +31,6 @@ const STORAGE_KEY = "flag-master-constellations-v1"
 // --- SVG RENDERER KOMPONENT ---
 function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { stars: [number, number, number?][], lines: [number, number][], isThumb?: boolean, artUrl?: string }) {
 
-    // --- DYNAMICKÝ VÝPOČET VEĽKOSTI (Auto-Zoom) ---
     let viewBox = "0 0 100 100";
 
     if (stars.length > 0) {
@@ -57,11 +56,8 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
         viewBox = `${vbX} ${vbY} ${totalSize} ${totalSize}`;
     }
 
-    // DÔLEŽITÉ: Ak máme obrázok, vypneme auto-zoom.
-    // Obrázok tak bude vidieť celý na 100x100 ploche a nebude orezaný podľa nesediacich hviezd.
     const finalViewBox = artUrl ? "0 0 100 100" : viewBox;
 
-    // Polomer pevného jadra hviezdy
     const getStarRadius = (sizeParam?: number) => {
         if (sizeParam === 2) return isThumb ? 1.0 : 0.8;     // Dim
         if (sizeParam === 1) return isThumb ? 1.8 : 1.4;     // Medium
@@ -71,7 +67,6 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
     return (
         <div className={`w-full h-full bg-black flex items-center justify-center border border-slate-800 shadow-inner relative overflow-hidden ${isThumb ? 'rounded-xl p-1' : 'rounded-lg p-0'}`}>
 
-            {/* --- NÁDHERNÉ VESMÍRNE POZADIE --- */}
             <div className="absolute inset-0 bg-slate-950"></div>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/30 via-slate-950/80 to-transparent"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(56,189,248,0.08)_0%,_transparent_60%)]"></div>
@@ -81,9 +76,7 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
                 className="w-full h-full overflow-visible z-10 transition-all duration-700 ease-in-out"
                 preserveAspectRatio="xMidYMid meet"
             >
-                {/* ROZHODOVACÍ BLOK: Zobrazíme BUĎ obrázok, ALEBO hviezdy s čiarami */}
                 {artUrl ? (
-                    /* UMELECKÁ KRESBA */
                     <image
                         href={artUrl}
                         x="0" y="0" width="100" height="100"
@@ -92,9 +85,7 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
                         className="animate-in fade-in duration-1000"
                     />
                 ) : (
-                    /* HVIEZDY A ČIARY */
                     <>
-                        {/* ČIARY SÚHVEZDIA */}
                         {lines.map((line, i) => {
                             const start = stars[line[0]]
                             const end = stars[line[1]]
@@ -111,7 +102,6 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
                             )
                         })}
 
-                        {/* HVIEZDY - ŽIARA (Glow) */}
                         {stars.map((star, i) => {
                             const radius = getStarRadius(star[2]);
                             const baseOpacity = 0.35;
@@ -139,7 +129,6 @@ function ConstellationRenderer({ stars, lines, isThumb = false, artUrl }: { star
                             )
                         })}
 
-                        {/* HVIEZDY - OSTRÉ JADRO */}
                         {stars.map((star, i) => {
                             const radius = getStarRadius(star[2]);
                             return (
@@ -174,7 +163,6 @@ export default function ConstellationGame() {
     const [isReview, setIsReview] = useState(false)
     const [sessionStreak, setSessionStreak] = useState(0)
 
-    // Novy stav pre HINT (zobrazenie obrazka namiesto ciar pocas hry)
     const [showHint, setShowHint] = useState(false)
 
     // Lang State
@@ -282,7 +270,6 @@ export default function ConstellationGame() {
 
         setShowHint(prev => !prev);
 
-        // Penalizácia: Ak si vypýta hint a ešte to nemá na full, vrátime ho v ohníčkoch na nulu
         if (!showHint && progress[current.code] && progress[current.code].streak > 0 && progress[current.code].streak < TARGET_STREAK) {
             const newProgress = { ...progress }
             newProgress[current.code] = { ...progress[current.code], streak: 0 }
@@ -295,7 +282,7 @@ export default function ConstellationGame() {
     function pickRandomItem(currentProgress: Record<string, Progress>) {
         if (practiceResults) return
 
-        setShowHint(false) // Vzdy skryjeme hint pri novom suhvezdi
+        setShowHint(false)
 
         const totalItems = activeData.length
         const masteredCount = Object.values(currentProgress).filter(p => p.streak >= TARGET_STREAK).length
@@ -444,10 +431,8 @@ export default function ConstellationGame() {
         <div className={`min-h-screen flex flex-col items-center justify-start pt-8 font-sans transition-colors duration-500 relative
             ${isPracticeMode ? 'bg-indigo-950 text-indigo-100' : 'bg-slate-950 text-slate-100'}`}
         >
-            {/* Tlacidlo spat - posunute nizsie aby nekolodovalo s practice bannerom */}
             <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900 shadow-md border border-slate-700 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-16' : 'top-4'}`}><ArrowLeft size={20} /></Link>
 
-            {/* Jazyky a Tema - posunute nizsie pocas practice */}
             <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-16' : 'top-4'}`}>
                 {/* LANGUAGE SELECTOR */}
                 <div className="flex bg-slate-900/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-slate-700">
@@ -523,7 +508,6 @@ export default function ConstellationGame() {
                                     autoFocus autoComplete="off"
                                 />
 
-                                {/* Tlacidlo napovedy */}
                                 {status === 'idle' && progress[current.code]?.seen !== 0 && (
                                     <button
                                         onClick={toggleHint}
@@ -652,7 +636,7 @@ export default function ConstellationGame() {
                     </a>
                 </div>
 
-                {/* KREDIT PRE NOIRLab */}
+                {/* NOIRLab credit*/}
                 <a href="https://noirlab.edu/public/education/constellations/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 mt-1 hover:text-indigo-400 transition-colors">
                     Constellation art provided by NOIRLab/NSF/AURA <ExternalLink size={12} />
                 </a>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, Copy, Trash2, Undo, Move } from "lucide-react"
 import constData from "../../data/constellations.json"
 
-// Typ pre hviezdu: [x, y, velkost?] (0/undefined=bright, 1=medium, 2=dim)
+// (0/undefined=bright, 1=medium, 2=dim)
 type StarPoint = [number, number, number?]
 
 export default function ConstellationBuilder() {
@@ -11,13 +11,11 @@ export default function ConstellationBuilder() {
     const [selectedCode, setSelectedCode] = useState<string>(allConstellations[0].code)
     const current = allConstellations.find(c => c.code === selectedCode) || allConstellations[0]
 
-    // --- OVLÁDANIE OBRÁZKA (Teraz aj s X a Y) ---
     const [bgImage, setBgImage] = useState<string>("")
     const [bgScale, setBgScale] = useState<number>(100)
     const [bgOffsetX, setBgOffsetX] = useState<number>(0)
     const [bgOffsetY, setBgOffsetY] = useState<number>(0)
 
-    // --- INTERAKTÍVNE STAVY ---
     const [localStars, setLocalStars] = useState<StarPoint[]>([])
     const [localLines, setLocalLines] = useState<[number, number][]>([])
     const [connectingFrom, setConnectingFrom] = useState<number | null>(null)
@@ -30,7 +28,6 @@ export default function ConstellationBuilder() {
         setConnectingFrom(null)
     }, [current.code])
 
-    // --- FUNKCIA: Ľavý klik = Nová hviezda s vybranou veľkosťou ---
     const handleSvgClick = (e: React.MouseEvent) => {
         if (e.button !== 0 || !svgRef.current) return
 
@@ -38,12 +35,10 @@ export default function ConstellationBuilder() {
         const x = Math.round((e.clientX - rect.left) * (100 / rect.width))
         const y = Math.round((e.clientY - rect.top) * (100 / rect.height))
 
-        // Uložíme hviezdu (ak je brush 0, tretie číslo tam ani nedáme pre čistejší JSON)
         const newStar: StarPoint = starBrush === 0 ? [x, y] : [x, y, starBrush]
         setLocalStars(prev => [...prev, newStar])
     }
 
-    // --- FUNKCIA: Pravý klik = Spájanie ---
     const handleStarRightClick = (e: React.MouseEvent, index: number) => {
         e.preventDefault()
         e.stopPropagation()
@@ -59,7 +54,6 @@ export default function ConstellationBuilder() {
         }
     }
 
-    // --- NÁSTROJE ---
     const undoLastStar = () => {
         if (localStars.length === 0) return
         setLocalStars(prev => prev.slice(0, -1))
@@ -75,15 +69,13 @@ export default function ConstellationBuilder() {
         alert("Copied to clipboard!")
     }
 
-    // VÝPOČET POLOHY OBRÁZKA
     const imgX = 50 - (bgScale / 2) + bgOffsetX;
     const imgY = 50 - (bgScale / 2) + bgOffsetY;
 
-    // Vizuálna veľkosť hviezdy na základe jej parametra
     const getStarRadius = (sizeParam?: number) => {
-        if (sizeParam === 2) return 1.2; // Malá
-        if (sizeParam === 1) return 1.8; // Stredná
-        return 2.8; // Veľká (default)
+        if (sizeParam === 2) return 1.2;
+        if (sizeParam === 1) return 1.8;
+        return 2.8;
     }
 
     return (
@@ -95,7 +87,6 @@ export default function ConstellationBuilder() {
 
             <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto w-full">
 
-                {/* ĽAVÝ PANEL */}
                 <div className="flex-1 flex flex-col gap-4 min-w-0">
                     <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
                         <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">1. Select Constellation</label>
@@ -110,7 +101,6 @@ export default function ConstellationBuilder() {
                             value={bgImage}
                             onChange={(e) => {
                                 setBgImage(e.target.value);
-                                // Automatický reset pri vložení nového obrázka
                                 setBgScale(100);
                                 setBgOffsetX(0);
                                 setBgOffsetY(0);
@@ -155,12 +145,9 @@ export default function ConstellationBuilder() {
                     </div>
                 </div>
 
-                {/* PRAVÝ PANEL */}
                 <div className="flex-1 flex flex-col gap-4 min-w-0">
 
-                    {/* HORNÝ PANEL NÁSTROJOV (Štetec a Undo) */}
                     <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-wrap gap-4 items-center justify-between">
-                        {/* Výber veľkosti hviezdy */}
                         <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
                             <button onClick={() => setStarBrush(0)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${starBrush === 0 ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}>
                                 <circle cx="5" cy="5" r="5" className="w-3 h-3 fill-current rounded-full" /> Big
@@ -188,7 +175,6 @@ export default function ConstellationBuilder() {
 
                             {bgImage && <image href={bgImage} x={imgX} y={imgY} height={bgScale} width={bgScale} preserveAspectRatio="xMidYMid meet" opacity="0.4" pointerEvents="none" />}
 
-                            {/* Mriežka */}
                             {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(n => (
                                 <g key={`grid-${n}`} className="opacity-50" pointerEvents="none">
                                     <line x1={n} y1="0" x2={n} y2="100" stroke="#06b6d4" strokeWidth="0.2" strokeDasharray={n % 50 === 0 ? "" : "1,1"} />
@@ -196,14 +182,12 @@ export default function ConstellationBuilder() {
                                 </g>
                             ))}
 
-                            {/* Čiary */}
                             {localLines.map((line, i) => {
                                 const start = localStars[line[0]]; const end = localStars[line[1]]
                                 if (!start || !end) return null
                                 return <line key={`line-${i}`} x1={start[0]} y1={start[1]} x2={end[0]} y2={end[1]} stroke="rgba(255, 255, 255, 0.6)" strokeWidth="1" strokeLinecap="round" pointerEvents="none"/>
                             })}
 
-                            {/* Hviezdy (s rôznymi veľkosťami) */}
                             {localStars.map((star, i) => {
                                 const isConnecting = connectingFrom === i;
                                 const radius = getStarRadius(star[2]); // Vypočítame veľkosť na základe 3. parametra

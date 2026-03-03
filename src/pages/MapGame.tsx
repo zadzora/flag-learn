@@ -448,7 +448,6 @@ export default function MapGame() {
     }
 
     // --- MEMOIZED MAP RENDERER ---
-    // Toto zabezpečuje extrémnu plynulosť, mapa sa prekreslí, len keď sa zmenia dôležité stavy!
     const renderMap = useMemo(() => {
         return (
             <ComposableMap projection="geoMercator" projectionConfig={{ scale: 140 }} width={800} height={600} style={{ width: "100%", height: "100%", outline: "none" }}>
@@ -497,7 +496,6 @@ export default function MapGame() {
                                 let hoverFill = theme === 'dark' ? "#334155" : "#cbd5e1"
                                 let hoverStroke = theme === 'dark' ? "#64748b" : "#64748b"
 
-                                // LOGIKA 1: Zobrazovanie už uhádnutých vlajok v Practice Mode
                                 if (isPracticeMode && isGuessed && status !== 'error') {
                                     if (!hardMode && guessedTarget) {
                                         fill = `url(#flag-${guessedTarget.code})`;
@@ -505,14 +503,12 @@ export default function MapGame() {
                                     }
                                 }
 
-                                // LOGIKA 2: Zvýraznenie hľadaného (Pulsing), ak to hrá prvýkrát
                                 if (isFirstTime && isTarget && status === 'idle' && !isPracticeMode && !isReview) {
                                     fill = theme === 'dark' ? "#3b82f6" : "#60a5fa"
                                     stroke = theme === 'dark' ? "#60a5fa" : "#93c5fd"
                                     hoverFill = fill;
                                 }
 
-                                // LOGIKA 3: Reakcie na kliknutie hráča
                                 if (status === 'error') {
                                     if (isClicked) {
                                         fill = theme === 'dark' ? "#ef4444" : "#f87171"
@@ -822,7 +818,6 @@ export default function MapGame() {
             <div className={`w-full h-full relative cursor-grab active:cursor-grabbing outline-none transition-colors duration-500 ${theme === 'light' ? 'bg-[#f8fafc]' : 'bg-[#0f172a]'}`}>
                 {renderMap}
 
-                {/* Ovládanie priblíženia */}
                 <div className="absolute bottom-8 right-8 flex flex-col gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl z-20">
                     <button onClick={handleZoomIn} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><ZoomIn size={24}/></button>
                     <button onClick={handleResetZoom} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><Maximize size={24}/></button>

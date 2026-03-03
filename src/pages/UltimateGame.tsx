@@ -336,7 +336,6 @@ export default function UltimateGame() {
                 {/* Top Header Bar */}
                 <div className="w-full bg-indigo-600 dark:bg-indigo-900/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 shadow-md pointer-events-auto">
 
-                    {/* Tlačidlo späť v štýle ako inde, s potvrdzovacím kontajnerom */}
                     <button
                         onClick={() => setShowExitConfirm(true)}
                         className="p-2 sm:p-2.5 rounded-full bg-white text-indigo-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-105"
@@ -367,7 +366,7 @@ export default function UltimateGame() {
                         {current && !gameFinished && (
                             <motion.div key={current.code} initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-3 sm:px-6 sm:py-3 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-4xl pointer-events-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
 
-                                {/* 1. Flag & Stepper Section */}
+                                {/* Flag & Stepper Section */}
                                 <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
                                     {/* Flag */}
                                     <div className="h-12 sm:h-16 shrink-0 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center">
@@ -393,7 +392,7 @@ export default function UltimateGame() {
                                     </div>
                                 </div>
 
-                                {/* 2. Input / Feedback Section */}
+                                {/* Input / Feedback Section */}
                                 <div className="flex-1 w-full flex flex-col justify-center relative min-h-[3rem]">
                                     {step === 'map' && status === 'idle' && (
                                         <div className="w-full text-center font-bold text-slate-500 dark:text-slate-400 py-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse">

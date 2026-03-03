@@ -59,6 +59,8 @@ npm run dev
 ## ☕ Support
 If you like this project, you can buy me a coffee!
 
+[![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://coff.ee/davidzadzora)
+
 ## 📄 License & Credits
 This project is licensed under the MIT License.
 

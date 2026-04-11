@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowLeft, EyeOff, AlertTriangle, Play, Loader2, X, RotateCcw, Trophy, Skull, Moon, Sun } from "lucide-react"
 import worldData from "../../data/flags.json"
+import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 // Types
 type Flag = {
@@ -130,10 +131,6 @@ export default function BlurGame() {
         // The new useEffect handles it when isImageLoading becomes false.
     }
 
-    function normalize(str: string) {
-        return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
-    }
-
     function calculateScore(currentBlur: number) {
         return Math.round(MIN_POINTS + (currentBlur * POINTS_MULTIPLIER))
     }
@@ -141,14 +138,15 @@ export default function BlurGame() {
     function handleCheck() {
         if (!current || status !== 'idle') return
 
-        const userAns = normalize(input)
-        let isCorrect = false
-
-        if (Array.isArray(current.name)) {
-            isCorrect = current.name.some(n => normalize(n) === userAns)
-        } else {
-            isCorrect = normalize(current.name) === userAns
+        const accept = Array.isArray(current.name) ? [...current.name] : [current.name]
+        const match = resolveTextAnswer(input, accept)
+        if (match === 'close') {
+            setFeedbackMsg(typoFeedbackForStreak(false))
+            setTimeout(() => setFeedbackMsg(null), 2800)
+            return
         }
+
+        const isCorrect = match === 'exact'
 
         const pointsEarned = calculateScore(blurAmount)
         setBlurAmount(0)
@@ -352,7 +350,7 @@ export default function BlurGame() {
                         />
 
                         {/* Feedback */}
-                        <div className="h-8 text-center">
+                        <div className="min-h-[4.5rem] py-2 px-1 text-center flex flex-col items-center justify-start">
                             <AnimatePresence mode="wait">
                                 {feedbackMsg && (
                                     <motion.div
@@ -360,7 +358,13 @@ export default function BlurGame() {
                                         initial={{ opacity: 0, y: 5 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0 }}
-                                        className={`text-lg font-bold ${status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}
+                                        className={`text-sm sm:text-base font-bold leading-snug max-w-full ${
+                                            status === 'correct'
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : status === 'idle'
+                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                    : 'text-red-600 dark:text-red-400'
+                                        }`}
                                     >
                                         {feedbackMsg}
                                     </motion.div>

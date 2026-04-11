@@ -102,7 +102,7 @@ export default function Home() {
                                 </div>
                                 <div className="flex flex-col text-center sm:text-left">
                                     <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-2">Ultimate Mode</h2>
-                                    <p className="text-[12px] text-indigo-100/80">
+                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">
                                         The ultimate test! Locate the flag on the map, then name the country and its capital to conquer the world.
                                     </p>
                                 </div>

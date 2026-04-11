@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Calendar, Trophy, X, Check, MapPin, Moon, Sun } from "lucide-react"
 import worldData from "../../data/flags.json"
+import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
 
 // Types
 type Flag = {
@@ -17,7 +18,7 @@ const DAILY_STORAGE_KEY = "flag-master-daily-save"
 const MAX_GUESSES = 6
 
 // Controls the scale of the image based on mistake count (harder zoom)
-const ZOOM_LEVELS = [15, 10, 5, 3, 1.5, 1]
+const ZOOM_LEVELS = [9, 7, 5, 3, 1.5, 1]
 
 export default function DailyFlagle() {
     const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" }) // Format: YYYY-MM-DD
@@ -105,10 +106,6 @@ export default function DailyFlagle() {
     }, [guesses, status, bonusStatus, todayStr])
 
     // --- HELPERS ---
-    function normalize(str: string) {
-        return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
-    }
-
     function getPrimaryName(f: Flag) {
         return Array.isArray(f.name) ? f.name[0] : f.name
     }
@@ -121,15 +118,17 @@ export default function DailyFlagle() {
     function handleGuess() {
         if (!input.trim() || status !== 'playing') return
 
-        const userAns = normalize(input)
-        let isCorrect = false
+        const accept = Array.isArray(dailyFlag.name) ? [...dailyFlag.name] : [dailyFlag.name]
+        const match = resolveTextAnswer(input, accept)
 
-        if (Array.isArray(dailyFlag.name)) {
-            isCorrect = dailyFlag.name.some(n => normalize(n) === userAns)
-        } else {
-            isCorrect = normalize(dailyFlag.name) === userAns
+        if (match === 'close') {
+            setFeedback(TYPO_FEEDBACK_DAILY_GUESS)
+            setTimeout(() => setFeedback(null), 2800)
+            setTimeout(() => inputRef.current?.focus(), 100)
+            return
         }
 
+        const isCorrect = match === 'exact'
         const newGuesses = [...guesses, input.trim()]
         setGuesses(newGuesses)
         setInput("")
@@ -150,10 +149,17 @@ export default function DailyFlagle() {
     function handleBonusGuess() {
         if (!input.trim() || bonusStatus !== 'playing') return
 
-        const userAns = normalize(input)
-        const actualCapital = normalize(getCapital(dailyFlag))
+        const capitals = (dailyFlag.capital || []).filter((c): c is string => typeof c === 'string')
+        const match = resolveTextAnswer(input, capitals.length > 0 ? capitals : [getCapital(dailyFlag)])
 
-        if (userAns === actualCapital) {
+        if (match === 'close') {
+            setFeedback(typoFeedbackForStreak(false))
+            setTimeout(() => setFeedback(null), 2800)
+            setTimeout(() => inputRef.current?.focus(), 100)
+            return
+        }
+
+        if (match === 'exact') {
             setBonusStatus('won')
         } else {
             setBonusStatus('lost')

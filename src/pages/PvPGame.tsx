@@ -6,6 +6,7 @@ import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, Alert
 import { motion, AnimatePresence } from "framer-motion"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 type Flag = {
     code: string
@@ -57,7 +58,7 @@ export default function PvPGame() {
 
     const [input, setInput] = useState("")
     const [feedback, setFeedback] = useState<string | null>(null)
-    const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'correct' | 'error'>('idle')
+    const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'correct' | 'error' | 'warn'>('idle')
     const [copied, setCopied] = useState(false)
     const [timeLeft, setTimeLeft] = useState(0)
 
@@ -223,10 +224,6 @@ export default function PvPGame() {
         return worldData as unknown as Flag[]
     }, [gameData])
 
-    function normalize(str: string) {
-        return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
-    }
-
     function getFlagObject(code: string) {
         return activeData.find(f => f.code === code)
     }
@@ -312,7 +309,7 @@ export default function PvPGame() {
             return
         }
 
-        if (gameData.status === 'playing' && feedbackStatus === 'idle') {
+        if (gameData.status === 'playing' && (feedbackStatus === 'idle' || feedbackStatus === 'warn')) {
             setBlurAmount(20)
 
             const interval = setInterval(() => {
@@ -332,27 +329,33 @@ export default function PvPGame() {
 
 
     const handleCheck = () => {
-        if (!gameData || !myId || feedbackStatus !== 'idle' || !currentFlagCode) return
+        if (!gameData || !myId || !currentFlagCode) return
+        if (feedbackStatus === 'correct' || feedbackStatus === 'error') return
 
         const flagObject = getFlagObject(currentFlagCode)
-        const userAns = normalize(input)
+        const accept: string[] =
+            flagObject && gameData.settings.region === 'capitals' && flagObject.capital && Array.isArray(flagObject.capital)
+                ? flagObject.capital.filter((c): c is string => typeof c === 'string')
+                : flagObject
+                    ? Array.isArray(flagObject.name)
+                        ? [...flagObject.name]
+                        : [flagObject.name]
+                    : []
 
-        let isCorrect = false
-        if (flagObject) {
-            if (gameData.settings.region === 'capitals') {
-                if (flagObject.capital && Array.isArray(flagObject.capital)) {
-                    isCorrect = flagObject.capital.some(c => (typeof c === 'string') && normalize(c) === userAns)
-                }
-            } else {
-                if (Array.isArray(flagObject.name)) {
-                    isCorrect = flagObject.name.some(n => normalize(n) === userAns)
-                } else {
-                    isCorrect = normalize(flagObject.name) === userAns
-                }
-            }
+        const match = resolveTextAnswer(input, accept)
+        setBlurAmount(0)
+
+        if (match === 'close') {
+            setFeedback(typoFeedbackForStreak(false))
+            setFeedbackStatus('warn')
+            setTimeout(() => {
+                setFeedback(null)
+                setFeedbackStatus('idle')
+            }, 2800)
+            return
         }
 
-        setBlurAmount(0)
+        const isCorrect = match === 'exact'
 
         if (isCorrect) {
             setFeedback("Correct! ✅")
@@ -702,18 +705,20 @@ export default function PvPGame() {
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCheck()}
-                            disabled={feedbackStatus !== 'idle'}
+                            disabled={feedbackStatus === 'correct' || feedbackStatus === 'error'}
                             placeholder={gameData.settings.region === 'capitals' ? "Type capital city..." : "Type country name..."}
                             className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all
                                 dark:bg-slate-900 dark:text-white
                                 ${feedbackStatus === 'error' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200' : ''}
-                                ${feedbackStatus === 'correct' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200' : 'border-slate-200 dark:border-slate-700'}
+                                ${feedbackStatus === 'correct' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200' : ''}
+                                ${feedbackStatus === 'warn' ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 text-amber-950 dark:text-amber-100' : ''}
+                                ${feedbackStatus === 'idle' ? 'border-slate-200 dark:border-slate-700' : ''}
                             `}
                             autoFocus
                             autoComplete="off"
                         />
 
-                        <div className="h-6 text-center font-bold">
+                        <div className="min-h-[4.5rem] py-2 px-1 text-center font-bold flex flex-col items-center justify-start">
                             <AnimatePresence mode="wait">
                                 {feedback && (
                                     <motion.span
@@ -721,7 +726,13 @@ export default function PvPGame() {
                                         initial={{ opacity: 0, y: 5 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0 }}
-                                        className={feedbackStatus === 'correct' ? 'text-emerald-500' : 'text-red-500'}
+                                        className={`block max-w-[98%] text-sm sm:text-base leading-snug ${
+                                            feedbackStatus === 'correct'
+                                                ? 'text-emerald-500'
+                                                : feedbackStatus === 'warn'
+                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                    : 'text-red-500'
+                                        }`}
                                     >
                                         {feedback}
                                     </motion.span>
@@ -731,12 +742,12 @@ export default function PvPGame() {
 
                         <button
                             onClick={handleCheck}
-                            disabled={!input || feedbackStatus !== 'idle'}
+                            disabled={!input || feedbackStatus === 'correct' || feedbackStatus === 'error'}
                             className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all text-white
-                                ${feedbackStatus !== 'idle' ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'}
+                                ${feedbackStatus === 'correct' || feedbackStatus === 'error' ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'}
                             `}
                         >
-                            {feedbackStatus === 'idle' ? 'Submit Answer' : 'Wait...'}
+                            {feedbackStatus === 'correct' || feedbackStatus === 'error' ? 'Wait...' : 'Submit Answer'}
                         </button>
                     </div>
                 </motion.div>

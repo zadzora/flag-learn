@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, X, Timer, Repeat, Sun, Moon, MapPin, Flag as FlagIcon, Landmark, AlertTriangle } from "lucide-react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import worldData from "../../data/flags.json"
+import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 const geoUrl = "/world-map.json"
 const THEME_KEY = "flag-master-theme"
@@ -64,10 +65,6 @@ function checkCountryMatch(geo: any, target: Flag | null) {
         if (geoName === "ssudan" && fName === "southsudan") return true;
         return false;
     });
-}
-
-function normalize(str: string) {
-    return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
 }
 
 function getPrimaryName(flag: Flag) {
@@ -226,17 +223,25 @@ export default function UltimateGame() {
     function handleTextSubmit() {
         if (status !== 'idle' || (step !== 'country' && step !== 'capital') || !current || !input.trim() || showExitConfirm) return;
 
-        const userAns = normalize(input);
-        let isCorrect = false;
         let correctDisplay = "";
+        const accept =
+            step === 'country'
+                ? Array.isArray(current.name)
+                    ? [...current.name]
+                    : [current.name]
+                : current.capital!.filter((c): c is string => typeof c === 'string');
 
-        if (step === 'country') {
-            isCorrect = Array.isArray(current.name) ? current.name.some(n => normalize(n) === userAns) : normalize(current.name) === userAns;
-            correctDisplay = getPrimaryName(current);
-        } else {
-            isCorrect = current.capital!.some(c => typeof c === 'string' && normalize(c) === userAns);
-            correctDisplay = getPrimaryCapital(current);
+        if (step === 'country') correctDisplay = getPrimaryName(current);
+        else correctDisplay = getPrimaryCapital(current);
+
+        const match = resolveTextAnswer(input, accept);
+        if (match === 'close') {
+            setFeedbackMsg(typoFeedbackForStreak(streak > 0));
+            setTimeout(() => setFeedbackMsg(null), 2800);
+            return;
         }
+
+        const isCorrect = match === 'exact';
 
         if (isCorrect) {
             setStatus('correct');
@@ -408,8 +413,20 @@ export default function UltimateGame() {
                                     )}
 
                                     <AnimatePresence mode="wait">
-                                        {status !== 'idle' && feedbackMsg && (
-                                            <motion.div key={feedbackMsg} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`absolute inset-0 flex items-center justify-center font-bold text-sm sm:text-base rounded-xl border-2 shadow-sm ${status === 'error' ? 'bg-red-50 border-red-400 text-red-600 dark:bg-red-900/50 dark:border-red-600 dark:text-red-400' : 'bg-emerald-50 border-emerald-400 text-emerald-600 dark:bg-emerald-900/50 dark:border-emerald-600 dark:text-emerald-400'}`}>
+                                        {feedbackMsg && (
+                                            <motion.div
+                                                key={feedbackMsg}
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                className={`absolute inset-0 z-10 flex items-center justify-center font-bold text-sm sm:text-base rounded-xl border-2 shadow-sm px-2 text-center ${
+                                                    status === 'error'
+                                                        ? 'bg-red-50 border-red-400 text-red-600 dark:bg-red-900/50 dark:border-red-600 dark:text-red-400'
+                                                        : status === 'correct'
+                                                            ? 'bg-emerald-50 border-emerald-400 text-emerald-600 dark:bg-emerald-900/50 dark:border-emerald-600 dark:text-emerald-400'
+                                                            : 'pointer-events-none bg-amber-50 border-amber-400 text-amber-900 dark:bg-amber-950/60 dark:border-amber-500 dark:text-amber-100'
+                                                }`}
+                                            >
                                                 {feedbackMsg}
                                             </motion.div>
                                         )}

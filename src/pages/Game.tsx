@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark, Unlock } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 // --- TYPES ---
 type Flag = {
@@ -152,10 +153,6 @@ export default function Game() {
     function getCountryName(flag: Flag): string {
         if (Array.isArray(flag.name)) return flag.name[0]
         return flag.name
-    }
-
-    function normalize(str: string) {
-        return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim()
     }
 
     // 1. INITIALIZATION
@@ -431,20 +428,23 @@ export default function Game() {
     function handleCheck() {
         if (!current || status !== 'idle') return
 
-        const userAns = normalize(input)
-        let isCorrect = false
+        const accept: string[] =
+            gameMode === 'capitals'
+                ? current.capital && Array.isArray(current.capital)
+                    ? current.capital.filter((c): c is string => typeof c === 'string')
+                    : []
+                : Array.isArray(current.name)
+                    ? [...current.name]
+                    : [current.name]
 
-        if (gameMode === 'capitals') {
-            if (current.capital && Array.isArray(current.capital)) {
-                isCorrect = current.capital.some(c => (typeof c === 'string') && normalize(c) === userAns)
-            }
-        } else {
-            if (Array.isArray(current.name)) {
-                isCorrect = current.name.some(n => normalize(n) === userAns)
-            } else {
-                isCorrect = normalize(current.name) === userAns
-            }
+        const match = resolveTextAnswer(input, accept)
+        if (match === 'close') {
+            setFeedbackMsg(typoFeedbackForStreak(!isPracticeMode && sessionStreak > 0))
+            setTimeout(() => setFeedbackMsg(null), 2800)
+            return
         }
+
+        const isCorrect = match === 'exact'
 
         if (isCorrect) {
             setSessionStreak(prev => prev + 1)
@@ -572,13 +572,13 @@ export default function Game() {
         >
             <Link
                 to="/"
-                className="absolute top-4 left-4 z-40 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                className={`absolute left-4 z-40 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}
                 title="Back to Menu"
             >
                 <ArrowLeft size={20} />
             </Link>
 
-            <div className="absolute top-4 right-4 z-40 flex items-center gap-2 sm:gap-3">
+            <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}>
                 {!isPracticeMode && (
                     <div className="flex bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-1 gap-1 shadow-sm border border-slate-300/50 dark:border-slate-700">
                         <button onClick={() => switchGameMode('world')} className={`p-2 rounded-lg transition-all ${gameMode === 'world' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Flags"><Globe size={20} /></button>
@@ -615,7 +615,7 @@ export default function Game() {
                 )}
             </AnimatePresence>
 
-            <div className={`w-full flex-1 flex flex-col items-center px-4 mt-16 sm:mt-12 mb-8`}>
+            <div className={`w-full flex-1 flex flex-col items-center px-4 mb-8 ${isPracticeMode ? 'mt-24 sm:mt-24' : 'mt-16 sm:mt-12'}`}>
                 {!isPracticeMode && !practiceResults && (
                     <motion.div layout onClick={handleOpenGallery} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none" animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}} transition={{ delay: 0.4, duration: 0.3 }}>
                         <div className="flex justify-between items-center px-1 mb-2">
@@ -639,6 +639,9 @@ export default function Game() {
                         <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-300/50 dark:ring-slate-700 group-hover:ring-indigo-300 transition-all relative">
                             <motion.div className="h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
                         </div>
+                        <p className="text-center text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            Click this bar to open your collection
+                        </p>
                     </motion.div>
                 )}
 

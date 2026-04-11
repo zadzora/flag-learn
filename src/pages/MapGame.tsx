@@ -581,7 +581,9 @@ export default function MapGame() {
         <div className={`h-screen w-full flex flex-col overflow-hidden relative select-none transition-colors duration-500 ${theme === 'dark' ? 'bg-[#0f172a] text-slate-100' : 'bg-[#f8fafc] text-slate-800'}`}>
 
             {/* --- THEME TOGGLE --- */}
-            <div className={`absolute right-4 z-20 transition-all ${isPracticeMode ? 'top-20' : 'top-4'}`}>
+            <div
+                className={`absolute right-3 z-20 transition-all sm:right-4 ${isPracticeMode ? 'top-[6.25rem] sm:top-[5.25rem] md:top-4' : 'top-3 sm:top-4'}`}
+            >
                 <button
                     onClick={toggleTheme}
                     className="p-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
@@ -591,14 +593,42 @@ export default function MapGame() {
             </div>
 
             {/* --- HEADER --- */}
-            <div className="absolute top-0 left-0 w-full z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center shadow-lg pointer-events-auto">
+            <div className="absolute top-0 left-0 w-full z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-2 pt-3 sm:p-4 pr-14 sm:pr-4 shadow-lg pointer-events-auto flex flex-col gap-2 min-w-0 md:flex-row md:items-center md:justify-between md:gap-0">
                 {!isPracticeMode ? (
                     <>
-                        <Link to="/" className="p-3 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-300">
-                            <ArrowLeft size={20} />
-                        </Link>
+                        <div className="flex w-full min-w-0 items-center justify-between gap-2 md:contents">
+                            <Link to="/" className="shrink-0 p-2.5 sm:p-3 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-300">
+                                <ArrowLeft size={20} />
+                            </Link>
 
-                        <div className="flex flex-col items-center flex-1 mx-4">
+                            <div className="flex items-center gap-2 sm:gap-3 md:order-3 md:mr-12">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowGallery(true)}
+                                    title="Open your map collection — browse mastered countries and practice selected regions."
+                                    className="group flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 transition-colors max-w-[9rem] sm:max-w-none"
+                                >
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase group-hover:text-slate-600 dark:group-hover:text-slate-300">Collection</span>
+                                    <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 leading-tight text-center group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                        Click to open
+                                    </span>
+                                    <div className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                        {totalStats.mastered} / {totalStats.total}
+                                    </div>
+                                </button>
+
+                                {current && !isReview && (
+                                    <div className="bg-slate-50 dark:bg-slate-800 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 flex flex-col items-center shrink-0">
+                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Streak</span>
+                                        <span className={`text-base sm:text-lg leading-none ${progress[current.code]?.streak > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-300'}`}>
+                                            🔥 {progress[current.code]?.streak || 0}/3
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center flex-1 min-w-0 w-full mx-0 md:mx-4 md:order-2">
                             <div className="h-5 flex items-center justify-center mb-1">
                                 {!practiceResults && (
                                     isFirstTime && status === 'idle' && !isPracticeMode && !isReview ? (
@@ -619,10 +649,10 @@ export default function MapGame() {
                                                 { borderColor: theme === 'dark' ? '#334155' : '#cbd5e1' }
                                     }
                                     transition={{ duration: 0.3 }}
-                                    className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 pr-6 rounded-xl border shadow-xl relative transition-colors"
+                                    className="flex w-full max-w-full min-w-0 items-center gap-2 sm:gap-3 bg-slate-50 dark:bg-slate-800 p-2 pt-7 sm:pt-2 sm:pr-6 rounded-xl border shadow-xl relative transition-colors"
                                 >
-                                    <img src={current.image} alt="Flag" className="h-10 w-16 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent" />
-                                    <h2 className={`text-xl sm:text-2xl font-black text-center ${status === 'correct' || status === 'mastered' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>
+                                    <img src={current.image} alt="Flag" className="h-9 w-14 shrink-0 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent sm:h-10 sm:w-16" />
+                                    <h2 className={`min-w-0 flex-1 text-sm sm:text-xl md:text-2xl font-black text-center leading-tight break-words hyphens-auto ${status === 'correct' || status === 'mastered' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>
                                         {getCountryNameDisplay(current)}
                                     </h2>
 
@@ -632,7 +662,7 @@ export default function MapGame() {
                                                 initial={{ opacity: 0, scale: 0.5, y: 10 }}
                                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                                 exit={{ opacity: 0, scale: 0.5 }}
-                                                className={`absolute -right-4 -top-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-20 ${
+                                                className={`absolute top-1.5 right-2 sm:-right-2 sm:-top-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-lg z-20 max-w-[calc(100%-1rem)] truncate ${
                                                     status === 'correct' ? 'bg-emerald-500 text-white' :
                                                         status === 'mastered' ? 'bg-yellow-400 text-yellow-900' :
                                                             'bg-red-500 text-white'
@@ -646,8 +676,8 @@ export default function MapGame() {
                                     </AnimatePresence>
 
                                     {isReview && status === 'idle' && (
-                                        <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                                            <RefreshCw size={12} /> Review
+                                        <div className="absolute top-1.5 right-2 sm:-top-2 sm:-right-2 bg-amber-500 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md flex items-center gap-1">
+                                            <RefreshCw size={12} className="shrink-0" /> Review
                                         </div>
                                     )}
                                 </motion.div>
@@ -663,40 +693,28 @@ export default function MapGame() {
                                 </div>
                             )}
                         </div>
-
-                        <div className="flex items-center gap-3 mr-12">
-                            <button onClick={() => setShowGallery(true)} className="group flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 px-4 py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 transition-colors">
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase group-hover:text-slate-600 dark:group-hover:text-slate-300">Collection</span>
-                                <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                    {totalStats.mastered} / {totalStats.total}
-                                </div>
-                            </button>
-
-                            {current && !isReview && (
-                                <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 flex flex-col items-center">
-                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Streak</span>
-                                    <span className={`text-lg leading-none ${progress[current.code]?.streak > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-300'}`}>
-                                        🔥 {progress[current.code]?.streak || 0}/3
-                                    </span>
-                                </div>
-                            )}
-                        </div>
                     </>
                 ) : (
                     /* PRACTICE MODE HEADER */
-                    <div className="w-full flex justify-between items-center text-slate-800 dark:text-white">
+                    <div className="w-full flex flex-col gap-2 min-w-0 text-slate-800 dark:text-white md:flex-row md:items-center md:justify-between md:gap-3">
 
-                        <div className="flex items-center gap-2">
-                            <button onClick={exitPracticeMode} className="flex items-center gap-1.5 text-sm bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-500 dark:bg-slate-800 dark:hover:bg-red-900/50 dark:text-slate-300 dark:hover:text-red-400 px-3 py-2 sm:px-4 rounded-xl transition-colors font-bold border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50">
-                                <LogOut size={16} /> <span className="hidden sm:inline">Exit</span>
+                        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto md:flex-nowrap shrink-0">
+                            <button onClick={exitPracticeMode} className="flex items-center gap-1.5 text-xs sm:text-sm bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-500 dark:bg-slate-800 dark:hover:bg-red-900/50 dark:text-slate-300 dark:hover:text-red-400 px-2.5 py-2 sm:px-4 rounded-xl transition-colors font-bold border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50">
+                                <LogOut size={16} className="shrink-0" /> <span className="hidden sm:inline">Exit</span>
                             </button>
 
-                            <button onClick={() => setHardMode(!hardMode)} className={`flex items-center gap-1 text-sm px-3 py-2 sm:px-4 rounded-xl transition-colors font-bold border shadow-sm ${hardMode ? 'bg-red-100 hover:bg-red-200 text-red-600 border-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 dark:border-red-800' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600 border-emerald-300 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800'}`}>
-                                {hardMode ? 'Hard Mode: ON' : 'Hard Mode: OFF'}
+                            <button
+                                type="button"
+                                onClick={() => setHardMode(!hardMode)}
+                                title="Hard mode ON: countries you already guessed correctly stay as plain map shapes (no flag fill). OFF: those territories show their flags so you can use them as landmarks."
+                                className={`flex items-center gap-1 text-[11px] leading-tight sm:text-sm px-2.5 py-2 sm:px-4 rounded-xl transition-colors font-bold border shadow-sm whitespace-nowrap ${hardMode ? 'bg-red-100 hover:bg-red-200 text-red-600 border-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 dark:border-red-800' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600 border-emerald-300 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800'}`}
+                            >
+                                <span className="sm:hidden">{hardMode ? 'Hard: ON' : 'Hard: OFF'}</span>
+                                <span className="hidden sm:inline">{hardMode ? 'Hard Mode: ON' : 'Hard Mode: OFF'}</span>
                             </button>
                         </div>
 
-                        <div className="flex flex-col items-center flex-1 mx-4">
+                        <div className="order-2 flex flex-col items-center flex-1 min-w-0 w-full mx-0 md:mx-4">
                             <div className="h-5 flex items-center justify-center mb-1">
                                 {status === 'error' ? (
                                     <span className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-widest">Wrong! Find green shape</span>
@@ -713,10 +731,10 @@ export default function MapGame() {
                                                 { borderColor: theme === 'dark' ? 'rgba(67, 56, 202, 0.5)' : '#c7d2fe' }
                                     }
                                     transition={{ duration: 0.3 }}
-                                    className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/50 p-2 pr-6 rounded-xl border border-indigo-200 dark:border-indigo-700/50 shadow-xl relative"
+                                    className="flex w-full max-w-full min-w-0 items-center gap-2 sm:gap-3 bg-indigo-50 dark:bg-indigo-900/50 p-2 pt-7 sm:pt-2 sm:pr-6 rounded-xl border border-indigo-200 dark:border-indigo-700/50 shadow-xl relative"
                                 >
-                                    <img src={current.image} alt="Flag" className="h-10 w-16 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent" />
-                                    <h2 className={`text-xl sm:text-2xl font-black ${status === 'correct' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-indigo-900 dark:text-indigo-100'}`}>
+                                    <img src={current.image} alt="Flag" className="h-9 w-14 shrink-0 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent sm:h-10 sm:w-16" />
+                                    <h2 className={`min-w-0 flex-1 text-sm sm:text-xl md:text-2xl font-black text-center leading-tight break-words hyphens-auto ${status === 'correct' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-indigo-900 dark:text-indigo-100'}`}>
                                         {getCountryNameDisplay(current)}
                                     </h2>
 
@@ -726,7 +744,7 @@ export default function MapGame() {
                                                 initial={{ opacity: 0, scale: 0.5, y: 10 }}
                                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                                 exit={{ opacity: 0, scale: 0.5 }}
-                                                className={`absolute -right-4 -top-3 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg z-20 ${
+                                                className={`absolute top-1.5 right-2 sm:-right-2 sm:-top-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-lg z-20 ${
                                                     status === 'correct' ? 'bg-emerald-500' : 'bg-red-500'
                                                 }`}
                                             >
@@ -736,20 +754,20 @@ export default function MapGame() {
                                     </AnimatePresence>
 
                                     {status === 'idle' && (
-                                        <div className="absolute -top-3 -right-3 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                                            <Dumbbell size={12} /> Practice
+                                        <div className="absolute top-1.5 right-2 sm:-top-2 sm:-right-2 bg-indigo-500 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md flex items-center gap-1 max-w-[calc(100%-0.5rem)]">
+                                            <Dumbbell size={12} className="shrink-0" /> <span className="truncate">Practice</span>
                                         </div>
                                     )}
                                 </motion.div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-3 sm:gap-4 bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 mr-12">
-                            <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300"><Timer size={16} className="text-indigo-500 dark:text-indigo-400"/>{formatTime(practiceElapsedTime)}</div>
-                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-                            <div className="text-sm font-medium text-slate-500 dark:text-slate-300">Rem: <span className="text-slate-800 dark:text-white font-bold">{practicePool.length}</span></div>
-                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-                            <div className="text-sm font-bold text-red-500 dark:text-red-400 flex items-center gap-1"><X size={16} /> {practiceMistakes}</div>
+                        <div className="order-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-4 bg-slate-50 dark:bg-slate-800 px-2 py-2 sm:px-4 rounded-xl border border-slate-200 dark:border-slate-700 md:mr-12 md:w-auto md:flex-nowrap md:justify-end shrink-0">
+                            <div className="flex items-center gap-1 font-mono text-xs sm:text-base font-bold text-slate-700 dark:text-slate-300"><Timer size={14} className="shrink-0 text-indigo-500 dark:text-indigo-400 sm:w-4 sm:h-4"/>{formatTime(practiceElapsedTime)}</div>
+                            <div className="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden />
+                            <div className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-300 whitespace-nowrap">Rem: <span className="text-slate-800 dark:text-white font-bold">{practicePool.length}</span></div>
+                            <div className="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden />
+                            <div className="text-xs sm:text-sm font-bold text-red-500 dark:text-red-400 flex items-center gap-1 whitespace-nowrap"><X size={14} className="sm:w-4 sm:h-4 shrink-0" /> {practiceMistakes}</div>
                         </div>
                     </div>
                 )}

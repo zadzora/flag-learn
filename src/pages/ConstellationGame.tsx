@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
 import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Coffee, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Lightbulb } from "lucide-react"
 import constData from "../../data/constellations.json"
+import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 // --- TYPES ---
 type Constellation = {
@@ -252,8 +253,6 @@ export default function ConstellationGame() {
     }, [isLoaded, progress, isPracticeMode, practiceResults])
 
     // --- HELPERS ---
-    function normalize(str: string) { return str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim() }
-
     function getPrimaryName(item: Constellation): string {
         return item.name.la[0]
     }
@@ -321,10 +320,16 @@ export default function ConstellationGame() {
 
     function handleCheck() {
         if (!current || status !== 'idle') return
-        const userAns = normalize(input)
 
         const allPossibleNames = [...current.name.en, ...current.name.la, ...(current.name.sk || [])]
-        const isCorrect = allPossibleNames.some(n => normalize(n) === userAns)
+        const match = resolveTextAnswer(input, allPossibleNames)
+        if (match === 'close') {
+            setFeedbackMsg(typoFeedbackForStreak(!isPracticeMode && sessionStreak > 0))
+            setTimeout(() => setFeedbackMsg(null), 2800)
+            return
+        }
+
+        const isCorrect = match === 'exact'
 
         if (isCorrect) setSessionStreak(prev => prev + 1)
         else setSessionStreak(0)
@@ -431,9 +436,9 @@ export default function ConstellationGame() {
         <div className={`min-h-screen flex flex-col items-center justify-start pt-8 font-sans transition-colors duration-500 relative
             ${isPracticeMode ? 'bg-indigo-950 text-indigo-100' : 'bg-slate-950 text-slate-100'}`}
         >
-            <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900 shadow-md border border-slate-700 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-16' : 'top-4'}`}><ArrowLeft size={20} /></Link>
+            <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900 shadow-md border border-slate-700 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}><ArrowLeft size={20} /></Link>
 
-            <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-16' : 'top-4'}`}>
+            <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}>
                 {/* LANGUAGE SELECTOR */}
                 <div className="flex bg-slate-900/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-slate-700">
                     <button onClick={() => setLang('en')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>EN</button>
@@ -459,7 +464,7 @@ export default function ConstellationGame() {
                 )}
             </AnimatePresence>
 
-            <div className={`w-full flex-1 flex flex-col items-center px-4 mb-8 ${isPracticeMode ? 'mt-32' : 'mt-20'}`}>
+            <div className={`w-full flex-1 flex flex-col items-center px-4 mb-8 ${isPracticeMode ? 'mt-36 sm:mt-32' : 'mt-20'}`}>
                 {!isPracticeMode && !practiceResults && (
                     <motion.div onClick={() => setShowGallery(true)} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none">
                         <div className="flex justify-between items-center px-1 mb-2">
@@ -474,6 +479,9 @@ export default function ConstellationGame() {
                         <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-800 group-hover:ring-indigo-700 transition-all relative">
                             <motion.div className="h-full bg-indigo-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
                         </div>
+                        <p className="text-center text-[10px] sm:text-xs text-slate-500 mt-2 group-hover:text-indigo-400 transition-colors">
+                            Click this bar to open your collection
+                        </p>
                     </motion.div>
                 )}
 

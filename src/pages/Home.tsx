@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy} from "lucide-react"
+import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy, MapPin } from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -56,9 +56,8 @@ export default function Home() {
 
                     {/* Challenges Section */}
                     <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Daily Mods</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             {/* Daily Flagle Card */}
                             <Link to="/daily" className="group flex flex-col p-4 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
                                 <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
@@ -67,6 +66,21 @@ export default function Home() {
                                 <h3 className="font-bold text-base">Daily Flagle</h3>
                                 <p className="text-[10px] text-emerald-100/90">New flag every day</p>
                             </Link>
+
+                            {/* Daily Map Hunt Card */}
+                            <Link to="/daily-map" className="group flex flex-col p-4 bg-gradient-to-br from-blue-600 to-red-600 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <MapPin size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Daily Map Hunt</h3>
+                                <p className="text-[10px] text-blue-100/90">Find the country by heat colors</p>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
                             {/* Map Mode Card */}
                             <Link to="/map" className="group flex flex-col p-4 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">

@@ -11,6 +11,7 @@ import MapGame from "./pages/MapGame"
 import ConstellationGame from "./pages/ConstellationGame"
 import ConstellationBuilder from "./pages/ConstellationBuilder"
 import UltimateGame from "./pages/UltimateGame"
+import Highscore from "./pages/Highscore"
 
 export default function App() {
     return (
@@ -28,6 +29,7 @@ export default function App() {
                 <Route path="/constellations" element={<ConstellationGame />} />
                 <Route path="/builder" element={<ConstellationBuilder />} />
                 <Route path="/ultimate" element={<UltimateGame />} />
+                <Route path="/highscore" element={<Highscore />} />
 
             </Routes>
             <Analytics />

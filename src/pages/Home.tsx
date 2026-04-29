@@ -122,6 +122,16 @@ export default function Home() {
                                 </div>
                             </Link>
 
+                            <Link to="/highscore" className="group flex flex-col p-4 bg-gradient-to-br from-amber-500 to-orange-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Trophy size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Highscore</h3>
+                                <p className="text-[10px] text-amber-100/90 leading-snug">
+                                    Speedrun flags, capitals, or US states—fastest times on the shared leaderboard.
+                                </p>
+                            </Link>
+
                         </div>
 
                     </div>
@@ -164,8 +174,8 @@ export default function Home() {
                 </a>
                 <section className="max-w-2xl mx-auto mt-6 text-center text-slate-500 text-xs px-8 pb-2 opacity-70">
                     <p>
-                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong> and US state flags effectively.
-                        Test your knowledge in Single Player or challenge friends in real-time <strong>PvP battles</strong> to see who knows more!
+                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
+                        Includes <strong>Daily Flagle</strong>, <strong>Daily Map Hunt</strong>, <strong>Map Locator</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, and <strong>Highscore</strong> speedruns.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>
                 </section>

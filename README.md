@@ -16,16 +16,19 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 
 - **📖 Single Player:** Learn World Flags, US State Flags, and World Capitals in batches of 10. Prioritizes spaced repetition.
 - **📅 Daily Flagle:** A new mystery flag to guess every single day.
+- **🗺️ Daily Map Hunt:** Daily geography puzzle using heat colors on the world map.
 - **🗺️ Map Locator:** Interactive SVG world map. Find the correct country by clicking on its territory.
 - **⚔️ PvP Battle:** Challenge your friends in real-time multiplayer flag battles.
 - **🏆 Ultimate Mode:** The ultimate test! Locate the country on the map, then type its name, and finally type its capital in a "sudden death" format.
 - **🌫️ Blur Mode:** Can you recognize flags when they are highly blurred?
+- **🏅 Highscore:** Timed speedruns for world flags, world capitals, or US state flags—track mistakes, accept a time penalty on errors, and post your best time to shared leaderboards (no login).
 - **✨ Constellations:** Learn to identify the 88 modern constellations by their star patterns. Features beautiful mythological art upon mastery!
 
 ## 🛠️ Features
 
 - **Progress & Streaks:** Saves your learning progress, streaks, and mastered items locally.
 - **Practice Mode:** Review items you've already mastered with a built-in timer and mistake counter.
+- **Highscore Leaderboards:** Firebase-backed global boards per category (flags / capitals / US states); personal bests keyed per browser.
 - **Dark & Light Mode:** Fully supported themes across all modes and interactive maps.
 - **Smooth Animations:** Powered by Framer Motion.
 

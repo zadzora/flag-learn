@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      ".read": true,
+      ".write": true
+    },
+    "highscores": {
+      ".read": true,
+      "$mode": {
+        "$playerId": {
+          ".write": "($mode === 'world' || $mode === 'capitals' || $mode === 'us') && ((!newData.exists() && data.exists()) || (newData.hasChildren(['name','bestTimeSeconds','mistakes','playerId']) && newData.child('playerId').isString() && newData.child('playerId').val() === $playerId && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('bestTimeSeconds').isNumber() && newData.child('bestTimeSeconds').val() >= 0 && newData.child('bestTimeSeconds').val() <= 72000 && newData.child('mistakes').isNumber() && newData.child('mistakes').val() >= 0 && newData.child('mistakes').val() <= 10000 && (!data.exists() || newData.child('bestTimeSeconds').val() < data.child('bestTimeSeconds').val() || (newData.child('bestTimeSeconds').val() === data.child('bestTimeSeconds').val() && newData.child('mistakes').val() < data.child('mistakes').val()))))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','bestTimeSeconds','mistakes','playerId']) && newData.child('playerId').isString() && newData.child('playerId').val() === $playerId && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('bestTimeSeconds').isNumber() && newData.child('bestTimeSeconds').val() >= 0 && newData.child('bestTimeSeconds').val() <= 72000 && newData.child('mistakes').isNumber() && newData.child('mistakes').val() >= 0 && newData.child('mistakes').val() <= 10000)"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { AlertTriangle, ArrowLeft, Globe, Landmark, Map, Moon, Sun, Timer, Trophy } from "lucide-react"
+import { AlertTriangle, ArrowLeft, ExternalLink, Globe, Heart, Landmark, Map, MessagesSquare, Moon, Sun, Timer, Trophy } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { onValue, ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
@@ -531,6 +531,19 @@ export default function Highscore() {
                         </div>
                     )}
                 </div>
+
+                <footer className="w-full max-w-3xl mx-auto mt-10 pt-6 border-t border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                        <p className="flex items-center gap-1 text-xs">
+                            Made with <Heart size={12} className="text-red-400 fill-red-400" /> for learning
+                        </p>
+                        <a href="https://discord.gg/WwaRgeGK" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform">
+                            <MessagesSquare size={14} />
+                            <span>Discord</span>
+                            <ExternalLink size={10} className="opacity-70" />
+                        </a>
+                    </div>
+                </footer>
             </div>
 
             <AnimatePresence>

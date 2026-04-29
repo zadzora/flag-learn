@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Coffee, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Lightbulb } from "lucide-react"
+import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Coffee, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Lightbulb, MessagesSquare } from "lucide-react"
 import constData from "../../data/constellations.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
@@ -637,8 +637,11 @@ export default function ConstellationGame() {
 
             {/* ... Footer ... */}
             <footer className="w-full py-8 border-t border-slate-800 bg-black text-slate-500 text-sm transition-colors flex flex-col items-center gap-2 mt-auto relative z-10">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                     <p className="flex items-center gap-1">Made with <Heart size={14} className="text-red-500 fill-red-500" /> for learning</p>
+                    <a href="https://discord.gg/WwaRgeGK" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
+                        <MessagesSquare size={14} /><span>Discord</span><ExternalLink size={10} className="opacity-70" />
+                    </a>
                     <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]">
                         <Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" />
                     </a>

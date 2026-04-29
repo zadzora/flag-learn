@@ -10,6 +10,8 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 
 ### 🚀 **Live Demo:** [https://www.flaglearn.eu/](https://www.flaglearn.eu/)
 
+### 💬 **Community:** [Discord](https://discord.gg/WwaRgeGK)
+
 ---
 
 ## ✨ Game Modes

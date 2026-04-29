@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy, MapPin } from "lucide-react"
+import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy, MapPin, MessagesSquare } from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -159,10 +159,15 @@ export default function Home() {
 
             {/* Footer */}
             <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                     <p className="flex items-center gap-1">
                         Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning
                     </p>
+                    <a href="https://discord.gg/WwaRgeGK" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
+                        <MessagesSquare size={14} />
+                        <span>Discord</span>
+                        <ExternalLink size={10} className="opacity-70" />
+                    </a>
                     <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]">
                         <Coffee size={14} className="text-black/80" />
                         <span>Buy me a coffee</span>

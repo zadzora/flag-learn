@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy, MapPin, MessagesSquare } from "lucide-react"
+import { Swords, Moon, Sun, Heart, Map, Star, Coffee, ExternalLink, EyeOff, BookOpen, Calendar, Trophy, MapPin, MessagesSquare, CircleDot } from "lucide-react"
 
 export default function Home() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -82,6 +82,16 @@ export default function Home() {
                         <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Challenge Mods</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
+                            <Link to="/highscore" className="group flex flex-col p-4 bg-gradient-to-br from-amber-500 to-orange-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Trophy size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Highscore</h3>
+                                <p className="text-[10px] text-amber-100/90 leading-snug">
+                                    Speedrun flags, capitals, or US states—fastest times on the shared leaderboard.
+                                </p>
+                            </Link>
+
                             {/* Map Mode Card */}
                             <Link to="/map" className="group flex flex-col p-4 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
                                 <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
@@ -110,6 +120,14 @@ export default function Home() {
                                 <p className="text-[10px] text-indigo-100/80">Guess blurry flags</p>
                             </Link>
 
+                            <Link to="/word-wheel" className="group flex flex-col p-4 bg-gradient-to-br from-teal-600 to-cyan-800 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <CircleDot size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Country Wheel</h3>
+                                <p className="text-[10px] text-teal-100/90">Connect letters on the wheel to spell countries</p>
+                            </Link>
+
                             {/* --- ULTIMATE MODE CARD --- */}
                             <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
                                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl text-white group-hover:scale-110 transition-transform shadow-md shrink-0 mt-1">
@@ -121,16 +139,6 @@ export default function Home() {
                                         The ultimate test! Locate the flag on the map, then name the country and its capital to conquer the world.
                                     </p>
                                 </div>
-                            </Link>
-
-                            <Link to="/highscore" className="group flex flex-col p-4 bg-gradient-to-br from-amber-500 to-orange-700 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
-                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
-                                    <Trophy size={24} />
-                                </div>
-                                <h3 className="font-bold text-base">Highscore</h3>
-                                <p className="text-[10px] text-amber-100/90 leading-snug">
-                                    Speedrun flags, capitals, or US states—fastest times on the shared leaderboard.
-                                </p>
                             </Link>
 
                         </div>

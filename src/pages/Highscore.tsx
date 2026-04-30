@@ -422,7 +422,14 @@ export default function Highscore() {
                         <div className="mb-4">
                             {gameMode === "capitals" ? (
                                 <div className="bg-slate-100 dark:bg-slate-900 rounded-xl p-5 text-center">
-                                    <div className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-1">Country</div>
+                                    <div className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-3">Country</div>
+                                    <div className="w-full flex justify-center h-48 sm:h-56 mb-3">
+                                        <img
+                                            src={current.image}
+                                            alt={`${getDisplayName(current)} flag`}
+                                            className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700"
+                                        />
+                                    </div>
                                     <div className="text-2xl font-bold">{getDisplayName(current)}</div>
                                 </div>
                             ) : (

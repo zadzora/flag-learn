@@ -6,6 +6,20 @@ import { generateWordWheelPuzzle, pathLetters, type WheelLetter, type WordWheelP
 import worldData from "../../data/flags.json"
 
 const THEME_KEY = "flag-master-theme"
+const WORD_WHEEL_PROGRESS_KEY = "flag-master-word-wheel-level"
+
+function loadSavedWordWheelLevel(): number {
+    if (typeof window === "undefined") return 1
+    try {
+        const raw = localStorage.getItem(WORD_WHEEL_PROGRESS_KEY)
+        if (raw == null || raw === "") return 1
+        const n = Number.parseInt(raw, 10)
+        return Number.isFinite(n) && n >= 1 ? n : 1
+    } catch {
+        return 1
+    }
+}
+
 /** Round limit; hints fire at 30s, 60s, 90s from puzzle start. */
 const ROUND_SECONDS = 120
 const HINT_DELAYS_MS = [30_000, 60_000, 90_000] as const
@@ -66,7 +80,7 @@ export default function WordWheelGame() {
     const [solvedKeys, setSolvedKeys] = useState<Set<string>>(() => new Set())
     const [pathIndices, setPathIndices] = useState<number[]>([])
     const [dragging, setDragging] = useState(false)
-    const [level, setLevel] = useState(1)
+    const [level, setLevel] = useState(loadSavedWordWheelLevel)
     const [toast, setToast] = useState<string | null>(null)
     const [showExitConfirm, setShowExitConfirm] = useState(false)
     const [wheelLetters, setWheelLetters] = useState<WheelLetter[]>([])
@@ -95,6 +109,14 @@ export default function WordWheelGame() {
         else root.classList.remove("dark")
         localStorage.setItem(THEME_KEY, theme)
     }, [theme])
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(WORD_WHEEL_PROGRESS_KEY, String(level))
+        } catch {
+            /* ignore quota / private mode */
+        }
+    }, [level])
 
     const reloadPuzzle = useCallback(() => {
         const p = generateWordWheelPuzzle(level)

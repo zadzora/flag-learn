@@ -6,6 +6,16 @@ import { generateWordWheelPuzzle, pathLetters, type WheelLetter, type WordWheelP
 import worldData from "../../data/flags.json"
 
 const THEME_KEY = "flag-master-theme"
+/** Round limit; hints fire at 30s, 60s, 90s from puzzle start. */
+const ROUND_SECONDS = 120
+const HINT_DELAYS_MS = [30_000, 60_000, 90_000] as const
+
+function formatMmSs(totalSec: number): string {
+    const s = Math.max(0, Math.floor(totalSec))
+    const m = Math.floor(s / 60)
+    const r = s % 60
+    return `${m}:${r.toString().padStart(2, "0")}`
+}
 
 function wheelIndexFromEl(el: Element | null): number | null {
     let e: Element | null = el
@@ -60,6 +70,9 @@ export default function WordWheelGame() {
     const [toast, setToast] = useState<string | null>(null)
     const [showExitConfirm, setShowExitConfirm] = useState(false)
     const [wheelLetters, setWheelLetters] = useState<WheelLetter[]>([])
+    const [timeLeftSec, setTimeLeftSec] = useState(ROUND_SECONDS)
+    const [hintRevealed, setHintRevealed] = useState<Set<string>>(() => new Set())
+    const [showTimeoutAnswers, setShowTimeoutAnswers] = useState(false)
 
     const wheelWrapRef = useRef<HTMLDivElement>(null)
     /** pointerup + pointercancel often both fire → duplicate submitPath → false "already found". */
@@ -69,6 +82,12 @@ export default function WordWheelGame() {
     wheelLettersRef.current = wheelLetters
     const solvedRef = useRef<Set<string>>(solvedKeys)
     solvedRef.current = solvedKeys
+    const puzzleRef = useRef<WordWheelPuzzle | null>(null)
+    puzzleRef.current = puzzle
+    const deadlineRef = useRef<number>(Date.now() + ROUND_SECONDS * 1000)
+    const timeoutFiredRef = useRef(false)
+    const showTimeoutAnswersRef = useRef(false)
+    showTimeoutAnswersRef.current = showTimeoutAnswers
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -89,6 +108,11 @@ export default function WordWheelGame() {
         setPathIndices([])
         setDragging(false)
         gestureEndedRef.current = false
+        deadlineRef.current = Date.now() + ROUND_SECONDS * 1000
+        timeoutFiredRef.current = false
+        setTimeLeftSec(ROUND_SECONDS)
+        setHintRevealed(new Set())
+        setShowTimeoutAnswers(false)
         setInitialized(true)
         if (!p) {
             setToast("Couldn't generate a puzzle. Tap try again or change level.")
@@ -115,6 +139,56 @@ export default function WordWheelGame() {
         reloadPuzzle()
     }, [level, reloadPuzzle])
 
+    const revealRandomHintLetter = useCallback(() => {
+        const p = puzzleRef.current
+        if (!p || showTimeoutAnswersRef.current || timeoutFiredRef.current) return
+        if (solvedRef.current.size >= p.words.length) return
+        setHintRevealed((prev) => {
+            const solved = solvedRef.current
+            const slots: string[] = []
+            for (const e of p.entries) {
+                if (solved.has(e.key)) continue
+                for (let i = 0; i < e.key.length; i++) {
+                    const k = `${e.code}-${i}`
+                    if (!prev.has(k)) slots.push(k)
+                }
+            }
+            if (slots.length === 0) return prev
+            const pick = slots[Math.floor(Math.random() * slots.length)]
+            return new Set(prev).add(pick)
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!puzzle) return
+        const timers = HINT_DELAYS_MS.map((ms) => window.setTimeout(revealRandomHintLetter, ms))
+        return () => timers.forEach(window.clearTimeout)
+    }, [puzzle, revealRandomHintLetter])
+
+    useEffect(() => {
+        if (!puzzle || showTimeoutAnswers) return
+        const tick = () => {
+            const left = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000))
+            setTimeLeftSec(left)
+            if (
+                left <= 0 &&
+                !timeoutFiredRef.current &&
+                solvedRef.current.size < puzzle.words.length
+            ) {
+                timeoutFiredRef.current = true
+                setShowTimeoutAnswers(true)
+            }
+        }
+        tick()
+        const id = window.setInterval(tick, 250)
+        return () => window.clearInterval(id)
+    }, [puzzle, showTimeoutAnswers])
+
+    const dismissTimeoutTryAgain = useCallback(() => {
+        setShowTimeoutAnswers(false)
+        reloadPuzzle()
+    }, [reloadPuzzle])
+
     const wheelLen = wheelLetters.length
 
     useEffect(() => {
@@ -124,6 +198,12 @@ export default function WordWheelGame() {
     const submitPath = useCallback(
         (indices: number[]) => {
             if (!puzzle || indices.length === 0) return
+            if (showTimeoutAnswersRef.current) return
+            if (
+                Date.now() >= deadlineRef.current &&
+                solvedRef.current.size < puzzle.words.length
+            )
+                return
             const word = pathLetters(wheelLettersRef.current, indices)
             const prev = solvedRef.current
             const unsolved = puzzle.words.filter((w) => !prev.has(w))
@@ -131,16 +211,7 @@ export default function WordWheelGame() {
             // Level already cleared but drag/release can still fire before the next level loads.
             if (unsolved.length === 0) return
 
-            let unsolvedHit = unsolved.find((w) => w === word)
-            if (!unsolvedHit) {
-                const subs = unsolved.filter((w) => {
-                    if (w.length < 3) return false
-                    return word.length > w.length && isSubsequence(w, word)
-                })
-                if (subs.length > 0) {
-                    unsolvedHit = subs.reduce((best, w) => (w.length > best.length ? w : best))
-                }
-            }
+            const unsolvedHit = unsolved.find((w) => w === word)
 
             if (unsolvedHit) {
                 const next = new Set(prev).add(unsolvedHit)
@@ -311,7 +382,18 @@ export default function WordWheelGame() {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <div className="flex items-center gap-2 font-bold text-sm">
+                <div className="flex items-center gap-2 font-bold text-sm flex-wrap justify-end">
+                    <span
+                        className={
+                            "px-3 py-1.5 rounded-full border font-mono tabular-nums " +
+                            (timeLeftSec <= 20
+                                ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-600"
+                                : "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-600")
+                        }
+                        title="Time remaining for this level"
+                    >
+                        {formatMmSs(timeLeftSec)}
+                    </span>
                     <span className="bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 px-3 py-1.5 rounded-full border border-violet-200 dark:border-violet-500/30">
                         Level {level}
                     </span>
@@ -326,7 +408,8 @@ export default function WordWheelGame() {
             </div>
 
             <p className="text-center text-sm text-slate-500 dark:text-slate-400 max-w-md mb-4">
-                Drag across the wheel. Each tile once per word. Spell every country name.
+                Drag across the wheel — each tile at most once per word. Spell the exact country names within{" "}
+                {Math.floor(ROUND_SECONDS / 60)} minutes. Every 30 seconds one random letter is revealed.
             </p>
 
             <div className="w-full max-w-lg bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl rounded-3xl border border-white/70 dark:border-slate-700/70 shadow-xl p-4 mb-6">
@@ -347,18 +430,24 @@ export default function WordWheelGame() {
                                     />
                                 )}
                                 <div className="flex gap-1 flex-wrap justify-center">
-                                    {e.key.split("").map((ch, i) => (
-                                        <div
-                                            key={`${e.code}-${i}`}
-                                            className={
-                                                done
-                                                    ? "w-9 h-11 rounded-lg bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-300 text-lg"
-                                                    : "w-9 h-11 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-transparent select-none"
-                                            }
-                                        >
-                                            {done ? ch : "·"}
-                                        </div>
-                                    ))}
+                                    {e.key.split("").map((ch, i) => {
+                                        const hinted =
+                                            !done && hintRevealed.has(`${e.code}-${i}`)
+                                        return (
+                                            <div
+                                                key={`${e.code}-${i}`}
+                                                className={
+                                                    done
+                                                        ? "w-9 h-11 rounded-lg bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-300 text-lg"
+                                                        : hinted
+                                                          ? "w-9 h-11 rounded-lg bg-amber-500/15 border border-amber-500/45 flex items-center justify-center font-black text-amber-800 dark:text-amber-200 text-lg"
+                                                          : "w-9 h-11 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-transparent select-none"
+                                                }
+                                            >
+                                                {done || hinted ? ch : "·"}
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                                 {done && (
                                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
@@ -377,7 +466,10 @@ export default function WordWheelGame() {
 
             <div
                 ref={wheelWrapRef}
-                className="relative w-[min(92vw,340px)] aspect-square touch-none select-none mb-6"
+                className={
+                    "relative w-[min(92vw,340px)] aspect-square touch-none select-none mb-6 " +
+                    (showTimeoutAnswers ? "opacity-40 pointer-events-none" : "")
+                }
                 style={{ touchAction: "none" }}
             >
                 <div className="absolute inset-[8%] rounded-full bg-gradient-to-br from-white/90 to-slate-100/90 dark:from-slate-700/90 dark:to-slate-900/90 border border-white/80 dark:border-slate-600/80 shadow-inner" />
@@ -430,7 +522,7 @@ export default function WordWheelGame() {
                 <button
                     type="button"
                     onClick={shuffleWheelLetters}
-                    disabled={wheelLetters.length < 2}
+                    disabled={wheelLetters.length < 2 || showTimeoutAnswers}
                     className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
                     <Shuffle size={18} aria-hidden /> Shuffle
@@ -438,7 +530,8 @@ export default function WordWheelGame() {
                 <button
                     type="button"
                     onClick={() => reloadPuzzle()}
-                    className="py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-colors shadow-md shadow-red-600/25"
+                    disabled={showTimeoutAnswers}
+                    className="py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-colors shadow-md shadow-red-600/25 disabled:opacity-40 disabled:pointer-events-none"
                 >
                     New puzzle
                 </button>
@@ -455,6 +548,74 @@ export default function WordWheelGame() {
                         <div className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold max-w-md text-center">
                             {toast}
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showTimeoutAnswers && puzzle && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="word-wheel-timeout-title"
+                            lang="en"
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-5 max-w-sm border border-slate-200 dark:border-slate-700 w-full"
+                        >
+                            <div className="w-full">
+                                <h2
+                                    id="word-wheel-timeout-title"
+                                    className="text-2xl font-bold text-slate-800 dark:text-white mb-2"
+                                >
+                                    Time&apos;s up!
+                                </h2>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
+                                    You didn&apos;t spell every country before the timer hit zero.
+                                </p>
+                                <p className="text-slate-600 dark:text-slate-300 text-sm font-semibold mb-4">
+                                    Countries on this level (answers):
+                                </p>
+                                <ul className="text-left space-y-3" aria-label="Answers for this level">
+                                    {puzzle.entries.map((e) => (
+                                        <li
+                                            key={e.code}
+                                            className="flex items-center gap-3 text-slate-800 dark:text-slate-100"
+                                        >
+                                            <img
+                                                src={e.image}
+                                                alt={`Flag — ${e.displayName}`}
+                                                className="w-12 h-8 rounded object-cover border border-slate-200 dark:border-slate-600 shrink-0"
+                                            />
+                                            <div className="text-left min-w-0">
+                                                <div className="font-semibold">{e.displayName}</div>
+                                                <div className="font-mono text-xs text-slate-500 dark:text-slate-400 tracking-widest">
+                                                    {e.key}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
+                                    You stay on <span className="font-semibold text-slate-600 dark:text-slate-300">level {level}</span>.
+                                    Tap below for a new puzzle — same level, different countries.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={dismissTimeoutTryAgain}
+                                className="w-full py-3.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-violet-600/20 transition-all active:scale-95"
+                            >
+                                Try again
+                            </button>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

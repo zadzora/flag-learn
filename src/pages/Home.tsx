@@ -18,12 +18,12 @@ export default function Home() {
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="min-h-screen flex flex-col text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
             {/* Theme Toggle */}
             <button
                 onClick={toggleTheme}
-                className="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform z-10"
+                className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform z-10"
             >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
@@ -43,7 +43,7 @@ export default function Home() {
                     {/* Learning Section */}
                     <div>
                         <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Learning Path</h2>
-                        <Link to="/play" className="group relative flex items-center gap-4 p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all hover:-translate-y-1">
+                        <Link to="/play" className="group relative flex items-center gap-4 p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all hover:-translate-y-1">
                             <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                                 <BookOpen size={32} />
                             </div>
@@ -92,12 +92,13 @@ export default function Home() {
                             </Link>
 
                             {/* PvP Card */}
-                            <Link to="/pvp/create" className="group flex flex-col p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 transition-all hover:-translate-y-1">
-                                <div className="bg-orange-100 dark:bg-orange-900/50 p-3 rounded-xl text-orange-500 w-fit mb-3 group-hover:scale-110 transition-transform">
+                            <Link to="/pvp/create" className="group relative flex flex-col p-4 rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.2)] border border-white/60 dark:border-slate-700/70 text-white transition-all hover:-translate-y-1" style={{ backgroundImage: "linear-gradient(90deg, #ef4444 0%, #ef4444 50%, #2563eb 50%, #2563eb 100%)" }}>
+                                <div className="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full bg-black/25 border border-white/25 tracking-wider">VS</div>
+                                <div className="bg-white/90 p-3 rounded-xl text-slate-800 w-fit mb-3 group-hover:scale-110 transition-transform">
                                     <Swords size={24} />
                                 </div>
                                 <h3 className="font-bold text-base">PvP Battle</h3>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400">Challenge friends</p>
+                                <p className="text-[10px] text-white/90">Challenge friends</p>
                             </Link>
 
                             {/* Blur Mode Card */}
@@ -110,7 +111,7 @@ export default function Home() {
                             </Link>
 
                             {/* --- ULTIMATE MODE CARD --- */}
-                            <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
+                            <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
                                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl text-white group-hover:scale-110 transition-transform shadow-md shrink-0 mt-1">
                                     <Trophy size={36} />
                                 </div>
@@ -143,8 +144,8 @@ export default function Home() {
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
-                            <Link to="/constellations" className="group flex items-center p-4 bg-slate-900 rounded-2xl shadow-md hover:scale-[1.02] transition-all border border-slate-800">
-                                <div className="bg-indigo-900/50 p-3 rounded-xl text-indigo-400 mr-4 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <Link to="/constellations" className="group flex items-center p-4 bg-slate-900/90 rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.35)] hover:scale-[1.02] transition-all border border-slate-700/70">
+                                <div className="bg-amber-900/50 p-3 rounded-xl text-amber-400 mr-4 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all">
                                     <Star size={24} className="fill-current" />
                                 </div>
                                 <div className="flex flex-col text-left">

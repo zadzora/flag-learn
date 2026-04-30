@@ -344,8 +344,8 @@ export default function Highscore() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 px-4 py-6">
-            <div className="max-w-3xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-b from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 px-4 py-8 sm:py-10">
+            <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <button
                         onClick={() => {
@@ -356,32 +356,32 @@ export default function Highscore() {
                             }
                             navigate("/")
                         }}
-                        className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                        className="p-3 rounded-full bg-white/75 dark:bg-slate-800/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.12)] border border-white/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                         title="Back to Menu"
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 className="text-2xl sm:text-3xl font-black flex items-center gap-2">
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
                         <Trophy className="text-amber-500" size={28} />
                         Highscore
                     </h1>
-                    <button onClick={() => setTheme((p) => (p === "light" ? "dark" : "light"))} className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
+                    <button onClick={() => setTheme((p) => (p === "light" ? "dark" : "light"))} className="p-3 rounded-full bg-white/75 dark:bg-slate-800/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.12)] border border-white/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
                         {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                    <button type="button" onClick={() => requestModeChange("world")} className={`group flex flex-col p-4 rounded-2xl shadow-lg text-white transition-all text-left ${gameMode === "world" ? "ring-4 ring-indigo-300 dark:ring-indigo-600 scale-[1.02]" : "hover:scale-105"} bg-gradient-to-br from-indigo-500 to-violet-700`}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
+                    <button type="button" onClick={() => requestModeChange("world")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(79,70,229,0.24)] text-white transition-all text-left ${gameMode === "world" ? "ring-2 ring-white/80 dark:ring-indigo-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-indigo-500/95 via-indigo-500 to-violet-700`}>
                         <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Globe size={20} /></div>
                         <h3 className="font-bold text-base">Flags</h3>
                         <p className="text-[10px] text-indigo-100/90">World flags speedrun</p>
                     </button>
-                    <button type="button" onClick={() => requestModeChange("capitals")} className={`group flex flex-col p-4 rounded-2xl shadow-lg text-white transition-all text-left ${gameMode === "capitals" ? "ring-4 ring-emerald-300 dark:ring-emerald-600 scale-[1.02]" : "hover:scale-105"} bg-gradient-to-br from-emerald-500 to-teal-700`}>
+                    <button type="button" onClick={() => requestModeChange("capitals")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(13,148,136,0.24)] text-white transition-all text-left ${gameMode === "capitals" ? "ring-2 ring-white/80 dark:ring-emerald-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-emerald-500/95 via-emerald-500 to-teal-700`}>
                         <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Landmark size={20} /></div>
                         <h3 className="font-bold text-base">Capitals</h3>
                         <p className="text-[10px] text-emerald-100/90">Capital city speedrun</p>
                     </button>
-                    <button type="button" onClick={() => requestModeChange("us")} className={`group flex flex-col p-4 rounded-2xl shadow-lg text-white transition-all text-left ${gameMode === "us" ? "ring-4 ring-red-300 dark:ring-red-600 scale-[1.02]" : "hover:scale-105"} bg-gradient-to-br from-blue-600 to-red-600`}>
+                    <button type="button" onClick={() => requestModeChange("us")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(37,99,235,0.24)] text-white transition-all text-left ${gameMode === "us" ? "ring-2 ring-white/80 dark:ring-red-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-blue-600/95 via-blue-600 to-red-600`}>
                         <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Map size={20} /></div>
                         <h3 className="font-bold text-base">USA States</h3>
                         <p className="text-[10px] text-blue-100/90">US states speedrun</p>
@@ -389,19 +389,19 @@ export default function Highscore() {
                 </div>
 
                 {!started && finishedTime === null && (
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 mb-6 shadow-lg">
+                    <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
                         <h2 className="text-xl font-bold mb-2">Speedrun: {MODE_LABELS[gameMode]}</h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                             Finish the full set as fast as you can. Mistakes add time. Enter a name to save your best run to the leaderboard.
                         </p>
-                        <button onClick={startRun} className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors">
+                        <button onClick={startRun} className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-[0_10px_24px_rgba(79,70,229,0.32)]">
                             Start timed run
                         </button>
                     </div>
                 )}
 
                 {started && current && (
-                    <div className="relative bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 mb-6 shadow-lg overflow-hidden">
+                    <div className="relative bg-white/85 dark:bg-slate-800/80 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.14)] overflow-hidden">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{MODE_LABELS[gameMode]} Mode</span>
                             <div className="flex items-center gap-3">
@@ -414,14 +414,14 @@ export default function Highscore() {
                                 >
                                     <Timer size={18} /> {formatTime(elapsedSeconds)}
                                 </motion.span>
-                                <span className="text-sm font-bold text-red-200 bg-red-900/40 px-2 py-1 rounded flex items-center gap-1 border border-red-500/30">
+                                <span className="text-sm font-bold text-red-100 bg-red-500/80 dark:bg-red-900/50 px-2 py-1 rounded-lg flex items-center gap-1 border border-red-300/40 dark:border-red-500/30">
                                     Mistakes: {mistakes}
                                 </span>
                             </div>
                         </div>
                         <div className="mb-4">
                             {gameMode === "capitals" ? (
-                                <div className="bg-slate-100 dark:bg-slate-900 rounded-xl p-5 text-center">
+                                <div className="bg-slate-100/90 dark:bg-slate-900/85 rounded-2xl p-5 text-center border border-white/60 dark:border-slate-700/60">
                                     <div className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-3">Country</div>
                                     <div className="w-full flex justify-center h-48 sm:h-56 mb-3">
                                         <img
@@ -445,7 +445,7 @@ export default function Highscore() {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") handleCheck() }}
                             placeholder={gameMode === "capitals" ? "Type capital city..." : "Type answer..."}
-                            className={`w-full px-4 py-3 text-center text-lg rounded-xl border-2 outline-none transition-all dark:bg-slate-900 ${status === "error" ? "border-red-400 dark:border-red-600" : status === "correct" ? "border-emerald-400 dark:border-emerald-600" : "border-slate-200 dark:border-slate-600 focus:border-indigo-500"}`}
+                            className={`w-full px-4 py-3 text-center text-lg rounded-2xl border-2 outline-none transition-all dark:bg-slate-900/90 ${status === "error" ? "border-red-400 dark:border-red-600" : status === "correct" ? "border-emerald-400 dark:border-emerald-600" : "border-slate-200 dark:border-slate-600 focus:border-indigo-500"}`}
                             autoComplete="off"
                             autoFocus
                         />
@@ -457,7 +457,7 @@ export default function Highscore() {
                                 </p>
                             )}
                         </div>
-                        <button onClick={handleCheck} disabled={!input.trim()} className={`w-full py-3 rounded-xl mt-2 font-bold transition-colors ${input.trim() ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"}`}>
+                        <button onClick={handleCheck} disabled={!input.trim()} className={`w-full py-3 rounded-2xl mt-2 font-bold transition-colors ${input.trim() ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_10px_24px_rgba(79,70,229,0.3)]" : "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"}`}>
                             Check
                         </button>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">Remaining: {queue.length + 1}</p>
@@ -480,26 +480,26 @@ export default function Highscore() {
                 )}
 
                 {finishedTime !== null && (
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 mb-6 shadow-lg">
+                    <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
                         <h2 className="text-2xl font-black mb-2">Run completed!</h2>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">Your time: <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{formatTime(finishedTime)}</span></p>
                         <p className="text-slate-600 dark:text-slate-300 mb-4">Mistakes: <span className="font-bold text-red-500 dark:text-red-400">{finishedMistakes}</span></p>
                         <div className="flex gap-2 mb-3">
-                            <input value={nameInput} onChange={(e) => { setNameInput(e.target.value); setSaveNotice(null) }} maxLength={24} placeholder="Choose your name..." className="flex-1 px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 outline-none focus:border-indigo-500" />
-                            <button onClick={saveScore} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold">Save</button>
+                            <input value={nameInput} onChange={(e) => { setNameInput(e.target.value); setSaveNotice(null) }} maxLength={24} placeholder="Choose your name..." className="flex-1 px-4 py-2 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50/85 dark:bg-slate-900/90 outline-none focus:border-indigo-500" />
+                            <button onClick={saveScore} className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_8px_20px_rgba(5,150,105,0.3)]">Save</button>
                         </div>
                         {saveNotice && (
                             <p className={`text-sm font-bold mb-3 ${saveNotice.includes("Not saved") ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                                 {saveNotice}
                             </p>
                         )}
-                        <button onClick={startRun} className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors">
+                        <button onClick={startRun} className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-[0_10px_24px_rgba(79,70,229,0.32)]">
                             Start again
                         </button>
                     </div>
                 )}
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+                <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
                     <div className="flex items-center justify-between gap-2 mb-4">
                         <h3 className="text-lg font-bold">{MODE_LABELS[gameMode]} leaderboard</h3>
                         {/* <div className="flex items-center gap-2">
@@ -524,7 +524,16 @@ export default function Highscore() {
                     ) : (
                         <div className="space-y-2">
                             {modeLeaderboard.slice(0, 50).map((entry, idx) => (
-                                <div key={`${entry.name}-${idx}`} className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+                                <div
+                                    key={`${entry.name}-${idx}`}
+                                    className={`flex items-center justify-between rounded-2xl px-3 py-2.5 border ${idx === 0
+                                        ? "bg-yellow-100/95 dark:bg-yellow-900/30 border-yellow-400/80 dark:border-yellow-600/70"
+                                        : idx === 1
+                                            ? "bg-slate-200/95 dark:bg-slate-600/40 border-slate-400/85 dark:border-slate-400/80"
+                                            : idx === 2
+                                                ? "bg-orange-100/95 dark:bg-orange-900/30 border-orange-400/80 dark:border-orange-600/70"
+                                                : "bg-slate-50/90 dark:bg-slate-900/85 border-slate-200/85 dark:border-slate-700/85"}`}
+                                >
                                     <div className="flex items-center gap-3">
                                         <span className="text-xs font-bold w-6 text-slate-500">#{idx + 1}</span>
                                         <span className="font-semibold">{entry.name}</span>
@@ -539,7 +548,7 @@ export default function Highscore() {
                     )}
                 </div>
 
-                <footer className="w-full max-w-3xl mx-auto mt-10 pt-6 border-t border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-3">
+                <footer className="w-full max-w-4xl mx-auto mt-10 pt-6 border-t border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-3">
                     <div className="flex flex-wrap items-center justify-center gap-3">
                         <p className="flex items-center gap-1 text-xs">
                             Made with <Heart size={12} className="text-red-400 fill-red-400" /> for learning

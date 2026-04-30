@@ -79,7 +79,7 @@ export default function ConstellationBuilder() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col p-4 sm:p-8 font-sans">
+        <div className="min-h-screen text-slate-100 flex flex-col p-4 sm:p-8 font-sans">
             <div className="flex items-center gap-4 mb-8">
                 <Link to="/" className="p-3 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"><ArrowLeft size={20} /></Link>
                 <h1 className="text-2xl font-bold text-indigo-400">Constellation Builder</h1>

@@ -339,11 +339,11 @@ export default function UltimateGame() {
             <div className="absolute top-0 left-0 w-full z-20 flex flex-col pointer-events-none">
 
                 {/* Top Header Bar */}
-                <div className="w-full bg-indigo-600 dark:bg-indigo-900/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 shadow-md pointer-events-auto">
+                <div className="w-full bg-indigo-600/95 dark:bg-indigo-900/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 shadow-[0_10px_24px_rgba(79,70,229,0.3)] pointer-events-auto">
 
                     <button
                         onClick={() => setShowExitConfirm(true)}
-                        className="p-2 sm:p-2.5 rounded-full bg-white text-indigo-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-105"
+                        className="p-2 sm:p-2.5 rounded-full bg-white/80 text-indigo-600 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors border border-white/70 dark:border-slate-700/70 shadow-md hover:scale-105"
                         title="Back to Menu"
                     >
                         <ArrowLeft size={20} />

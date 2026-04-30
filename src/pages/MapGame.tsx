@@ -586,7 +586,7 @@ export default function MapGame() {
             >
                 <button
                     onClick={toggleTheme}
-                    className="p-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>

@@ -393,10 +393,10 @@ export default function PvPGame() {
 
     if (needsName) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4 transition-colors duration-500">
+            <div className="min-h-screen flex flex-col items-center justify-center text-slate-800 dark:text-slate-100 p-4 transition-colors duration-500">
                 <button
                     onClick={toggleTheme}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                    className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
@@ -466,12 +466,12 @@ export default function PvPGame() {
         const canStart = activePlayersCount >= 2
 
         return (
-            <div className="min-h-screen flex flex-col items-center pt-20 px-4 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
+            <div className="min-h-screen flex flex-col items-center pt-20 px-4 text-slate-800 dark:text-slate-100 transition-colors duration-500">
                 <button onClick={leaveGame} className="absolute top-4 left-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md text-red-500 hover:bg-red-50"><X size={20} /></button>
 
                 <button
                     onClick={toggleTheme}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                    className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
@@ -619,7 +619,7 @@ export default function PvPGame() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
             <div className="w-full px-4 flex justify-between items-center mb-4">
                 <button onClick={leaveGame} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm text-slate-400 hover:text-red-500"><X size={20}/></button>

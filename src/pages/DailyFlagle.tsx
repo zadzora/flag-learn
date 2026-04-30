@@ -176,11 +176,11 @@ export default function DailyFlagle() {
 
     // --- RENDER ---
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 pb-12">
+        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500 pb-12">
 
             {/* Header */}
             <div className="w-full max-w-lg px-4 flex justify-between items-center mb-6">
-                <Link to="/" className="p-3 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
+                <Link to="/" className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
                     <ArrowLeft size={20} />
                 </Link>
 
@@ -191,7 +191,7 @@ export default function DailyFlagle() {
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">{todayStr}</span>
                 </div>
 
-                <button onClick={toggleTheme} className="p-3 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
+                <button onClick={toggleTheme} className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
             </div>

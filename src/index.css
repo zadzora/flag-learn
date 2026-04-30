@@ -2,3 +2,163 @@
 
 /* Toto je kľúčové pre Tailwind v4 - povie mu, aby dark mode fungoval cez triedu .dark */
 @custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    /* 8pt spacing rhythm */
+    --space-2: 0.5rem;   /* 8 */
+    --space-3: 0.75rem;  /* 12 */
+    --space-4: 1rem;     /* 16 */
+    --space-6: 1.5rem;   /* 24 */
+
+    /* Type rhythm */
+    --text-title-1: clamp(1.75rem, 2.6vw, 2.25rem);
+    --text-title-2: clamp(1.35rem, 2vw, 1.75rem);
+    --text-title-3: clamp(1.05rem, 1.2vw, 1.25rem);
+
+    --apple-bg-start: #f4f6fb;
+    --apple-bg-mid: #ffffff;
+    --apple-bg-end: #eef2f9;
+    --apple-surface: rgba(255, 255, 255, 0.8);
+    --apple-surface-border: rgba(148, 163, 184, 0.35);
+    --apple-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 3px 10px rgba(15, 23, 42, 0.1);
+}
+
+.dark {
+    --apple-bg-start: #020617;
+    --apple-bg-mid: #0f172a;
+    --apple-bg-end: #020617;
+    --apple-surface: rgba(30, 41, 59, 0.78);
+    --apple-surface-border: rgba(71, 85, 105, 0.5);
+    --apple-shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
+}
+
+@layer base {
+    html,
+    body,
+    #root {
+        min-height: 100%;
+    }
+
+    body {
+        font-family: "Inter", "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        letter-spacing: -0.01em;
+        background:
+            radial-gradient(1200px 700px at 12% -5%, rgba(59, 130, 246, 0.08), transparent 60%),
+            radial-gradient(1000px 700px at 100% 0%, rgba(99, 102, 241, 0.08), transparent 60%),
+            linear-gradient(180deg, var(--apple-bg-start), var(--apple-bg-mid) 40%, var(--apple-bg-end));
+        color: #0f172a;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    .dark body {
+        color: #e2e8f0;
+    }
+
+    h1, h2, h3 {
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+    }
+
+    h1 { font-size: var(--text-title-1); }
+    h2 { font-size: var(--text-title-2); }
+    h3 { font-size: var(--text-title-3); }
+}
+
+@layer components {
+    .min-h-screen {
+        background-color: transparent !important;
+    }
+
+    .bg-white,
+    .dark .dark\:bg-slate-800,
+    .dark .dark\:bg-slate-900 {
+        background-color: var(--apple-surface) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-color: var(--apple-surface-border) !important;
+        box-shadow: var(--apple-shadow);
+    }
+
+    .bg-slate-100,
+    .dark .dark\:bg-slate-950 {
+        background-color: transparent !important;
+    }
+
+    .bg-slate-900\/80,
+    .bg-slate-900\/90,
+    .dark .dark\:bg-slate-900\/80,
+    .dark .dark\:bg-slate-900\/90,
+    .dark .dark\:bg-slate-800\/80,
+    .dark .dark\:bg-slate-800\/90 {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-color: var(--apple-surface-border) !important;
+    }
+
+    .shadow-md,
+    .shadow-lg,
+    .shadow-xl,
+    .shadow-2xl {
+        box-shadow: var(--apple-shadow) !important;
+    }
+
+    .dark .shadow-md,
+    .dark .shadow-lg,
+    .dark .shadow-xl,
+    .dark .shadow-2xl {
+        box-shadow: 0 22px 56px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    .rounded-2xl,
+    .rounded-3xl {
+        border-radius: 1.4rem !important;
+    }
+
+    .rounded-xl {
+        border-radius: 1rem !important;
+    }
+
+    button {
+        min-height: 2.75rem;
+        padding-inline: var(--space-4);
+        padding-block: var(--space-2);
+        font-weight: 700;
+        transition: transform 180ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
+    }
+
+    button:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    button:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    input,
+    textarea,
+    select {
+        min-height: 2.75rem;
+        padding-inline: var(--space-4);
+        padding-block: var(--space-2);
+        border-radius: 0.95rem !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-2) !important; }
+    .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-3) !important; }
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-4) !important; }
+    .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-6) !important; }
+
+    a[class*="rounded-full"],
+    button[class*="rounded-full"] {
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    footer {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+}

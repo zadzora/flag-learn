@@ -572,7 +572,7 @@ export default function Game() {
         >
             <Link
                 to="/"
-                className={`absolute left-4 z-40 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}
+                className={`absolute left-4 z-40 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}
                 title="Back to Menu"
             >
                 <ArrowLeft size={20} />
@@ -580,7 +580,7 @@ export default function Game() {
 
             <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}>
                 {!isPracticeMode && (
-                    <div className="flex bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-1 gap-1 shadow-sm border border-slate-300/50 dark:border-slate-700">
+                    <div className="flex bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-1 gap-1 shadow-[0_10px_24px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70">
                         <button onClick={() => switchGameMode('world')} className={`p-2 rounded-lg transition-all ${gameMode === 'world' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Flags"><Globe size={20} /></button>
                         <button onClick={() => switchGameMode('us')} className={`p-2 rounded-lg transition-all ${gameMode === 'us' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="US States"><Map size={20} /></button>
                         <button onClick={() => switchGameMode('capitals')} className={`p-2 rounded-lg transition-all ${gameMode === 'capitals' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Capitals"><Landmark size={20} /></button>
@@ -589,7 +589,7 @@ export default function Game() {
 
                 <button
                     onClick={toggleTheme}
-                    className="p-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
@@ -601,7 +601,7 @@ export default function Game() {
                         initial={{ y: -50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -50, opacity: 0 }}
-                        className="absolute top-0 w-full bg-indigo-600 dark:bg-indigo-800 text-white p-2 flex justify-between items-center px-4 sm:px-8 z-30 shadow-md"
+                        className="absolute top-0 w-full bg-indigo-600/95 dark:bg-indigo-800/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 z-30 shadow-[0_10px_24px_rgba(79,70,229,0.3)]"
                     >
                         <button onClick={() => exitPracticeMode()} className="flex items-center gap-1 text-xs bg-indigo-700 dark:bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full transition-colors"><LogOut size={14} /> Exit</button>
                         <div className="flex items-center gap-4 mr-12 sm:mr-0">
@@ -647,7 +647,7 @@ export default function Game() {
 
                 <AnimatePresence mode="wait">
                     {current ? (
-                        <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isPracticeMode ? 0.05 : 0.2 }} className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300">
+                        <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isPracticeMode ? 0.05 : 0.2 }} className="bg-white/85 dark:bg-slate-800/80 backdrop-blur-2xl p-6 sm:p-8 rounded-t-2xl rounded-b-3xl shadow-[0_18px_48px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300">
                             <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r ${isPracticeMode ? 'from-indigo-600 via-blue-500 to-indigo-600' : 'from-indigo-500 via-purple-500 to-pink-500'}`}></div>
 
                             <div className="relative group w-full flex justify-center h-48 sm:h-56">

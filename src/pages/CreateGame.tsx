@@ -84,9 +84,9 @@ export default function CreateGame() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 px-4 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-500 overflow-y-auto pb-10">
+        <div className="min-h-screen flex flex-col items-center pt-8 px-4 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-500 overflow-y-auto pb-10">
 
-            <Link to="/" className="absolute top-4 left-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 hover:scale-110 transition-transform">
+            <Link to="/" className="absolute top-4 left-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 hover:scale-110 transition-transform">
                 <ArrowLeft size={20} />
             </Link>
 
@@ -99,7 +99,7 @@ export default function CreateGame() {
                     <p className="text-slate-500 dark:text-slate-400">Setup your multiplayer arena.</p>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 space-y-5">
+                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-2xl p-6 rounded-3xl shadow-[0_18px_48px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 space-y-5">
 
                     {/* Nickname */}
                     <div>

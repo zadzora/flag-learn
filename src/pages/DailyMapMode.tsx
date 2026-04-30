@@ -231,9 +231,9 @@ export default function DailyMapMode() {
     }
 
     return (
-        <div className="h-screen w-full flex flex-col overflow-hidden relative select-none transition-colors duration-500 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+        <div className="h-screen w-full flex flex-col overflow-hidden relative select-none transition-colors duration-500 text-slate-800 dark:text-slate-100">
             <div className="absolute right-3 sm:right-4 top-3 sm:top-4 z-20">
-                <button onClick={toggleTheme} className="p-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
+                <button onClick={toggleTheme} className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
                     {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
             </div>

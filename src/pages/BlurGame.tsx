@@ -180,7 +180,7 @@ export default function BlurGame() {
     // --- RENDER: GAME OVER SCREEN ---
     if (isGameOver) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans p-4 transition-colors duration-500">
+            <div className="min-h-screen flex flex-col items-center justify-center text-slate-800 dark:text-slate-100 font-sans p-4 transition-colors duration-500">
                 <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full border border-slate-200 dark:border-slate-700">
                     <div className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 p-4 rounded-full inline-block mb-4">
                         <Trophy size={48} />
@@ -219,11 +219,11 @@ export default function BlurGame() {
 
     // --- RENDER: GAME ---
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
 
             {/* Header */}
             <div className="w-full max-w-lg px-4 flex justify-between items-center mb-6">
-                <Link to="/" className="p-3 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
+                <Link to="/" className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
                     <ArrowLeft size={20} />
                 </Link>
 
@@ -239,7 +239,7 @@ export default function BlurGame() {
                     {/* Theme Toggle Button */}
                     <button
                         onClick={toggleTheme}
-                        className="p-3 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ml-2"
+                        className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ml-2"
                     >
                         {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     </button>

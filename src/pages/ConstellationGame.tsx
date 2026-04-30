@@ -434,9 +434,9 @@ export default function ConstellationGame() {
 
     return (
         <div className={`min-h-screen flex flex-col items-center justify-start pt-8 font-sans transition-colors duration-500 relative
-            ${isPracticeMode ? 'bg-indigo-950 text-indigo-100' : 'bg-slate-950 text-slate-100'}`}
+            ${isPracticeMode ? 'text-indigo-100' : 'text-slate-100'}`}
         >
-            <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900 shadow-md border border-slate-700 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}><ArrowLeft size={20} /></Link>
+            <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900/85 shadow-md border border-slate-700/70 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}><ArrowLeft size={20} /></Link>
 
             <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}>
                 {/* LANGUAGE SELECTOR */}

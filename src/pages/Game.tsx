@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef, useMemo } from "react"
+import { useEffect, useState, useRef, useMemo, type MouseEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import { Link } from "react-router-dom"
-import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark, Unlock, MessagesSquare } from "lucide-react"
+import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark, Unlock, MessagesSquare, Info } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+import CountryFactsPanel, { type CountryFactsUi } from "../components/CountryFactsPanel"
+import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 // --- TYPES ---
@@ -30,6 +32,36 @@ const TUTORIAL_KEY = "flag-master-tutorial-dismissed"
 const STORAGE_KEY_WORLD = "flag-master-v1"
 const STORAGE_KEY_US = "flag-master-us-v1"
 const STORAGE_KEY_CAPITALS = "flag-master-capitals-v1"
+
+function readCapitalsStreakFromStorage(code: string): number {
+    if (typeof window === "undefined") return 0
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_CAPITALS)
+        if (!raw) return 0
+        const parsed = JSON.parse(raw) as { progress?: Record<string, FlagProgress> }
+        return parsed.progress?.[code]?.streak ?? 0
+    } catch {
+        return 0
+    }
+}
+
+function readWorldStreakFromStorage(code: string): number {
+    if (typeof window === "undefined") return 0
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_WORLD)
+        if (!raw) return 0
+        const parsed = JSON.parse(raw) as { progress?: Record<string, FlagProgress> }
+        return parsed.progress?.[code]?.streak ?? 0
+    } catch {
+        return 0
+    }
+}
+
+const SECTION_LABELS: Record<GameMode, { title: string; detail: string }> = {
+    world: { title: "Countries", detail: "Guess countries from flags" },
+    us: { title: "US States", detail: "Guess states from flags" },
+    capitals: { title: "World Capitals", detail: "Guess capitals from flags" },
+}
 
 export default function Game() {
     // --- GAME MODE STATE ---
@@ -64,6 +96,8 @@ export default function Game() {
 
     // UI states
     const [showGallery, setShowGallery] = useState(false)
+    const [countryFactsModalFlag, setCountryFactsModalFlag] = useState<Flag | null>(null)
+    const [countryFactsModalUi, setCountryFactsModalUi] = useState<CountryFactsUi | null>(null)
     const [progress, setProgress] = useState<Record<string, FlagProgress>>({})
     const [isLoaded, setIsLoaded] = useState(false)
     const [showCheatConfirm, setShowCheatConfirm] = useState(false) // State pre Cheat button
@@ -94,6 +128,7 @@ export default function Game() {
     const [practicePool, setPracticePool] = useState<Flag[]>([])
 
     const inputRef = useRef<HTMLInputElement>(null)
+    const countryFactsReqIdRef = useRef(0)
 
     // --- DARK MODE LOGIC ---
     useEffect(() => {
@@ -133,6 +168,7 @@ export default function Game() {
         setPracticeResults(null)
         setShowGallery(false)
         setShowCheatConfirm(false)
+        closeCountryFactsModal()
         setSelectedFlags([])
         setCurrent(null)
         setStatus('idle')
@@ -250,9 +286,33 @@ export default function Game() {
         }
     }
 
+    function closeCountryFactsModal() {
+        countryFactsReqIdRef.current++
+        setCountryFactsModalFlag(null)
+        setCountryFactsModalUi(null)
+    }
+
+    function openCountryFactsModal(flag: Flag, e?: MouseEvent<HTMLButtonElement>) {
+        e?.stopPropagation()
+        const reqId = ++countryFactsReqIdRef.current
+        setCountryFactsModalFlag(flag)
+        setCountryFactsModalUi({ phase: "loading" })
+        void fetchCountryFactsFree(flag.code)
+            .then(facts => {
+                if (countryFactsReqIdRef.current !== reqId) return
+                if (facts) setCountryFactsModalUi({ phase: "ready", facts })
+                else setCountryFactsModalUi({ phase: "failed" })
+            })
+            .catch(() => {
+                if (countryFactsReqIdRef.current !== reqId) return
+                setCountryFactsModalUi({ phase: "failed" })
+            })
+    }
+
     function closeGallery() {
         setShowGallery(false)
         setShowCheatConfirm(false)
+        closeCountryFactsModal()
     }
 
     function toggleFlagSelection(code: string) {
@@ -561,6 +621,22 @@ export default function Game() {
         return "idle"
     }
 
+    /** Hide API capital until mastered in Capitals (disk save); if user is in Capitals mode, also trust live React progress (may update before the next save). */
+    const countryFactsModalCapitalMasked =
+        countryFactsModalFlag != null &&
+        (() => {
+            const code = countryFactsModalFlag.code
+            const fromDisk = readCapitalsStreakFromStorage(code)
+            const live = gameMode === "capitals" ? (progress[code]?.streak ?? 0) : 0
+            return Math.max(fromDisk, live) < TARGET_STREAK
+        })()
+
+    /** In Capitals mode, hide country name & currency from API until country is mastered in Countries (world save). */
+    const countryFactsModalCountryIdentityMasked =
+        countryFactsModalFlag != null &&
+        gameMode === "capitals" &&
+        readWorldStreakFromStorage(countryFactsModalFlag.code) < TARGET_STREAK
+
     if (!isLoaded) return null
 
     return (
@@ -578,12 +654,68 @@ export default function Game() {
                 <ArrowLeft size={20} />
             </Link>
 
-            <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}>
+            <div className={`absolute right-4 z-40 flex max-w-[min(100vw-5rem,28rem)] flex-row-reverse flex-wrap items-center justify-end gap-2 sm:max-w-none sm:flex-nowrap sm:gap-3 ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}>
                 {!isPracticeMode && (
-                    <div className="flex bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-1 gap-1 shadow-[0_10px_24px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70">
-                        <button onClick={() => switchGameMode('world')} className={`p-2 rounded-lg transition-all ${gameMode === 'world' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Flags"><Globe size={20} /></button>
-                        <button onClick={() => switchGameMode('us')} className={`p-2 rounded-lg transition-all ${gameMode === 'us' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="US States"><Map size={20} /></button>
-                        <button onClick={() => switchGameMode('capitals')} className={`p-2 rounded-lg transition-all ${gameMode === 'capitals' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`} title="World Capitals"><Landmark size={20} /></button>
+                    <div className="flex min-w-0 items-stretch overflow-hidden rounded-2xl border border-white/70 bg-white/75 shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85">
+                        <AnimatePresence mode="wait" initial={false}>
+                            <motion.div
+                                key={gameMode}
+                                initial={{ opacity: 0, x: 18 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -14 }}
+                                transition={{ duration: 0.22, ease: "easeOut" }}
+                                className="flex max-w-[10rem] flex-col justify-center border-r border-slate-200/90 px-2.5 py-1.5 sm:max-w-[12.5rem] sm:px-3 dark:border-slate-600/90"
+                            >
+                                <span className="text-[10px] font-extrabold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                                    {SECTION_LABELS[gameMode].title}
+                                </span>
+                                <span className="mt-0.5 text-[9px] leading-snug text-slate-500 dark:text-slate-400 sm:text-[10px]">
+                                    {SECTION_LABELS[gameMode].detail}
+                                </span>
+                                <span className="mt-1 text-[8px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    Icons · switch section
+                                </span>
+                            </motion.div>
+                        </AnimatePresence>
+                        <div
+                            className="flex shrink-0 items-center gap-0.5 p-1"
+                            role="tablist"
+                            aria-label="Quiz section — tap an icon to switch"
+                        >
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={gameMode === "world"}
+                                onClick={() => switchGameMode("world")}
+                                title={`Countries — ${SECTION_LABELS.world.detail}`}
+                                className={`rounded-xl p-2 transition-all ${gameMode === "world" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
+                            >
+                                <Globe size={20} aria-hidden />
+                                <span className="sr-only">Countries</span>
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={gameMode === "us"}
+                                onClick={() => switchGameMode("us")}
+                                title={`US States — ${SECTION_LABELS.us.detail}`}
+                                className={`rounded-xl p-2 transition-all ${gameMode === "us" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
+                            >
+                                <Map size={20} aria-hidden />
+                                <span className="sr-only">US States</span>
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={gameMode === "capitals"}
+                                onClick={() => switchGameMode("capitals")}
+                                title={`World Capitals — ${SECTION_LABELS.capitals.detail}`}
+                                className={`rounded-xl p-2 transition-all ${gameMode === "capitals" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
+                            >
+                                <Landmark size={20} aria-hidden />
+                                <span className="sr-only">World Capitals</span>
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -621,7 +753,6 @@ export default function Game() {
                         <div className="flex justify-between items-center px-1 mb-2">
                             <div className="flex items-center gap-2">
                                 <img src={theme === 'dark' ? '/logo_dark.png' : '/logo_white.png'} alt="Logo" className="h-10 w-auto object-contain" />
-                                {gameMode === 'capitals' && <span className="text-xs font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded">Capitals</span>}
                             </div>
                             <div className="flex items-center gap-3">
                                 <AnimatePresence>
@@ -650,21 +781,29 @@ export default function Game() {
                         <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isPracticeMode ? 0.05 : 0.2 }} className="bg-white/85 dark:bg-slate-800/80 backdrop-blur-2xl p-6 sm:p-8 rounded-t-2xl rounded-b-3xl shadow-[0_18px_48px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300">
                             <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r ${isPracticeMode ? 'from-indigo-600 via-blue-500 to-indigo-600' : 'from-indigo-500 via-purple-500 to-pink-500'}`}></div>
 
-                            <div className="relative group w-full flex justify-center h-48 sm:h-56">
-                                {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />}
-                                {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700 absolute top-0 z-50" />}
+                            <div className="flex w-full flex-col gap-2">
+                                <div className="flex min-h-[1.75rem] justify-end px-0.5">
+                                    {!isPracticeMode && !isReview && (
+                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-slate-800 px-3 py-1 text-xs font-bold text-white shadow-sm dark:border-slate-600 dark:bg-slate-950">
+                                            🔥 {progress[current.code]?.streak || 0}/3
+                                        </div>
+                                    )}
+                                    {isPracticeMode && (
+                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-sm dark:bg-indigo-500 dark:border-white/20">
+                                            <Dumbbell size={12} /> Practice
+                                        </div>
+                                    )}
+                                    {!isPracticeMode && isReview && (
+                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                                            <RefreshCw size={12} /> Review
+                                        </div>
+                                    )}
+                                </div>
 
-                                {!isPracticeMode && !isReview && (
-                                    <div className="absolute -top-3 -right-3 bg-slate-800 dark:bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1">🔥 {progress[current.code]?.streak || 0}/3</div>
-                                )}
-
-                                {isPracticeMode && (
-                                    <div className="absolute -top-3 -right-3 bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><Dumbbell size={12} /> Practice</div>
-                                )}
-
-                                {!isPracticeMode && isReview && (
-                                    <div className="absolute -top-3 -right-3 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-white dark:border-slate-700 shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Review</div>
-                                )}
+                                <div className="relative group flex h-48 w-full justify-center sm:h-56">
+                                    {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full w-auto max-w-full object-contain rounded-lg border border-slate-100 shadow-md dark:border-slate-700" />}
+                                    {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute top-0 z-50 h-full w-auto max-w-full object-contain rounded-lg border border-slate-100 shadow-md dark:border-slate-700" />}
+                                </div>
                             </div>
 
                             {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
@@ -762,6 +901,14 @@ export default function Game() {
                     <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]"><Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" /></a>
                 </div>
                 <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Flags provided by Flagpedia.net <ExternalLink size={12} /></a>
+                <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 px-4 text-center text-xs">
+                    <a href="https://restcountries.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                        Country data from REST Countries <ExternalLink size={12} />
+                    </a>
+                    <a href="https://www.worldpop.org/sdi/introapi/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                        Population grids from WorldPop <ExternalLink size={12} />
+                    </a>
+                </div>
                 <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2"><h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2><p>Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively. Unlike other <strong>flag games</strong>, we use spaced repetition and streak mechanics to make learning fun.</p></section>
             </footer>
 
@@ -772,7 +919,7 @@ export default function Game() {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900 gap-4">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Collection</h2><p className="text-slate-500 dark:text-slate-400 text-sm">{gameMode === 'world' ? 'World Flags' : (gameMode === 'us' ? 'US State Flags' : 'World Capitals')} - Select to practice.</p></div>
+                                    <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Collection</h2><p className="text-slate-500 dark:text-slate-400 text-sm">{gameMode === 'world' ? 'World Flags' : (gameMode === 'us' ? 'US State Flags' : 'World Capitals')} — Select mastered flags to practice. {(gameMode === 'world' || gameMode === 'capitals') && <span className="text-indigo-600 dark:text-indigo-400">Tap <Info size={12} className="inline align-text-bottom mx-0.5" /> on a mastered flag for country facts.</span>}</p></div>
                                     <div className="flex items-center gap-2">
                                         <button onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }} disabled={selectedFlags.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedFlags.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}</button>
                                         <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
@@ -839,6 +986,18 @@ export default function Game() {
                                                         {!isSelected && isMastered && <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-1 shadow-sm"><Check size={12} strokeWidth={4} /></div>}
 
                                                         {!isSelected && !isMastered && isSeen && <div className="absolute bottom-0 w-full bg-slate-900/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">{p.streak}/3</div>}
+
+                                                        {isMastered && (gameMode === 'world' || gameMode === 'capitals') && (
+                                                            <button
+                                                                type="button"
+                                                                title="Country info"
+                                                                aria-label="Country info"
+                                                                onClick={e => openCountryFactsModal(flag, e)}
+                                                                className="absolute bottom-1 left-1 z-20 box-border inline-flex aspect-square h-[34px] min-h-[34px] max-h-[28px] w-[34px] min-w-[34px] max-w-[28px] shrink-0 items-center justify-center rounded-full border-0 bg-indigo-600 p-0 leading-none text-white shadow-md outline-none ring-[1.5px] ring-white/35 hover:bg-indigo-500 dark:ring-slate-950/40 appearance-none"
+                                                            >
+                                                                <Info size={14} strokeWidth={2.5} className="shrink-0" aria-hidden />
+                                                            </button>
+                                                        )}
                                                     </>
                                                 )}
 
@@ -852,6 +1011,105 @@ export default function Game() {
                                     })}
                                 </div>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {countryFactsModalFlag && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+                        onClick={closeCountryFactsModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.96, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.96, opacity: 0 }}
+                            className="flex max-h-[88vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                                        {countryFactsModalCountryIdentityMasked ? (
+                                            <span className="italic text-slate-400 dark:text-slate-500">Yet to learn</span>
+                                        ) : (
+                                            getCountryName(countryFactsModalFlag)
+                                        )}
+                                    </h3>
+                                    {gameMode === 'capitals' && (
+                                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                            Capital:{" "}
+                                            {countryFactsModalCapitalMasked ? (
+                                                <span className="font-semibold italic text-slate-400 dark:text-slate-500">
+                                                    Yet to learn
+                                                </span>
+                                            ) : (
+                                                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                                    {getCorrectAnswerDisplay(countryFactsModalFlag)}
+                                                </span>
+                                            )}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={closeCountryFactsModal}
+                                    className="shrink-0 rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    aria-label="Close"
+                                >
+                                    <X size={22} className="text-slate-500 dark:text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="flex justify-center rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/80">
+                                <img
+                                    src={countryFactsModalFlag.image}
+                                    alt=""
+                                    className="max-h-32 w-auto rounded-md object-contain shadow-sm"
+                                />
+                            </div>
+                            {showGallery && (
+                                <button
+                                    type="button"
+                                    onClick={() => toggleFlagSelection(countryFactsModalFlag.code)}
+                                    className={`w-full rounded-xl border py-3 text-sm font-bold transition-colors ${
+                                        selectedFlags.includes(countryFactsModalFlag.code)
+                                            ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-200"
+                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                                    }`}
+                                >
+                                    {selectedFlags.includes(countryFactsModalFlag.code)
+                                        ? "Remove from practice selection"
+                                        : "Add to practice selection"}
+                                </button>
+                            )}
+                            {countryFactsModalUi && (
+                                <CountryFactsPanel
+                                    ui={countryFactsModalUi}
+                                    maskCapital={countryFactsModalCapitalMasked}
+                                    onMaskedCapitalClick={
+                                        countryFactsModalCapitalMasked
+                                            ? () => {
+                                                  closeCountryFactsModal()
+                                                  switchGameMode("capitals")
+                                              }
+                                            : undefined
+                                    }
+                                    maskCountryIdentity={countryFactsModalCountryIdentityMasked}
+                                    onMaskedCountryIdentityClick={
+                                        countryFactsModalCountryIdentityMasked
+                                            ? () => {
+                                                  closeCountryFactsModal()
+                                                  switchGameMode("world")
+                                              }
+                                            : undefined
+                                    }
+                                />
+                            )}
                         </motion.div>
                     </motion.div>
                 )}

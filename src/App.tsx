@@ -13,6 +13,7 @@ import ConstellationBuilder from "./pages/ConstellationBuilder"
 import UltimateGame from "./pages/UltimateGame"
 import Highscore from "./pages/Highscore"
 import WordWheelGame from "./pages/WordWheelGame"
+import HigherLowerGame from "./pages/HigherLowerGame"
 
 export default function App() {
     return (
@@ -32,6 +33,7 @@ export default function App() {
                 <Route path="/ultimate" element={<UltimateGame />} />
                 <Route path="/highscore" element={<Highscore />} />
                 <Route path="/word-wheel" element={<WordWheelGame />} />
+                <Route path="/higher-lower" element={<HigherLowerGame />} />
 
             </Routes>
             <Analytics />

@@ -24,10 +24,12 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **🏆 Ultimate Mode:** The ultimate test! Locate the country on the map, then type its name, and finally type its capital in a "sudden death" format.
 - **🌫️ Blur Mode:** Can you recognize flags when they are highly blurred?
 - **🏅 Highscore:** Timed speedruns for world flags, world capitals, or US state flags—track mistakes, accept a time penalty on errors, and post your best time to shared leaderboards (no login).
+- **📊 Higher or Lower:** Compare two countries’ **population** or **land area** (REST Countries data): see one stat, guess higher or lower for the mystery side; correct guesses move you forward until no challenger remains—built-in streak, mistakes, and timer.
 - **✨ Constellations:** Learn to identify the 88 modern constellations by their star patterns. Features beautiful mythological art upon mastery!
 
 ## 🛠️ Features
 
+- **Higher or Lower chain:** Optional stats-only quiz route (`/higher-lower`) comparing population or land area between flags (REST Countries API + cached lookups); hot streak, mistakes, and elapsed timer during the run.
 - **Progress & Streaks:** Saves your learning progress, streaks, and mastered items locally.
 - **Practice Mode:** Review items you've already mastered with a built-in timer and mistake counter.
 - **Highscore Leaderboards:** Firebase-backed global boards per category (flags / capitals / US states); personal bests keyed per browser.
@@ -72,3 +74,6 @@ This project is licensed under the MIT License.
 Flags provided by Flagpedia.net.
 
 Constellation mythological art provided by NOIRLab/NSF/AURA.
+
+Population grids from WorldPop.org
+    

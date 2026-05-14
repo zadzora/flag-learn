@@ -10,7 +10,7 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 
 ### 🚀 **Live Demo:** [https://www.flaglearn.eu/](https://www.flaglearn.eu/)
 
-### 💬 **Community:** [Discord](https://discord.gg/WwaRgeGK)
+### 💬 **Community:** [Discord](https://discord.gg/qcwW5evMU9)
 
 ---
 
@@ -25,11 +25,17 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **🌫️ Blur Mode:** Can you recognize flags when they are highly blurred?
 - **🏅 Highscore:** Timed speedruns for world flags, world capitals, or US state flags—track mistakes, accept a time penalty on errors, and post your best time to shared leaderboards (no login).
 - **📊 Higher or Lower:** Compare two countries’ **population** or **land area** (REST Countries data): see one stat, guess higher or lower for the mystery side; correct guesses move you forward until no challenger remains—built-in streak, mistakes, and timer.
+<!-- Temporarily disabled
+- **❓ Flag 20 Questions:** Guess a hidden flag using **templated Yes/No questions** (stripe counts/orientation and colors). Answers use hand-maintained per-flag traits in `src/data/flagQuestionTraitsData.ts` — extend the map to cover more countries (no AI).
+-->
 - **✨ Constellations:** Learn to identify the 88 modern constellations by their star patterns. Features beautiful mythological art upon mastery!
 
 ## 🛠️ Features
 
 - **Higher or Lower chain:** Optional stats-only quiz route (`/higher-lower`) comparing population or land area between flags (REST Countries API + cached lookups); hot streak, mistakes, and elapsed timer during the run.
+<!-- Temporarily disabled
+- **Flag 20 Questions:** Route `/flag-questions` — templated stripe/color questions with deterministic answers from `flagQuestionTraitsData.ts`; candidate pool narrows when traits are known.
+-->
 - **Progress & Streaks:** Saves your learning progress, streaks, and mastered items locally.
 - **Practice Mode:** Review items you've already mastered with a built-in timer and mistake counter.
 - **Highscore Leaderboards:** Firebase-backed global boards per category (flags / capitals / US states); personal bests keyed per browser.

@@ -553,7 +553,7 @@ export default function Highscore() {
                         <p className="flex items-center gap-1 text-xs">
                             Made with <Heart size={12} className="text-red-400 fill-red-400" /> for learning
                         </p>
-                        <a href="https://discord.gg/WwaRgeGK" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform">
+                        <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform">
                             <MessagesSquare size={14} />
                             <span>Discord</span>
                             <ExternalLink size={10} className="opacity-70" />

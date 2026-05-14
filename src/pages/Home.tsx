@@ -136,6 +136,16 @@ export default function Home() {
                                 <p className="text-[10px] text-violet-100/90">Population or area—guess which country is higher.</p>
                             </Link>
 
+                            {/* Flag 20 Questions — route disabled in App.tsx
+                            <Link to="/flag-questions" className="group flex flex-col p-4 bg-gradient-to-br from-sky-600 to-indigo-800 rounded-2xl shadow-lg text-white hover:scale-105 transition-all">
+                                <div className="bg-white/20 p-3 rounded-xl text-white w-fit mb-3 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <HelpCircle size={24} />
+                                </div>
+                                <h3 className="font-bold text-base">Flag 20 Questions</h3>
+                                <p className="text-[10px] leading-snug text-sky-100/90">Yes/No questions about stripes &amp; colors—then guess the flag.</p>
+                            </Link>
+                            */}
+
                             {/* --- ULTIMATE MODE CARD --- */}
                             <Link to="/ultimate" className="sm:col-span-2 group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:-translate-y-1 hover:shadow-2xl">
                                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl text-white group-hover:scale-110 transition-transform shadow-md shrink-0 mt-1">
@@ -180,7 +190,7 @@ export default function Home() {
                     <p className="flex items-center gap-1">
                         Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning
                     </p>
-                    <a href="https://discord.gg/WwaRgeGK" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
+                    <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
                         <MessagesSquare size={14} />
                         <span>Discord</span>
                         <ExternalLink size={10} className="opacity-70" />

@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+@font-face {
+    font-family: "Satoshi";
+    src: url("/fonts/satoshi/Satoshi-Variable.woff2") format("woff2");
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Satoshi";
+    src: url("/fonts/satoshi/Satoshi-VariableItalic.woff2") format("woff2");
+    font-weight: 300 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Toto je kľúčové pre Tailwind v4 - povie mu, aby dark mode fungoval cez triedu .dark */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -40,7 +60,8 @@
     }
 
     body {
-        font-family: "Inter", "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+        font-weight: 400;
         letter-spacing: -0.01em;
         background:
             radial-gradient(1200px 700px at 12% -5%, rgba(59, 130, 246, 0.08), transparent 60%),
@@ -60,9 +81,20 @@
         line-height: 1.15;
     }
 
-    h1 { font-size: var(--text-title-1); }
-    h2 { font-size: var(--text-title-2); }
-    h3 { font-size: var(--text-title-3); }
+    h1 {
+        font-size: var(--text-title-1);
+        font-weight: 900;
+    }
+
+    h2 {
+        font-size: var(--text-title-2);
+        font-weight: 700;
+    }
+
+    h3 {
+        font-size: var(--text-title-3);
+        font-weight: 500;
+    }
 }
 
 @layer components {

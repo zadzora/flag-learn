@@ -18,7 +18,7 @@ const DAILY_STORAGE_KEY = "flag-master-daily-save"
 const MAX_GUESSES = 6
 
 // Controls the scale of the image based on mistake count (harder zoom)
-const ZOOM_LEVELS = [9, 7, 5, 3, 1.5, 1]
+const ZOOM_LEVELS = [8, 5, 4, 3, 2, 1]
 
 export default function DailyFlagle() {
     const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" }) // Format: YYYY-MM-DD

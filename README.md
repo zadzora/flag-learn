@@ -24,7 +24,7 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **🏆 Ultimate Mode:** The ultimate test! Locate the country on the map, then type its name, and finally type its capital in a "sudden death" format.
 - **🌫️ Blur Mode:** Can you recognize flags when they are highly blurred?
 - **🏅 Highscore:** Timed speedruns for world flags, world capitals, or US state flags—track mistakes, accept a time penalty on errors, and post your best time to shared leaderboards (no login).
-- **📊 Higher or Lower:** Compare two countries’ **population** or **land area** (REST Countries data): see one stat, guess higher or lower for the mystery side; correct guesses move you forward until no challenger remains—built-in streak, mistakes, and timer.
+- **📊 Higher or Lower:** Compare two countries’ **population** or **land area** (bundled offline dataset): see one stat, guess higher or lower for the mystery side; correct guesses move you forward until no challenger remains—built-in streak, mistakes, and timer.
 <!-- Temporarily disabled
 - **❓ Flag 20 Questions:** Guess a hidden flag using **templated Yes/No questions** (stripe counts/orientation and colors). Answers use hand-maintained per-flag traits in `src/data/flagQuestionTraitsData.ts` — extend the map to cover more countries (no AI).
 -->
@@ -32,7 +32,7 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 
 ## 🛠️ Features
 
-- **Higher or Lower chain:** Optional stats-only quiz route (`/higher-lower`) comparing population or land area between flags (REST Countries API + cached lookups); hot streak, mistakes, and elapsed timer during the run.
+- **Higher or Lower chain:** Optional stats-only quiz route (`/higher-lower`) comparing population or land area between flags (bundled local dataset — see [Data & licenses](#-data--licenses)); hot streak, mistakes, and elapsed timer during the run.
 <!-- Temporarily disabled
 - **Flag 20 Questions:** Route `/flag-questions` — templated stripe/color questions with deterministic answers from `flagQuestionTraitsData.ts`; candidate pool narrows when traits are known.
 -->
@@ -74,6 +74,26 @@ If you like this project, you can buy me a coffee!
 
 [![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://coff.ee/davidzadzora)
 
+## 📊 Data & licenses
+
+Country facts (Higher/Lower mode and the info modal) come from a bundled offline
+snapshot, [`data/countryStats.json`](data/countryStats.json), so the app needs no
+live API and works offline. Population figures are the latest available (**2024**);
+the snapshot was compiled **June 2026**. Regenerate it with:
+
+```bash
+node scripts/gen-country-stats.cjs
+```
+
+Sources (full details in [`data/CREDITS.md`](data/CREDITS.md)):
+
+- Names, capital, area, currency, region — [mledoze/countries](https://github.com/mledoze/countries) ([ODbL 1.0](https://opendatacommons.org/licenses/odbl/1.0/))
+- Population — [World Bank, SP.POP.TOTL](https://data.worldbank.org/indicator/SP.POP.TOTL) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
+
+> Previously this data was fetched live from the REST Countries API, which has
+> since been deprecated (its endpoints now redirect to a notice and are
+> CORS-blocked from the browser).
+
 ## 📄 License & Credits
 This project is licensed under the MIT License.
 
@@ -81,5 +101,5 @@ Flags provided by Flagpedia.net.
 
 Constellation mythological art provided by NOIRLab/NSF/AURA.
 
-Population grids from WorldPop.org
+Country data: mledoze/countries (ODbL 1.0) and the World Bank (CC BY 4.0). See [`data/CREDITS.md`](data/CREDITS.md).
     

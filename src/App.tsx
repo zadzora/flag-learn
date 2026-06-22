@@ -14,6 +14,8 @@ import UltimateGame from "./pages/UltimateGame"
 import Highscore from "./pages/Highscore"
 import WordWheelGame from "./pages/WordWheelGame"
 import HigherLowerGame from "./pages/HigherLowerGame"
+import PaintGame from "./pages/PaintGame"
+import BorderGuessGame from "./pages/BorderGuessGame"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -35,6 +37,8 @@ export default function App() {
                 <Route path="/highscore" element={<Highscore />} />
                 <Route path="/word-wheel" element={<WordWheelGame />} />
                 <Route path="/higher-lower" element={<HigherLowerGame />} />
+                <Route path="/paint" element={<PaintGame />} />
+                <Route path="/border-guess" element={<BorderGuessGame />} />
                 {/* <Route path="/flag-questions" element={<FlagQuestionGame />} /> */}
 
             </Routes>

@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react"
 import { ExternalLink, Globe, Loader2, Landmark, Banknote } from "lucide-react"
 import type { CountryFactsDisplay } from "../utils/countryFactsFree"
+import CountryDataCredit from "./CountryDataCredit"
 
 export type CountryFactsUi =
     | { phase: "loading" }
@@ -261,6 +262,10 @@ export default function CountryFactsPanel({
                     )}
                 </div>
             )}
+
+            <p className="mt-3 border-t border-indigo-200/60 pt-2 text-[10px] leading-tight text-indigo-600/70 dark:border-indigo-500/20 dark:text-indigo-300/60">
+                <CountryDataCredit prefix="Data:" />
+            </p>
         </div>
     )
 }

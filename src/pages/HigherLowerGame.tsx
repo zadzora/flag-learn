@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { fetchPopulationAndArea } from "../utils/restCountryMetric"
+import CountryDataCredit from "../components/CountryDataCredit"
 
 const THEME_KEY = "flag-master-theme"
 
@@ -676,7 +677,7 @@ export default function HigherLowerGame() {
 
                     {/* Buttons */}
                     {!complete && pair && !loading && leftStat !== null && rightStat !== null && revealPhase === null && (
-                        <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-3 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 md:static md:mt-10 md:w-full md:max-w-md md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+                        <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-3 p-3 md:static md:mt-10 md:w-full md:max-w-md md:p-0">
                             <motion.button
                                 type="button"
                                 whileHover={{ scale: 1.02 }}
@@ -706,16 +707,7 @@ export default function HigherLowerGame() {
                 </div>
 
                 <footer className="mt-auto border-t border-slate-200 bg-white/80 px-4 py-3 text-center text-[10px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
-                    Stats from{" "}
-                    <a
-                        href="https://restcountries.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-500 underline-offset-2 hover:underline dark:text-indigo-400"
-                    >
-                        REST Countries
-                    </a>
-                    .
+                    <CountryDataCredit prefix="Stats from" />
                 </footer>
             </div>
 

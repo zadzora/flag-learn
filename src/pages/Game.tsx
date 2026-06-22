@@ -6,6 +6,7 @@ import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, Lo
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import CountryFactsPanel, { type CountryFactsUi } from "../components/CountryFactsPanel"
+import CountryDataCredit from "../components/CountryDataCredit"
 import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
@@ -752,7 +753,7 @@ export default function Game() {
                     <motion.div layout onClick={handleOpenGallery} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none" animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}} transition={{ delay: 0.4, duration: 0.3 }}>
                         <div className="flex justify-between items-center px-1 mb-2">
                             <div className="flex items-center gap-2">
-                                <img src={theme === 'dark' ? '/logo_dark.png' : '/logo_white.png'} alt="Logo" className="h-10 w-auto object-contain" />
+                                <img src="/logo2.png" alt="Logo" className="h-10 w-auto object-contain" />
                             </div>
                             <div className="flex items-center gap-3">
                                 <AnimatePresence>
@@ -901,14 +902,9 @@ export default function Game() {
                     <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]"><Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" /></a>
                 </div>
                 <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Flags provided by Flagpedia.net <ExternalLink size={12} /></a>
-                <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 px-4 text-center text-xs">
-                    <a href="https://restcountries.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                        Country data from REST Countries <ExternalLink size={12} />
-                    </a>
-                    <a href="https://www.worldpop.org/sdi/introapi/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                        Population grids from WorldPop <ExternalLink size={12} />
-                    </a>
-                </div>
+                <p className="max-w-2xl px-4 text-center text-xs">
+                    <CountryDataCredit prefix="Country data from" />
+                </p>
                 <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2"><h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2><p>Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively. Unlike other <strong>flag games</strong>, we use spaced repetition and streak mechanics to make learning fun.</p></section>
             </footer>
 

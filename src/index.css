@@ -1,27 +1,43 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: "Satoshi";
-    src: url("/fonts/satoshi/Satoshi-Variable.woff2") format("woff2");
-    font-weight: 300 900;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Satoshi";
-    src: url("/fonts/satoshi/Satoshi-VariableItalic.woff2") format("woff2");
-    font-weight: 300 900;
-    font-style: italic;
-    font-display: swap;
-}
-
-@theme {
-    --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
-}
-
 /* Toto je kľúčové pre Tailwind v4 - povie mu, aby dark mode fungoval cez triedu .dark */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Brand paleta (podľa ikony „glóbus s vlajkou"):
+ * nočná modrá #0F172A → #1E3A8A, blankytná #38BDF8 → #2563EB,
+ * mätová #A7F3D0 (emerald), koralová #F43F5E (rose), žltá #FDE047.
+ *
+ * Komponenty používajú triedy indigo-* a red-* — tu ich premapujeme
+ * na blankytnú a koralovú, takže celá appka sa preladí centrálne.
+ */
+@theme {
+    --font-sans: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;
+
+    --color-indigo-50: #f0f8ff;
+    --color-indigo-100: #def0fe;
+    --color-indigo-200: #b9defe;
+    --color-indigo-300: #79c4fb;
+    --color-indigo-400: #38bdf8;
+    --color-indigo-500: #2b8ff3;
+    --color-indigo-600: #2563eb;
+    --color-indigo-700: #1d4ed8;
+    --color-indigo-800: #1e40af;
+    --color-indigo-900: #1e3a8a;
+    --color-indigo-950: #172554;
+
+    --color-red-50: #fff1f2;
+    --color-red-100: #ffe4e6;
+    --color-red-200: #fecdd3;
+    --color-red-300: #fda4af;
+    --color-red-400: #fb7185;
+    --color-red-500: #f43f5e;
+    --color-red-600: #e11d48;
+    --color-red-700: #be123c;
+    --color-red-800: #9f1239;
+    --color-red-900: #881337;
+    --color-red-950: #4c0519;
+}
 
 :root {
     /* 8pt spacing rhythm */
@@ -35,21 +51,21 @@
     --text-title-2: clamp(1.35rem, 2vw, 1.75rem);
     --text-title-3: clamp(1.05rem, 1.2vw, 1.25rem);
 
-    --apple-bg-start: #f4f6fb;
+    --apple-bg-start: #f2f8fd;
     --apple-bg-mid: #ffffff;
-    --apple-bg-end: #eef2f9;
+    --apple-bg-end: #eaf3fb;
     --apple-surface: rgba(255, 255, 255, 0.8);
-    --apple-surface-border: rgba(148, 163, 184, 0.35);
+    --apple-surface-border: rgba(125, 175, 220, 0.35);
     --apple-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 3px 10px rgba(15, 23, 42, 0.1);
 }
 
 .dark {
     --apple-bg-start: #020617;
     --apple-bg-mid: #0f172a;
-    --apple-bg-end: #020617;
-    --apple-surface: rgba(30, 41, 59, 0.78);
-    --apple-surface-border: rgba(71, 85, 105, 0.5);
-    --apple-shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
+    --apple-bg-end: #1e3a8a;
+    --apple-surface: rgba(28, 44, 84, 0.72);
+    --apple-surface-border: rgba(96, 165, 250, 0.28);
+    --apple-shadow: 0 22px 56px rgba(2, 6, 23, 0.5);
 }
 
 @layer base {
@@ -60,12 +76,11 @@
     }
 
     body {
-        font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
-        font-weight: 400;
+        font-family: "Nunito Variable", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         letter-spacing: -0.01em;
         background:
-            radial-gradient(1200px 700px at 12% -5%, rgba(59, 130, 246, 0.08), transparent 60%),
-            radial-gradient(1000px 700px at 100% 0%, rgba(99, 102, 241, 0.08), transparent 60%),
+            radial-gradient(1200px 700px at 12% -5%, rgba(56, 189, 248, 0.1), transparent 60%),
+            radial-gradient(1000px 700px at 100% 0%, rgba(37, 99, 235, 0.08), transparent 60%),
             linear-gradient(180deg, var(--apple-bg-start), var(--apple-bg-mid) 40%, var(--apple-bg-end));
         color: #0f172a;
         -webkit-font-smoothing: antialiased;
@@ -74,6 +89,53 @@
 
     .dark body {
         color: #e2e8f0;
+        /* nočná obloha — ladí s ikonou appky (hviezdy sú v ::before/::after nižšie) */
+        background:
+            radial-gradient(1200px 700px at 12% -5%, rgba(56, 189, 248, 0.12), transparent 60%),
+            radial-gradient(1000px 700px at 100% 0%, rgba(37, 99, 235, 0.14), transparent 60%),
+            linear-gradient(180deg, var(--apple-bg-start), var(--apple-bg-mid) 45%, var(--apple-bg-end));
+        background-attachment: fixed;
+    }
+
+    /* Hviezdy v dvoch vrstvách s rôznym tempom, aby blikanie pôsobilo prirodzene. */
+    .dark body::before,
+    .dark body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .dark body::before {
+        background:
+            radial-gradient(2px 2px at 18% 12%, rgba(255, 255, 255, 0.55), transparent 100%),
+            radial-gradient(2px 2px at 71% 8%, rgba(255, 255, 255, 0.45), transparent 100%),
+            radial-gradient(2px 2px at 9% 46%, rgba(255, 255, 255, 0.25), transparent 100%),
+            radial-gradient(1.5px 1.5px at 56% 64%, rgba(255, 255, 255, 0.2), transparent 100%);
+        animation: star-twinkle 7s ease-in-out infinite;
+    }
+
+    .dark body::after {
+        background:
+            radial-gradient(1.5px 1.5px at 32% 28%, rgba(255, 255, 255, 0.35), transparent 100%),
+            radial-gradient(1.5px 1.5px at 86% 22%, rgba(255, 255, 255, 0.3), transparent 100%),
+            radial-gradient(1.5px 1.5px at 93% 55%, rgba(255, 255, 255, 0.3), transparent 100%),
+            radial-gradient(2px 2px at 48% 38%, rgba(255, 255, 255, 0.2), transparent 100%),
+            radial-gradient(1.5px 1.5px at 26% 78%, rgba(255, 255, 255, 0.18), transparent 100%);
+        animation: star-twinkle 9.5s ease-in-out 3.2s infinite;
+    }
+
+    @keyframes star-twinkle {
+        0%, 100% { opacity: 0.45; }
+        50% { opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dark body::before,
+        .dark body::after {
+            animation: none;
+        }
     }
 
     h1, h2, h3 {
@@ -81,20 +143,9 @@
         line-height: 1.15;
     }
 
-    h1 {
-        font-size: var(--text-title-1);
-        font-weight: 900;
-    }
-
-    h2 {
-        font-size: var(--text-title-2);
-        font-weight: 700;
-    }
-
-    h3 {
-        font-size: var(--text-title-3);
-        font-weight: 500;
-    }
+    h1 { font-size: var(--text-title-1); }
+    h2 { font-size: var(--text-title-2); }
+    h3 { font-size: var(--text-title-3); }
 }
 
 @layer components {

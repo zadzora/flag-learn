@@ -1,0 +1,2067 @@
+{
+  "gb": {
+    "common": "United Kingdom",
+    "official": "United Kingdom of Great Britain and Northern Ireland",
+    "capital": "London",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 242900,
+    "population": 69226000,
+    "currency": "GBP (British pound)"
+  },
+  "us": {
+    "common": "United States",
+    "official": "United States of America",
+    "capital": "Washington D.C.",
+    "region": "Americas",
+    "subregion": "North America",
+    "area": 9372610,
+    "population": 340110988,
+    "currency": "USD (United States dollar)"
+  },
+  "de": {
+    "common": "Germany",
+    "official": "Federal Republic of Germany",
+    "capital": "Berlin",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 357114,
+    "population": 83516593,
+    "currency": "EUR (Euro)"
+  },
+  "it": {
+    "common": "Italy",
+    "official": "Italian Republic",
+    "capital": "Rome",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 301336,
+    "population": 58952704,
+    "currency": "EUR (Euro)"
+  },
+  "es": {
+    "common": "Spain",
+    "official": "Kingdom of Spain",
+    "capital": "Madrid",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 505992,
+    "population": 48848840,
+    "currency": "EUR (Euro)"
+  },
+  "au": {
+    "common": "Australia",
+    "official": "Commonwealth of Australia",
+    "capital": "Canberra",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "area": 7692024,
+    "population": 27196812,
+    "currency": "AUD (Australian dollar)"
+  },
+  "fr": {
+    "common": "France",
+    "official": "French Republic",
+    "capital": "Paris",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 551695,
+    "population": 68551653,
+    "currency": "EUR (Euro)"
+  },
+  "pt": {
+    "common": "Portugal",
+    "official": "Portuguese Republic",
+    "capital": "Lisbon",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 92090,
+    "population": 10694681,
+    "currency": "EUR (Euro)"
+  },
+  "dk": {
+    "common": "Denmark",
+    "official": "Kingdom of Denmark",
+    "capital": "Copenhagen",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 43094,
+    "population": 5976992,
+    "currency": "DKK (Danish krone)"
+  },
+  "jp": {
+    "common": "Japan",
+    "official": "Japan",
+    "capital": "Tokyo",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 377930,
+    "population": 123975371,
+    "currency": "JPY (Japanese yen)"
+  },
+  "br": {
+    "common": "Brazil",
+    "official": "Federative Republic of Brazil",
+    "capital": "Brasília",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 8515767,
+    "population": 211998573,
+    "currency": "BRL (Brazilian real)"
+  },
+  "ca": {
+    "common": "Canada",
+    "official": "Canada",
+    "capital": "Ottawa",
+    "region": "Americas",
+    "subregion": "North America",
+    "area": 9984670,
+    "population": 41288599,
+    "currency": "CAD (Canadian dollar)"
+  },
+  "dz": {
+    "common": "Algeria",
+    "official": "People's Democratic Republic of Algeria",
+    "capital": "Algiers",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 2381741,
+    "population": 46814308,
+    "currency": "DZD (Algerian dinar)"
+  },
+  "af": {
+    "common": "Afghanistan",
+    "official": "Islamic Republic of Afghanistan",
+    "capital": "Kabul",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 652230,
+    "population": 42647492,
+    "currency": "AFN (Afghan afghani)"
+  },
+  "al": {
+    "common": "Albania",
+    "official": "Republic of Albania",
+    "capital": "Tirana",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 28748,
+    "population": 2377128,
+    "currency": "ALL (Albanian lek)"
+  },
+  "ad": {
+    "common": "Andorra",
+    "official": "Principality of Andorra",
+    "capital": "Andorra la Vella",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 468,
+    "population": 81938,
+    "currency": "EUR (Euro)"
+  },
+  "ao": {
+    "common": "Angola",
+    "official": "Republic of Angola",
+    "capital": "Luanda",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 1246700,
+    "population": 37885849,
+    "currency": "AOA (Angolan kwanza)"
+  },
+  "ag": {
+    "common": "Antigua and Barbuda",
+    "official": "Antigua and Barbuda",
+    "capital": "Saint John's",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 442,
+    "population": 93772,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "ar": {
+    "common": "Argentina",
+    "official": "Argentine Republic",
+    "capital": "Buenos Aires",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 2780400,
+    "population": 45696159,
+    "currency": "ARS (Argentine peso)"
+  },
+  "am": {
+    "common": "Armenia",
+    "official": "Republic of Armenia",
+    "capital": "Yerevan",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 29743,
+    "population": 3033500,
+    "currency": "AMD (Armenian dram)"
+  },
+  "at": {
+    "common": "Austria",
+    "official": "Republic of Austria",
+    "capital": "Vienna",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 83871,
+    "population": 9177982,
+    "currency": "EUR (Euro)"
+  },
+  "az": {
+    "common": "Azerbaijan",
+    "official": "Republic of Azerbaijan",
+    "capital": "Baku",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 86600,
+    "population": 10202830,
+    "currency": "AZN (Azerbaijani manat)"
+  },
+  "bs": {
+    "common": "Bahamas",
+    "official": "Commonwealth of the Bahamas",
+    "capital": "Nassau",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 13943,
+    "population": 401283,
+    "currency": "BSD (Bahamian dollar)"
+  },
+  "bh": {
+    "common": "Bahrain",
+    "official": "Kingdom of Bahrain",
+    "capital": "Manama",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 765,
+    "population": 1588670,
+    "currency": "BHD (Bahraini dinar)"
+  },
+  "bd": {
+    "common": "Bangladesh",
+    "official": "People's Republic of Bangladesh",
+    "capital": "Dhaka",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 147570,
+    "population": 173562364,
+    "currency": "BDT (Bangladeshi taka)"
+  },
+  "bb": {
+    "common": "Barbados",
+    "official": "Barbados",
+    "capital": "Bridgetown",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 430,
+    "population": 282467,
+    "currency": "BBD (Barbadian dollar)"
+  },
+  "by": {
+    "common": "Belarus",
+    "official": "Republic of Belarus",
+    "capital": "Minsk",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "area": 207600,
+    "population": 9132629,
+    "currency": "BYN (Belarusian ruble)"
+  },
+  "be": {
+    "common": "Belgium",
+    "official": "Kingdom of Belgium",
+    "capital": "Brussels",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 30528,
+    "population": 11858610,
+    "currency": "EUR (Euro)"
+  },
+  "bz": {
+    "common": "Belize",
+    "official": "Belize",
+    "capital": "Belmopan",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 22966,
+    "population": 417072,
+    "currency": "BZD (Belize dollar)"
+  },
+  "bj": {
+    "common": "Benin",
+    "official": "Republic of Benin",
+    "capital": "Porto-Novo",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 112622,
+    "population": 14462724,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "bt": {
+    "common": "Bhutan",
+    "official": "Kingdom of Bhutan",
+    "capital": "Thimphu",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 38394,
+    "population": 791524,
+    "currency": "BTN (Bhutanese ngultrum)"
+  },
+  "bo": {
+    "common": "Bolivia",
+    "official": "Plurinational State of Bolivia",
+    "capital": "Sucre",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 1098581,
+    "population": 12413315,
+    "currency": "BOB (Bolivian boliviano)"
+  },
+  "ba": {
+    "common": "Bosnia and Herzegovina",
+    "official": "Bosnia and Herzegovina",
+    "capital": "Sarajevo",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 51209,
+    "population": 3164253,
+    "currency": "BAM (Bosnia and Herzegovina convertible mark)"
+  },
+  "bw": {
+    "common": "Botswana",
+    "official": "Republic of Botswana",
+    "capital": "Gaborone",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "area": 582000,
+    "population": 2521139,
+    "currency": "BWP (Botswana pula)"
+  },
+  "bn": {
+    "common": "Brunei",
+    "official": "Nation of Brunei, Abode of Peace",
+    "capital": "Bandar Seri Begawan",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 5765,
+    "population": 462721,
+    "currency": "BND (Brunei dollar)"
+  },
+  "bg": {
+    "common": "Bulgaria",
+    "official": "Republic of Bulgaria",
+    "capital": "Sofia",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 110879,
+    "population": 6441421,
+    "currency": "EUR (Euro)"
+  },
+  "bf": {
+    "common": "Burkina Faso",
+    "official": "Burkina Faso",
+    "capital": "Ouagadougou",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 272967,
+    "population": 23548781,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "bi": {
+    "common": "Burundi",
+    "official": "Republic of Burundi",
+    "capital": "Gitega",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 27834,
+    "population": 14047786,
+    "currency": "BIF (Burundian franc)"
+  },
+  "cv": {
+    "common": "Cape Verde",
+    "official": "Republic of Cabo Verde",
+    "capital": "Praia",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 4033,
+    "population": 524877,
+    "currency": "CVE (Cape Verdean escudo)"
+  },
+  "kh": {
+    "common": "Cambodia",
+    "official": "Kingdom of Cambodia",
+    "capital": "Phnom Penh",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 181035,
+    "population": 17638801,
+    "currency": "KHR (Cambodian riel)"
+  },
+  "cm": {
+    "common": "Cameroon",
+    "official": "Republic of Cameroon",
+    "capital": "Yaoundé",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 475442,
+    "population": 29123744,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "cf": {
+    "common": "Central African Republic",
+    "official": "Central African Republic",
+    "capital": "Bangui",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 622984,
+    "population": 5330690,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "td": {
+    "common": "Chad",
+    "official": "Republic of Chad",
+    "capital": "N'Djamena",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 1284000,
+    "population": 20299123,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "cl": {
+    "common": "Chile",
+    "official": "Republic of Chile",
+    "capital": "Santiago",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 756102,
+    "population": 19764771,
+    "currency": "CLP (Chilean peso)"
+  },
+  "cn": {
+    "common": "China",
+    "official": "People's Republic of China",
+    "capital": "Beijing",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 9706961,
+    "population": 1408975000,
+    "currency": "CNY (Chinese yuan)"
+  },
+  "co": {
+    "common": "Colombia",
+    "official": "Republic of Colombia",
+    "capital": "Bogotá",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 1141748,
+    "population": 52886363,
+    "currency": "COP (Colombian peso)"
+  },
+  "km": {
+    "common": "Comoros",
+    "official": "Union of the Comoros",
+    "capital": "Moroni",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 1862,
+    "population": 866628,
+    "currency": "KMF (Comorian franc)"
+  },
+  "cg": {
+    "common": "Congo",
+    "official": "Republic of the Congo",
+    "capital": "Brazzaville",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 342000,
+    "population": 6332961,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "cd": {
+    "common": "DR Congo",
+    "official": "Democratic Republic of the Congo",
+    "capital": "Kinshasa",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 2344858,
+    "population": 109276265,
+    "currency": "CDF (Congolese franc)"
+  },
+  "cr": {
+    "common": "Costa Rica",
+    "official": "Republic of Costa Rica",
+    "capital": "San José",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 51100,
+    "population": 5129910,
+    "currency": "CRC (Costa Rican colón)"
+  },
+  "hr": {
+    "common": "Croatia",
+    "official": "Republic of Croatia",
+    "capital": "Zagreb",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 56594,
+    "population": 3866200,
+    "currency": "EUR (Euro)"
+  },
+  "cu": {
+    "common": "Cuba",
+    "official": "Republic of Cuba",
+    "capital": "Havana",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 109884,
+    "population": 10979783,
+    "currency": "CUC (Cuban convertible peso)"
+  },
+  "cy": {
+    "common": "Cyprus",
+    "official": "Republic of Cyprus",
+    "capital": "Nicosia",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 9251,
+    "population": 1358282,
+    "currency": "EUR (Euro)"
+  },
+  "cz": {
+    "common": "Czechia",
+    "official": "Czech Republic",
+    "capital": "Prague",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 78865,
+    "population": 10905028,
+    "currency": "CZK (Czech koruna)"
+  },
+  "dj": {
+    "common": "Djibouti",
+    "official": "Republic of Djibouti",
+    "capital": "Djibouti",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 23200,
+    "population": 1168722,
+    "currency": "DJF (Djiboutian franc)"
+  },
+  "dm": {
+    "common": "Dominica",
+    "official": "Commonwealth of Dominica",
+    "capital": "Roseau",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 751,
+    "population": 66205,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "do": {
+    "common": "Dominican Republic",
+    "official": "Dominican Republic",
+    "capital": "Santo Domingo",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 48671,
+    "population": 11427557,
+    "currency": "DOP (Dominican peso)"
+  },
+  "tl": {
+    "common": "Timor-Leste",
+    "official": "Democratic Republic of Timor-Leste",
+    "capital": "Dili",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 14874,
+    "population": 1400638,
+    "currency": "USD (United States dollar)"
+  },
+  "ec": {
+    "common": "Ecuador",
+    "official": "Republic of Ecuador",
+    "capital": "Quito",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 276841,
+    "population": 18135478,
+    "currency": "USD (United States dollar)"
+  },
+  "eg": {
+    "common": "Egypt",
+    "official": "Arab Republic of Egypt",
+    "capital": "Cairo",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 1002450,
+    "population": 116538258,
+    "currency": "EGP (Egyptian pound)"
+  },
+  "sv": {
+    "common": "El Salvador",
+    "official": "Republic of El Salvador",
+    "capital": "San Salvador",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 21041,
+    "population": 6338193,
+    "currency": "USD (United States dollar)"
+  },
+  "gq": {
+    "common": "Equatorial Guinea",
+    "official": "Republic of Equatorial Guinea",
+    "capital": "Malabo",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 28051,
+    "population": 1892516,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "er": {
+    "common": "Eritrea",
+    "official": "State of Eritrea",
+    "capital": "Asmara",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 117600,
+    "population": 3535603,
+    "currency": "ERN (Eritrean nakfa)"
+  },
+  "ee": {
+    "common": "Estonia",
+    "official": "Republic of Estonia",
+    "capital": "Tallinn",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 45227,
+    "population": 1372341,
+    "currency": "EUR (Euro)"
+  },
+  "sz": {
+    "common": "Eswatini",
+    "official": "Kingdom of Eswatini",
+    "capital": "Lobamba",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "area": 17364,
+    "population": 1242822,
+    "currency": "SZL (Swazi lilangeni)"
+  },
+  "et": {
+    "common": "Ethiopia",
+    "official": "Federal Democratic Republic of Ethiopia",
+    "capital": "Addis Ababa",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 1104300,
+    "population": 132059767,
+    "currency": "ETB (Ethiopian birr)"
+  },
+  "fj": {
+    "common": "Fiji",
+    "official": "Republic of Fiji",
+    "capital": "Suva",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "area": 18272,
+    "population": 928784,
+    "currency": "FJD (Fijian dollar)"
+  },
+  "fi": {
+    "common": "Finland",
+    "official": "Republic of Finland",
+    "capital": "Helsinki",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 338424,
+    "population": 5619911,
+    "currency": "EUR (Euro)"
+  },
+  "ga": {
+    "common": "Gabon",
+    "official": "Gabonese Republic",
+    "capital": "Libreville",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 267668,
+    "population": 2538952,
+    "currency": "XAF (Central African CFA franc)"
+  },
+  "gm": {
+    "common": "Gambia",
+    "official": "Republic of the Gambia",
+    "capital": "Banjul",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 10689,
+    "population": 2759988,
+    "currency": "GMD (dalasi)"
+  },
+  "ge": {
+    "common": "Georgia",
+    "official": "Georgia",
+    "capital": "Tbilisi",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 69700,
+    "population": 3699557,
+    "currency": "GEL (lari)"
+  },
+  "gh": {
+    "common": "Ghana",
+    "official": "Republic of Ghana",
+    "capital": "Accra",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 238533,
+    "population": 34427414,
+    "currency": "GHS (Ghanaian cedi)"
+  },
+  "gr": {
+    "common": "Greece",
+    "official": "Hellenic Republic",
+    "capital": "Athens",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 131990,
+    "population": 10405134,
+    "currency": "EUR (Euro)"
+  },
+  "gd": {
+    "common": "Grenada",
+    "official": "Grenada",
+    "capital": "St. George's",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 344,
+    "population": 117207,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "gt": {
+    "common": "Guatemala",
+    "official": "Republic of Guatemala",
+    "capital": "Guatemala City",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 108889,
+    "population": 18406359,
+    "currency": "GTQ (Guatemalan quetzal)"
+  },
+  "gn": {
+    "common": "Guinea",
+    "official": "Republic of Guinea",
+    "capital": "Conakry",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 245857,
+    "population": 14754785,
+    "currency": "GNF (Guinean franc)"
+  },
+  "gw": {
+    "common": "Guinea-Bissau",
+    "official": "Republic of Guinea-Bissau",
+    "capital": "Bissau",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 36125,
+    "population": 2201352,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "gy": {
+    "common": "Guyana",
+    "official": "Co-operative Republic of Guyana",
+    "capital": "Georgetown",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 214969,
+    "population": 831087,
+    "currency": "GYD (Guyanese dollar)"
+  },
+  "ht": {
+    "common": "Haiti",
+    "official": "Republic of Haiti",
+    "capital": "Port-au-Prince",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 27750,
+    "population": 11772557,
+    "currency": "HTG (Haitian gourde)"
+  },
+  "hn": {
+    "common": "Honduras",
+    "official": "Republic of Honduras",
+    "capital": "Tegucigalpa",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 112492,
+    "population": 10825703,
+    "currency": "HNL (Honduran lempira)"
+  },
+  "hu": {
+    "common": "Hungary",
+    "official": "Hungary",
+    "capital": "Budapest",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 93028,
+    "population": 9562065,
+    "currency": "HUF (Hungarian forint)"
+  },
+  "is": {
+    "common": "Iceland",
+    "official": "Iceland",
+    "capital": "Reykjavik",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 103000,
+    "population": 386506,
+    "currency": "ISK (Icelandic króna)"
+  },
+  "in": {
+    "common": "India",
+    "official": "Republic of India",
+    "capital": "New Delhi",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 3287590,
+    "population": 1450935791,
+    "currency": "INR (Indian rupee)"
+  },
+  "id": {
+    "common": "Indonesia",
+    "official": "Republic of Indonesia",
+    "capital": "Jakarta",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 1904569,
+    "population": 283487931,
+    "currency": "IDR (Indonesian rupiah)"
+  },
+  "ir": {
+    "common": "Iran",
+    "official": "Islamic Republic of Iran",
+    "capital": "Tehran",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 1648195,
+    "population": 91567738,
+    "currency": "IRR (Iranian rial)"
+  },
+  "iq": {
+    "common": "Iraq",
+    "official": "Republic of Iraq",
+    "capital": "Baghdad",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 438317,
+    "population": 46042015,
+    "currency": "IQD (Iraqi dinar)"
+  },
+  "ie": {
+    "common": "Ireland",
+    "official": "Republic of Ireland",
+    "capital": "Dublin",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 70273,
+    "population": 5395790,
+    "currency": "EUR (Euro)"
+  },
+  "il": {
+    "common": "Israel",
+    "official": "State of Israel",
+    "capital": "Jerusalem",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 20770,
+    "population": 9974400,
+    "currency": "ILS (Israeli new shekel)"
+  },
+  "ci": {
+    "common": "Ivory Coast",
+    "official": "Republic of Côte d'Ivoire",
+    "capital": "Yamoussoukro",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 322463,
+    "population": 31934230,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "jm": {
+    "common": "Jamaica",
+    "official": "Jamaica",
+    "capital": "Kingston",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 10991,
+    "population": 2839175,
+    "currency": "JMD (Jamaican dollar)"
+  },
+  "jo": {
+    "common": "Jordan",
+    "official": "Hashemite Kingdom of Jordan",
+    "capital": "Amman",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 89342,
+    "population": 11552876,
+    "currency": "JOD (Jordanian dinar)"
+  },
+  "kz": {
+    "common": "Kazakhstan",
+    "official": "Republic of Kazakhstan",
+    "capital": "Astana",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "area": 2724900,
+    "population": 20592571,
+    "currency": "KZT (Kazakhstani tenge)"
+  },
+  "ke": {
+    "common": "Kenya",
+    "official": "Republic of Kenya",
+    "capital": "Nairobi",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 580367,
+    "population": 56432944,
+    "currency": "KES (Kenyan shilling)"
+  },
+  "ki": {
+    "common": "Kiribati",
+    "official": "Independent and Sovereign Republic of Kiribati",
+    "capital": "South Tarawa",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "area": 811,
+    "population": 134518,
+    "currency": "AUD (Australian dollar)"
+  },
+  "kp": {
+    "common": "North Korea",
+    "official": "Democratic People's Republic of Korea",
+    "capital": "Pyongyang",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 120538,
+    "population": 26498823,
+    "currency": "KPW (North Korean won)"
+  },
+  "kr": {
+    "common": "South Korea",
+    "official": "Republic of Korea",
+    "capital": "Seoul",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 100210,
+    "population": 51751065,
+    "currency": "KRW (South Korean won)"
+  },
+  "xk": {
+    "common": "Kosovo",
+    "official": "Republic of Kosovo",
+    "capital": "Pristina",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 10908,
+    "population": 1761985,
+    "currency": "EUR (Euro)"
+  },
+  "kw": {
+    "common": "Kuwait",
+    "official": "State of Kuwait",
+    "capital": "Kuwait City",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 17818,
+    "population": 4897263,
+    "currency": "KWD (Kuwaiti dinar)"
+  },
+  "kg": {
+    "common": "Kyrgyzstan",
+    "official": "Kyrgyz Republic",
+    "capital": "Bishkek",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "area": 199951,
+    "population": 7221868,
+    "currency": "KGS (Kyrgyzstani som)"
+  },
+  "la": {
+    "common": "Laos",
+    "official": "Lao People's Democratic Republic",
+    "capital": "Vientiane",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 236800,
+    "population": 7769819,
+    "currency": "LAK (Lao kip)"
+  },
+  "lv": {
+    "common": "Latvia",
+    "official": "Republic of Latvia",
+    "capital": "Riga",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 64559,
+    "population": 1866124,
+    "currency": "EUR (Euro)"
+  },
+  "lb": {
+    "common": "Lebanon",
+    "official": "Lebanese Republic",
+    "capital": "Beirut",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 10452,
+    "population": 5805962,
+    "currency": "LBP (Lebanese pound)"
+  },
+  "ls": {
+    "common": "Lesotho",
+    "official": "Kingdom of Lesotho",
+    "capital": "Maseru",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "area": 30355,
+    "population": 2337423,
+    "currency": "LSL (Lesotho loti)"
+  },
+  "lr": {
+    "common": "Liberia",
+    "official": "Republic of Liberia",
+    "capital": "Monrovia",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 111369,
+    "population": 5612817,
+    "currency": "LRD (Liberian dollar)"
+  },
+  "ly": {
+    "common": "Libya",
+    "official": "State of Libya",
+    "capital": "Tripoli",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 1759540,
+    "population": 7381023,
+    "currency": "LYD (Libyan dinar)"
+  },
+  "li": {
+    "common": "Liechtenstein",
+    "official": "Principality of Liechtenstein",
+    "capital": "Vaduz",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 160,
+    "population": 40450,
+    "currency": "CHF (Swiss franc)"
+  },
+  "lt": {
+    "common": "Lithuania",
+    "official": "Republic of Lithuania",
+    "capital": "Vilnius",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 65300,
+    "population": 2888278,
+    "currency": "EUR (Euro)"
+  },
+  "lu": {
+    "common": "Luxembourg",
+    "official": "Grand Duchy of Luxembourg",
+    "capital": "Luxembourg",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 2586,
+    "population": 677012,
+    "currency": "EUR (Euro)"
+  },
+  "mg": {
+    "common": "Madagascar",
+    "official": "Republic of Madagascar",
+    "capital": "Antananarivo",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 587041,
+    "population": 31964956,
+    "currency": "MGA (Malagasy ariary)"
+  },
+  "mw": {
+    "common": "Malawi",
+    "official": "Republic of Malawi",
+    "capital": "Lilongwe",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 118484,
+    "population": 21655286,
+    "currency": "MWK (Malawian kwacha)"
+  },
+  "my": {
+    "common": "Malaysia",
+    "official": "Malaysia",
+    "capital": "Kuala Lumpur",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 330803,
+    "population": 35557673,
+    "currency": "MYR (Malaysian ringgit)"
+  },
+  "mv": {
+    "common": "Maldives",
+    "official": "Republic of the Maldives",
+    "capital": "Malé",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 300,
+    "population": 527799,
+    "currency": "MVR (Maldivian rufiyaa)"
+  },
+  "ml": {
+    "common": "Mali",
+    "official": "Republic of Mali",
+    "capital": "Bamako",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 1240192,
+    "population": 24478595,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "mt": {
+    "common": "Malta",
+    "official": "Republic of Malta",
+    "capital": "Valletta",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 316,
+    "population": 568847,
+    "currency": "EUR (Euro)"
+  },
+  "mh": {
+    "common": "Marshall Islands",
+    "official": "Republic of the Marshall Islands",
+    "capital": "Majuro",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "area": 181,
+    "population": 37548,
+    "currency": "USD (United States dollar)"
+  },
+  "mr": {
+    "common": "Mauritania",
+    "official": "Islamic Republic of Mauritania",
+    "capital": "Nouakchott",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 1030700,
+    "population": 5169395,
+    "currency": "MRU (Mauritanian ouguiya)"
+  },
+  "mu": {
+    "common": "Mauritius",
+    "official": "Republic of Mauritius",
+    "capital": "Port Louis",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 2040,
+    "population": 1245779,
+    "currency": "MUR (Mauritian rupee)"
+  },
+  "mx": {
+    "common": "Mexico",
+    "official": "United Mexican States",
+    "capital": "Mexico City",
+    "region": "Americas",
+    "subregion": "North America",
+    "area": 1964375,
+    "population": 130861007,
+    "currency": "MXN (Mexican peso)"
+  },
+  "fm": {
+    "common": "Micronesia",
+    "official": "Federated States of Micronesia",
+    "capital": "Palikir",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "area": 702,
+    "population": 113160
+  },
+  "md": {
+    "common": "Moldova",
+    "official": "Republic of Moldova",
+    "capital": "Chișinău",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "area": 33846,
+    "population": 2402306,
+    "currency": "MDL (Moldovan leu)"
+  },
+  "mc": {
+    "common": "Monaco",
+    "official": "Principality of Monaco",
+    "capital": "Monaco",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 2.02,
+    "population": 38631,
+    "currency": "EUR (Euro)"
+  },
+  "mn": {
+    "common": "Mongolia",
+    "official": "Mongolia",
+    "capital": "Ulan Bator",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 1564110,
+    "population": 3524788,
+    "currency": "MNT (Mongolian tögrög)"
+  },
+  "me": {
+    "common": "Montenegro",
+    "official": "Montenegro",
+    "capital": "Podgorica",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 13812,
+    "population": 623525,
+    "currency": "EUR (Euro)"
+  },
+  "ma": {
+    "common": "Morocco",
+    "official": "Kingdom of Morocco",
+    "capital": "Rabat",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 446550,
+    "population": 38081173,
+    "currency": "MAD (Moroccan dirham)"
+  },
+  "mz": {
+    "common": "Mozambique",
+    "official": "Republic of Mozambique",
+    "capital": "Maputo",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 801590,
+    "population": 34631766,
+    "currency": "MZN (Mozambican metical)"
+  },
+  "mm": {
+    "common": "Myanmar",
+    "official": "Republic of the Union of Myanmar",
+    "capital": "Naypyidaw",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 676578,
+    "population": 54500091,
+    "currency": "MMK (Burmese kyat)"
+  },
+  "na": {
+    "common": "Namibia",
+    "official": "Republic of Namibia",
+    "capital": "Windhoek",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "area": 825615,
+    "population": 3030131,
+    "currency": "NAD (Namibian dollar)"
+  },
+  "nr": {
+    "common": "Nauru",
+    "official": "Republic of Nauru",
+    "capital": "Yaren",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "area": 21,
+    "population": 11947,
+    "currency": "AUD (Australian dollar)"
+  },
+  "np": {
+    "common": "Nepal",
+    "official": "Federal Democratic Republic of Nepal",
+    "capital": "Kathmandu",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 147181,
+    "population": 29651054,
+    "currency": "NPR (Nepalese rupee)"
+  },
+  "nl": {
+    "common": "Netherlands",
+    "official": "Kingdom of the Netherlands",
+    "capital": "Amsterdam",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 41850,
+    "population": 17993485,
+    "currency": "EUR (Euro)"
+  },
+  "nz": {
+    "common": "New Zealand",
+    "official": "New Zealand",
+    "capital": "Wellington",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "area": 270467,
+    "population": 5287500,
+    "currency": "NZD (New Zealand dollar)"
+  },
+  "ni": {
+    "common": "Nicaragua",
+    "official": "Republic of Nicaragua",
+    "capital": "Managua",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 130373,
+    "population": 6916140,
+    "currency": "NIO (Nicaraguan córdoba)"
+  },
+  "ne": {
+    "common": "Niger",
+    "official": "Republic of Niger",
+    "capital": "Niamey",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 1267000,
+    "population": 27032412,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "ng": {
+    "common": "Nigeria",
+    "official": "Federal Republic of Nigeria",
+    "capital": "Abuja",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 923768,
+    "population": 232679478,
+    "currency": "NGN (Nigerian naira)"
+  },
+  "mk": {
+    "common": "North Macedonia",
+    "official": "Republic of North Macedonia",
+    "capital": "Skopje",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 25713,
+    "population": 1824359,
+    "currency": "MKD (denar)"
+  },
+  "no": {
+    "common": "Norway",
+    "official": "Kingdom of Norway",
+    "capital": "Oslo",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 323802,
+    "population": 5572279,
+    "currency": "NOK (Norwegian krone)"
+  },
+  "om": {
+    "common": "Oman",
+    "official": "Sultanate of Oman",
+    "capital": "Muscat",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 309500,
+    "population": 5281538,
+    "currency": "OMR (Omani rial)"
+  },
+  "pk": {
+    "common": "Pakistan",
+    "official": "Islamic Republic of Pakistan",
+    "capital": "Islamabad",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 881912,
+    "population": 251269164,
+    "currency": "PKR (Pakistani rupee)"
+  },
+  "pw": {
+    "common": "Palau",
+    "official": "Republic of Palau",
+    "capital": "Ngerulmud",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "area": 459,
+    "population": 17695,
+    "currency": "USD (United States dollar)"
+  },
+  "ps": {
+    "common": "Palestine",
+    "official": "State of Palestine",
+    "capital": "Ramallah",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 6220,
+    "population": 5289152,
+    "currency": "EGP (Egyptian pound)"
+  },
+  "pa": {
+    "common": "Panama",
+    "official": "Republic of Panama",
+    "capital": "Panama City",
+    "region": "Americas",
+    "subregion": "Central America",
+    "area": 75417,
+    "population": 4515577,
+    "currency": "PAB (Panamanian balboa)"
+  },
+  "pg": {
+    "common": "Papua New Guinea",
+    "official": "Independent State of Papua New Guinea",
+    "capital": "Port Moresby",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "area": 462840,
+    "population": 10576502,
+    "currency": "PGK (Papua New Guinean kina)"
+  },
+  "py": {
+    "common": "Paraguay",
+    "official": "Republic of Paraguay",
+    "capital": "Asunción",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 406752,
+    "population": 6929153,
+    "currency": "PYG (Paraguayan guaraní)"
+  },
+  "pe": {
+    "common": "Peru",
+    "official": "Republic of Peru",
+    "capital": "Lima",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 1285216,
+    "population": 34217848,
+    "currency": "PEN (Peruvian sol)"
+  },
+  "ph": {
+    "common": "Philippines",
+    "official": "Republic of the Philippines",
+    "capital": "Manila",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 342353,
+    "population": 115843670,
+    "currency": "PHP (Philippine peso)"
+  },
+  "pl": {
+    "common": "Poland",
+    "official": "Republic of Poland",
+    "capital": "Warsaw",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 312679,
+    "population": 36559233,
+    "currency": "PLN (Polish złoty)"
+  },
+  "qa": {
+    "common": "Qatar",
+    "official": "State of Qatar",
+    "capital": "Doha",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 11586,
+    "population": 2857822,
+    "currency": "QAR (Qatari riyal)"
+  },
+  "ro": {
+    "common": "Romania",
+    "official": "Romania",
+    "capital": "Bucharest",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 238391,
+    "population": 19051804,
+    "currency": "RON (Romanian leu)"
+  },
+  "ru": {
+    "common": "Russia",
+    "official": "Russian Federation",
+    "capital": "Moscow",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "area": 17098242,
+    "population": 143533851,
+    "currency": "RUB (Russian ruble)"
+  },
+  "rw": {
+    "common": "Rwanda",
+    "official": "Republic of Rwanda",
+    "capital": "Kigali",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 26338,
+    "population": 14256567,
+    "currency": "RWF (Rwandan franc)"
+  },
+  "kn": {
+    "common": "Saint Kitts and Nevis",
+    "official": "Federation of Saint Christopher and Nevis",
+    "capital": "Basseterre",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 261,
+    "population": 46843,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "lc": {
+    "common": "Saint Lucia",
+    "official": "Saint Lucia",
+    "capital": "Castries",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 616,
+    "population": 179744,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "vc": {
+    "common": "Saint Vincent and the Grenadines",
+    "official": "Saint Vincent and the Grenadines",
+    "capital": "Kingstown",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 389,
+    "population": 100616,
+    "currency": "XCD (Eastern Caribbean dollar)"
+  },
+  "ws": {
+    "common": "Samoa",
+    "official": "Independent State of Samoa",
+    "capital": "Apia",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "area": 2842,
+    "population": 218019,
+    "currency": "WST (Samoan tālā)"
+  },
+  "sm": {
+    "common": "San Marino",
+    "official": "Most Serene Republic of San Marino",
+    "capital": "City of San Marino",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 61,
+    "population": 33977,
+    "currency": "EUR (Euro)"
+  },
+  "st": {
+    "common": "São Tomé and Príncipe",
+    "official": "Democratic Republic of São Tomé and Príncipe",
+    "capital": "São Tomé",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 964,
+    "population": 235536,
+    "currency": "STN (São Tomé and Príncipe dobra)"
+  },
+  "sa": {
+    "common": "Saudi Arabia",
+    "official": "Kingdom of Saudi Arabia",
+    "capital": "Riyadh",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 2149690,
+    "population": 35300280,
+    "currency": "SAR (Saudi riyal)"
+  },
+  "sn": {
+    "common": "Senegal",
+    "official": "Republic of Senegal",
+    "capital": "Dakar",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 196722,
+    "population": 18501984,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "rs": {
+    "common": "Serbia",
+    "official": "Republic of Serbia",
+    "capital": "Belgrade",
+    "region": "Europe",
+    "subregion": "Southeast Europe",
+    "area": 88361,
+    "population": 6586476,
+    "currency": "RSD (Serbian dinar)"
+  },
+  "sc": {
+    "common": "Seychelles",
+    "official": "Republic of Seychelles",
+    "capital": "Victoria",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 452,
+    "population": 121354,
+    "currency": "SCR (Seychellois rupee)"
+  },
+  "sl": {
+    "common": "Sierra Leone",
+    "official": "Republic of Sierra Leone",
+    "capital": "Freetown",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 71740,
+    "population": 8642022,
+    "currency": "SLL (Sierra Leonean leone)"
+  },
+  "sg": {
+    "common": "Singapore",
+    "official": "Republic of Singapore",
+    "capital": "Singapore",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 710,
+    "population": 6036860,
+    "currency": "SGD (Singapore dollar)"
+  },
+  "sk": {
+    "common": "Slovakia",
+    "official": "Slovak Republic",
+    "capital": "Bratislava",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 49037,
+    "population": 5422069,
+    "currency": "EUR (Euro)"
+  },
+  "si": {
+    "common": "Slovenia",
+    "official": "Republic of Slovenia",
+    "capital": "Ljubljana",
+    "region": "Europe",
+    "subregion": "Central Europe",
+    "area": 20273,
+    "population": 2127400,
+    "currency": "EUR (Euro)"
+  },
+  "sb": {
+    "common": "Solomon Islands",
+    "official": "Solomon Islands",
+    "capital": "Honiara",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "area": 28896,
+    "population": 819198,
+    "currency": "SBD (Solomon Islands dollar)"
+  },
+  "so": {
+    "common": "Somalia",
+    "official": "Federal Republic of Somalia",
+    "capital": "Mogadishu",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 637657,
+    "population": 19009151,
+    "currency": "SOS (Somali shilling)"
+  },
+  "za": {
+    "common": "South Africa",
+    "official": "Republic of South Africa",
+    "capital": "Pretoria",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "area": 1221037,
+    "population": 64007187,
+    "currency": "ZAR (South African rand)"
+  },
+  "ss": {
+    "common": "South Sudan",
+    "official": "Republic of South Sudan",
+    "capital": "Juba",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "area": 619745,
+    "population": 11943408,
+    "currency": "SSP (South Sudanese pound)"
+  },
+  "lk": {
+    "common": "Sri Lanka",
+    "official": "Democratic Socialist Republic of Sri Lanka",
+    "capital": "Colombo",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "area": 65610,
+    "population": 21916000,
+    "currency": "LKR (Sri Lankan rupee)"
+  },
+  "sd": {
+    "common": "Sudan",
+    "official": "Republic of the Sudan",
+    "capital": "Khartoum",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 1886068,
+    "population": 50448963,
+    "currency": "SDG (Sudanese pound)"
+  },
+  "sr": {
+    "common": "Suriname",
+    "official": "Republic of Suriname",
+    "capital": "Paramaribo",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 163820,
+    "population": 634431,
+    "currency": "SRD (Surinamese dollar)"
+  },
+  "se": {
+    "common": "Sweden",
+    "official": "Kingdom of Sweden",
+    "capital": "Stockholm",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 450295,
+    "population": 10569709,
+    "currency": "SEK (Swedish krona)"
+  },
+  "ch": {
+    "common": "Switzerland",
+    "official": "Swiss Confederation",
+    "capital": "Bern",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "area": 41284,
+    "population": 9005582,
+    "currency": "CHF (Swiss franc)"
+  },
+  "sy": {
+    "common": "Syria",
+    "official": "Syrian Arab Republic",
+    "capital": "Damascus",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 185180,
+    "population": 24672760,
+    "currency": "SYP (Syrian pound)"
+  },
+  "tw": {
+    "common": "Taiwan",
+    "official": "Republic of China (Taiwan)",
+    "capital": "Taipei",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 36193,
+    "population": 23923276,
+    "currency": "TWD (New Taiwan dollar)"
+  },
+  "tj": {
+    "common": "Tajikistan",
+    "official": "Republic of Tajikistan",
+    "capital": "Dushanbe",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "area": 143100,
+    "population": 10590927,
+    "currency": "TJS (Tajikistani somoni)"
+  },
+  "tz": {
+    "common": "Tanzania",
+    "official": "United Republic of Tanzania",
+    "capital": "Dodoma",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 945087,
+    "population": 68560157,
+    "currency": "TZS (Tanzanian shilling)"
+  },
+  "th": {
+    "common": "Thailand",
+    "official": "Kingdom of Thailand",
+    "capital": "Bangkok",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 513120,
+    "population": 71668011,
+    "currency": "THB (Thai baht)"
+  },
+  "tg": {
+    "common": "Togo",
+    "official": "Togolese Republic",
+    "capital": "Lomé",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "area": 56785,
+    "population": 9515236,
+    "currency": "XOF (West African CFA franc)"
+  },
+  "to": {
+    "common": "Tonga",
+    "official": "Kingdom of Tonga",
+    "capital": "Nuku'alofa",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "area": 747,
+    "population": 104175,
+    "currency": "TOP (Tongan paʻanga)"
+  },
+  "tt": {
+    "common": "Trinidad and Tobago",
+    "official": "Republic of Trinidad and Tobago",
+    "capital": "Port of Spain",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 5130,
+    "population": 1368333,
+    "currency": "TTD (Trinidad and Tobago dollar)"
+  },
+  "tn": {
+    "common": "Tunisia",
+    "official": "Tunisian Republic",
+    "capital": "Tunis",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "area": 163610,
+    "population": 12277109,
+    "currency": "TND (Tunisian dinar)"
+  },
+  "tr": {
+    "common": "Türkiye",
+    "official": "Republic of Türkiye",
+    "capital": "Ankara",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 783562,
+    "population": 85518661,
+    "currency": "TRY (Turkish lira)"
+  },
+  "tm": {
+    "common": "Turkmenistan",
+    "official": "Turkmenistan",
+    "capital": "Ashgabat",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "area": 488100,
+    "population": 7494498,
+    "currency": "TMT (Turkmenistan manat)"
+  },
+  "tv": {
+    "common": "Tuvalu",
+    "official": "Tuvalu",
+    "capital": "Funafuti",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "area": 26,
+    "population": 9646,
+    "currency": "AUD (Australian dollar)"
+  },
+  "ug": {
+    "common": "Uganda",
+    "official": "Republic of Uganda",
+    "capital": "Kampala",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 241550,
+    "population": 50015092,
+    "currency": "UGX (Ugandan shilling)"
+  },
+  "ua": {
+    "common": "Ukraine",
+    "official": "Ukraine",
+    "capital": "Kyiv",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "area": 603500,
+    "population": 37860221,
+    "currency": "UAH (Ukrainian hryvnia)"
+  },
+  "ae": {
+    "common": "United Arab Emirates",
+    "official": "United Arab Emirates",
+    "capital": "Abu Dhabi",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 83600,
+    "population": 10986400,
+    "currency": "AED (United Arab Emirates dirham)"
+  },
+  "uy": {
+    "common": "Uruguay",
+    "official": "Oriental Republic of Uruguay",
+    "capital": "Montevideo",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 181034,
+    "population": 3386588,
+    "currency": "UYU (Uruguayan peso)"
+  },
+  "uz": {
+    "common": "Uzbekistan",
+    "official": "Republic of Uzbekistan",
+    "capital": "Tashkent",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "area": 447400,
+    "population": 36361859,
+    "currency": "UZS (Uzbekistani soʻm)"
+  },
+  "vu": {
+    "common": "Vanuatu",
+    "official": "Republic of Vanuatu",
+    "capital": "Port Vila",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "area": 12189,
+    "population": 327777,
+    "currency": "VUV (Vanuatu vatu)"
+  },
+  "va": {
+    "common": "Vatican City",
+    "official": "Vatican City State",
+    "capital": "Vatican City",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "area": 0.44,
+    "population": 764,
+    "currency": "EUR (Euro)"
+  },
+  "ve": {
+    "common": "Venezuela",
+    "official": "Bolivarian Republic of Venezuela",
+    "capital": "Caracas",
+    "region": "Americas",
+    "subregion": "South America",
+    "area": 916445,
+    "population": 28405543,
+    "currency": "VES (Venezuelan bolívar soberano)"
+  },
+  "vn": {
+    "common": "Vietnam",
+    "official": "Socialist Republic of Vietnam",
+    "capital": "Hanoi",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "area": 331212,
+    "population": 100987686,
+    "currency": "VND (Vietnamese đồng)"
+  },
+  "ye": {
+    "common": "Yemen",
+    "official": "Republic of Yemen",
+    "capital": "Sana'a",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "area": 527968,
+    "population": 40583164,
+    "currency": "YER (Yemeni rial)"
+  },
+  "zm": {
+    "common": "Zambia",
+    "official": "Republic of Zambia",
+    "capital": "Lusaka",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 752612,
+    "population": 21314956,
+    "currency": "ZMW (Zambian kwacha)"
+  },
+  "zw": {
+    "common": "Zimbabwe",
+    "official": "Republic of Zimbabwe",
+    "capital": "Harare",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "area": 390757,
+    "population": 16634373,
+    "currency": "BWP (Botswana pula)"
+  },
+  "hk": {
+    "common": "Hong Kong",
+    "official": "Hong Kong Special Administrative Region of the People's Republic of China",
+    "capital": "City of Victoria",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 1104,
+    "population": 7524100,
+    "currency": "HKD (Hong Kong dollar)"
+  },
+  "mo": {
+    "common": "Macau",
+    "official": "Macao Special Administrative Region of the People's Republic of China",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "area": 30,
+    "population": 687000,
+    "currency": "MOP (Macanese pataca)"
+  },
+  "pr": {
+    "common": "Puerto Rico",
+    "official": "Commonwealth of Puerto Rico",
+    "capital": "San Juan",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "area": 8870,
+    "population": 3203295,
+    "currency": "USD (United States dollar)"
+  },
+  "gl": {
+    "common": "Greenland",
+    "official": "Greenland",
+    "capital": "Nuuk",
+    "region": "Americas",
+    "subregion": "North America",
+    "area": 2166086,
+    "population": 56836,
+    "currency": "DKK (krone)"
+  },
+  "fo": {
+    "common": "Faroe Islands",
+    "official": "Faroe Islands",
+    "capital": "Tórshavn",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 1393,
+    "population": 54681,
+    "currency": "DKK (Danish krone)"
+  },
+  "aq": {
+    "common": "Antarctica",
+    "official": "Antarctica",
+    "region": "Antarctic",
+    "area": 14000000,
+    "population": 1106
+  },
+  "gb-eng": {
+    "common": "England",
+    "official": "England",
+    "capital": "London",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 130279,
+    "population": 57106398,
+    "currency": "GBP (Pound sterling)"
+  },
+  "gb-sct": {
+    "common": "Scotland",
+    "official": "Scotland",
+    "capital": "Edinburgh",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 77933,
+    "population": 5479900,
+    "currency": "GBP (Pound sterling)"
+  },
+  "gb-wls": {
+    "common": "Wales",
+    "official": "Wales",
+    "capital": "Cardiff",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 20779,
+    "population": 3107500,
+    "currency": "GBP (Pound sterling)"
+  },
+  "gb-nir": {
+    "common": "Northern Ireland",
+    "official": "Northern Ireland",
+    "capital": "Belfast",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "area": 14130,
+    "population": 1910543,
+    "currency": "GBP (Pound sterling)"
+  }
+}

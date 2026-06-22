@@ -7,14 +7,12 @@ import {
     ArrowLeft,
     ArrowUp,
     Clock,
-    Flame,
     Loader2,
     MapPin,
     Moon,
     RotateCcw,
     Sun,
     Users,
-    XCircle,
 } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { fetchPopulationAndArea } from "../utils/restCountryMetric"
@@ -204,9 +202,8 @@ export default function HigherLowerGame() {
     const [revealed, setRevealed] = useState<RevealedRow[]>([])
     const [complete, setComplete] = useState(false)
 
-    const [hotStreak, setHotStreak] = useState(0)
-    const [wrongCount, setWrongCount] = useState(0)
     const [elapsedSec, setElapsedSec] = useState(0)
+    const [lost, setLost] = useState(false)
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -241,8 +238,7 @@ export default function HigherLowerGame() {
         setRevealed([])
         setComplete(false)
         setRevealPhase(null)
-        setHotStreak(0)
-        setWrongCount(0)
+        setLost(false)
         setElapsedSec(0)
         const p = pickRandomPair(pool)
         if (!p) {
@@ -266,8 +262,7 @@ export default function HigherLowerGame() {
         setRevealPhase(null)
         setLeftStat(null)
         setRightStat(null)
-        setHotStreak(0)
-        setWrongCount(0)
+        setLost(false)
         setElapsedSec(0)
         const p = pickRandomPair(pool)
         if (!p) {
@@ -367,12 +362,13 @@ export default function HigherLowerGame() {
 
         window.setTimeout(() => {
             setRevealPhase(null)
-            if (ok) setHotStreak(s => s + 1)
-            else {
-                setHotStreak(0)
-                setWrongCount(w => w + 1)
+            if (ok) {
+                advanceAfterRound(true, { left: pair.left, right: pair.right }, rightStat)
+            } else {
+                // A single wrong guess ends the run.
+                setLost(true)
+                setComplete(true)
             }
-            advanceAfterRound(ok, { left: pair.left, right: pair.right }, rightStat)
         }, 2900)
     }
 
@@ -449,8 +445,7 @@ export default function HigherLowerGame() {
                     </motion.h1>
                     <p className="mb-6 max-w-md text-center text-xs text-slate-500 dark:text-slate-400">
                         Compare the mystery country (right) to the reference (left). Guess right → that country becomes the new
-                        reference; only the mystery is replaced. The previous reference leaves the pool. Wrong guess → new
-                        mystery only.
+                        reference and the previous one leaves the pool. One wrong guess ends the run.
                     </p>
 
                     <AnimatePresence mode="wait">
@@ -476,23 +471,6 @@ export default function HigherLowerGame() {
                             initial={{ opacity: 0, y: -6 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            <div className="flex items-center gap-1.5 rounded-full border border-orange-200/90 bg-orange-50 px-3 py-1.5 text-[11px] font-semibold text-orange-900 shadow-sm dark:border-orange-900/50 dark:bg-orange-950/50 dark:text-orange-100">
-                                <Flame size={14} className="shrink-0 text-orange-500 dark:text-orange-400" aria-hidden />
-                                <span className="text-orange-700/90 dark:text-orange-200/90">Hot streak</span>
-                                <motion.span
-                                    key={hotStreak}
-                                    initial={{ scale: 1.2 }}
-                                    animate={{ scale: 1 }}
-                                    className="min-w-[1ch] font-black tabular-nums text-orange-600 dark:text-orange-300"
-                                >
-                                    {hotStreak}
-                                </motion.span>
-                            </div>
-                            <div className="flex items-center gap-1.5 rounded-full border border-rose-200/90 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-100">
-                                <XCircle size={14} className="shrink-0 text-rose-500 dark:text-rose-400" aria-hidden />
-                                <span className="text-rose-700/90 dark:text-rose-200/90">Mistakes</span>
-                                <span className="font-black tabular-nums text-rose-600 dark:text-rose-300">{wrongCount}</span>
-                            </div>
                             <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200">
                                 <Clock size={14} className="shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
                                 <span className="text-slate-500 dark:text-slate-400">Time</span>
@@ -512,38 +490,53 @@ export default function HigherLowerGame() {
                     )}
 
                     {complete && (
-                        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
-                            <p className="font-bold text-amber-900 dark:text-amber-100">Round complete</p>
-                            <p className="mt-1 text-sm text-amber-800/90 dark:text-amber-200/90">
-                                Not enough countries left to compare.
+                        <div
+                            className={`mb-6 rounded-2xl border px-6 py-5 text-center ${
+                                lost
+                                    ? "border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/30"
+                                    : "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30"
+                            }`}
+                        >
+                            <p
+                                className={`text-lg font-black ${
+                                    lost ? "text-rose-900 dark:text-rose-100" : "text-amber-900 dark:text-amber-100"
+                                }`}
+                            >
+                                {lost ? "Game over" : "You did it!"}
                             </p>
-                            <p className="mx-auto mt-2 max-w-xs text-[11px] leading-snug text-amber-800/75 dark:text-amber-200/75">
-                                Congratulations — you played through the whole chain. Outstanding run!
+                            <p
+                                className={`mt-1 text-sm ${
+                                    lost ? "text-rose-800/90 dark:text-rose-200/90" : "text-amber-800/90 dark:text-amber-200/90"
+                                }`}
+                            >
+                                {lost
+                                    ? "Wrong guess — that ends your run."
+                                    : "You played through the whole chain. Outstanding run!"}
                             </p>
-                            <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] font-semibold text-amber-900/80 dark:text-amber-200/85">
-                                <span className="inline-flex items-center gap-1">
-                                    <Clock size={12} aria-hidden />
-                                    {formatElapsed(elapsedSec)}
-                                </span>
-                                <span className="opacity-40" aria-hidden>
-                                    ·
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                    <Flame size={12} className="text-orange-500" aria-hidden />
-                                    streak {hotStreak}
-                                </span>
-                                <span className="opacity-40" aria-hidden>
-                                    ·
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                    <XCircle size={12} className="text-rose-500" aria-hidden />
-                                    {wrongCount} wrong
-                                </span>
-                            </p>
+                            <div className="mx-auto mt-4 flex max-w-xs items-stretch justify-center gap-3">
+                                <div className="flex-1 rounded-xl bg-white/70 px-3 py-2 dark:bg-slate-900/40">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                        Score
+                                    </div>
+                                    <div className="text-2xl font-black tabular-nums text-slate-800 dark:text-slate-100">
+                                        {revealed.length}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 dark:text-slate-500">correct guesses</div>
+                                </div>
+                                <div className="flex-1 rounded-xl bg-white/70 px-3 py-2 dark:bg-slate-900/40">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                        Time
+                                    </div>
+                                    <div className="flex items-center justify-center gap-1 text-2xl font-black tabular-nums text-slate-800 dark:text-slate-100">
+                                        <Clock size={16} className="text-slate-400" aria-hidden />
+                                        {formatElapsed(elapsedSec)}
+                                    </div>
+                                </div>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => resetGame()}
-                                className="mt-4 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-indigo-500"
+                                className="mt-5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-indigo-500"
                             >
                                 Play again
                             </button>

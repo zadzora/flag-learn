@@ -1,10 +1,14 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowLeft, BarChart3, Calendar, Trophy, X, Check, MapPin, Moon, Sun, Users } from "lucide-react"
+import { ArrowLeft, Flame, Trophy, X, Check, MapPin, Moon, Sun } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
+import DailyStanding from "../components/DailyStanding"
+import NextDailyLink from "../components/NextDailyLink"
+import { dailyMode } from "../utils/dailyModes"
+import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
 
 // Types
 type Flag = {
@@ -18,6 +22,8 @@ const THEME_KEY = "flag-master-theme"
 const DAILY_STORAGE_KEY = "flag-master-daily-save"
 const MAX_GUESSES = 6
 const DAILY_GAME_KEY = "flagle"
+/** Same icon the home card and the hand-off button use. */
+const { icon: FlagleIcon } = dailyMode("flagle")
 
 // Controls the scale of the image based on mistake count (harder zoom)
 const ZOOM_LEVELS = [7, 5, 4, 3, 2, 1]
@@ -103,11 +109,28 @@ export default function DailyFlagle() {
         return false
     })
 
+    // Did today's loss end a running streak? Saved so the message stays put
+    // after a refresh, by which point the stored streak is already zeroed.
+    const [brokeStreak, setBrokeStreak] = useState<boolean>(() => {
+        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                if (parsed.date === todayStr) return parsed.brokeStreak === true
+            } catch { /* corrupt save - fall through */ }
+        }
+        return false
+    })
+
     const [distribution, setDistribution] = useState<DailyDistribution | null>(null)
     const [statsError, setStatsError] = useState(false)
 
     const [input, setInput] = useState("")
     const [feedback, setFeedback] = useState<string | null>(null)
+
+    // Consecutive days solved. Lives in its own localStorage key so the home
+    // screen can read it without loading the daily save.
+    const [streak, setStreak] = useState(() => activeStreak(readStreak(STREAK_KEYS.flagle), todayStr))
 
     const inputRef = useRef<HTMLInputElement>(null)
     // StrictMode runs effects twice in dev - this keeps the submit to one write.
@@ -121,10 +144,11 @@ export default function DailyFlagle() {
             guesses,
             status,
             bonusStatus,
-            statsSubmitted
+            statsSubmitted,
+            brokeStreak
         }
         localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(dataToSave))
-    }, [guesses, status, bonusStatus, statsSubmitted, todayStr])
+    }, [guesses, status, bonusStatus, statsSubmitted, brokeStreak, todayStr])
 
     // --- DAILY STANDINGS ---
     // Report our result once the game is over, then watch the live distribution.
@@ -164,6 +188,14 @@ export default function DailyFlagle() {
     }
 
     // --- LOGIC ---
+    /** Ends the main round: freezes the status and folds the result into the streak. */
+    function finish(won: boolean) {
+        setStatus(won ? 'won' : 'lost')
+        const before = activeStreak(readStreak(STREAK_KEYS.flagle), todayStr)
+        setStreak(activeStreak(recordDailyResult(STREAK_KEYS.flagle, todayStr, won), todayStr))
+        if (!won && before > 0) setBrokeStreak(true)
+    }
+
     function handleGuess() {
         if (!input.trim() || status !== 'playing') return
 
@@ -183,11 +215,11 @@ export default function DailyFlagle() {
         setInput("")
 
         if (isCorrect) {
-            setStatus('won')
+            finish(true)
             setFeedback("Perfect! 🎉")
             setTimeout(() => setFeedback(null), 2000)
         } else if (newGuesses.length >= MAX_GUESSES) {
-            setStatus('lost')
+            finish(false)
         } else {
             setFeedback("Wrong! The flag zoomed out a bit. 👀")
             setTimeout(() => setFeedback(null), 2000)
@@ -228,11 +260,6 @@ export default function DailyFlagle() {
         return computeStanding(distribution, myBucket)
     }, [distribution, myBucket])
 
-    const maxBucketCount = useMemo(() => {
-        if (!distribution) return 0
-        return Math.max(...distribution.solved, distribution.failed, 1)
-    }, [distribution])
-
     const currentZoom = status === 'playing' ? ZOOM_LEVELS[guesses.length] : 1
 
     // --- RENDER ---
@@ -247,9 +274,16 @@ export default function DailyFlagle() {
 
                 <div className="flex flex-col items-center">
                     <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                        <Calendar size={18} className="text-indigo-500" /> DAILY FLAGLE
+                        <FlagleIcon size={18} className="text-indigo-500" /> DAILY FLAGLE
                     </h1>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">{todayStr}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">{todayStr}</span>
+                        {streak > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-[10px] font-black">
+                                <Flame size={11} /> {streak}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <button onClick={toggleTheme} className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
@@ -347,7 +381,13 @@ export default function DailyFlagle() {
                                         <Trophy size={32} />
                                     </div>
                                     <h2 className="text-2xl font-bold mb-1 text-slate-800 dark:text-white">Brilliant!</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 mb-6">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
+                                    <p className="text-slate-500 dark:text-slate-400 mb-4">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
+
+                                    {streak > 0 && (
+                                        <div className="mb-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-xs font-black">
+                                            <Flame size={14} /> {streak} day streak
+                                        </div>
+                                    )}
 
                                     <div className="border-t border-slate-100 dark:border-slate-700 pt-6">
                                         <h3 className="font-bold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-widest text-xs">Bonus Round</h3>
@@ -363,7 +403,9 @@ export default function DailyFlagle() {
                                         <X size={32} />
                                     </div>
                                     <h2 className="text-2xl font-bold mb-1 text-slate-800 dark:text-white">Game Over</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 mb-6">Better luck tomorrow!</p>
+                                    <p className="text-slate-500 dark:text-slate-400 mb-6">
+                                        {brokeStreak ? 'Your streak is back to zero - start a new one tomorrow!' : 'Better luck tomorrow!'}
+                                    </p>
                                 </div>
                             )}
                         </motion.div>
@@ -408,90 +450,19 @@ export default function DailyFlagle() {
 
                 </div>
 
-                {/* Today's Standing */}
                 {status !== 'playing' && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm"
-                    >
-                        <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
-                            <BarChart3 size={14} /> Today's Standing
-                        </h3>
-
-                        {statsError ? (
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                Global stats are unavailable right now.
-                            </p>
-                        ) : !distribution ? (
-                            <p className="text-sm text-slate-500 dark:text-slate-400 animate-pulse">
-                                Loading today's results...
-                            </p>
-                        ) : !standing || distribution.total < 2 ? (
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                You are the first player today - come back later to see how you compare.
-                            </p>
-                        ) : (
-                            <>
-                                <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">
-                                        Top {standing.topPercent}%
-                                    </span>
-                                    <span className="text-sm font-bold text-slate-400">
-                                        of today's players
-                                    </span>
-                                </div>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                                    You finished ahead of <strong className="text-slate-700 dark:text-slate-200">{standing.beatPercent}%</strong> of them
-                                    {standing.tiedCount > 1 && <> - {standing.tiedCount} players got the same result</>}.
-                                </p>
-
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
-                                    <span className="flex items-center gap-1.5">
-                                        <Users size={13} /> {distribution.total} {distribution.total === 1 ? 'player' : 'players'} today
-                                    </span>
-                                    <span>{Math.round(standing.solveRate * 100)}% solved it</span>
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                    {[...Array.from({ length: MAX_GUESSES }, (_, i) => ({
-                                        key: `g${i + 1}`,
-                                        label: `${i + 1}`,
-                                        count: distribution.solved[i],
-                                        isMine: myBucket === i + 1,
-                                        won: true,
-                                    })), {
-                                        key: 'fail',
-                                        label: 'X',
-                                        count: distribution.failed,
-                                        isMine: myBucket === null,
-                                        won: false,
-                                    }].map(row => (
-                                        <div key={row.key} className="flex items-center gap-2">
-                                            <span className={`w-4 text-xs font-bold text-center ${row.isMine ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
-                                                {row.label}
-                                            </span>
-                                            <div className="flex-1 h-5 rounded-md bg-slate-100 dark:bg-slate-900/60 overflow-hidden">
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${Math.max(row.count > 0 ? 8 : 0, (row.count / maxBucketCount) * 100)}%` }}
-                                                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                                                    className={`h-full rounded-md flex items-center justify-end pr-2 text-[10px] font-bold text-white ${
-                                                        row.isMine
-                                                            ? (row.won ? 'bg-emerald-500' : 'bg-red-500')
-                                                            : 'bg-slate-300 dark:bg-slate-600'
-                                                    }`}
-                                                >
-                                                    {row.count > 0 && row.count}
-                                                </motion.div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </motion.div>
+                    <DailyStanding
+                        distribution={distribution}
+                        standing={standing}
+                        statsError={statsError}
+                        myBucket={myBucket}
+                        bucketLabels={Array.from({ length: MAX_GUESSES }, (_, i) => `${i + 1}`)}
+                        accentClass="text-indigo-600 dark:text-indigo-400"
+                        footnote="Guesses used - X did not solve it"
+                    />
                 )}
+
+                {status !== 'playing' && <NextDailyLink current="flagle" today={todayStr} />}
 
                 {/* Guess History List */}
                 {guesses.length > 0 && (

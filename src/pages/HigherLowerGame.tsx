@@ -17,6 +17,7 @@ import {
 import worldData from "../../data/flags.json"
 import { fetchPopulationAndArea } from "../utils/restCountryMetric"
 import CountryDataCredit from "../components/CountryDataCredit"
+import CountUpValue from "../components/CountUpValue"
 
 const THEME_KEY = "flag-master-theme"
 
@@ -83,48 +84,6 @@ function formatElapsed(totalSec: number): string {
     const h = Math.floor(m / 60)
     if (h > 0) return `${h}:${String(m % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
     return `${m}:${String(s % 60).padStart(2, "0")}`
-}
-
-/** Counts up quickly then eases to `target` (ease-out) when `active` becomes true. */
-function RevealStatCount({ metric, target, active }: { metric: Metric; target: number; active: boolean }) {
-    const [display, setDisplay] = useState(0)
-
-    useEffect(() => {
-        if (!active) {
-            setDisplay(0)
-            return
-        }
-        if (!Number.isFinite(target)) {
-            setDisplay(0)
-            return
-        }
-
-        let cancelled = false
-        let raf = 0
-        const durationMs = 1500
-        const from = target > 0 ? Math.min(target * 0.05, target * 0.18) : 0
-        const tickStart = performance.now()
-
-        const tick = (now: number) => {
-            if (cancelled) return
-            const t = Math.min(1, (now - tickStart) / durationMs)
-            const eased = 1 - Math.pow(1 - t, 3.2)
-            const next = from + (target - from) * eased
-            setDisplay(next)
-            if (t < 1) raf = requestAnimationFrame(tick)
-            else setDisplay(target)
-        }
-
-        setDisplay(from)
-        raf = requestAnimationFrame(tick)
-
-        return () => {
-            cancelled = true
-            cancelAnimationFrame(raf)
-        }
-    }, [active, target])
-
-    return <span className="tabular-nums">{formatValue(metric, display)}</span>
 }
 
 function CorrectGuessesPanel({
@@ -633,7 +592,7 @@ export default function HigherLowerGame() {
                                                     transition={{ type: "spring", stiffness: 380, damping: 22 }}
                                                     className="inline-block text-lg font-black text-slate-800 dark:text-slate-100 sm:text-2xl"
                                                 >
-                                                    <RevealStatCount metric={metric} target={rightStat} active />
+                                                    <CountUpValue target={rightStat} format={v => formatValue(metric, v)} />
                                                 </motion.span>
                                             ) : null
                                         ) : (

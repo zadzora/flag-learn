@@ -3,18 +3,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowLeft, SkipForward, Check, Loader2 } from "lucide-react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps"
-import { feature as topoFeature } from "topojson-client"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
-
-const GEO_URL = "/world-map.json"
-
-const UNSUPPORTED_MAP_CODES = [
-    "ad", "mc", "sm", "va", "li", "sg", "mt", "bh", "mv", "nr", "tv",
-    "mh", "pw", "fm", "ws", "to", "ki", "st", "sc", "km", "bb", "vc",
-    "gd", "ag", "kn", "lc", "dm", "hk", "mo", "pr", "aq", "cv", "mu", "fo",
-    "gb-sct", "gb-wls", "gb-nir", "gb-eng"
-]
+import {
+    GEO_URL, UNSUPPORTED_MAP_CODES, geoMatchesFlag, getDisplayName, getNames, loadGeoInfoByCode,
+    type GeoInfo,
+} from "../utils/mapGeo"
 
 const STORAGE_KEY = "border-guess-v1"
 interface SaveData { queue: string[]; completed: number; total: number; incorrectRounds: number; cycleComplete?: boolean }
@@ -24,86 +18,6 @@ function loadSave(): SaveData | null {
 function writeSave(d: SaveData) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)) }
 
 type Flag = { code: string; name: string | string[]; image: string }
-type GeoInfo = { center: [number, number]; zoom: number }
-
-function getNames(flag: Flag): string[] {
-    return Array.isArray(flag.name) ? flag.name : [flag.name]
-}
-
-function getDisplayName(flag: Flag): string {
-    return getNames(flag)[0]
-}
-
-function normStr(s: string): string {
-    return s.toLowerCase().replace(/[^a-z]/g, "")
-}
-
-function geoMatchesFlag(geoRawName: string, flag: Flag): boolean {
-    const g = normStr(geoRawName)
-    const fs = getNames(flag).map(normStr)
-    if (fs.some(f => f === g)) return true
-    if (g === "unitedstatesofamerica" && fs.includes("unitedstates")) return true
-    if (g === "unitedrepublicoftanzania" && fs.includes("tanzania")) return true
-    if (g === "demrepcongo" && fs.includes("drcongo")) return true
-    if (g === "congo" && fs.includes("republicofthecongo")) return true
-    if (g === "czechia" && fs.includes("czechrepublic")) return true
-    if (g === "republicofserbia" && fs.includes("serbia")) return true
-    if (g === "republicofkorea" && fs.includes("southkorea")) return true
-    if (g === "dempeoplesrepofkorea" && fs.includes("northkorea")) return true
-    if (g === "eswatini" && fs.includes("swaziland")) return true
-    if (g === "northmacedonia" && fs.includes("macedonia")) return true
-    if (g === "republicofmoldova" && fs.includes("moldova")) return true
-    if (g === "thebahamas" && fs.includes("bahamas")) return true
-    if (g === "myanmar" && fs.includes("myanmarburma")) return true
-    if (g === "vatican" && fs.includes("vaticancity")) return true
-    if (g === "palestine" && fs.includes("stateofpalestine")) return true
-    if (g === "bosniaandherz" && fs.includes("bosnia")) return true
-    if (g === "centralafricanrep" && fs.includes("car")) return true
-    if (g === "eqguinea" && fs.includes("equatorialguinea")) return true
-    if (g === "dominicanrep" && fs.includes("dominicana")) return true
-    if (g === "ctedivoire" && fs.includes("ivorycoast")) return true
-    if (g === "solomonis" && fs.includes("solomonislands")) return true
-    if (g === "ssudan" && fs.includes("southsudan")) return true
-    return false
-}
-
-function computeGeoInfo(feature: any): GeoInfo | null {
-    const geometry = feature?.geometry
-    if (!geometry) return null
-
-    const coords: number[][] = []
-    if (geometry.type === "Polygon") {
-        for (const c of geometry.coordinates[0]) coords.push(c)
-    } else if (geometry.type === "MultiPolygon") {
-        let largest: number[][] = []
-        for (const poly of geometry.coordinates) {
-            if (poly[0].length > largest.length) largest = poly[0]
-        }
-        for (const c of largest) coords.push(c)
-    } else {
-        return null
-    }
-
-    if (coords.length === 0) return null
-
-    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity
-    for (const [lon, lat] of coords) {
-        if (lon < minLon) minLon = lon
-        if (lon > maxLon) maxLon = lon
-        if (lat < minLat) minLat = lat
-        if (lat > maxLat) maxLat = lat
-    }
-
-    const lonSpan = maxLon - minLon
-    const latSpan = maxLat - minLat
-    const maxSpan = Math.max(lonSpan, latSpan)
-    const zoom = Math.min(14, Math.max(1.2, 70 / maxSpan))
-
-    return {
-        center: [(minLon + maxLon) / 2, Math.max(-70, Math.min(70, (minLat + maxLat) / 2))],
-        zoom,
-    }
-}
 
 export default function BorderGuessGame() {
     const isDark = useMemo(() => document.documentElement.classList.contains("dark"), [])
@@ -175,25 +89,8 @@ export default function BorderGuessGame() {
     }
 
     useEffect(() => {
-        fetch(GEO_URL)
-            .then(r => r.json())
-            .then(data => {
-                const features: any[] = data.objects?.countries
-                    ? (topoFeature(data, data.objects.countries) as any).features || []
-                    : data.features || []
-                const infoByCode: Record<string, GeoInfo> = {}
-
-                for (const flag of activeData) {
-                    for (const feature of features) {
-                        const geoName = feature.properties?.name || feature.properties?.NAME || ""
-                        if (geoMatchesFlag(geoName, flag)) {
-                            const info = computeGeoInfo(feature)
-                            if (info) infoByCode[flag.code] = info
-                            break
-                        }
-                    }
-                }
-
+        loadGeoInfoByCode(activeData)
+            .then(infoByCode => {
                 geoInfoRef.current = infoByCode
                 setGeoInfoByCode(infoByCode)
                 setIsLoading(false)

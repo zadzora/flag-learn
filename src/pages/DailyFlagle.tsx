@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowLeft, Calendar, Trophy, X, Check, MapPin, Moon, Sun } from "lucide-react"
+import { ArrowLeft, BarChart3, Calendar, Trophy, X, Check, MapPin, Moon, Sun, Users } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
+import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 
 // Types
 type Flag = {
@@ -16,9 +17,10 @@ type Flag = {
 const THEME_KEY = "flag-master-theme"
 const DAILY_STORAGE_KEY = "flag-master-daily-save"
 const MAX_GUESSES = 6
+const DAILY_GAME_KEY = "flagle"
 
 // Controls the scale of the image based on mistake count (harder zoom)
-const ZOOM_LEVELS = [8, 5, 4, 3, 2, 1]
+const ZOOM_LEVELS = [7, 5, 4, 3, 2, 1]
 
 export default function DailyFlagle() {
     const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" }) // Format: YYYY-MM-DD
@@ -88,10 +90,28 @@ export default function DailyFlagle() {
         return 'idle'
     })
 
+    // Was today's result already added to the global counters? Kept in the daily
+    // save so a refresh never counts the same player twice.
+    const [statsSubmitted, setStatsSubmitted] = useState<boolean>(() => {
+        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                if (parsed.date === todayStr) return parsed.statsSubmitted === true
+            } catch (e) {}
+        }
+        return false
+    })
+
+    const [distribution, setDistribution] = useState<DailyDistribution | null>(null)
+    const [statsError, setStatsError] = useState(false)
+
     const [input, setInput] = useState("")
     const [feedback, setFeedback] = useState<string | null>(null)
 
     const inputRef = useRef<HTMLInputElement>(null)
+    // StrictMode runs effects twice in dev - this keeps the submit to one write.
+    const submitLockRef = useRef(false)
 
     // --- SAVE PROGRESS ---
     // Only runs when state actually changes
@@ -100,10 +120,39 @@ export default function DailyFlagle() {
             date: todayStr,
             guesses,
             status,
-            bonusStatus
+            bonusStatus,
+            statsSubmitted
         }
         localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(dataToSave))
-    }, [guesses, status, bonusStatus, todayStr])
+    }, [guesses, status, bonusStatus, statsSubmitted, todayStr])
+
+    // --- DAILY STANDINGS ---
+    // Report our result once the game is over, then watch the live distribution.
+    useEffect(() => {
+        if (status === 'playing' || statsSubmitted || submitLockRef.current) return
+        submitLockRef.current = true
+        submitDailyResult(DAILY_GAME_KEY, todayStr, MAX_GUESSES, status === 'won' ? guesses.length : null)
+            .then(() => setStatsSubmitted(true))
+            .catch(() => {
+                submitLockRef.current = false
+                setStatsError(true)
+            })
+    }, [status, statsSubmitted, guesses.length, todayStr])
+
+    useEffect(() => {
+        if (status === 'playing') return
+        const unsubscribe = subscribeDailyStats(
+            DAILY_GAME_KEY,
+            todayStr,
+            MAX_GUESSES,
+            (next) => {
+                setDistribution(next)
+                setStatsError(false)
+            },
+            () => setStatsError(true)
+        )
+        return () => unsubscribe()
+    }, [status, todayStr])
 
     // --- HELPERS ---
     function getPrimaryName(f: Flag) {
@@ -171,6 +220,18 @@ export default function DailyFlagle() {
         setBonusStatus('playing')
         setTimeout(() => inputRef.current?.focus(), 100)
     }
+
+    const myBucket = status === 'won' ? guesses.length : null
+
+    const standing = useMemo(() => {
+        if (!distribution) return null
+        return computeStanding(distribution, myBucket)
+    }, [distribution, myBucket])
+
+    const maxBucketCount = useMemo(() => {
+        if (!distribution) return 0
+        return Math.max(...distribution.solved, distribution.failed, 1)
+    }, [distribution])
 
     const currentZoom = status === 'playing' ? ZOOM_LEVELS[guesses.length] : 1
 
@@ -346,6 +407,91 @@ export default function DailyFlagle() {
                     )}
 
                 </div>
+
+                {/* Today's Standing */}
+                {status !== 'playing' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm"
+                    >
+                        <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2">
+                            <BarChart3 size={14} /> Today's Standing
+                        </h3>
+
+                        {statsError ? (
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                Global stats are unavailable right now.
+                            </p>
+                        ) : !distribution ? (
+                            <p className="text-sm text-slate-500 dark:text-slate-400 animate-pulse">
+                                Loading today's results...
+                            </p>
+                        ) : !standing || distribution.total < 2 ? (
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                You are the first player today - come back later to see how you compare.
+                            </p>
+                        ) : (
+                            <>
+                                <div className="flex items-baseline gap-2 mb-1">
+                                    <span className="text-4xl font-black text-indigo-600 dark:text-indigo-400">
+                                        Top {standing.topPercent}%
+                                    </span>
+                                    <span className="text-sm font-bold text-slate-400">
+                                        of today's players
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                                    You finished ahead of <strong className="text-slate-700 dark:text-slate-200">{standing.beatPercent}%</strong> of them
+                                    {standing.tiedCount > 1 && <> - {standing.tiedCount} players got the same result</>}.
+                                </p>
+
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+                                    <span className="flex items-center gap-1.5">
+                                        <Users size={13} /> {distribution.total} {distribution.total === 1 ? 'player' : 'players'} today
+                                    </span>
+                                    <span>{Math.round(standing.solveRate * 100)}% solved it</span>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                    {[...Array.from({ length: MAX_GUESSES }, (_, i) => ({
+                                        key: `g${i + 1}`,
+                                        label: `${i + 1}`,
+                                        count: distribution.solved[i],
+                                        isMine: myBucket === i + 1,
+                                        won: true,
+                                    })), {
+                                        key: 'fail',
+                                        label: 'X',
+                                        count: distribution.failed,
+                                        isMine: myBucket === null,
+                                        won: false,
+                                    }].map(row => (
+                                        <div key={row.key} className="flex items-center gap-2">
+                                            <span className={`w-4 text-xs font-bold text-center ${row.isMine ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>
+                                                {row.label}
+                                            </span>
+                                            <div className="flex-1 h-5 rounded-md bg-slate-100 dark:bg-slate-900/60 overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${Math.max(row.count > 0 ? 8 : 0, (row.count / maxBucketCount) * 100)}%` }}
+                                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                                    className={`h-full rounded-md flex items-center justify-end pr-2 text-[10px] font-bold text-white ${
+                                                        row.isMine
+                                                            ? (row.won ? 'bg-emerald-500' : 'bg-red-500')
+                                                            : 'bg-slate-300 dark:bg-slate-600'
+                                                    }`}
+                                                >
+                                                    {row.count > 0 && row.count}
+                                                </motion.div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </motion.div>
+                )}
 
                 {/* Guess History List */}
                 {guesses.length > 0 && (

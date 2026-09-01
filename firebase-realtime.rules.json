@@ -14,6 +14,17 @@
           ".validate": "!newData.exists() || (newData.hasChildren(['name','bestTimeSeconds','mistakes','playerId']) && newData.child('playerId').isString() && newData.child('playerId').val() === $playerId && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('bestTimeSeconds').isNumber() && newData.child('bestTimeSeconds').val() >= 0 && newData.child('bestTimeSeconds').val() <= 72000 && newData.child('mistakes').isNumber() && newData.child('mistakes').val() >= 0 && newData.child('mistakes').val() <= 10000)"
         }
       }
+    },
+    "dailyStats": {
+      ".read": true,
+      "$game": {
+        "$date": {
+          "$bucket": {
+            ".write": "$game.matches(/^[a-z0-9-]{1,24}$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $bucket.matches(/^(g[1-9]|fail)$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        }
+      }
     }
   }
 }

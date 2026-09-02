@@ -18,6 +18,8 @@ import WordWheelGame from "./pages/WordWheelGame"
 import HigherLowerGame from "./pages/HigherLowerGame"
 import PaintGame from "./pages/PaintGame"
 import BorderGuessGame from "./pages/BorderGuessGame"
+import FlagWars from "./pages/FlagWars"
+import BorderChain from "./pages/BorderChain"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -43,6 +45,10 @@ export default function App() {
                 <Route path="/higher-lower" element={<HigherLowerGame />} />
                 <Route path="/paint" element={<PaintGame />} />
                 <Route path="/border-guess" element={<BorderGuessGame />} />
+                <Route path="/border-chain" element={<BorderChain />} />
+                <Route path="/world-conqueror" element={<FlagWars />} />
+                {/* The mode was called Flag Wars before; keep the old link working. */}
+                <Route path="/flag-wars" element={<FlagWars />} />
                 {/* <Route path="/flag-questions" element={<FlagQuestionGame />} /> */}
 
             </Routes>

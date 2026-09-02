@@ -79,6 +79,20 @@
     </url>
 
     <url>
+        <loc>https://flaglearn.eu/world-conqueror</loc>
+        <lastmod>2026-09-02</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <url>
+        <loc>https://flaglearn.eu/border-chain</loc>
+        <lastmod>2026-09-02</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <url>
         <loc>https://flaglearn.eu/pvp/create</loc>
         <lastmod>2026-04-29</lastmod>
         <changefreq>monthly</changefreq>

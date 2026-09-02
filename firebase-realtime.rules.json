@@ -25,6 +25,75 @@
           }
         }
       }
+    },
+    "flagWars": {
+      ".read": true,
+      "$season": {
+        "territories": {
+          "$code": {
+            ".write": "$season.matches(/^s[0-9]{1,4}$/) && $code.matches(/^[a-z]{2}$/) && auth != null && newData.exists() && ((!data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && data.child('ownerId').val() === auth.uid && root.child('flagWars/' + $season + '/sieges/' + $code).exists() && newData.child('ownerId').val() === root.child('flagWars/' + $season + '/sieges/' + $code).child('attackerId').val() && now <= root.child('flagWars/' + $season + '/sieges/' + $code).child('startedAt').val() + 86400000) || (data.exists() && root.child('flagWars/' + $season + '/sieges/' + $code).exists() && root.child('flagWars/' + $season + '/sieges/' + $code).child('attackerId').val() === auth.uid && newData.child('ownerId').val() === auth.uid && !root.child('flagWars/' + $season + '/sieges/' + $code).child('resolvedAt').exists() && now > root.child('flagWars/' + $season + '/sieges/' + $code).child('startedAt').val() + 86400000))",
+            ".validate": "newData.hasChildren(['ownerId','ownerName','score','timeMs','takenAt']) && newData.child('ownerId').isString() && newData.child('ownerName').isString() && newData.child('ownerName').val().length > 0 && newData.child('ownerName').val().length <= 24 && newData.child('score').isNumber() && newData.child('score').val() > 0 && newData.child('score').val() <= 1000 && newData.child('timeMs').isNumber() && newData.child('timeMs').val() >= 0 && newData.child('timeMs').val() <= 60000 && newData.child('takenAt').val() === now"
+          }
+        },
+        "players": {
+          "$uid": {
+            ".write": "$season.matches(/^s[0-9]{1,4}$/) && auth != null && auth.uid === $uid && newData.exists() && newData.hasChildren(['name','color','joinedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isNumber() && newData.child('color').val() >= 0 && newData.child('color').val() < 12 && newData.child('joinedAt').isNumber()",
+            ".validate": "newData.hasChildren(['name','color','joinedAt'])"
+          }
+        },
+        "attacks": {
+          "$uid": {
+            "$date": {
+              ".write": "$season.matches(/^s[0-9]{1,4}$/) && auth != null && auth.uid === $uid && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10"
+            }
+          }
+        },
+        "sieges": {
+          "$code": {
+            ".write": "$season.matches(/^s[0-9]{1,4}$/) && $code.matches(/^[a-z]{2}$/) && auth != null && (((!data.exists() || data.child('resolvedAt').exists() || now > data.child('startedAt').val() + 86400000) && newData.exists() && newData.child('attackerId').val() === auth.uid && root.child('flagWars/' + $season + '/territories/' + $code).exists() && root.child('flagWars/' + $season + '/territories/' + $code).child('ownerId').val() !== auth.uid && newData.child('startedAt').val() === now) || (data.exists() && newData.exists() && root.child('flagWars/' + $season + '/territories/' + $code).child('ownerId').val() === auth.uid && !data.child('resolvedAt').exists() && now <= data.child('startedAt').val() + 86400000 && newData.child('resolvedAt').val() === now && newData.child('attackerId').val() === data.child('attackerId').val() && newData.child('score').val() === data.child('score').val() && newData.child('seed').val() === data.child('seed').val() && newData.child('startedAt').val() === data.child('startedAt').val()) || (!newData.exists() && data.exists() && data.child('attackerId').val() === auth.uid && (data.child('resolvedAt').exists() || now > data.child('startedAt').val() + 86400000)))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['code','attackerId','attackerName','score','seed','startedAt']) && newData.child('code').val() === $code && newData.child('attackerId').isString() && newData.child('attackerName').isString() && newData.child('attackerName').val().length > 0 && newData.child('attackerName').val().length <= 24 && newData.child('score').isNumber() && newData.child('score').val() > 0 && newData.child('score').val() <= 1000 && newData.child('seed').isNumber() && (!newData.child('defenceScore').exists() || (newData.child('defenceScore').isNumber() && newData.child('defenceScore').val() >= 0 && newData.child('defenceScore').val() <= 1000)))"
+          }
+        },
+        "nameIndex": {
+          "$name": {
+            ".write": "$season.matches(/^s[0-9]{1,4}$/) && auth != null && newData.exists() && newData.isString() && newData.val() === auth.uid && (!data.exists() || data.val() === auth.uid)",
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 128"
+          }
+        }
+      },
+      "hallOfFame": {
+        "$recordedSeason": {
+          ".write": "$recordedSeason.matches(/^s[0-9]{1,4}$/) && auth != null && !data.exists() && newData.exists() && root.child('flagWars/' + $recordedSeason + '/players/' + auth.uid).exists()",
+          ".validate": "newData.hasChildren(['number','winnerId','winnerName','winnerColor','territories','strength','endedAt']) && newData.child('number').isNumber() && newData.child('number').val() > 0 && newData.child('number').val() < 100000 && newData.child('winnerId').isString() && newData.child('winnerName').isString() && newData.child('winnerName').val().length > 0 && newData.child('winnerName').val().length <= 24 && newData.child('winnerColor').isNumber() && newData.child('winnerColor').val() >= 0 && newData.child('winnerColor').val() < 12 && newData.child('territories').isNumber() && newData.child('territories').val() > 0 && newData.child('territories').val() <= 200 && newData.child('strength').isNumber() && newData.child('strength').val() >= 0 && newData.child('endedAt').val() === now"
+        }
+      }
+    },
+    "borderChain": {
+      ".read": true,
+      "leg": {
+        ".write": "auth != null && newData.exists() && ((newData.child('seq').val() === 0 && newData.child('startedAt').val() === now && newData.child('lastMoveAt').val() === now && newData.child('lastBy').val() === '' && newData.child('chain').val() === ',' + newData.child('current').val() + ',' && (!data.exists() || (newData.child('id').val() !== data.child('id').val() && (now > data.child('lastMoveAt').val() + 22000 || data.child('seq').val() >= 80)))) || (data.exists() && newData.child('id').val() === data.child('id').val() && newData.child('startedAt').val() === data.child('startedAt').val() && newData.child('seq').val() === data.child('seq').val() + 1 && data.child('seq').val() < 80 && newData.child('lastMoveAt').val() === now && now <= data.child('lastMoveAt').val() + 22000 && newData.child('lastBy').val() !== data.child('lastBy').val() && newData.child('chain').val() === data.child('chain').val() + newData.child('current').val() + ',' && !data.child('chain').val().contains(',' + newData.child('current').val() + ',') && (newData.child('lastBy').val() === auth.uid || (newData.child('lastBy').val().beginsWith('bot_') && now > data.child('lastMoveAt').val() + 2500))))",
+        ".validate": "newData.hasChildren(['id','seq','current','chain','startedAt','lastMoveAt','lastBy','lastName']) && newData.child('id').val().matches(/^[a-z0-9]{1,32}$/) && newData.child('seq').isNumber() && newData.child('seq').val() >= 0 && newData.child('seq').val() <= 80 && newData.child('current').val().matches(/^[a-z]{2}$/) && newData.child('chain').isString() && newData.child('chain').val().length <= 244 && newData.child('chain').val().beginsWith(',') && newData.child('chain').val().endsWith(newData.child('current').val() + ',') && newData.child('lastBy').isString() && newData.child('lastBy').val().length <= 64 && newData.child('lastName').isString() && newData.child('lastName').val().length <= 24"
+      },
+      "moves": {
+        "$legId": {
+          ".write": "auth != null && !newData.exists() && $legId !== root.child('borderChain/leg/id').val()",
+          "$seq": {
+            ".write": "auth != null && !data.exists() && newData.exists() && $legId === root.child('borderChain/leg/id').val() && newData.child('i').val() === root.child('borderChain/leg/seq').val() + 1 && (newData.child('by').val() === auth.uid || newData.child('by').val().beginsWith('bot_'))",
+            ".validate": "newData.hasChildren(['i','c','by','n','p']) && newData.child('i').isNumber() && newData.child('i').val() > 0 && newData.child('i').val() <= 80 && newData.child('c').val().matches(/^[a-z]{2}$/) && newData.child('by').isString() && newData.child('by').val().length > 0 && newData.child('by').val().length <= 64 && newData.child('n').isString() && newData.child('n').val().length > 0 && newData.child('n').val().length <= 24 && newData.child('p').isNumber() && newData.child('p').val() > 0 && newData.child('p').val() <= 40"
+          }
+        }
+      },
+      "presence": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name','color','at']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('color').isNumber() && newData.child('color').val() >= 0 && newData.child('color').val() < 12 && newData.child('at').val() === now)"
+        }
+      },
+      "record": {
+        ".write": "auth != null && newData.exists() && newData.child('legId').val() === root.child('borderChain/leg/id').val() && newData.child('length').val() === root.child('borderChain/leg/seq').val() + 1 && newData.child('at').val() === now && (!data.exists() || newData.child('length').val() > data.child('length').val())",
+        ".validate": "newData.hasChildren(['length','legId','at','by']) && newData.child('length').isNumber() && newData.child('length').val() > 0 && newData.child('length').val() <= 81 && newData.child('legId').isString() && newData.child('legId').val().length <= 32 && newData.child('by').isString() && newData.child('by').val().length > 0 && newData.child('by').val().length <= 64"
+      }
     }
   }
 }

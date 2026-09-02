@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import {
     BookOpen, ChevronDown, Globe, Landmark, Swords, Map, Star, Calendar, Trophy,
     EyeOff, CircleDot, ArrowUpDown, Flame, Paintbrush, Scan, Moon, Sun,
-    Heart, Coffee, ExternalLink, MessagesSquare,
+    Heart, Coffee, ExternalLink, MessagesSquare, Crown, Link2,
 } from "lucide-react"
 import CountryDataCredit from "../components/CountryDataCredit"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
@@ -27,6 +27,8 @@ type Challenge = {
     /** localStorage key whose daily streak is shown on the card. */
     streakKey?: string
     badge?: string
+    /** A second destination, shown as its own button on the right of the card. */
+    action?: { to: string; icon: typeof Calendar; label: string }
 }
 
 /**
@@ -44,9 +46,15 @@ const DAILY_CHALLENGES: Challenge[] = DAILY_MODES.map(mode => ({
     badge: mode.badge,
 }))
 
-const CHALLENGES: Challenge[] = [
-    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals, or states - global leaderboard", icon: Trophy, accent: "bg-orange-100 dark:bg-orange-900/50 text-orange-500 dark:text-orange-400", hover: "hover:border-orange-400 dark:hover:border-orange-500" },
+/** Everyone else is in the room: the async conquest, live lobbies and the global boards. */
+const MULTIPLAYER: Challenge[] = [
+    { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: Swords, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500", streakKey: STREAK_KEYS.wars, badge: "New", action: { to: "/world-conqueror?hall=1", icon: Crown, label: "Hall of Fame" } },
+    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: Link2, accent: "bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400", hover: "hover:border-violet-400 dark:hover:border-violet-500", badge: "New" },
     { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real-time", icon: Swords, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500" },
+    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals, or states - global leaderboard", icon: Trophy, accent: "bg-orange-100 dark:bg-orange-900/50 text-orange-500 dark:text-orange-400", hover: "hover:border-orange-400 dark:hover:border-orange-500" },
+]
+
+const CHALLENGES: Challenge[] = [
     { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: Paintbrush, accent: "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400", hover: "hover:border-purple-400 dark:hover:border-purple-500" },
     { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border shape", icon: Scan, accent: "bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400", hover: "hover:border-teal-400 dark:hover:border-teal-500" },
     { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - guess which country is higher", icon: ArrowUpDown, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500" },
@@ -60,33 +68,52 @@ const CHALLENGES: Challenge[] = [
 function ChallengeList({ items, streaks }: { items: Challenge[]; streaks: Record<string, number> }) {
     return (
         <div className="mt-3 flex flex-col gap-2">
-            {items.map(({ to, label, detail, icon: Icon, accent, hover, streakKey, badge }) => (
-                <Link
+            {items.map(({ to, label, detail, icon: Icon, accent, hover, streakKey, badge, action: Action }) => (
+                // A card with a second destination cannot be one big link - a link
+                // inside a link is not valid - so the row becomes the card and the
+                // two links sit inside it. The inner rounding is a step tighter
+                // than the card's so the corners nest instead of clashing.
+                <div
                     key={to}
-                    to={to}
-                    className={`group flex items-center gap-3 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-white/70 dark:border-slate-700/70 ${hover} transition-all active:scale-[0.98] touch-manipulation`}
+                    className={`group flex items-center gap-1 p-1.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-white/70 dark:border-slate-700/70 ${hover} transition-all touch-manipulation`}
                 >
-                    <div className={`p-2.5 rounded-xl shrink-0 ${accent}`}>
-                        <Icon size={22} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="font-bold flex items-center gap-2">
-                            {label}
-                            {badge && (
-                                <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shrink-0">
-                                    {badge}
-                                </span>
-                            )}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">{detail}</p>
-                    </div>
-                    {streakKey && streaks[streakKey] > 0 && (
-                        <div className="flex flex-col items-center shrink-0">
-                            <Flame size={16} className="text-orange-400" />
-                            <span className="text-xs font-black text-orange-400 leading-none">{streaks[streakKey]}</span>
+                    <Link
+                        to={to}
+                        className="flex items-center gap-3 flex-1 min-w-0 p-2.5 rounded-xl active:scale-[0.98] transition-transform"
+                    >
+                        <div className={`p-2.5 rounded-xl shrink-0 ${accent}`}>
+                            <Icon size={22} />
                         </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="font-bold flex items-center gap-2">
+                                {label}
+                                {badge && (
+                                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shrink-0">
+                                        {badge}
+                                    </span>
+                                )}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">{detail}</p>
+                        </div>
+                        {streakKey && streaks[streakKey] > 0 && (
+                            <div className="flex flex-col items-center shrink-0">
+                                <Flame size={16} className="text-orange-400" />
+                                <span className="text-xs font-black text-orange-400 leading-none">{streaks[streakKey]}</span>
+                            </div>
+                        )}
+                    </Link>
+
+                    {Action && (
+                        <Link
+                            to={Action.to}
+                            aria-label={Action.label}
+                            title={Action.label}
+                            className="shrink-0 self-stretch flex items-center px-3 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/70 active:scale-95 transition-all"
+                        >
+                            <Action.icon size={20} />
+                        </Link>
                     )}
-                </Link>
+                </div>
             ))}
         </div>
     )
@@ -117,9 +144,12 @@ export default function Home() {
     const [showModes, setShowModes] = useState(false)
     // The dailies are what people come back for, so that section starts open.
     const [showDaily, setShowDaily] = useState(true)
+    const [showMulti, setShowMulti] = useState(false)
     const [showMods, setShowMods] = useState(false)
     const streaks = getStreaks()
-    const topStreak = Math.max(0, ...Object.values(streaks))
+    // Only the daily cards feed the daily header - World Conqueror now has its own section.
+    const topStreak = Math.max(0, ...DAILY_CHALLENGES.map(c => (c.streakKey && streaks[c.streakKey]) || 0))
+    const warsStreak = streaks[STREAK_KEYS.wars] ?? 0
 
     const navigate = useNavigate()
 
@@ -216,6 +246,33 @@ export default function Home() {
                         </button>
 
                         {showDaily && <ChallengeList items={DAILY_CHALLENGES} streaks={streaks} />}
+                    </div>
+
+                    {/* Multiplayer Section */}
+                    <div>
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Multiplayer</h2>
+                        <button
+                            type="button"
+                            onClick={() => setShowMulti(prev => !prev)}
+                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-rose-400 dark:hover:border-rose-500 transition-all active:scale-[0.98] touch-manipulation text-left"
+                        >
+                            <div className="bg-rose-100 dark:bg-rose-900/50 p-3 rounded-xl text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform shrink-0">
+                                <Swords size={32} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <h2 className="font-bold text-lg">Multiplayer</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Play against everyone else - live or async</p>
+                            </div>
+                            {warsStreak > 0 && (
+                                <div className="flex flex-col items-center shrink-0 mr-1">
+                                    <Flame size={18} className="text-orange-400" />
+                                    <span className="text-xs font-black text-orange-400 leading-none">{warsStreak}</span>
+                                </div>
+                            )}
+                            <ChevronDown size={22} className={`shrink-0 text-slate-400 transition-transform ${showMulti ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showMulti && <ChallengeList items={MULTIPLAYER} streaks={streaks} />}
                     </div>
 
                     {/* Challenges Section */}

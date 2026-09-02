@@ -18,6 +18,7 @@ export const STREAK_KEYS = {
     connections: "flag-master-connections-streak",
     gauntlet: "flag-master-gauntlet-streak",
     deduction: "flag-master-deduction-streak",
+    wars: "flag-master-wars-streak",
 } as const
 
 const EMPTY: StreakState = { streak: 0, best: 0, lastDate: "" }

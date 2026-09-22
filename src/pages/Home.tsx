@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import {
     BookOpen, ChevronDown, Globe, Landmark, Swords, Map, Star, Calendar, Trophy,
     EyeOff, CircleDot, ArrowUpDown, Flame, Paintbrush, Scan, Moon, Sun,
-    Heart, Coffee, ExternalLink, MessagesSquare, Crown, Link2,
+    Heart, Coffee, ExternalLink, MessagesSquare, Crown, Link2, Atom,
 } from "lucide-react"
 import CountryDataCredit from "../components/CountryDataCredit"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
@@ -295,6 +295,29 @@ export default function Home() {
 
                         {showMods && <ChallengeList items={CHALLENGES} streaks={streaks} />}
                     </div>
+
+                    {/* Science Section - its own wing, nothing here is geography */}
+                    <div>
+                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Science</h2>
+                        <Link
+                            to="/science"
+                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all active:scale-[0.98] touch-manipulation text-left"
+                        >
+                            <div className="bg-cyan-100 dark:bg-cyan-900/50 p-3 rounded-xl text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
+                                <Atom size={32} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <h2 className="font-bold text-lg flex items-center gap-2">
+                                    Science
+                                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shrink-0">
+                                        New
+                                    </span>
+                                </h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Learn the periodic table the same way you learn flags</p>
+                            </div>
+                            <ChevronDown size={22} className="shrink-0 text-slate-400 -rotate-90" />
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -325,6 +348,7 @@ export default function Home() {
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
                         Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, and <strong>Highscore</strong> speedruns.
+                        The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>
                 </section>

@@ -1,4 +1,4 @@
-# 🌍 Flag Learn (Geography & Astronomy Quiz)
+# 🌍 Flag Learn (Geography, Science & Astronomy Quiz)
 
 An interactive educational quiz game built with React, TypeScript, and Tailwind CSS. Master world geography, flags, capitals, and even the night sky through engaging game modes and spaced repetition!
 
@@ -33,6 +33,7 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **❓ Flag 20 Questions:** Guess a hidden flag using **templated Yes/No questions** (stripe counts/orientation and colors). Answers use hand-maintained per-flag traits in `src/data/flagQuestionTraitsData.ts` — extend the map to cover more countries (no AI).
 -->
 - **✨ Constellations:** Learn to identify the 88 modern constellations by their star patterns. Features beautiful mythological art upon mastery!
+- **🧪 Science - Periodic Table:** The same spaced repetition, pointed at chemistry instead of the map. All 118 elements, learned in four directions that are tracked separately because they are four different things to know: **symbol to name** (Fe -> iron), **name to symbol**, **family** - alkali metal, halogen, noble gas, picked from the ten the table is coloured by - and **locate** - click the element's cell on a blank table. There is no atomic-number round on purpose: the number is the position in another notation, and past calcium it is trivia, so it is shown after every answer and never asked. Thirteen elements are in play at a time and each needs three correct answers in a row, starting at hydrogen and working outwards. The first time an element comes up you are **told** the answer rather than asked for it - the same "New Flag!" moment the flags have - and after that you are on your own. The periodic table itself is the collection: cells start as question marks and fill in fact by fact, so an element whose symbol you have learned stays plain until you have learned its family, and shows `?` for its atomic number until you can place it on the table, and tapping a cell shows exactly which of the four directions you have finished - plus a line on what the element is actually used for, which only unlocks along with it. Latin roots are accepted (Natrium, Aurum, Wolfram), a lowercase symbol is accepted with a note about why the capital matters, and mastered elements can be run as a timed lap.
 
 ## 🛠️ Features
 
@@ -261,6 +262,38 @@ generator first:
 ```bash
 node scripts/gen-neighbours.mjs
 ```
+
+[`data/elements.json`](data/elements.json) is the Science wing's periodic table.
+Only what cannot be derived is written down in the generator - number, symbol,
+name, standard atomic weight and category; the period, the group and each
+element's cell on the printed table are computed from the atomic number. Standard
+atomic weights follow IUPAC's published values, and an element with no stable
+isotope carries the mass number of its most stable one, printed in brackets the
+way a table does. Regenerate it with:
+
+```bash
+node scripts/gen-elements.mjs
+```
+
+The generator refuses to write a table that fails its own checks (118 sequential
+elements, unique symbols, no two elements in one cell, 30 f-block entries, no
+word that answers for two different elements), so edit `scripts/gen-elements.mjs`
+rather than the JSON, which the next run overwrites.
+
+Every element also carries its **Slovak name**. There is no button for it - open
+the console on `/science/elements` and type:
+
+```js
+scienceLang.sk()      // show Slovak names next to the English ones
+scienceLang.en()      // English only (the default)
+scienceLang.toggle()
+scienceLang.status()  // "en" or "sk"
+scienceLang.list()    // console.table of all 118 translations
+```
+
+The choice is remembered. Slovak appears *beside* the English name rather than
+replacing it, and while the switch is on it is also accepted as an answer, so
+`Zelezo` counts for `Fe` just as `Iron` does.
 
 Sources (full details in [`data/CREDITS.md`](data/CREDITS.md)):
 

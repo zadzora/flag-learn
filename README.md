@@ -295,6 +295,12 @@ The choice is remembered. Slovak appears *beside* the English name rather than
 replacing it, and while the switch is on it is also accepted as an answer, so
 `Zelezo` counts for `Fe` just as `Iron` does.
 
+The same switch works on every Science page and is shared between them -
+`/science/quantities` and `/science/formulas` show the Slovak names of the
+quantities, formulas and symbols beside the English ones, and on the quantities
+page a Slovak unit name (`sekunda`, `ampér`, `mól`) is accepted while it is on.
+`scienceLang.list()` prints the translations of whichever page is open.
+
 Sources (full details in [`data/CREDITS.md`](data/CREDITS.md)):
 
 - Names, capital, area, currency, region — [mledoze/countries](https://github.com/mledoze/countries) ([ODbL 1.0](https://opendatacommons.org/licenses/odbl/1.0/))

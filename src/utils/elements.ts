@@ -408,8 +408,8 @@ export type ScienceLangApi = {
     en: () => string
     toggle: () => string
     status: () => ElementLang
-    /** Every element as `symbol / English / Slovak`, to eyeball the translations. */
-    list: () => { symbol: string; english: string; slovak: string }[]
+    /** Every item on the current page with its translation, to eyeball them. */
+    list: () => Record<string, string>[]
 }
 
 declare global {
@@ -418,8 +418,16 @@ declare global {
     }
 }
 
-/** Installed while a Science page is mounted; returns the uninstall. */
-export function installElementLangConsole(): () => void {
+function elementRows(): Record<string, string>[] {
+    return ELEMENTS.map(e => ({ symbol: e.symbol, english: e.name, slovak: e.sk }))
+}
+
+/**
+ * Installed while a Science page is mounted; returns the uninstall. The switch
+ * is shared by the whole wing - `rows` is only what `.list()` prints, so each
+ * page lists its own translations.
+ */
+export function installElementLangConsole(rows: () => Record<string, string>[] = elementRows): () => void {
     if (typeof window === "undefined") return () => {}
 
     window.scienceLang = {
@@ -428,9 +436,9 @@ export function installElementLangConsole(): () => void {
         toggle: () => setElementLang(currentLang === "sk" ? "en" : "sk"),
         status: () => currentLang,
         list: () => {
-            const rows = ELEMENTS.map(e => ({ symbol: e.symbol, english: e.name, slovak: e.sk }))
-            console.table(rows)
-            return rows
+            const table = rows()
+            console.table(table)
+            return table
         },
     }
 

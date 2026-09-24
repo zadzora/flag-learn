@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { ArrowLeft, Atom, Moon, Sun, Sparkles, ChevronRight } from "lucide-react"
+import { ArrowLeft, Atom, Gauge, Moon, Sun, Sparkles, ChevronRight, SquareFunction } from "lucide-react"
 import { ELEMENTS, ELEMENT_MODES, readElementProgress, type ElementModeKey } from "../utils/elements"
+import { QUANTITIES, QUANTITY_MODES, readQuantityProgress } from "../utils/quantities"
+import { FORMULA_MODES, formulasFor, readFormulaProgress } from "../utils/formulas"
 import { srStats } from "../utils/spacedRepetition"
 
 /**
@@ -10,8 +12,9 @@ import { srStats } from "../utils/spacedRepetition"
  * It is a separate hub rather than another row on the home screen because
  * nothing here is geography: no flags, no map, no country pool. The topics
  * share only the spaced repetition in `utils/spacedRepetition.ts`. The
- * periodic table is the first one; the next topic gets a card here and a route
- * under `/science/`, and nothing on the geography side has to move.
+ * periodic table came first, then physical quantities and formulas; the next
+ * topic gets a card here and a route under `/science/`, and nothing on the geography side
+ * has to move.
  */
 
 const THEME_KEY = "flag-master-theme"
@@ -41,11 +44,38 @@ function buildTopics(): Topic[] {
             icon: Atom,
             accent: "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400",
             hover: "hover:border-cyan-400 dark:hover:border-cyan-500",
-            badge: "New",
             breakdown: ELEMENT_MODES.map(mode => ({
                 label: mode.short,
                 mastered: masteredIn(mode.key),
                 total: ELEMENTS.length,
+            })),
+        },
+        {
+            to: "/science/quantities",
+            label: "Physical Quantities",
+            detail: "Force, pressure, voltage... - their symbols and SI units",
+            icon: Gauge,
+            accent: "bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400",
+            hover: "hover:border-violet-400 dark:hover:border-violet-500",
+            badge: "New",
+            breakdown: QUANTITY_MODES.map(mode => ({
+                label: mode.short,
+                mastered: srStats(QUANTITIES, readQuantityProgress(mode.key)).mastered,
+                total: QUANTITIES.length,
+            })),
+        },
+        {
+            to: "/science/formulas",
+            label: "Formulas",
+            detail: "Basic physics and maths formulas - write them from memory",
+            icon: SquareFunction,
+            accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400",
+            hover: "hover:border-amber-400 dark:hover:border-amber-500",
+            badge: "New",
+            breakdown: FORMULA_MODES.map(mode => ({
+                label: mode.short,
+                mastered: srStats(formulasFor(mode.key), readFormulaProgress(mode.key)).mastered,
+                total: formulasFor(mode.key).length,
             })),
         },
     ]

@@ -77,6 +77,14 @@ const popOverride = {
     aq: 1106, // Antarctica (transient research population)
 }
 
+// Capitals mledoze gets wrong or out of date. Its first capital for Sri Lanka is
+// Colombo, the commercial one; Equatorial Guinea moved to Ciudad de la Paz by
+// decree on 3 January 2026.
+const capitalOverride = {
+    lk: "Sri Jayawardenepura Kotte",
+    gq: "Ciudad de la Paz",
+}
+
 // Full records for non-ISO entries that mledoze does not track (UK home nations).
 const recordOverride = {
     "gb-eng": { common: "England", official: "England", capital: "London", region: "Europe", subregion: "Northern Europe", area: 130279, population: 57106398, currency: "GBP (Pound sterling)" },
@@ -111,7 +119,7 @@ async function main() {
         const rec = {
             common: c.name && c.name.common ? c.name.common : undefined,
             official: c.name && c.name.official ? c.name.official : undefined,
-            capital: Array.isArray(c.capital) && c.capital.length ? c.capital[0] : undefined,
+            capital: capitalOverride[code] || (Array.isArray(c.capital) && c.capital.length ? c.capital[0] : undefined),
             region: c.region || undefined,
             subregion: c.subregion || undefined,
             area: typeof c.area === "number" && c.area >= 0 ? c.area : undefined,

@@ -22,6 +22,8 @@ import FlagWars from "./pages/FlagWars"
 import BorderChain from "./pages/BorderChain"
 import Science from "./pages/Science"
 import PeriodicTableGame from "./pages/PeriodicTableGame"
+import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
+import FormulasGame from "./pages/FormulasGame"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -53,6 +55,8 @@ export default function App() {
                 {/* Science - no flags, no map, its own wing under /science. */}
                 <Route path="/science" element={<Science />} />
                 <Route path="/science/elements" element={<PeriodicTableGame />} />
+                <Route path="/science/quantities" element={<PhysicsQuantitiesGame />} />
+                <Route path="/science/formulas" element={<FormulasGame />} />
 
                 {/* The mode was called Flag Wars before; keep the old link working. */}
                 <Route path="/flag-wars" element={<FlagWars />} />

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { AlertTriangle, ArrowLeft, ExternalLink, Globe, Heart, Landmark, Map, MessagesSquare, Moon, Sun, Timer, Trophy } from "lucide-react"
+import { AlertTriangle, Check, Globe, Landmark, Map, Medal, PencilLine, Repeat, Timer, Trophy, X } from "lucide-react"
+import TopBar from "../components/TopBar"
+import SiteFooter from "../components/SiteFooter"
 import { AnimatePresence, motion } from "framer-motion"
 import { onValue, ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
@@ -343,124 +345,144 @@ export default function Highscore() {
         setShowExitConfirm(false)
     }
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-500 px-4 py-8 sm:py-10">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-between mb-6">
-                    <button
-                        onClick={() => {
-                            if (isRunActive) {
-                                setExitConfirmTarget("home")
-                                setShowExitConfirm(true)
-                                return
-                            }
-                            navigate("/")
-                        }}
-                        className="p-3 rounded-full bg-white/75 dark:bg-slate-800/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.12)] border border-white/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                        title="Back to Menu"
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-                        <Trophy className="text-amber-500" size={28} />
-                        Highscore
-                    </h1>
-                    <button onClick={() => setTheme((p) => (p === "light" ? "dark" : "light"))} className="p-3 rounded-full bg-white/75 dark:bg-slate-800/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.12)] border border-white/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                        {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
-                </div>
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const disabledButton = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-bold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const modeOptions: { mode: GameMode; icon: typeof Globe; detail: string }[] = [
+        { mode: "world", icon: Globe, detail: "World flags speedrun" },
+        { mode: "capitals", icon: Landmark, detail: "Capital city speedrun" },
+        { mode: "us", icon: Map, detail: "US states speedrun" },
+    ]
+    // The feedback copy carries a trailing emoji; the line shows a lucide icon in its place.
+    const feedbackText = feedback.replace(/\s*(?:\p{Extended_Pictographic}️?)+\s*$/u, "")
+    const isCloseFeedback = status === "idle" && !!feedback
+    const rankColor = ["text-amber-500", "text-slate-400", "text-orange-600 dark:text-orange-400"]
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
-                    <button type="button" onClick={() => requestModeChange("world")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(79,70,229,0.24)] text-white transition-all text-left ${gameMode === "world" ? "ring-2 ring-white/80 dark:ring-indigo-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-indigo-500/95 via-indigo-500 to-violet-700`}>
-                        <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Globe size={20} /></div>
-                        <h3 className="font-bold text-base">Flags</h3>
-                        <p className="text-[10px] text-indigo-100/90">World flags speedrun</p>
-                    </button>
-                    <button type="button" onClick={() => requestModeChange("capitals")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(13,148,136,0.24)] text-white transition-all text-left ${gameMode === "capitals" ? "ring-2 ring-white/80 dark:ring-emerald-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-emerald-500/95 via-emerald-500 to-teal-700`}>
-                        <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Landmark size={20} /></div>
-                        <h3 className="font-bold text-base">Capitals</h3>
-                        <p className="text-[10px] text-emerald-100/90">Capital city speedrun</p>
-                    </button>
-                    <button type="button" onClick={() => requestModeChange("us")} className={`group flex flex-col p-4 rounded-3xl shadow-[0_14px_40px_rgba(37,99,235,0.24)] text-white transition-all text-left ${gameMode === "us" ? "ring-2 ring-white/80 dark:ring-red-300/60 scale-[1.02]" : "hover:scale-[1.015]"} bg-gradient-to-br from-blue-600/95 via-blue-600 to-red-600`}>
-                        <div className="bg-white/20 p-2.5 rounded-xl w-fit mb-2 backdrop-blur-sm group-hover:scale-110 transition-transform"><Map size={20} /></div>
-                        <h3 className="font-bold text-base">USA States</h3>
-                        <p className="text-[10px] text-blue-100/90">US states speedrun</p>
-                    </button>
+    return (
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar
+                title={<span className="flex items-center gap-2"><Trophy size={17} aria-hidden className="shrink-0 text-amber-500" /> Highscore</span>}
+                back={() => {
+                    if (isRunActive) {
+                        setExitConfirmTarget("home")
+                        setShowExitConfirm(true)
+                        return
+                    }
+                    navigate("/")
+                }}
+                theme={theme}
+                onToggleTheme={() => setTheme((p) => (p === "light" ? "dark" : "light"))}
+            >
+                {started && current && (
+                    <>
+                        <motion.span
+                            key={timerPulseKey}
+                            initial={{ scale: 1 }}
+                            animate={{ scale: [1, 1.16, 1] }}
+                            transition={{ duration: 0.45 }}
+                            className={`flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums ${timerPulseKey > 0 && status === "error" ? "text-red-600 dark:text-red-400" : ""}`}
+                            title="Time"
+                        >
+                            <Timer size={16} aria-hidden /> {formatTime(elapsedSeconds)}
+                        </motion.span>
+                        <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes">
+                            <span className="sr-only">Mistakes:</span><X size={14} aria-hidden /> {mistakes}
+                        </span>
+                    </>
+                )}
+            </TopBar>
+
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                <div className="grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" role="tablist" aria-label="Speedrun mode">
+                    {modeOptions.map(({ mode, icon: Icon, detail }) => {
+                        const selected = gameMode === mode
+                        return (
+                            <button
+                                key={mode}
+                                type="button"
+                                role="tab"
+                                aria-selected={selected}
+                                onClick={() => requestModeChange(mode)}
+                                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-md px-1.5 py-2 text-center ${selected ? "bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+                            >
+                                <span className="flex items-center gap-1.5 text-sm font-semibold"><Icon size={16} aria-hidden className="shrink-0" /> {MODE_LABELS[mode]}</span>
+                                <span className={`text-[11px] font-normal leading-tight ${selected ? "text-slate-300 dark:text-slate-500" : "text-slate-400 dark:text-slate-500"}`}>{detail}</span>
+                            </button>
+                        )
+                    })}
                 </div>
 
                 {!started && finishedTime === null && (
-                    <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
-                        <h2 className="text-xl font-bold mb-2">Speedrun: {MODE_LABELS[gameMode]}</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                    <section className={`${panel} mt-6 p-5 sm:p-7`}>
+                        <h2 className="!text-xl font-bold">Speedrun: {MODE_LABELS[gameMode]}</h2>
+                        <p className="mb-5 mt-1.5 text-sm text-slate-500 dark:text-slate-400">
                             Finish the full set as fast as you can. Mistakes add time. Enter a name to save your best run to the leaderboard.
                         </p>
-                        <button onClick={startRun} className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-[0_10px_24px_rgba(79,70,229,0.32)]">
-                            Start timed run
+                        <button type="button" onClick={startRun} className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}>
+                            <Timer size={18} aria-hidden /> Start timed run
                         </button>
-                    </div>
+                    </section>
                 )}
 
                 {started && current && (
-                    <div className="relative bg-white/85 dark:bg-slate-800/80 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.14)] overflow-hidden">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{MODE_LABELS[gameMode]} Mode</span>
-                            <div className="flex items-center gap-3">
-                                <motion.span
-                                    key={timerPulseKey}
-                                    initial={{ scale: 1 }}
-                                    animate={{ scale: [1, 1.16, 1], color: ["#4f46e5", "#dc2626", "#4f46e5"] }}
-                                    transition={{ duration: 0.45 }}
-                                    className="font-mono text-lg font-bold flex items-center gap-1 text-indigo-600 dark:text-indigo-400"
-                                >
-                                    <Timer size={18} /> {formatTime(elapsedSeconds)}
-                                </motion.span>
-                                <span className="text-sm font-bold text-red-100 bg-red-500/80 dark:bg-red-900/50 px-2 py-1 rounded-lg flex items-center gap-1 border border-red-300/40 dark:border-red-500/30">
-                                    Mistakes: {mistakes}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="mb-4">
-                            {gameMode === "capitals" ? (
-                                <div className="bg-slate-100/90 dark:bg-slate-900/85 rounded-2xl p-5 text-center border border-white/60 dark:border-slate-700/60">
-                                    <div className="text-xs uppercase text-slate-500 dark:text-slate-400 mb-3">Country</div>
-                                    <div className="w-full flex justify-center h-48 sm:h-56 mb-3">
-                                        <img
-                                            src={current.image}
-                                            alt={`${getDisplayName(current)} flag`}
-                                            className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700"
-                                        />
-                                    </div>
-                                    <div className="text-2xl font-bold">{getDisplayName(current)}</div>
-                                </div>
-                            ) : (
-                                <div className="w-full flex justify-center h-48 sm:h-56">
-                                    <img src={current.image} alt="Quiz item" className="w-auto h-full object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700" />
-                                </div>
-                            )}
+                    // The card stays put between questions; only the flag inside it changes.
+                    <section className={`${panel} relative mt-6 flex flex-col gap-5 overflow-hidden p-5 sm:p-7`}>
+                        <div className="flex min-h-6 items-center justify-between gap-3">
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{MODE_LABELS[gameMode]} Mode</span>
+                            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">Remaining: {queue.length + 1}</span>
                         </div>
 
-                        <input
-                            ref={inputRef}
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") handleCheck() }}
-                            placeholder={gameMode === "capitals" ? "Type capital city..." : "Type answer..."}
-                            className={`w-full px-4 py-3 text-center text-lg rounded-2xl border-2 outline-none transition-all dark:bg-slate-900/90 ${status === "error" ? "border-red-400 dark:border-red-600" : status === "correct" ? "border-emerald-400 dark:border-emerald-600" : "border-slate-200 dark:border-slate-600 focus:border-indigo-500"}`}
-                            autoComplete="off"
-                            autoFocus
-                        />
-                        <div className="text-center min-h-6 mt-3">
-                            <p className={`text-base font-extrabold tracking-tight ${status === "error" ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>{feedback}</p>
-                            {status === "error" && revealedAnswer && (
-                                <p className="mt-1 text-xl font-black text-red-700 dark:text-red-300">
-                                    Correct: <span className="underline decoration-2 underline-offset-4">{revealedAnswer}</span>
-                                </p>
-                            )}
+                        {gameMode === "capitals" ? (
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Country</div>
+                                <div className="flex h-48 w-full items-center justify-center sm:h-56">
+                                    <img
+                                        key={current.code}
+                                        src={current.image}
+                                        alt={`${getDisplayName(current)} flag`}
+                                        className="fl-in h-full w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
+                                    />
+                                </div>
+                                <div className="text-2xl font-bold">{getDisplayName(current)}</div>
+                            </div>
+                        ) : (
+                            <div className="flex h-48 w-full items-center justify-center sm:h-56">
+                                <img key={current.code} src={current.image} alt="Quiz item" className="fl-in h-full w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]" />
+                            </div>
+                        )}
+
+                        <div className="flex w-full flex-col gap-3">
+                            <input
+                                ref={inputRef}
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleCheck() }}
+                                placeholder={gameMode === "capitals" ? "Type capital city..." : "Type answer..."}
+                                aria-label={gameMode === "capitals" ? "Capital" : "Answer"}
+                                className={`w-full border px-5 py-4 text-center text-xl font-medium outline-none transition-colors duration-150 dark:text-white ${status === "error" ? "border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100" : status === "correct" ? "border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100" : "border-slate-200 bg-slate-50 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"}`}
+                                autoComplete="off"
+                                autoFocus
+                            />
+                            <div className="flex min-h-12 flex-col items-center justify-center px-2 text-center">
+                                {feedback && (
+                                    <p key={feedback} className={`fl-in flex items-center justify-center gap-1.5 font-bold leading-tight ${status === "error" ? "text-red-600 dark:text-red-400" : isCloseFeedback ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                                        {status === "correct" && <Check size={18} strokeWidth={3} aria-hidden />}
+                                        {isCloseFeedback && <PencilLine size={17} aria-hidden />}
+                                        {status === "error" && <X size={18} strokeWidth={3} aria-hidden />}
+                                        {feedbackText}
+                                    </p>
+                                )}
+                                {status === "error" && revealedAnswer && (
+                                    <p className="mt-1 text-xl font-bold text-red-700 dark:text-red-300">
+                                        Correct: <span className="underline decoration-2 underline-offset-4">{revealedAnswer}</span>
+                                    </p>
+                                )}
+                            </div>
+                            <button type="button" onClick={handleCheck} disabled={!input.trim()} className={`w-full py-4 text-lg ${input.trim() ? primary : disabledButton}`}>
+                                Check
+                            </button>
                         </div>
-                        <button onClick={handleCheck} disabled={!input.trim()} className={`w-full py-3 rounded-2xl mt-2 font-bold transition-colors ${input.trim() ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_10px_24px_rgba(79,70,229,0.3)]" : "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"}`}>
-                            Check
-                        </button>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">Remaining: {queue.length + 1}</p>
 
                         <AnimatePresence>
                             {showPenaltyFx && (
@@ -470,38 +492,58 @@ export default function Highscore() {
                                     animate={{ opacity: [0, 1, 1, 0], x: 0, y: -210, scale: [0.8, 1.05, 0.85] }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.8, ease: "easeInOut" }}
-                                    className="pointer-events-none absolute right-16 bottom-24 rounded-full bg-red-500 text-white font-black text-sm px-3 py-1 shadow-xl"
+                                    className="pointer-events-none absolute bottom-24 right-16 rounded-md bg-red-500 px-3 py-1 text-sm font-bold text-white shadow-xl"
                                 >
                                     +10s
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </div>
+                    </section>
                 )}
 
                 {finishedTime !== null && (
-                    <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 mb-6 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
-                        <h2 className="text-2xl font-black mb-2">Run completed!</h2>
-                        <p className="text-slate-600 dark:text-slate-300 mb-4">Your time: <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{formatTime(finishedTime)}</span></p>
-                        <p className="text-slate-600 dark:text-slate-300 mb-4">Mistakes: <span className="font-bold text-red-500 dark:text-red-400">{finishedMistakes}</span></p>
-                        <div className="flex gap-2 mb-3">
-                            <input value={nameInput} onChange={(e) => { setNameInput(e.target.value); setSaveNotice(null) }} maxLength={24} placeholder="Choose your name..." className="flex-1 px-4 py-2 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50/85 dark:bg-slate-900/90 outline-none focus:border-indigo-500" />
-                            <button onClick={saveScore} className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_8px_20px_rgba(5,150,105,0.3)]">Save</button>
+                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                        <div className="flex items-center gap-4">
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={24} aria-hidden /></span>
+                            <h2 className="!text-2xl font-bold">Run completed!</h2>
                         </div>
-                        {saveNotice && (
-                            <p className={`text-sm font-bold mb-3 ${saveNotice.includes("Not saved") ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                                {saveNotice}
-                            </p>
-                        )}
-                        <button onClick={startRun} className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-[0_10px_24px_rgba(79,70,229,0.32)]">
-                            Start again
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Your time</div>
+                                <div className="mt-1 font-mono text-3xl font-bold tabular-nums">{formatTime(finishedTime)}</div>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Mistakes</div>
+                                <div className={`mt-1 text-3xl font-bold ${finishedMistakes ? "text-red-500 dark:text-red-400" : "text-emerald-500"}`}>{finishedMistakes}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex gap-2">
+                                <input
+                                    value={nameInput}
+                                    onChange={(e) => { setNameInput(e.target.value); setSaveNotice(null) }}
+                                    maxLength={24}
+                                    placeholder="Choose your name..."
+                                    aria-label="Your name"
+                                    className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-4 py-2 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
+                                />
+                                <button type="button" onClick={saveScore} className={`${primary} shrink-0 px-5`}>Save</button>
+                            </div>
+                            {saveNotice && (
+                                <p className={`mt-2 text-sm font-bold ${saveNotice.includes("Not saved") ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                                    {saveNotice}
+                                </p>
+                            )}
+                        </div>
+                        <button type="button" onClick={startRun} className={`${quiet} flex w-full items-center justify-center gap-2 py-3.5`}>
+                            <Repeat size={18} aria-hidden /> Start again
                         </button>
-                    </div>
+                    </section>
                 )}
 
-                <div className="bg-white/80 dark:bg-slate-800/75 backdrop-blur-2xl rounded-3xl border border-white/70 dark:border-slate-700/70 p-6 sm:p-7 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
-                    <div className="flex items-center justify-between gap-2 mb-4">
-                        <h3 className="text-lg font-bold">{MODE_LABELS[gameMode]} leaderboard</h3>
+                <section className={`${panel} mt-6 p-5 sm:p-6`}>
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                        <h3 className="!text-lg font-bold">{MODE_LABELS[gameMode]} leaderboard</h3>
                         {/* <div className="flex items-center gap-2">
                             <button
                                 onClick={clearCurrentModeLeaderboard}
@@ -522,62 +564,49 @@ export default function Highscore() {
                     {modeLeaderboard.length === 0 ? (
                         <p className="text-sm text-slate-500 dark:text-slate-400">No records yet.</p>
                     ) : (
-                        <div className="space-y-2">
+                        <ol className="divide-y divide-slate-200 dark:divide-slate-700">
                             {modeLeaderboard.slice(0, 50).map((entry, idx) => (
-                                <div
+                                <li
                                     key={`${entry.name}-${idx}`}
-                                    className={`flex items-center justify-between rounded-2xl px-3 py-2.5 border ${idx === 0
-                                        ? "bg-yellow-100/95 dark:bg-yellow-900/30 border-yellow-400/80 dark:border-yellow-600/70"
-                                        : idx === 1
-                                            ? "bg-slate-200/95 dark:bg-slate-600/40 border-slate-400/85 dark:border-slate-400/80"
-                                            : idx === 2
-                                                ? "bg-orange-100/95 dark:bg-orange-900/30 border-orange-400/80 dark:border-orange-600/70"
-                                                : "bg-slate-50/90 dark:bg-slate-900/85 border-slate-200/85 dark:border-slate-700/85"}`}
+                                    className="flex items-center justify-between gap-3 py-2.5"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-bold w-6 text-slate-500">#{idx + 1}</span>
-                                        <span className="font-semibold">{entry.name}</span>
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <span className={`flex w-8 shrink-0 items-center gap-0.5 text-xs font-bold tabular-nums ${idx < 3 ? rankColor[idx] : "text-slate-400 dark:text-slate-500"}`}>
+                                            {idx < 3 ? <Medal size={14} aria-hidden /> : "#"}{idx + 1}
+                                        </span>
+                                        <span className="truncate font-semibold">{entry.name}</span>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-semibold text-red-500 dark:text-red-400">X {entry.mistakes}</span>
-                                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{formatTime(entry.bestTimeSeconds)}</span>
+                                    <div className="flex shrink-0 items-center gap-3">
+                                        <span className="flex items-center gap-0.5 text-xs font-semibold text-red-500 dark:text-red-400" title="Mistakes">
+                                            <X size={12} strokeWidth={3} aria-hidden /> {entry.mistakes}
+                                        </span>
+                                        <span className="font-mono font-bold tabular-nums">{formatTime(entry.bestTimeSeconds)}</span>
                                     </div>
-                                </div>
+                                </li>
                             ))}
-                        </div>
+                        </ol>
                     )}
-                </div>
+                </section>
+            </main>
 
-                <footer className="w-full max-w-4xl mx-auto mt-10 pt-6 border-t border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-3">
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                        <p className="flex items-center gap-1 text-xs">
-                            Made with <Heart size={12} className="text-red-400 fill-red-400" /> for learning
-                        </p>
-                        <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform">
-                            <MessagesSquare size={14} />
-                            <span>Discord</span>
-                            <ExternalLink size={10} className="opacity-70" />
-                        </a>
-                    </div>
-                </footer>
-            </div>
+            <SiteFooter />
 
             <AnimatePresence>
                 {showExitConfirm && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-sm border border-slate-200 dark:border-slate-700 w-full">
-                            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full text-red-500 dark:text-red-400">
-                                <AlertTriangle size={48} />
-                            </div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4">
+                        <motion.div initial={{ scale: 0.97 }} animate={{ scale: 1 }} exit={{ scale: 0.97 }} className="flex w-full max-w-sm flex-col items-center gap-6 rounded-[10px] border border-slate-200 bg-white p-7 text-center shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                            <span className="flex h-14 w-14 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700 dark:text-red-400">
+                                <AlertTriangle size={28} aria-hidden />
+                            </span>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Quit Highscore Mode?</h2>
+                                <h2 className="mb-2 !text-2xl font-bold">Quit Highscore Mode?</h2>
                                 <p className="text-slate-500 dark:text-slate-400">If you leave now, your current run progress will be lost.</p>
                             </div>
-                            <div className="w-full flex flex-col gap-3 mt-2">
-                                <button type="button" onClick={confirmExitOrModeSwitch} className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-red-500/20 transition-all active:scale-95">
+                            <div className="flex w-full flex-col gap-3">
+                                <button type="button" onClick={confirmExitOrModeSwitch} className="w-full rounded-lg bg-red-500 py-3.5 text-lg font-bold text-white hover:bg-red-600">
                                     Yes, Quit
                                 </button>
-                                <button type="button" onClick={cancelExitConfirm} className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">
+                                <button type="button" onClick={cancelExitConfirm} className={`${quiet} w-full py-3.5 text-lg`}>
                                     Cancel
                                 </button>
                             </div>

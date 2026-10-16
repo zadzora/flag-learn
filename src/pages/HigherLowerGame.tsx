@@ -4,19 +4,19 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion"
 import {
     AlertTriangle,
     ArrowDown,
-    ArrowLeft,
     ArrowUp,
+    ChevronRight,
     Clock,
     Loader2,
     MapPin,
-    Moon,
+    Repeat,
     RotateCcw,
-    Sun,
     Users,
 } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { fetchPopulationAndArea } from "../utils/restCountryMetric"
-import CountryDataCredit from "../components/CountryDataCredit"
+import TopBar, { BarButton } from "../components/TopBar"
+import SiteFooter from "../components/SiteFooter"
 import CountUpValue from "../components/CountUpValue"
 
 const THEME_KEY = "flag-master-theme"
@@ -97,10 +97,10 @@ function CorrectGuessesPanel({
 }) {
     return (
         <>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Correct guesses
             </p>
-            <p className="mb-3 text-[9px] leading-snug text-slate-500 dark:text-slate-400">
+            <p className="mb-3 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
                 Higher → lower ({metric === "area" ? "area" : metric === "population" ? "population" : "—"})
             </p>
             <div className={listClassName}>
@@ -113,14 +113,14 @@ function CorrectGuessesPanel({
                             animate={{ opacity: 1, x: 0, scale: 1 }}
                             transition={{ type: "spring", stiffness: 420, damping: 26 }}
                             exit={{ opacity: 0, x: -8 }}
-                            className="flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-2 py-1.5 dark:border-emerald-800/60 dark:bg-emerald-950/40"
+                            className="flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800"
                         >
-                            <img src={r.image} alt="" className="h-8 w-11 rounded object-cover shadow-sm" />
+                            <img src={r.image} alt="" className="h-8 w-11 rounded-[3px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]" />
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-[10px] font-bold leading-tight text-slate-800 dark:text-slate-100">
+                                <div className="truncate text-[11px] font-bold leading-tight">
                                     {r.label}
                                 </div>
-                                <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                                <div className="text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                                     {metric ? formatValue(metric, r.value) : r.value}
                                 </div>
                             </div>
@@ -128,7 +128,7 @@ function CorrectGuessesPanel({
                     ))}
                 </AnimatePresence>
                 {revealed.length === 0 && (
-                    <p className="text-[11px] italic text-slate-400 dark:text-slate-500">Your streak builds here.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">Your streak builds here.</p>
                 )}
             </div>
         </>
@@ -352,315 +352,239 @@ export default function HigherLowerGame() {
         setLeaveConfirm(null)
     }
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const dialog = `${panel} shadow-xl`
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const chip = "flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+
     return (
-        <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100 md:flex-row">
-            {/* Sidebar — guessed countries high → low */}
-            <aside className="order-2 hidden h-auto w-full shrink-0 flex-col border-t border-slate-200 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/90 md:order-1 md:flex md:h-screen md:w-[11.5rem] md:border-r md:border-t-0 md:overflow-y-auto">
-                <CorrectGuessesPanel
-                    metric={metric}
-                    revealed={revealed}
-                    listClassName="flex flex-row gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-x-visible md:pb-0"
-                />
-            </aside>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar
+                title="Higher or Lower"
+                back={handleMenuClick}
+                theme={theme}
+                onToggleTheme={() => setTheme(t => (t === "light" ? "dark" : "light"))}
+            >
+                <BarButton onClick={handleResetClick} label="Reset game">
+                    <RotateCcw size={18} aria-hidden />
+                </BarButton>
+            </TopBar>
 
-            {/* Main */}
-            <div className="relative order-1 flex min-h-0 flex-1 flex-col md:order-2">
-                <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
-                    <button
-                        type="button"
-                        onClick={handleMenuClick}
-                        className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm hover:bg-white dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-300 dark:hover:bg-slate-800"
-                    >
-                        <ArrowLeft size={18} /> Menu
-                    </button>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleResetClick}
-                            className="rounded-full border border-slate-200 bg-white/90 p-2.5 text-slate-600 shadow-sm hover:bg-white dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-300 dark:hover:bg-slate-800"
-                            title="Reset game"
-                        >
-                            <RotateCcw size={18} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setTheme(t => (t === "light" ? "dark" : "light"))}
-                            className="rounded-full border border-slate-200 bg-white/90 p-2.5 dark:border-slate-700 dark:bg-slate-800/90"
-                        >
-                            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-                        </button>
+            <div className="flex flex-1 flex-col md:flex-row">
+                {/* Sidebar — guessed countries high → low */}
+                <aside className="hidden w-full shrink-0 flex-col border-slate-200 p-3 md:flex md:w-[11.5rem] md:border-r dark:border-slate-700">
+                    <div className="md:sticky md:top-0 md:max-h-screen md:overflow-y-auto md:pt-1">
+                        <CorrectGuessesPanel
+                            metric={metric}
+                            revealed={revealed}
+                            listClassName="flex flex-row gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-x-visible md:pb-0"
+                        />
                     </div>
-                </div>
+                </aside>
 
-                <div className="flex flex-1 flex-col items-center px-3 pb-28 pt-2 sm:px-6 md:pb-24">
-                    <motion.h1
-                        layout
-                        className="mb-1 text-center text-xl font-black tracking-tight text-slate-800 dark:text-white sm:text-2xl"
-                        initial={false}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35 }}
-                    >
-                        Higher or Lower
-                    </motion.h1>
-                    <p className="mb-6 max-w-md text-center text-xs text-slate-500 dark:text-slate-400">
-                        Compare the mystery country (right) to the reference (left). Guess right → that country becomes the new
-                        reference and the previous one leaves the pool. One wrong guess ends the run.
-                    </p>
+                {/* Main */}
+                <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+                    <div className="flex flex-1 flex-col items-center px-4 pb-28 pt-6 sm:px-6 sm:pt-8 md:pb-16">
+                        <h1 className="mb-1 text-center text-2xl font-bold">
+                            Higher or Lower
+                        </h1>
+                        <p className="mb-5 max-w-md text-center text-sm text-slate-500 dark:text-slate-400">
+                            Compare the mystery country (right) to the reference (left). Guess right → that country becomes the new
+                            reference and the previous one leaves the pool. One wrong guess ends the run.
+                        </p>
 
-                    <AnimatePresence mode="wait">
                         {metric && (
-                            <motion.div
-                                key={metric}
-                                initial={{ opacity: 0, scale: 0.92, y: -6 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -4 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                                className="mb-4 flex items-center gap-2 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-200"
-                            >
-                                {metric === "population" ? <Users size={14} /> : <MapPin size={14} />}
-                                {metric === "population" ? "Population" : "Land area"}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {metric && !setupOpen && (
-                        <motion.div
-                            layout
-                            className="mb-5 flex w-full max-w-lg flex-wrap items-center justify-center gap-2 sm:gap-3"
-                            initial={{ opacity: 0, y: -6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                        >
-                            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200">
-                                <Clock size={14} className="shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
-                                <span className="text-slate-500 dark:text-slate-400">Time</span>
-                                <span className="font-mono font-black tabular-nums text-slate-800 dark:text-slate-100">{formatElapsed(elapsedSec)}</span>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {metric && !setupOpen && (
-                        <div className="mb-4 w-full max-w-2xl rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 md:hidden">
-                            <CorrectGuessesPanel
-                                metric={metric}
-                                revealed={revealed}
-                                listClassName="flex flex-row gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]"
-                            />
-                        </div>
-                    )}
-
-                    {complete && (
-                        <div
-                            className={`mb-6 rounded-2xl border px-6 py-5 text-center ${
-                                lost
-                                    ? "border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/30"
-                                    : "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30"
-                            }`}
-                        >
-                            <p
-                                className={`text-lg font-black ${
-                                    lost ? "text-rose-900 dark:text-rose-100" : "text-amber-900 dark:text-amber-100"
-                                }`}
-                            >
-                                {lost ? "Game over" : "You did it!"}
-                            </p>
-                            <p
-                                className={`mt-1 text-sm ${
-                                    lost ? "text-rose-800/90 dark:text-rose-200/90" : "text-amber-800/90 dark:text-amber-200/90"
-                                }`}
-                            >
-                                {lost
-                                    ? "Wrong guess — that ends your run."
-                                    : "You played through the whole chain. Outstanding run!"}
-                            </p>
-                            <div className="mx-auto mt-4 flex max-w-xs items-stretch justify-center gap-3">
-                                <div className="flex-1 rounded-xl bg-white/70 px-3 py-2 dark:bg-slate-900/40">
-                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                        Score
-                                    </div>
-                                    <div className="text-2xl font-black tabular-nums text-slate-800 dark:text-slate-100">
-                                        {revealed.length}
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 dark:text-slate-500">correct guesses</div>
-                                </div>
-                                <div className="flex-1 rounded-xl bg-white/70 px-3 py-2 dark:bg-slate-900/40">
-                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                        Time
-                                    </div>
-                                    <div className="flex items-center justify-center gap-1 text-2xl font-black tabular-nums text-slate-800 dark:text-slate-100">
-                                        <Clock size={16} className="text-slate-400" aria-hidden />
-                                        {formatElapsed(elapsedSec)}
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => resetGame()}
-                                className="mt-5 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-indigo-500"
-                            >
-                                Play again
-                            </button>
-                        </div>
-                    )}
-
-                    {!complete && pair && leftEntry && rightEntry && (
-                        <LayoutGroup id="higher-lower-flags">
-                            <div className="grid w-full max-w-2xl grid-cols-2 gap-3 sm:gap-6">
-                                {/* Reference */}
-                                <motion.div
-                                    key={`col-left-${pair.left}`}
-                                    layout="position"
-                                    initial={false}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ layout: { type: "spring", stiffness: 380, damping: 30 } }}
-                                    className="relative z-0 flex flex-col items-center overflow-visible rounded-2xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:p-5"
-                                >
-                                    <span className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Reference</span>
-                                    <motion.img
-                                        layoutId={`hl-flag-${pair.left}`}
-                                        layout
-                                        src={leftEntry.image}
-                                        alt=""
-                                        className="mb-3 h-20 w-auto max-w-full object-contain sm:h-28"
-                                        transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                                    />
-                                    <p className="mb-2 text-center text-xs font-bold leading-tight sm:text-sm">{labelFor(leftEntry)}</p>
-                                    <div className="min-h-[2.5rem] text-center">
-                                        {loading ? (
-                                            <Loader2 className="mx-auto animate-spin text-indigo-400" size={28} />
-                                        ) : leftStat !== null && metric ? (
-                                            <motion.span
-                                                key={`${pair.left}-lv`}
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="inline-block text-lg font-black text-indigo-600 dark:text-indigo-400 sm:text-2xl tabular-nums"
-                                            >
-                                                {formatValue(metric, leftStat)}
-                                            </motion.span>
-                                        ) : (
-                                            <span className="text-xs text-red-500">Data unavailable</span>
-                                        )}
-                                    </div>
-                                </motion.div>
-
-                                {/* Mystery */}
-                                <motion.div
-                                    key={`col-right-${pair.right}`}
-                                    layout="position"
-                                    initial={false}
-                                    animate={{
-                                        opacity: 1,
-                                        scale: revealPhase ? 1.02 : 1,
-                                    }}
-                                    transition={{ layout: { type: "spring", stiffness: 380, damping: 30 } }}
-                                    className={`relative z-0 flex flex-col items-center overflow-visible rounded-2xl border p-3 shadow-lg dark:bg-slate-900 sm:p-5 ${
-                                        revealPhase === "correct"
-                                            ? "border-emerald-500 bg-emerald-50/90 ring-2 ring-emerald-400/50 dark:border-emerald-600 dark:bg-emerald-950/40"
-                                            : revealPhase === "wrong"
-                                              ? "border-red-400 bg-red-50/90 ring-2 ring-red-400/40 dark:border-red-700 dark:bg-red-950/40"
-                                              : "border-slate-200 bg-white dark:border-slate-700"
-                                    }`}
-                                >
-                                    <span className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                        Guess this one
+                            <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+                                <span key={metric} className={`fl-in ${chip}`}>
+                                    {metric === "population" ? <Users size={14} aria-hidden /> : <MapPin size={14} aria-hidden />}
+                                    {metric === "population" ? "Population" : "Land area"}
+                                </span>
+                                {!setupOpen && (
+                                    <span className={chip}>
+                                        <Clock size={14} className="shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
+                                        <span className="text-slate-500 dark:text-slate-400">Time</span>
+                                        <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-white">{formatElapsed(elapsedSec)}</span>
                                     </span>
-                                    <motion.img
-                                        layoutId={`hl-flag-${pair.right}`}
-                                        layout
-                                        src={rightEntry.image}
-                                        alt=""
-                                        className="mb-3 h-20 w-auto max-w-full object-contain sm:h-28"
-                                        animate={{
-                                            filter: revealPhase ? "brightness(1.06)" : "brightness(1)",
-                                        }}
-                                        transition={{
-                                            layout: { type: "spring", stiffness: 420, damping: 34 },
-                                            filter: { duration: 0.35 },
-                                        }}
-                                    />
-                                    <p className="mb-2 text-center text-xs font-bold leading-tight opacity-90 sm:text-sm">
-                                        {labelFor(rightEntry)}
+                                )}
+                            </div>
+                        )}
+
+                        {metric && !setupOpen && (
+                            <div className={`${panel} mb-4 w-full max-w-2xl p-3 md:hidden`}>
+                                <CorrectGuessesPanel
+                                    metric={metric}
+                                    revealed={revealed}
+                                    listClassName="flex flex-row gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]"
+                                />
+                            </div>
+                        )}
+
+                        {complete && (
+                            <section className={`${panel} mb-6 flex w-full max-w-md flex-col gap-5 p-6`}>
+                                <div>
+                                    <h2 className={`text-2xl font-bold ${lost ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                                        {lost ? "Game over" : "You did it!"}
+                                    </h2>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {lost
+                                            ? "Wrong guess — that ends your run."
+                                            : "You played through the whole chain. Outstanding run!"}
                                     </p>
-                                    <div className="min-h-[2.5rem] text-center">
-                                        {loading ? (
-                                            <Loader2 className="mx-auto animate-spin text-indigo-400" size={28} />
-                                        ) : revealPhase ? (
-                                            rightStat !== null && metric ? (
-                                                <motion.span
-                                                    layout
-                                                    initial={{ scale: 0.85, opacity: 0 }}
-                                                    animate={{ scale: 1, opacity: 1 }}
-                                                    transition={{ type: "spring", stiffness: 380, damping: 22 }}
-                                                    className="inline-block text-lg font-black text-slate-800 dark:text-slate-100 sm:text-2xl"
-                                                >
-                                                    <CountUpValue target={rightStat} format={v => formatValue(metric, v)} />
-                                                </motion.span>
-                                            ) : null
-                                        ) : (
-                                            <motion.span
-                                                animate={{ opacity: [0.5, 1, 0.5] }}
-                                                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                                                className="inline-block text-sm font-bold text-slate-400 dark:text-slate-500"
-                                            >
-                                                ?
-                                            </motion.span>
-                                        )}
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                            Score
+                                        </div>
+                                        <div className="mt-1 text-3xl font-bold tabular-nums">
+                                            {revealed.length}
+                                        </div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400">correct guesses</div>
                                     </div>
-                                    <AnimatePresence>
+                                    <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                            Time
+                                        </div>
+                                        <div className="mt-1 flex items-center gap-1.5 text-3xl font-bold tabular-nums">
+                                            <Clock size={18} className="text-slate-400" aria-hidden />
+                                            {formatElapsed(elapsedSec)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => resetGame()}
+                                    className={`${primary} flex w-full items-center justify-center gap-2 py-3.5 font-bold`}
+                                >
+                                    <Repeat size={18} aria-hidden /> Play again
+                                </button>
+                            </section>
+                        )}
+
+                        {!complete && pair && leftEntry && rightEntry && (
+                            <LayoutGroup id="higher-lower-flags">
+                                <div className="grid w-full max-w-2xl grid-cols-2 gap-3 sm:gap-6">
+                                    {/* Reference */}
+                                    <motion.div
+                                        key={`col-left-${pair.left}`}
+                                        layout="position"
+                                        initial={false}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ layout: { type: "spring", stiffness: 380, damping: 30 } }}
+                                        className={`${panel} relative z-0 flex flex-col items-center overflow-visible p-3 sm:p-5`}
+                                    >
+                                        <span className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Reference</span>
+                                        <motion.img
+                                            layoutId={`hl-flag-${pair.left}`}
+                                            layout
+                                            src={leftEntry.image}
+                                            alt=""
+                                            className="mb-3 h-20 w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:h-28"
+                                            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                                        />
+                                        <p className="mb-2 text-center text-xs font-bold leading-tight sm:text-sm">{labelFor(leftEntry)}</p>
+                                        <div className="min-h-[2.5rem] text-center">
+                                            {loading ? (
+                                                <Loader2 className="mx-auto animate-spin text-slate-400" size={28} />
+                                            ) : leftStat !== null && metric ? (
+                                                <motion.span
+                                                    key={`${pair.left}-lv`}
+                                                    initial={{ opacity: 0, y: 8 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="inline-block text-lg font-bold tabular-nums text-blue-600 dark:text-blue-400 sm:text-2xl"
+                                                >
+                                                    {formatValue(metric, leftStat)}
+                                                </motion.span>
+                                            ) : (
+                                                <span className="text-xs text-red-500">Data unavailable</span>
+                                            )}
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Mystery */}
+                                    <motion.div
+                                        key={`col-right-${pair.right}`}
+                                        layout="position"
+                                        initial={false}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ layout: { type: "spring", stiffness: 380, damping: 30 } }}
+                                        className={`relative z-0 flex flex-col items-center overflow-visible rounded-[10px] border p-3 transition-colors sm:p-5 ${
+                                            revealPhase === "correct"
+                                                ? "border-emerald-500 bg-emerald-500/10"
+                                                : revealPhase === "wrong"
+                                                  ? "border-red-500 bg-red-500/10"
+                                                  : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+                                        }`}
+                                    >
+                                        <span className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                            Guess this one
+                                        </span>
+                                        <motion.img
+                                            layoutId={`hl-flag-${pair.right}`}
+                                            layout
+                                            src={rightEntry.image}
+                                            alt=""
+                                            className="mb-3 h-20 w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:h-28"
+                                            transition={{ layout: { type: "spring", stiffness: 420, damping: 34 } }}
+                                        />
+                                        <p className="mb-2 text-center text-xs font-bold leading-tight sm:text-sm">
+                                            {labelFor(rightEntry)}
+                                        </p>
+                                        <div className="min-h-[2.5rem] text-center">
+                                            {loading ? (
+                                                <Loader2 className="mx-auto animate-spin text-slate-400" size={28} />
+                                            ) : revealPhase ? (
+                                                rightStat !== null && metric ? (
+                                                    <span className="fl-in inline-block text-lg font-bold tabular-nums sm:text-2xl">
+                                                        <CountUpValue target={rightStat} format={v => formatValue(metric, v)} />
+                                                    </span>
+                                                ) : null
+                                            ) : (
+                                                <span className="inline-block text-lg font-bold text-slate-400 dark:text-slate-500">
+                                                    ?
+                                                </span>
+                                            )}
+                                        </div>
                                         {revealPhase && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0 }}
-                                                transition={{ delay: 0.35 }}
-                                                className="absolute inset-x-0 bottom-2 text-center text-[11px] font-black uppercase tracking-wide"
-                                            >
+                                            <div className="fl-in absolute inset-x-0 bottom-2 text-center text-[11px] font-bold uppercase tracking-wider">
                                                 {revealPhase === "correct" ? (
                                                     <span className="text-emerald-600 dark:text-emerald-400">Correct</span>
                                                 ) : (
                                                     <span className="text-red-600 dark:text-red-400">Wrong</span>
                                                 )}
-                                            </motion.div>
+                                            </div>
                                         )}
-                                    </AnimatePresence>
-                                </motion.div>
+                                    </motion.div>
+                                </div>
+                            </LayoutGroup>
+                        )}
+
+                        {/* Buttons */}
+                        {!complete && pair && !loading && leftStat !== null && rightStat !== null && revealPhase === null && (
+                            <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-3 border-t border-slate-200 bg-[#F4F6FB] p-3 md:static md:mt-10 md:w-full md:max-w-md md:border-0 md:bg-transparent md:p-0 dark:border-slate-700 dark:bg-[#0A0E1A] md:dark:bg-transparent">
+                                <button
+                                    type="button"
+                                    onClick={() => submitGuess("higher")}
+                                    className={`${primary} flex flex-1 items-center justify-center gap-2 py-4 text-lg font-bold`}
+                                >
+                                    <ArrowUp size={22} strokeWidth={2.75} aria-hidden />
+                                    Higher
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => submitGuess("lower")}
+                                    className={`${primary} flex flex-1 items-center justify-center gap-2 py-4 text-lg font-bold`}
+                                >
+                                    <ArrowDown size={22} strokeWidth={2.75} aria-hidden />
+                                    Lower
+                                </button>
                             </div>
-                        </LayoutGroup>
-                    )}
+                        )}
+                    </div>
 
-                    {/* Buttons */}
-                    {!complete && pair && !loading && leftStat !== null && rightStat !== null && revealPhase === null && (
-                        <div className="fixed bottom-0 left-0 right-0 z-30 flex gap-3 p-3 md:static md:mt-10 md:w-full md:max-w-md md:p-0">
-                            <motion.button
-                                type="button"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => submitGuess("higher")}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-4 text-lg font-black text-white shadow-lg shadow-emerald-500/25 transition-colors hover:bg-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500"
-                            >
-                                <motion.span animate={{ y: [0, -3, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
-                                    <ArrowUp size={22} strokeWidth={3} />
-                                </motion.span>
-                                Higher
-                            </motion.button>
-                            <motion.button
-                                type="button"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => submitGuess("lower")}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-500 py-4 text-lg font-black text-white shadow-lg shadow-red-500/25 transition-colors hover:bg-red-400 dark:bg-red-600 dark:hover:bg-red-500"
-                            >
-                                <motion.span animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
-                                    <ArrowDown size={22} strokeWidth={3} />
-                                </motion.span>
-                                Lower
-                            </motion.button>
-                        </div>
-                    )}
+                    <SiteFooter />
                 </div>
-
-                <footer className="mt-auto border-t border-slate-200 bg-white/80 px-4 py-3 text-center text-[10px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-500">
-                    <CountryDataCredit prefix="Stats from" />
-                </footer>
             </div>
 
             {/* Loss of progress confirmation — same pattern as Highscore quit modal */}
@@ -670,44 +594,41 @@ export default function HigherLowerGame() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-md"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4"
                     >
-                        <motion.div
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0.95 }}
-                            className="flex w-full max-w-sm flex-col items-center gap-6 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-2xl dark:border-slate-700 dark:bg-slate-800"
-                        >
-                            <div className="rounded-full bg-red-100 p-4 text-red-500 dark:bg-red-900/30 dark:text-red-400">
-                                <AlertTriangle size={48} aria-hidden />
+                        <div className={`${dialog} flex w-full max-w-sm flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-start gap-4">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700 dark:text-red-400">
+                                    <AlertTriangle size={24} aria-hidden />
+                                </span>
+                                <div>
+                                    <h2 className="text-2xl font-bold">
+                                        {leaveConfirm === "menu" ? "Quit Higher or Lower?" : "Reset game?"}
+                                    </h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+                                        {leaveConfirm === "menu"
+                                            ? "If you leave now, your current run progress will be lost."
+                                            : "If you reset now, your current run progress will be lost."}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="mb-2 text-2xl font-bold text-slate-800 dark:text-white">
-                                    {leaveConfirm === "menu" ? "Quit Higher or Lower?" : "Reset game?"}
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400">
-                                    {leaveConfirm === "menu"
-                                        ? "If you leave now, your current run progress will be lost."
-                                        : "If you reset now, your current run progress will be lost."}
-                                </p>
-                            </div>
-                            <div className="mt-2 flex w-full flex-col gap-3">
+                            <div className="flex w-full flex-col gap-3">
                                 <button
                                     type="button"
                                     onClick={confirmLeave}
-                                    className="w-full rounded-xl bg-red-500 py-3.5 text-lg font-bold text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 active:scale-95"
+                                    className="w-full rounded-lg bg-red-600 py-3.5 font-bold text-white hover:bg-red-700"
                                 >
                                     {leaveConfirm === "menu" ? "Yes, Quit" : "Yes, Reset"}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLeaveConfirm(null)}
-                                    className="w-full rounded-xl bg-slate-100 py-3.5 text-lg font-bold text-slate-700 transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                                    className={`${quiet} w-full py-3.5 font-bold`}
                                 >
                                     Cancel
                                 </button>
                             </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -719,53 +640,52 @@ export default function HigherLowerGame() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-sm dark:bg-black/70"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
                         onClick={() => {}}
                     >
-                        <motion.div
-                            initial={{ scale: 0.94, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.94, opacity: 0 }}
-                            className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                        <div
+                            className={`${dialog} w-full max-w-sm p-6`}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Choose category</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            <h2 className="text-xl font-bold">Choose category</h2>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 Which stat should the mystery country be compared on?
                             </p>
                             <div className="mt-5 grid gap-3">
                                 <button
                                     type="button"
                                     onClick={() => startMetric("population")}
-                                    className="flex items-center gap-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 px-4 py-4 text-left transition-colors hover:border-indigo-400 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60"
+                                    className="group flex items-center gap-3 rounded-[10px] border border-slate-200 bg-white px-3 py-3 text-left font-normal hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
                                 >
-                                    <div className="rounded-xl bg-indigo-600 p-2 text-white dark:bg-indigo-500">
-                                        <Users size={22} />
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-indigo-950 dark:text-indigo-100">Population</div>
-                                        <div className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 group-hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:group-hover:text-white">
+                                        <Users size={20} aria-hidden />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block font-bold">Population</span>
+                                        <span className="block text-xs text-slate-500 dark:text-slate-400">
                                             Higher or lower population
-                                        </div>
-                                    </div>
+                                        </span>
+                                    </span>
+                                    <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400" />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => startMetric("area")}
-                                    className="flex items-center gap-3 rounded-2xl border-2 border-teal-200 bg-teal-50 px-4 py-4 text-left transition-colors hover:border-teal-400 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:hover:bg-teal-900/50"
+                                    className="group flex items-center gap-3 rounded-[10px] border border-slate-200 bg-white px-3 py-3 text-left font-normal hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
                                 >
-                                    <div className="rounded-xl bg-teal-600 p-2 text-white dark:bg-teal-500">
-                                        <MapPin size={22} />
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-teal-950 dark:text-teal-100">Land area</div>
-                                        <div className="text-[11px] text-teal-800/80 dark:text-teal-300/80">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 group-hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:group-hover:text-white">
+                                        <MapPin size={20} aria-hidden />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block font-bold">Land area</span>
+                                        <span className="block text-xs text-slate-500 dark:text-slate-400">
                                             Higher or lower km²
-                                        </div>
-                                    </div>
+                                        </span>
+                                    </span>
+                                    <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400" />
                                 </button>
                             </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useSearchParams } from "react-router-dom"
-import {
-    ArrowLeft, Check, Flame, Moon, Shuffle, Sun, X,
-} from "lucide-react"
+import { Check, Flame, Shuffle, X } from "lucide-react"
 import {
     buildDailyPuzzle, countryByCode, getTodayString, shiftDate,
     type ConnectionsPuzzle, type ConnectionsColor, type PuzzleGroup,
@@ -14,7 +12,7 @@ import {
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
-import { dailyMode } from "../utils/dailyModes"
+import TopBar from "../components/TopBar"
 
 const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-connections-save"
@@ -22,8 +20,6 @@ const STORAGE_KEY = "flag-master-connections-save"
 const TEST_STORAGE_KEY = "flag-master-connections-test-save"
 const TEST_FLAG_KEY = "flag-master-test"
 const DAILY_GAME_KEY = "connections"
-/** Same icon the home card and the hand-off button use. */
-const { icon: ConnectionsIcon } = dailyMode("connections")
 const MAX_MISTAKES = 4
 
 type Status = "playing" | "won" | "lost"
@@ -66,10 +62,10 @@ declare global {
 }
 
 const COLOR_CLASSES: Record<ConnectionsColor, string> = {
-    yellow: "bg-amber-300 dark:bg-amber-500/80 border-amber-400 dark:border-amber-500 text-amber-950 dark:text-amber-50",
-    green: "bg-emerald-300 dark:bg-emerald-500/80 border-emerald-400 dark:border-emerald-500 text-emerald-950 dark:text-emerald-50",
-    blue: "bg-sky-300 dark:bg-sky-500/80 border-sky-400 dark:border-sky-500 text-sky-950 dark:text-sky-50",
-    purple: "bg-violet-300 dark:bg-violet-500/80 border-violet-400 dark:border-violet-500 text-violet-950 dark:text-violet-50",
+    yellow: "border-amber-400 bg-amber-300 text-amber-950 dark:border-amber-400 dark:bg-amber-400 dark:text-amber-950",
+    green: "border-emerald-400 bg-emerald-300 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-400 dark:text-emerald-950",
+    blue: "border-sky-400 bg-sky-300 text-sky-950 dark:border-sky-400 dark:bg-sky-400 dark:text-sky-950",
+    purple: "border-violet-400 bg-violet-300 text-violet-950 dark:border-violet-400 dark:bg-violet-400 dark:text-violet-950",
 }
 
 /**
@@ -412,11 +408,19 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
     }
 
     // --- RENDER ---
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+
     if (!puzzle) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center text-slate-600 dark:text-slate-300">
-                <p className="font-bold">No puzzle could be built for {date}.</p>
-                <Link to="/" className="px-5 py-3 rounded-xl bg-indigo-600 text-white font-bold">Back home</Link>
+            <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+                <TopBar title="Connections" theme={theme} onToggleTheme={toggleTheme} />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-4 px-4 py-14 text-center">
+                    <p className="font-bold text-slate-600 dark:text-slate-300">No puzzle could be built for {date}.</p>
+                    <Link to="/" className={`${primary} px-5 py-3 font-bold`}>Back home</Link>
+                </main>
             </div>
         )
     }
@@ -424,62 +428,51 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
     const mistakesLeft = MAX_MISTAKES - mistakes
 
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500 pb-12">
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Connections" theme={theme} onToggleTheme={toggleTheme}>
+                <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">
+                    #{puzzle.number}<span className="hidden sm:inline"> · {date}</span>
+                </span>
+            </TopBar>
 
-            {/* Header */}
-            <div className="w-full max-w-lg px-4 flex justify-between items-center mb-6">
-                <Link to="/" className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                    <ArrowLeft size={20} />
-                </Link>
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 pb-14 pt-6 sm:pt-8">
 
-                <div className="flex flex-col items-center">
-                    <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                        <ConnectionsIcon size={18} className="text-violet-500" /> CONNECTIONS
-                    </h1>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-                        #{puzzle.number} - {date}
-                    </span>
+                <div className="flex items-baseline justify-between gap-3">
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Find four groups of four countries that belong together.
+                    </p>
+                    <span className="shrink-0 text-xs tabular-nums text-slate-400 sm:hidden dark:text-slate-500">{date}</span>
                 </div>
 
-                <button onClick={toggleTheme} className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                    {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
-
-            <div className="w-full max-w-lg px-4 flex flex-col items-center gap-4">
-
-                <p className="text-sm text-slate-500 dark:text-slate-400 text-center font-medium">
-                    Find four groups of four countries that belong together.
-                </p>
-
                 {/* Solved groups */}
-                <div className="w-full flex flex-col gap-2">
-                    <AnimatePresence initial={false}>
-                        {solvedGroups.map((group, index) => (
-                            <motion.div
-                                key={group.id}
-                                initial={{ opacity: 0, scale: 0.94 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: status === "lost" ? index * 0.12 : 0, duration: 0.25 }}
-                                className={`rounded-2xl border px-3 py-2.5 text-center shadow-sm ${COLOR_CLASSES[group.color]}`}
-                            >
-                                <div className="flex justify-center gap-1 mb-1.5">
-                                    {group.codes.map(code => (
-                                        <img
-                                            key={code}
-                                            src={countryByCode(code)?.image}
-                                            alt=""
-                                            className="h-4 w-6 object-cover rounded-[3px] ring-1 ring-black/15"
-                                        />
-                                    ))}
-                                </div>
-                                <p className="font-black text-sm leading-tight">{group.label}</p>
-                                <p className="text-xs font-semibold opacity-80 leading-tight">
-                                    {group.codes.map(code => countryByCode(code)?.name).join(", ")}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
+                {/* Kept mounted so the first group still animates in; hidden while empty. */}
+                <div className="flex w-full flex-col gap-2 empty:hidden">
+                        <AnimatePresence initial={false}>
+                            {solvedGroups.map((group, index) => (
+                                <motion.div
+                                    key={group.id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: status === "lost" ? index * 0.12 : 0, duration: 0.2 }}
+                                    className={`rounded-[10px] border px-3 py-2.5 text-center ${COLOR_CLASSES[group.color]}`}
+                                >
+                                    <div className="mb-1.5 flex justify-center gap-1">
+                                        {group.codes.map(code => (
+                                            <img
+                                                key={code}
+                                                src={countryByCode(code)?.image}
+                                                alt=""
+                                                className="h-4 w-6 rounded-[2px] object-cover shadow-[0_1px_3px_rgba(10,14,26,0.25)]"
+                                            />
+                                        ))}
+                                    </div>
+                                    <p className="text-sm font-extrabold leading-tight">{group.label}</p>
+                                    <p className="text-xs font-semibold leading-tight opacity-80">
+                                        {group.codes.map(code => countryByCode(code)?.name).join(", ")}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                 </div>
 
                 {/* Grid */}
@@ -488,7 +481,7 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                         key={shakeKey}
                         animate={shakeKey > 0 ? { x: [0, -10, 10, -6, 6, 0] } : undefined}
                         transition={{ duration: 0.4 }}
-                        className="w-full grid grid-cols-4 gap-2"
+                        className="grid w-full grid-cols-4 gap-2"
                     >
                         {remainingTiles.map(tile => {
                             const isSelected = selected.includes(tile.code)
@@ -498,18 +491,19 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                                     type="button"
                                     onClick={() => toggleTile(tile.code)}
                                     disabled={status !== "playing"}
-                                    className={`aspect-[5/4] rounded-2xl border p-1.5 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 touch-manipulation ${
+                                    aria-pressed={isSelected}
+                                    className={`flex aspect-[5/4] min-h-0 touch-manipulation flex-col items-center justify-center gap-1.5 rounded-[10px] border p-1.5 transition-colors ${
                                         isSelected
-                                            ? "bg-slate-800 dark:bg-slate-200 border-slate-800 dark:border-slate-200 text-white dark:text-slate-900 shadow-lg scale-[0.97]"
-                                            : "bg-white/85 dark:bg-slate-800/85 border-slate-200 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-500 shadow-sm"
+                                            ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-[#0A0E1A]"
+                                            : "border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
                                     }`}
                                 >
                                     <img
                                         src={tile.image}
                                         alt={tile.name}
-                                        className="w-full max-h-[46%] object-contain rounded-[3px] ring-1 ring-black/10"
+                                        className="max-h-[46%] w-full rounded-[3px] object-contain"
                                     />
-                                    <span className="text-[10px] sm:text-[11px] font-bold leading-tight text-center line-clamp-2 px-0.5">
+                                    <span className="line-clamp-2 px-0.5 text-center text-[10px] font-bold leading-tight sm:text-[11px]">
                                         {tile.name}
                                     </span>
                                 </button>
@@ -519,14 +513,14 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                 )}
 
                 {/* Toast */}
-                <div className={`flex items-center ${status === "playing" ? "h-6" : "h-0"}`}>
+                <div className={`flex items-center justify-center ${status === "playing" ? "h-7" : "h-0"}`}>
                     <AnimatePresence>
                         {toast && (
                             <motion.div
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -6 }}
-                                className="px-4 py-1.5 rounded-full bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold shadow-lg"
+                                className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white dark:bg-white dark:text-[#0A0E1A]"
                             >
                                 {toast}
                             </motion.div>
@@ -536,14 +530,14 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
 
                 {/* Mistakes */}
                 {status === "playing" && (
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                    <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                         Mistakes left
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1.5" aria-label={`${mistakesLeft} of ${MAX_MISTAKES} left`}>
                             {Array.from({ length: MAX_MISTAKES }).map((_, i) => (
                                 <span
                                     key={i}
-                                    className={`w-3 h-3 rounded-full transition-colors ${
-                                        i < mistakesLeft ? "bg-slate-500 dark:bg-slate-300" : "bg-slate-200 dark:bg-slate-700"
+                                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                                        i < mistakesLeft ? "bg-slate-600 dark:bg-slate-300" : "bg-slate-200 dark:bg-slate-700"
                                     }`}
                                 />
                             ))}
@@ -553,19 +547,19 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
 
                 {/* Controls */}
                 {status === "playing" && (
-                    <div className="w-full flex flex-wrap gap-2 justify-center">
+                    <div className="grid w-full grid-cols-3 gap-2">
                         <button
                             type="button"
                             onClick={shuffleTiles}
-                            className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm bg-white/85 dark:bg-slate-800/85 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-violet-400 active:scale-95 transition-all"
+                            className={`${quiet} flex items-center justify-center gap-2 px-3 py-3 text-sm font-bold`}
                         >
-                            <Shuffle size={16} /> Shuffle
+                            <Shuffle size={16} aria-hidden /> Shuffle
                         </button>
                         <button
                             type="button"
                             onClick={() => setSelected([])}
                             disabled={selected.length === 0}
-                            className="px-4 py-3 rounded-xl font-bold text-sm bg-white/85 dark:bg-slate-800/85 border border-slate-200 dark:border-slate-700 shadow-sm disabled:opacity-40 active:scale-95 transition-all"
+                            className={`px-3 py-3 text-sm font-bold ${selected.length === 0 ? disabledBtn : quiet}`}
                         >
                             Deselect all
                         </button>
@@ -573,7 +567,7 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                             type="button"
                             onClick={submitGuess}
                             disabled={selected.length !== 4}
-                            className="px-6 py-3 rounded-xl font-bold text-sm bg-violet-600 hover:bg-violet-700 text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+                            className={`px-3 py-3 text-sm font-bold ${selected.length === 4 ? primary : disabledBtn}`}
                         >
                             Submit
                         </button>
@@ -582,35 +576,28 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
 
                 {/* Result */}
                 {status !== "playing" && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`w-full p-5 rounded-2xl border text-center ${
-                            status === "won"
-                                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50"
-                                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50"
-                        }`}
-                    >
-                        <div className={`mx-auto w-12 h-12 flex items-center justify-center rounded-full mb-3 text-white ${status === "won" ? "bg-emerald-500" : "bg-red-500"}`}>
-                            {status === "won" ? <Check size={24} strokeWidth={3} /> : <X size={24} strokeWidth={3} />}
+                    <section className={`${panel} flex items-center gap-4 p-5 sm:p-6`}>
+                        <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 ${status === "won" ? "text-emerald-500" : "text-red-500"}`}>
+                            {status === "won" ? <Check size={28} strokeWidth={3} aria-hidden /> : <X size={28} strokeWidth={3} aria-hidden />}
+                        </span>
+                        <div className="min-w-0">
+                            <h2 className="!text-2xl font-bold">
+                                {status === "won"
+                                    ? mistakes === 0 ? "Flawless!" : "Solved it!"
+                                    : "Out of tries"}
+                            </h2>
+                            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                                {status === "won"
+                                    ? `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"} - come back tomorrow.`
+                                    : "All four groups are shown above."}
+                            </p>
+                            {isRealDay && streak > 0 && (
+                                <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
+                                    <Flame size={15} aria-hidden /> {streak} day streak
+                                </p>
+                            )}
                         </div>
-                        <h3 className="font-black text-xl mb-1">
-                            {status === "won"
-                                ? mistakes === 0 ? "Flawless!" : "Solved it!"
-                                : "Out of tries"}
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-300 text-sm">
-                            {status === "won"
-                                ? `${mistakes} ${mistakes === 1 ? "mistake" : "mistakes"} - come back tomorrow.`
-                                : "All four groups are shown above."}
-                        </p>
-
-                        {isRealDay && streak > 0 && (
-                            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-xs font-black">
-                                <Flame size={14} /> {streak} day streak
-                            </div>
-                        )}
-                    </motion.div>
+                    </section>
                 )}
 
                 {isRealDay && status !== "playing" && (
@@ -620,13 +607,13 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                         statsError={statsError}
                         myBucket={myBucket}
                         bucketLabels={Array.from({ length: MAX_MISTAKES }, (_, i) => `${i}`)}
-                        accentClass="text-violet-600 dark:text-violet-400"
+                        accentClass="text-slate-900 dark:text-white"
                         footnote="Mistakes made - X did not solve it"
                     />
                 )}
 
                 {isRealDay && status !== "playing" && <NextDailyLink current="connections" today={today} />}
-            </div>
+            </main>
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import { Atom, Calculator, type LucideIcon } from "lucide-react"
+import { AtomIcon, MathToolsIcon, type ModeIcon } from "../components/ModeIcons"
 import { freshProgress, mergeProgress, type SrProgressMap } from "./spacedRepetition"
 
 /**
@@ -127,14 +127,14 @@ export type FormulaMode = {
     label: string
     short: string
     detail: string
-    icon: LucideIcon
+    icon: ModeIcon
     storageKey: string
 }
 
 /** Each subject is its own pool with its own progress, like a direction elsewhere in the wing. */
 export const FORMULA_MODES: FormulaMode[] = [
-    { key: "physics", label: "Physics formulas", short: "Physics", detail: "Write the right-hand side", icon: Atom, storageKey: "science-formulas-physics-v1" },
-    { key: "math", label: "Maths formulas", short: "Math", detail: "Write the right-hand side", icon: Calculator, storageKey: "science-formulas-math-v1" },
+    { key: "physics", label: "Physics formulas", short: "Physics", detail: "Write the right-hand side", icon: AtomIcon, storageKey: "science-formulas-physics-v1" },
+    { key: "math", label: "Maths formulas", short: "Math", detail: "Write the right-hand side", icon: MathToolsIcon, storageKey: "science-formulas-math-v1" },
 ]
 
 export function formulaMode(key: FormulaSubject): FormulaMode {

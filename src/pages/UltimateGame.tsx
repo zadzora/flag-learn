@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, X, Timer, Repeat, Sun, Moon, MapPin, Flag as FlagIcon, Landmark, AlertTriangle } from "lucide-react"
+import { ZoomIn, ZoomOut, Maximize, Trophy, X, Timer, Repeat, MapPin, Flag as FlagIcon, Landmark, AlertTriangle, Flame } from "lucide-react"
+import TopBar, { BarButton } from "../components/TopBar"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
@@ -280,10 +281,10 @@ export default function UltimateGame() {
                                 const isClicked = geo.rsmKey === clickedGeo
                                 const isGuessed = guessedIds.includes(activeData.find(f => checkCountryMatch(geo, f))?.code || "")
 
-                                let fill = theme === 'dark' ? "#1e293b" : "#e2e8f0"
-                                let stroke = theme === 'dark' ? "#334155" : "#94a3b8"
-                                let hoverFill = theme === 'dark' ? "#334155" : "#cbd5e1"
-                                let hoverStroke = theme === 'dark' ? "#64748b" : "#64748b"
+                                let fill = theme === 'dark' ? "#1A2135" : "#DDE3EE"
+                                let stroke = theme === 'dark' ? "#2E3858" : "#A6B0C8"
+                                let hoverFill = theme === 'dark' ? "#253050" : "#C9D2E3"
+                                let hoverStroke = theme === 'dark' ? "#4A5680" : "#66718F"
 
                                 if (isGuessed && status !== 'error') {
                                     const guessedFlag = activeData.find(f => checkCountryMatch(geo, f));
@@ -295,7 +296,7 @@ export default function UltimateGame() {
 
                                 if (step === 'map' && status === 'error') {
                                     if (isClicked) {
-                                        fill = theme === 'dark' ? "#ef4444" : "#f87171"
+                                        fill = theme === 'dark' ? "#f43f5e" : "#fb7185"
                                         hoverFill = fill;
                                     }
                                     if (isTarget) {
@@ -313,7 +314,7 @@ export default function UltimateGame() {
                                         style={{
                                             default: { fill, stroke, strokeWidth: 0.15, outline: "none", transition: "fill 250ms" },
                                             hover: { fill: isClicked ? fill : hoverFill, stroke: hoverStroke, strokeWidth: 0.3, outline: "none", cursor: step === 'map' && status === 'idle' ? "pointer" : "default" },
-                                            pressed: { fill: step === 'map' && status === 'idle' ? (theme === 'dark' ? "#cbd5e1" : "#94a3b8") : hoverFill, strokeWidth: 0.15, outline: "none" },
+                                            pressed: { fill: step === 'map' && status === 'idle' ? (theme === 'dark' ? "#3A4670" : "#A6B0C8") : hoverFill, strokeWidth: 0.15, outline: "none" },
                                         }}
                                     />
                                 )
@@ -322,7 +323,7 @@ export default function UltimateGame() {
                     </Geographies>
                     {OCEAN_LABELS.map(({ name, coordinates, size, rotate }) => (
                         <Marker key={name} coordinates={coordinates}>
-                            <text textAnchor="middle" y={0} transform={rotate ? `rotate(${rotate})` : undefined} style={{ fontFamily: "system-ui, sans-serif", fill: theme === 'dark' ? "#64748b" : "#94a3b8", fontSize: size, fontWeight: "600", pointerEvents: "none", opacity: theme === 'dark' ? 0.3 : 0.6, userSelect: "none", letterSpacing: "0.1em" }}>
+                            <text textAnchor="middle" y={0} transform={rotate ? `rotate(${rotate})` : undefined} style={{ fontFamily: "var(--font-sans)", fill: theme === 'dark' ? "#66718F" : "#8C97B3", fontSize: size, fontWeight: "600", pointerEvents: "none", opacity: theme === 'dark' ? 0.45 : 0.6, userSelect: "none", letterSpacing: "0.1em" }}>
                                 {name.toUpperCase()}
                             </text>
                         </Marker>
@@ -332,130 +333,124 @@ export default function UltimateGame() {
         )
     }, [theme, position, current, clickedGeo, guessedIds, step, status, activeData])
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const dialog = `${panel} shadow-xl`
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const stepState = (s: GameStep) => {
+        const order: GameStep[] = ['map', 'country', 'capital']
+        const at = order.indexOf(step), me = order.indexOf(s)
+        return me === at ? 'current' : me < at ? 'done' : 'todo'
+    }
+    const stepClass = (s: GameStep) => {
+        const st = stepState(s)
+        return st === 'current' ? 'text-blue-600 dark:text-blue-400' : st === 'done' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
+    }
+
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden relative select-none transition-colors duration-500 ${theme === 'dark' ? 'bg-[#0f172a] text-slate-100' : 'bg-[#f8fafc] text-slate-800'}`}>
+        <div className="relative flex h-screen w-full select-none flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
 
-            {/* --- UI LAYER --- */}
-            <div className="absolute top-0 left-0 w-full z-20 flex flex-col pointer-events-none">
+            <TopBar title="Ultimate Mode" back={() => setShowExitConfirm(true)} theme={theme} onToggleTheme={toggleTheme}>
+                <span className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={16} aria-hidden />{formatTime(elapsedTime)}</span>
+                <span className={`flex items-center gap-1 text-sm font-bold ${streak > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`} title="Streak"><Flame size={15} aria-hidden /> {streak}</span>
+                <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">Rem: {pool.length}</span>
+                <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {mistakes}</span>
+            </TopBar>
 
-                {/* Top Header Bar */}
-                <div className="w-full bg-indigo-600/95 dark:bg-indigo-900/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 shadow-[0_10px_24px_rgba(79,70,229,0.3)] pointer-events-auto">
+            {/* --- MAP --- */}
+            <div className="relative w-full flex-1 cursor-grab outline-none active:cursor-grabbing">
+                {renderMap}
 
-                    <button
-                        onClick={() => setShowExitConfirm(true)}
-                        className="p-2 sm:p-2.5 rounded-full bg-white/80 text-indigo-600 hover:bg-slate-100 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors border border-white/70 dark:border-slate-700/70 shadow-md hover:scale-105"
-                        title="Back to Menu"
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
+                {/* Game Control Panel (floating over the top of the map). The card stays put; only its content changes. */}
+                {current && !gameFinished && (
+                    <div className="pointer-events-none absolute left-0 top-0 z-20 flex w-full justify-center px-3 pt-3 sm:px-4">
+                        <div className={`${panel} pointer-events-auto flex w-full max-w-4xl flex-col items-center gap-3 p-3 sm:flex-row sm:gap-6 sm:px-5`}>
 
-                    <div className="flex items-center gap-2 sm:gap-4 font-bold text-sm sm:text-lg">
-                        <span className="hidden sm:inline">🌍 Ultimate Mode 🌍</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <button onClick={toggleTheme} className="p-1.5 rounded-full bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 transition-colors">
-                            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                        </button>
-                        <div className="flex items-center gap-1 font-mono text-indigo-100"><Timer size={16} />{formatTime(elapsedTime)}</div>
-                        <div className="text-sm font-bold text-orange-300 flex items-center gap-1">🔥 {streak}</div>
-                        <div className="w-px h-5 bg-indigo-500 dark:bg-indigo-700"></div>
-                        <div className="text-sm font-medium opacity-80 hidden sm:block">Rem: {pool.length}</div>
-                        <div className="text-sm font-bold text-red-200 bg-red-900/30 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/30"><X size={14} /> {mistakes}</div>
-                    </div>
-                </div>
-
-                {/* Game Control Panel (Floating below header) */}
-                <div className="w-full flex justify-center mt-3 px-2 sm:px-4 pointer-events-none">
-                    <AnimatePresence mode="wait">
-                        {current && !gameFinished && (
-                            <motion.div key={current.code} initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-3 sm:px-6 sm:py-3 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-4xl pointer-events-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-
-                                {/* Flag & Stepper Section */}
-                                <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                                    {/* Flag */}
-                                    <div className="h-12 sm:h-16 shrink-0 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center">
-                                        <img src={current.image} alt="Target Flag" className="h-full w-auto max-w-[5rem] sm:max-w-[7rem] object-contain rounded" />
-                                    </div>
-
-                                    {/* Compact Stepper */}
-                                    <div className="flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs font-bold shrink-0">
-                                        <div className={`flex flex-col items-center gap-1 ${step === 'map' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-500'}`}>
-                                            <div className={`p-1.5 rounded-full ${step === 'map' ? 'bg-indigo-100 dark:bg-indigo-900/50 shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/50'}`}><MapPin size={14}/></div>
-                                            <span>Map</span>
-                                        </div>
-                                        <div className={`w-3 sm:w-6 h-0.5 rounded-full ${step === 'country' || step === 'capital' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
-                                        <div className={`flex flex-col items-center gap-1 ${step === 'country' ? 'text-indigo-600 dark:text-indigo-400' : step === 'capital' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                            <div className={`p-1.5 rounded-full ${step === 'country' ? 'bg-indigo-100 dark:bg-indigo-900/50 shadow-sm' : step === 'capital' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-slate-100 dark:bg-slate-700'}`}><FlagIcon size={14}/></div>
-                                            <span>Country</span>
-                                        </div>
-                                        <div className={`w-3 sm:w-6 h-0.5 rounded-full ${step === 'capital' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
-                                        <div className={`flex flex-col items-center gap-1 ${step === 'capital' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}>
-                                            <div className={`p-1.5 rounded-full ${step === 'capital' ? 'bg-indigo-100 dark:bg-indigo-900/50 shadow-sm' : 'bg-slate-100 dark:bg-slate-700'}`}><Landmark size={14}/></div>
-                                            <span>Capital</span>
-                                        </div>
-                                    </div>
+                            {/* Flag & Stepper Section */}
+                            <div className="flex w-full items-center gap-4 sm:w-auto sm:gap-6">
+                                <div className="flex h-12 shrink-0 items-center justify-center sm:h-16">
+                                    <img key={current.code} src={current.image} alt="Target Flag" className="fl-in h-full w-auto max-w-[5rem] rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:max-w-[7rem]" />
                                 </div>
 
-                                {/* Input / Feedback Section */}
-                                <div className="flex-1 w-full flex flex-col justify-center relative min-h-[3rem]">
-                                    {step === 'map' && status === 'idle' && (
-                                        <div className="w-full text-center font-bold text-slate-500 dark:text-slate-400 py-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 animate-pulse">
-                                            Click the country on the map
-                                        </div>
-                                    )}
-                                    {(step === 'country' || step === 'capital') && status === 'idle' && (
-                                        <input
-                                            ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleTextSubmit() }} disabled={status !== 'idle' || showExitConfirm}
-                                            placeholder={step === 'country' ? "Name the country..." : "Name the capital city..."}
-                                            className="w-full px-4 py-2 sm:py-3 text-center text-base sm:text-lg font-bold rounded-xl border-2 outline-none transition-colors border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 dark:focus:border-indigo-500 shadow-inner"
-                                        />
-                                    )}
-
-                                    <AnimatePresence mode="wait">
-                                        {feedbackMsg && (
-                                            <motion.div
-                                                key={feedbackMsg}
-                                                initial={{ opacity: 0, scale: 0.95 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.95 }}
-                                                className={`absolute inset-0 z-10 flex items-center justify-center font-bold text-sm sm:text-base rounded-xl border-2 shadow-sm px-2 text-center ${
-                                                    status === 'error'
-                                                        ? 'bg-red-50 border-red-400 text-red-600 dark:bg-red-900/50 dark:border-red-600 dark:text-red-400'
-                                                        : status === 'correct'
-                                                            ? 'bg-emerald-50 border-emerald-400 text-emerald-600 dark:bg-emerald-900/50 dark:border-emerald-600 dark:text-emerald-400'
-                                                            : 'pointer-events-none bg-amber-50 border-amber-400 text-amber-900 dark:bg-amber-950/60 dark:border-amber-500 dark:text-amber-100'
-                                                }`}
-                                            >
-                                                {feedbackMsg}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                {/* Compact Stepper */}
+                                <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider sm:gap-3 sm:text-[11px]">
+                                    <div className={`flex flex-col items-center gap-1 ${stepClass('map')}`}>
+                                        <MapPin size={16} aria-hidden />
+                                        <span>Map</span>
+                                    </div>
+                                    <div className={`h-0.5 w-3 rounded-sm sm:w-6 ${step === 'country' || step === 'capital' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                    <div className={`flex flex-col items-center gap-1 ${stepClass('country')}`}>
+                                        <FlagIcon size={16} aria-hidden />
+                                        <span>Country</span>
+                                    </div>
+                                    <div className={`h-0.5 w-3 rounded-sm sm:w-6 ${step === 'capital' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                    <div className={`flex flex-col items-center gap-1 ${stepClass('capital')}`}>
+                                        <Landmark size={16} aria-hidden />
+                                        <span>Capital</span>
+                                    </div>
                                 </div>
+                            </div>
 
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                            {/* Input / Feedback Section */}
+                            <div className="relative flex min-h-[3rem] w-full flex-1 flex-col justify-center">
+                                {step === 'map' && status === 'idle' && (
+                                    <div className="w-full rounded-lg border border-dashed border-slate-300 py-3 text-center font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                        Click the country on the map
+                                    </div>
+                                )}
+                                {(step === 'country' || step === 'capital') && status === 'idle' && (
+                                    <input
+                                        ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleTextSubmit() }} disabled={status !== 'idle' || showExitConfirm}
+                                        placeholder={step === 'country' ? "Name the country..." : "Name the capital city..."}
+                                        className="w-full border border-slate-200 bg-slate-50 px-4 py-2 text-center text-base font-semibold text-slate-900 outline-none transition-colors focus:border-slate-500 sm:py-3 sm:text-lg dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
+                                    />
+                                )}
+
+                                {feedbackMsg && (
+                                    <div
+                                        key={feedbackMsg}
+                                        className={`fl-in absolute inset-0 z-10 flex items-center justify-center rounded-lg border bg-[#fff] px-2 text-center text-sm font-bold sm:text-base dark:bg-[#121829] ${
+                                            status === 'error'
+                                                ? 'border-red-400 text-red-600 dark:border-red-500/60 dark:text-red-400'
+                                                : status === 'correct'
+                                                    ? 'border-emerald-400 text-emerald-600 dark:border-emerald-500/60 dark:text-emerald-400'
+                                                    : 'pointer-events-none border-amber-400 text-amber-700 dark:border-amber-500/60 dark:text-amber-300'
+                                        }`}
+                                    >
+                                        {feedbackMsg}
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+
+                {/* Map Controls */}
+                <div className="pointer-events-auto absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
+                    <BarButton onClick={handleZoomIn} label="Zoom in"><ZoomIn size={19} aria-hidden /></BarButton>
+                    <BarButton onClick={handleResetZoom} label="Reset zoom"><Maximize size={18} aria-hidden /></BarButton>
+                    <BarButton onClick={handleZoomOut} label="Zoom out"><ZoomOut size={19} aria-hidden /></BarButton>
                 </div>
             </div>
 
             {/* --- EXIT CONFIRMATION MODAL --- */}
             <AnimatePresence>
                 {showExitConfirm && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-sm border border-slate-200 dark:border-slate-700 w-full pointer-events-auto">
-                            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full text-red-500 dark:text-red-400">
-                                <AlertTriangle size={48} />
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4">
+                        <div className={`${dialog} pointer-events-auto flex w-full max-w-sm flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-start gap-4">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700 dark:text-red-400"><AlertTriangle size={24} aria-hidden /></span>
+                                <div>
+                                    <h2 className="text-2xl font-bold">Quit Ultimate Mode?</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">If you leave now, all your current progress and painted flags will be lost.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Quit Ultimate Mode?</h2>
-                                <p className="text-slate-500 dark:text-slate-400">If you leave now, all your current progress and painted flags will be lost.</p>
+                            <div className="flex w-full flex-col gap-3">
+                                <button onClick={() => navigate('/')} className="w-full rounded-lg bg-red-600 py-3.5 font-bold text-white hover:bg-red-700">Yes, Quit</button>
+                                <button onClick={() => setShowExitConfirm(false)} className={`${quiet} w-full py-3.5 font-bold`}>Cancel</button>
                             </div>
-                            <div className="w-full flex flex-col gap-3 mt-2">
-                                <button onClick={() => navigate('/')} className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-red-500/20 transition-all active:scale-95">Yes, Quit</button>
-                                <button onClick={() => setShowExitConfirm(false)} className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">Cancel</button>
-                            </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -463,43 +458,33 @@ export default function UltimateGame() {
             {/* --- END SCREEN --- */}
             <AnimatePresence>
                 {gameFinished && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-200 dark:border-slate-700 w-full pointer-events-auto">
-                            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce"><Trophy size={64} /></div>
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Ultimate Master!</h2>
-                                <p className="text-slate-500 dark:text-slate-400">You conquered the world map with flying colors.</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="bg-red-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-red-100 dark:border-red-900/30">
-                                    <div className="text-xs uppercase font-bold text-red-500 mb-1">Mistakes</div>
-                                    <div className="text-3xl font-bold text-red-600 dark:text-red-400">{mistakes}</div>
-                                </div>
-                                <div className="bg-indigo-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                                    <div className="text-xs uppercase font-bold text-indigo-500 mb-1">Time</div>
-                                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{formatTime(elapsedTime)}</div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+                        <div className={`${dialog} pointer-events-auto flex w-full max-w-md flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
+                                <div>
+                                    <h2 className="text-3xl font-bold">Ultimate Master!</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">You conquered the world map with flying colors.</p>
                                 </div>
                             </div>
-                            <div className="w-full flex flex-col gap-3">
-                                <button onClick={() => startGame()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"><Repeat size={20} /> Play Again</button>
-                                <Link to="/" className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95 text-center">Back to Menu</Link>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Mistakes</div>
+                                    <div className={`mt-1 text-3xl font-bold ${mistakes ? 'text-red-500' : 'text-emerald-500'}`}>{mistakes}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Time</div>
+                                    <div className="mt-1 text-3xl font-bold tabular-nums">{formatTime(elapsedTime)}</div>
+                                </div>
                             </div>
-                        </motion.div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <button onClick={() => startGame()} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Play Again</button>
+                                <Link to="/" className={`${quiet} flex flex-1 items-center justify-center py-3.5 font-bold`}>Back to Menu</Link>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* --- MAP --- */}
-            <div className="w-full flex-1 relative cursor-grab active:cursor-grabbing outline-none">
-                {renderMap}
-
-                {/* Map Controls */}
-                <div className="absolute bottom-8 right-8 flex flex-col gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl z-20 pointer-events-auto">
-                    <button onClick={handleZoomIn} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><ZoomIn size={24}/></button>
-                    <button onClick={handleResetZoom} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><Maximize size={24}/></button>
-                    <button onClick={handleZoomOut} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><ZoomOut size={24}/></button>
-                </div>
-            </div>
 
         </div>
     )

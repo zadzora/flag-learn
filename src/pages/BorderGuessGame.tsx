@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowLeft, SkipForward, Check, Loader2 } from "lucide-react"
+import { SkipForward, Check, Loader2, Flame, Map as MapIcon, Minus, Plus, Repeat } from "lucide-react"
+import TopBar from "../components/TopBar"
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
@@ -243,88 +244,83 @@ export default function BorderGuessGame() {
         ? (isDark ? "#f43f5e" : "#fb7185")
         : status === "revealed"
         ? (isDark ? "#f59e0b" : "#fbbf24")
-        : (isDark ? "#6366f1" : "#818cf8")
+        : (isDark ? "#3b82f6" : "#60a5fa")
 
-    const otherFill = isDark ? "#475569" : "#b8c5d1"
-    const targetStroke = isDark ? "#a5b4fc" : "#4338ca"
-    const otherStroke = isDark ? "#94a3b8" : "#64748b"
+    const otherFill = isDark ? "#253050" : "#C3CBDC"
+    const targetStroke = isDark ? "#B9DEFE" : "#1d4ed8"
+    const otherStroke = isDark ? "#3A4670" : "#8C97B3"
+
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const zoomBtn = "flex h-9 min-h-0 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
 
     if (cycleComplete) {
         return (
-            <div className="h-screen overflow-hidden flex flex-col items-center justify-center gap-5 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500 px-6">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }} className="text-7xl">🗺️</motion.div>
-                <h1 className="text-3xl font-black text-center">All Done!</h1>
-                <p className="text-slate-500 dark:text-slate-400 text-center">You went through all {total} countries.</p>
-                <div className="flex gap-10 mt-2">
-                    <div className="flex flex-col items-center gap-1">
-                        <span className="text-4xl font-black text-emerald-500">{completed}</span>
-                        <span className="text-slate-400 dark:text-slate-500 text-sm">Correct</span>
-                    </div>
-                    <div className="w-px bg-slate-200 dark:bg-slate-700" />
-                    <div className="flex flex-col items-center gap-1">
-                        <span className="text-4xl font-black text-red-400">{incorrectRounds}</span>
-                        <span className="text-slate-400 dark:text-slate-500 text-sm">Missed</span>
-                    </div>
-                </div>
-                <button
-                    onClick={startNewCycle}
-                    className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-bold text-lg text-white transition-all shadow-lg active:scale-95"
-                >
-                    Play Again
-                </button>
-                <Link to="/" className="text-slate-400 dark:text-slate-500 text-sm">Back to menu</Link>
+            <div className="flex h-screen flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
+                <TopBar title="Border Guess" />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-8">
+                    <section className="flex flex-col gap-6 rounded-[10px] border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center gap-4">
+                            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-blue-600 dark:border-slate-700 dark:text-blue-400"><MapIcon size={28} aria-hidden /></span>
+                            <div>
+                                <h1 className="text-3xl font-bold">All Done!</h1>
+                                <p className="mt-1 text-slate-500 dark:text-slate-400">You went through all {total} countries.</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Correct</div>
+                                <div className="mt-1 text-3xl font-bold text-emerald-500">{completed}</div>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Missed</div>
+                                <div className="mt-1 text-3xl font-bold text-red-500">{incorrectRounds}</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                            <button onClick={startNewCycle} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}>
+                                <Repeat size={18} aria-hidden /> Play Again
+                            </button>
+                            <Link to="/" className={`${quiet} flex flex-1 items-center justify-center py-3.5 font-bold`}>Back to menu</Link>
+                        </div>
+                    </section>
+                </main>
             </div>
         )
     }
 
     return (
-        <div className="h-screen overflow-hidden flex flex-col font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="flex h-screen flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Border Guess">
+                {streak >= 2 && (
+                    <span key={streak} className="fl-in flex items-center gap-1 text-sm font-bold text-orange-500 dark:text-orange-400" title="Correct in a row">
+                        <Flame size={16} aria-hidden /> {streak}
+                    </span>
+                )}
+                <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">
+                    <span className="font-bold text-slate-900 dark:text-white">{completed}</span>/{total}
+                </span>
+            </TopBar>
 
-            {/* Header */}
-            <div className="shrink-0 w-full max-w-lg mx-auto px-4 pt-3 pb-2 flex items-center gap-2">
-                <Link
-                    to="/"
-                    className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform shrink-0"
-                >
-                    <ArrowLeft size={20} />
-                </Link>
-
-                <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <main className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col gap-3 px-4 pb-4 pt-3">
+                <div className="h-1.5 shrink-0 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                     <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500"
+                        className="h-full bg-blue-500"
                         initial={false}
                         animate={{ width: `${progressPct}%` }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
                     />
                 </div>
 
-                {streak >= 2 && (
-                    <motion.span
-                        key={streak}
-                        initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="text-xs font-black text-orange-500 dark:text-orange-400 shrink-0"
-                    >
-                        🔥{streak}
-                    </motion.span>
-                )}
-
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 tabular-nums">
-                    {completed}/{total}
-                </span>
-            </div>
-
-            <div className="flex-1 min-h-0 w-full max-w-lg mx-auto px-4 flex flex-col gap-3 pb-4">
-
                 {/* Map Card */}
-                <div className="relative flex-1 min-h-0 w-full rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden bg-[#bfdbfe] dark:bg-slate-900">
+                <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-[10px] border border-slate-200 bg-[#E4EBF7] dark:border-slate-700 dark:bg-[#0F1424]">
                     {isLoading ? (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <Loader2 className="animate-spin text-slate-400 dark:text-slate-500" size={32} />
                         </div>
                     ) : current ? (
-                        <div className="pointer-events-none w-full h-full">
+                        <div className="pointer-events-none h-full w-full">
                             <ComposableMap
                                 key={current.code}
                                 projection="geoMercator"
@@ -365,7 +361,6 @@ export default function BorderGuessGame() {
                                                                 outline: "none",
                                                             },
                                                         }}
-                                                        className={isTarget && status === "idle" ? "animate-pulse" : ""}
                                                     />
                                                 )
                                             })
@@ -378,73 +373,54 @@ export default function BorderGuessGame() {
 
                     {/* Zoom controls */}
                     {!isLoading && (
-                        <div className="absolute bottom-2 right-2 flex flex-col gap-1 z-10">
-                            <button
-                                onClick={handleZoomIn}
-                                className="w-8 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-white/60 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow font-bold text-lg leading-none hover:bg-white dark:hover:bg-slate-700 active:scale-95 transition-all"
-                            >+</button>
-                            <button
-                                onClick={handleZoomOut}
-                                className="w-8 h-8 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-white/60 dark:border-slate-700/60 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow font-bold text-lg leading-none hover:bg-white dark:hover:bg-slate-700 active:scale-95 transition-all"
-                            >−</button>
+                        <div className="absolute bottom-2 right-2 z-10 flex flex-col gap-1.5">
+                            <button onClick={handleZoomIn} className={zoomBtn} aria-label="Zoom in" title="Zoom in"><Plus size={17} aria-hidden /></button>
+                            <button onClick={handleZoomOut} className={zoomBtn} aria-label="Zoom out" title="Zoom out"><Minus size={17} aria-hidden /></button>
                         </div>
                     )}
                 </div>
 
                 {/* Input Section */}
-                <div className="shrink-0 w-full space-y-2">
+                <div className="flex w-full shrink-0 flex-col gap-2">
 
                     {/* Feedback */}
-                    <div className="h-6 flex items-center justify-center">
-                        <AnimatePresence mode="wait">
-                            {feedbackMsg && (
-                                <motion.div
-                                    key={feedbackMsg}
-                                    initial={{ opacity: 0, y: 4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -4 }}
-                                    className={`flex items-center gap-2 text-sm font-bold ${
-                                        status === "correct" ? "text-emerald-600 dark:text-emerald-400" :
-                                        status === "wrong" ? "text-red-500 dark:text-red-400" :
-                                        status === "revealed" ? "text-amber-600 dark:text-amber-500" :
-                                        "text-amber-500 dark:text-amber-400"
-                                    }`}
-                                >
-                                    {(status === "correct" || status === "revealed") && current && (
-                                        <img
-                                            src={current.image}
-                                            alt=""
-                                            className="h-5 w-8 object-cover rounded shadow-sm border border-slate-200 dark:border-slate-700 shrink-0"
-                                        />
-                                    )}
-                                    {feedbackMsg}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                    <div className="flex h-6 items-center justify-center">
+                        {feedbackMsg && (
+                            <div
+                                key={feedbackMsg}
+                                className={`fl-in flex items-center gap-2 text-sm font-bold ${
+                                    status === "correct" ? "text-emerald-600 dark:text-emerald-400" :
+                                    status === "wrong" ? "text-red-600 dark:text-red-400" :
+                                    "text-amber-600 dark:text-amber-400"
+                                }`}
+                            >
+                                {(status === "correct" || status === "revealed") && current && (
+                                    <img
+                                        src={current.image}
+                                        alt=""
+                                        className="h-5 w-8 shrink-0 rounded-[3px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
+                                    />
+                                )}
+                                {feedbackMsg}
+                            </div>
+                        )}
                     </div>
 
                     {/* Input with autocomplete */}
                     <div className="relative">
-                        <AnimatePresence>
-                            {suggestions.length > 0 && status === "idle" && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 4 }}
-                                    className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden z-10"
-                                >
-                                    {suggestions.map((s, i) => (
-                                        <button
-                                            key={s}
-                                            onMouseDown={e => { e.preventDefault(); setInput(s); setSuggestions([]); handleCheck(s) }}
-                                            className={`w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors ${i < suggestions.length - 1 ? "border-b border-slate-100 dark:border-slate-700/50" : ""}`}
-                                        >
-                                            {s}
-                                        </button>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {suggestions.length > 0 && status === "idle" && (
+                            <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                                {suggestions.map((s, i) => (
+                                    <button
+                                        key={s}
+                                        onMouseDown={e => { e.preventDefault(); setInput(s); setSuggestions([]); handleCheck(s) }}
+                                        className={`w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white ${i < suggestions.length - 1 ? "border-b border-slate-200 dark:border-slate-700" : ""}`}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                         <motion.input
                             ref={inputRef}
                             value={input}
@@ -457,12 +433,11 @@ export default function BorderGuessGame() {
                             placeholder="Type country name..."
                             animate={status === "wrong" ? { x: [-6, 6, -4, 4, 0] } : {}}
                             transition={{ duration: 0.25 }}
-                            className={`w-full px-4 py-3.5 text-center font-bold text-base rounded-2xl border-2 outline-none transition-colors duration-200
-                                bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
-                                ${status === "wrong" ? "border-red-400 dark:border-red-600" :
-                                  status === "correct" ? "border-emerald-400 dark:border-emerald-600" :
-                                  status === "revealed" ? "border-amber-400 dark:border-amber-500" :
-                                  "border-slate-200 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-400"}`}
+                            className={`w-full border px-4 py-3.5 text-center text-base font-semibold outline-none transition-colors duration-150 placeholder-slate-400 dark:text-white dark:placeholder-slate-500
+                                ${status === "wrong" ? "border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100" :
+                                  status === "correct" ? "border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100" :
+                                  status === "revealed" ? "border-amber-400 bg-amber-500/10 text-amber-900 dark:border-amber-500/60 dark:text-amber-100" :
+                                  "border-slate-200 bg-slate-50 text-slate-900 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"}`}
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -470,53 +445,49 @@ export default function BorderGuessGame() {
                         />
                     </div>
 
-                    {/* Skip button */}
-                    <div className="flex items-center justify-center">
+                    {/* Attempts indicator + skip */}
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-1.5">
+                            {[0, 1, 2].map(i => (
+                                <div
+                                    key={i}
+                                    className={`h-1.5 w-5 rounded-sm transition-colors ${
+                                        i < 3 - wrongAttempts ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"
+                                    }`}
+                                />
+                            ))}
+                            <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                                {3 - wrongAttempts} attempt{3 - wrongAttempts !== 1 ? "s" : ""} left
+                            </span>
+                        </div>
                         <button
                             onClick={handleSkip}
                             disabled={status !== "idle"}
-                            className="flex flex-col items-center gap-1 py-3 px-8 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 active:scale-95 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className={`${quiet} flex min-h-0 items-center gap-1.5 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40`}
                         >
-                            <SkipForward size={18} className="opacity-80" />
+                            <SkipForward size={16} aria-hidden />
                             <span>Skip</span>
                         </button>
-                    </div>
-
-                    {/* Attempts indicator */}
-                    <div className="flex items-center justify-center gap-1.5">
-                        {[0, 1, 2].map(i => (
-                            <div
-                                key={i}
-                                className={`w-2 h-2 rounded-full transition-colors ${
-                                    i < 3 - wrongAttempts ? "bg-emerald-400" : "bg-red-400/40"
-                                }`}
-                            />
-                        ))}
-                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-1">
-                            {3 - wrongAttempts} attempt{3 - wrongAttempts !== 1 ? "s" : ""} left
-                        </span>
                     </div>
 
                     {/* Check button */}
                     <button
                         onClick={() => handleCheck()}
                         disabled={status !== "idle" || !input.trim()}
-                        className={`w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-                            status === "idle" && input.trim()
-                                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25"
-                                : "bg-slate-200 dark:bg-white/8 text-slate-400 dark:text-white/30 cursor-not-allowed"
+                        className={`flex w-full items-center justify-center gap-2 py-4 text-base font-bold ${
+                            status === "idle" && input.trim() ? primary : disabledBtn
                         }`}
                     >
                         {status === "idle" && input.trim()
-                            ? <><Check size={18} /> Check Answer</>
+                            ? <><Check size={18} aria-hidden /> Check Answer</>
                             : "Type a country name…"}
                     </button>
 
-                    <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+                    <p className="text-center text-xs text-slate-500 dark:text-slate-400">
                         {queue.length} countr{queue.length !== 1 ? "ies" : "y"} left
                     </p>
                 </div>
-            </div>
+            </main>
         </div>
     )
 }

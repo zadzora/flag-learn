@@ -1,4 +1,4 @@
-import { Calendar, Compass, Grid3x3, Layers, type LucideIcon } from "lucide-react"
+import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyGauntletIcon, type ModeIcon } from "../components/ModeIcons"
 import { STREAK_KEYS } from "./dailyStreak"
 
 /**
@@ -23,7 +23,7 @@ export type DailyMode = {
     /** Short pitch shown on the "play this next" button. */
     tagline: string
     /** Shown on the home card, in the mode's own header, and on the hand-off. */
-    icon: LucideIcon
+    icon: ModeIcon
     /** Longer blurb for the home screen card. */
     detail: string
     /** Home card icon chip. */
@@ -48,7 +48,7 @@ export const DAILY_MODES: DailyMode[] = [
         to: "/daily-connections",
         label: "Daily Connections",
         tagline: "Sort 16 countries into 4 hidden groups",
-        icon: Grid3x3,
+        icon: DailyConnectionsIcon,
         detail: "Sort 16 countries into 4 hidden groups",
         accent: "bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400",
         hover: "hover:border-violet-400 dark:hover:border-violet-500",
@@ -62,7 +62,7 @@ export const DAILY_MODES: DailyMode[] = [
         to: "/daily-deduction",
         label: "Daily Deduction",
         tagline: "Name the country in six guesses",
-        icon: Compass,
+        icon: DailyDeductionIcon,
         detail: "Name the country in six guesses - every guess narrows it down",
         accent: "bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400",
         hover: "hover:border-sky-400 dark:hover:border-sky-500",
@@ -76,7 +76,7 @@ export const DAILY_MODES: DailyMode[] = [
         to: "/daily",
         label: "Daily Flagle",
         tagline: "Guess today's flag from a tight zoom",
-        icon: Calendar,
+        icon: DailyFlagleIcon,
         detail: "Guess today's flag - new challenge every day",
         accent: "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400",
         hover: "hover:border-emerald-400 dark:hover:border-emerald-500",
@@ -89,7 +89,7 @@ export const DAILY_MODES: DailyMode[] = [
         to: "/daily-gauntlet",
         label: "Daily Gauntlet",
         tagline: "Four rounds, one score out of 100",
-        icon: Layers,
+        icon: DailyGauntletIcon,
         detail: "Four rounds, one from each mode - a single score out of 100",
         accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400",
         hover: "hover:border-amber-400 dark:hover:border-amber-500",

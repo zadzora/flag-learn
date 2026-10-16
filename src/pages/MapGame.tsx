@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2 } from "lucide-react"
+import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight } from "lucide-react"
+import { BarButton } from "../components/TopBar"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import worldData from "../../data/flags.json"
 
@@ -491,10 +492,10 @@ export default function MapGame() {
                                 const guessedTarget = guessedPracticeFlags.find(f => checkCountryMatch(geo, f));
                                 const isGuessed = !!guessedTarget;
 
-                                let fill = theme === 'dark' ? "#1e293b" : "#e2e8f0"
-                                let stroke = theme === 'dark' ? "#334155" : "#94a3b8"
-                                let hoverFill = theme === 'dark' ? "#334155" : "#cbd5e1"
-                                let hoverStroke = theme === 'dark' ? "#64748b" : "#64748b"
+                                let fill = theme === 'dark' ? "#1A2135" : "#DDE3EE"
+                                let stroke = theme === 'dark' ? "#2E3858" : "#A6B0C8"
+                                let hoverFill = theme === 'dark' ? "#253050" : "#C9D2E3"
+                                let hoverStroke = theme === 'dark' ? "#4A5680" : "#66718F"
 
                                 if (isPracticeMode && isGuessed && status !== 'error') {
                                     if (!hardMode && guessedTarget) {
@@ -511,7 +512,7 @@ export default function MapGame() {
 
                                 if (status === 'error') {
                                     if (isClicked) {
-                                        fill = theme === 'dark' ? "#ef4444" : "#f87171"
+                                        fill = theme === 'dark' ? "#f43f5e" : "#fb7185"
                                         hoverFill = fill;
                                     }
                                     if (isTarget) {
@@ -530,7 +531,9 @@ export default function MapGame() {
                                     hoverFill = fill;
                                 }
 
-                                const isPulsing = (isFirstTime && isTarget && status === 'idle' && !isPracticeMode && !isReview) || (status === 'error' && isTarget)
+                                // The shape to find is marked by colour and a heavier outline, not by pulsing.
+                                const isHighlighted = (isFirstTime && isTarget && status === 'idle' && !isPracticeMode && !isReview) || (status === 'error' && isTarget)
+                                const baseStrokeWidth = isHighlighted ? 0.6 : 0.15
 
                                 return (
                                     <Geography
@@ -538,11 +541,10 @@ export default function MapGame() {
                                         geography={geo}
                                         onClick={() => handleCountryClick(geo)}
                                         style={{
-                                            default: { fill, stroke, strokeWidth: 0.15, outline: "none", transition: "fill 250ms" },
-                                            hover: { fill: isClicked ? fill : hoverFill, stroke: hoverStroke, strokeWidth: 0.3, outline: "none", cursor: "pointer" },
-                                            pressed: { fill: isClicked ? fill : (theme === 'dark' ? "#cbd5e1" : "#94a3b8"), strokeWidth: 0.15, outline: "none" },
+                                            default: { fill, stroke, strokeWidth: baseStrokeWidth, outline: "none", transition: "fill 250ms" },
+                                            hover: { fill: isClicked ? fill : hoverFill, stroke: isHighlighted ? stroke : hoverStroke, strokeWidth: Math.max(baseStrokeWidth, 0.3), outline: "none", cursor: "pointer" },
+                                            pressed: { fill: isClicked ? fill : (theme === 'dark' ? "#3A4670" : "#A6B0C8"), strokeWidth: baseStrokeWidth, outline: "none" },
                                         }}
-                                        className={isPulsing ? "animate-pulse" : ""}
                                     />
                                 )
                             })
@@ -555,12 +557,12 @@ export default function MapGame() {
                                 y={0}
                                 transform={rotate ? `rotate(${rotate})` : undefined}
                                 style={{
-                                    fontFamily: "system-ui, sans-serif",
-                                    fill: theme === 'dark' ? "#64748b" : "#94a3b8",
+                                    fontFamily: "var(--font-sans)",
+                                    fill: theme === 'dark' ? "#66718F" : "#8C97B3",
                                     fontSize: size,
                                     fontWeight: "600",
                                     pointerEvents: "none",
-                                    opacity: theme === 'dark' ? 0.3 : 0.6,
+                                    opacity: theme === 'dark' ? 0.45 : 0.6,
                                     userSelect: "none",
                                     letterSpacing: "0.1em"
                                 }}
@@ -575,227 +577,168 @@ export default function MapGame() {
     }, [theme, position, current, clickedGeo, guessedPracticeFlags, status, hardMode, isFirstTime, isPracticeMode, isReview, activeData])
 
 
-    if (!isLoaded) return <div className="h-screen flex items-center justify-center bg-white dark:bg-slate-900 text-slate-800 dark:text-white"><Loader2 className="animate-spin" /></div>
+    if (!isLoaded) return <div className="flex h-screen items-center justify-center text-slate-500 dark:text-slate-400"><Loader2 className="animate-spin" /></div>
+
+    const backClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const dialog = "rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800"
+    const badge = "inline-flex shrink-0 items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+    // Solid card colours on purpose: the global .bg-white rule would repaint the status border.
+    const targetBorder =
+        status === 'correct' || status === 'mastered' ? 'border-emerald-500 dark:border-emerald-500/70'
+            : status === 'error' ? 'border-red-500 dark:border-red-500/70'
+                : 'border-slate-200 dark:border-slate-700'
+    const streakNow = current ? (progress[current.code]?.streak || 0) : 0
 
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden relative select-none transition-colors duration-500 ${theme === 'dark' ? 'bg-[#0f172a] text-slate-100' : 'bg-[#f8fafc] text-slate-800'}`}>
+        <div className="relative flex h-screen w-full select-none flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
 
-            {/* --- THEME TOGGLE --- */}
-            <div
-                className={`absolute right-3 z-20 transition-all sm:right-4 ${isPracticeMode ? 'top-[6.25rem] sm:top-[5.25rem] md:top-4' : 'top-3 sm:top-4'}`}
-            >
-                <button
-                    onClick={toggleTheme}
-                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
-
-            {/* --- HEADER --- */}
-            <div className="absolute top-0 left-0 w-full z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-2 pt-3 sm:p-4 pr-14 sm:pr-4 shadow-lg pointer-events-auto flex flex-col gap-2 min-w-0 md:flex-row md:items-center md:justify-between md:gap-0">
-                {!isPracticeMode ? (
-                    <>
-                        <div className="flex w-full min-w-0 items-center justify-between gap-2 md:contents">
-                            <Link to="/" className="shrink-0 p-2.5 sm:p-3 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-300">
-                                <ArrowLeft size={20} />
+            {/* --- HEADER (overlays the full-bleed map) --- */}
+            <header className="absolute left-0 top-0 z-20 w-full border-b border-slate-200 bg-[#F4F6FB] dark:border-slate-700 dark:bg-[#0A0E1A]">
+                <div className="mx-auto flex w-full max-w-[1120px] min-w-0 flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3 sm:gap-x-3 sm:px-6 md:flex-nowrap">
+                    {!isPracticeMode ? (
+                        <>
+                            <Link to="/" aria-label="Back" className={backClass}>
+                                <ArrowLeft size={19} aria-hidden />
+                            </Link>
+                            <Link to="/" className="hidden shrink-0 items-center gap-2 font-bold lg:flex">
+                                <img src="/logo2.png" alt="" className="h-8 w-8" />
+                                Flag Learn
                             </Link>
 
-                            <div className="flex items-center gap-2 sm:gap-3 md:order-3 md:mr-12">
+                            {/* The country to find: second row on phones, centre of the bar from md up. */}
+                            <div className="order-last flex w-full min-w-0 flex-col gap-1 md:order-none md:mx-2 md:w-auto md:flex-1">
+                                {!practiceResults && (
+                                    <span className={`text-[11px] font-bold uppercase tracking-wider ${isFirstTime && status === 'idle' && !isReview ? 'text-blue-600 dark:text-blue-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                        {isFirstTime && status === 'idle' && !isReview ? 'New! Find the blue shape' : status === 'error' ? 'Wrong! Find green shape' : 'Find this country'}
+                                    </span>
+                                )}
+
+                                {current ? (
+                                    <motion.div
+                                        animate={status === 'error' ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className={`flex w-full min-w-0 items-center gap-3 rounded-[10px] border bg-[#fff] px-2.5 py-2 transition-colors dark:bg-[#121829] ${targetBorder}`}
+                                    >
+                                        <img key={current.code} src={current.image} alt="Flag" className="fl-in h-9 w-14 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:h-10 sm:w-[60px]" />
+                                        <h2 className={`min-w-0 flex-1 break-words text-base font-bold leading-tight hyphens-auto sm:text-xl ${status === 'correct' || status === 'mastered' ? 'text-emerald-600 dark:text-emerald-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                                            {getCountryNameDisplay(current)}
+                                        </h2>
+                                        {status === 'correct' && <span key="correct" className={`fl-in ${badge} bg-emerald-500/15 text-emerald-700 dark:text-emerald-300`}><Check size={12} strokeWidth={3} aria-hidden /> Correct!</span>}
+                                        {status === 'mastered' && <span key="mastered" className={`fl-in ${badge} bg-amber-500/15 text-amber-700 dark:text-amber-300`}><Trophy size={12} aria-hidden /> Mastered!</span>}
+                                        {status === 'error' && <span key="error" className={`fl-in ${badge} bg-red-500/15 text-red-700 dark:text-red-300`}><X size={12} strokeWidth={3} aria-hidden /> Wrong!</span>}
+                                        {isReview && status === 'idle' && <span className={`${badge} bg-amber-500/15 text-amber-700 dark:text-amber-300`}><RefreshCw size={12} aria-hidden /> Review</span>}
+                                    </motion.div>
+                                ) : practiceResults ? (
+                                    <div className="text-lg font-bold">Practice Over</div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setHideMastery(false)}
+                                        title="Show Trophies"
+                                        className="flex min-h-0 items-center gap-2 self-start p-0 text-lg font-bold text-amber-600 dark:text-amber-400"
+                                    >
+                                        <Trophy size={20} aria-hidden /> Map Mastered!
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="ml-auto flex shrink-0 items-center gap-2">
+                                {current && !isReview && (
+                                    <span className={`flex items-center gap-1 text-sm font-bold tabular-nums ${streakNow > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`} title="Streak">
+                                        <Flame size={16} aria-hidden /> {streakNow}/3
+                                    </span>
+                                )}
                                 <button
                                     type="button"
                                     onClick={() => setShowGallery(true)}
                                     title="Open your map collection — browse mastered countries and practice selected regions."
-                                    className="group flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 transition-colors max-w-[9rem] sm:max-w-none"
+                                    className={`${quiet} flex h-10 min-h-0 items-center gap-2 px-3 py-0 text-sm`}
                                 >
-                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase group-hover:text-slate-600 dark:group-hover:text-slate-300">Collection</span>
-                                    <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 leading-tight text-center group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                        Click to open
-                                    </span>
-                                    <div className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                        {totalStats.mastered} / {totalStats.total}
-                                    </div>
+                                    <span className="hidden font-semibold sm:inline">Collection</span>
+                                    <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total}</span>
+                                    <ChevronRight size={15} aria-hidden className="text-slate-400" />
                                 </button>
-
-                                {current && !isReview && (
-                                    <div className="bg-slate-50 dark:bg-slate-800 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold border border-slate-200 dark:border-slate-700 flex flex-col items-center shrink-0">
-                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Streak</span>
-                                        <span className={`text-base sm:text-lg leading-none ${progress[current.code]?.streak > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-300'}`}>
-                                            🔥 {progress[current.code]?.streak || 0}/3
-                                        </span>
-                                    </div>
-                                )}
+                                <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
+                                    {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
+                                </BarButton>
                             </div>
-                        </div>
-
-                        <div className="flex flex-col items-center flex-1 min-w-0 w-full mx-0 md:mx-4 md:order-2">
-                            <div className="h-5 flex items-center justify-center mb-1">
-                                {!practiceResults && (
-                                    isFirstTime && status === 'idle' && !isPracticeMode && !isReview ? (
-                                        <span className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-widest animate-pulse">New! Find pulsing shape</span>
-                                    ) : status === 'error' ? (
-                                        <span className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-widest">Wrong! Find green shape</span>
-                                    ) : (
-                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Find this country</span>
-                                    )
-                                )}
-                            </div>
-
-                            {current ? (
-                                <motion.div
-                                    animate={
-                                        status === 'correct' || status === 'mastered' ? { scale: [1, 1.05, 1], borderColor: '#10b981' } :
-                                            status === 'error' ? { x: [-5, 5, -5, 5, 0], borderColor: '#ef4444' } :
-                                                { borderColor: theme === 'dark' ? '#334155' : '#cbd5e1' }
-                                    }
-                                    transition={{ duration: 0.3 }}
-                                    className="flex w-full max-w-full min-w-0 items-center gap-2 sm:gap-3 bg-slate-50 dark:bg-slate-800 p-2 pt-7 sm:pt-2 sm:pr-6 rounded-xl border shadow-xl relative transition-colors"
-                                >
-                                    <img src={current.image} alt="Flag" className="h-9 w-14 shrink-0 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent sm:h-10 sm:w-16" />
-                                    <h2 className={`min-w-0 flex-1 text-sm sm:text-xl md:text-2xl font-black text-center leading-tight break-words hyphens-auto ${status === 'correct' || status === 'mastered' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>
-                                        {getCountryNameDisplay(current)}
-                                    </h2>
-
-                                    <AnimatePresence>
-                                        {status !== 'idle' && (
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.5, y: 10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.5 }}
-                                                className={`absolute top-1.5 right-2 sm:-right-2 sm:-top-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-lg z-20 max-w-[calc(100%-1rem)] truncate ${
-                                                    status === 'correct' ? 'bg-emerald-500 text-white' :
-                                                        status === 'mastered' ? 'bg-yellow-400 text-yellow-900' :
-                                                            'bg-red-500 text-white'
-                                                }`}
-                                            >
-                                                {status === 'correct' && 'Correct!'}
-                                                {status === 'mastered' && 'Mastered! 🏆'}
-                                                {status === 'error' && 'Wrong!'}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-
-                                    {isReview && status === 'idle' && (
-                                        <div className="absolute top-1.5 right-2 sm:-top-2 sm:-right-2 bg-amber-500 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md flex items-center gap-1">
-                                            <RefreshCw size={12} className="shrink-0" /> Review
-                                        </div>
-                                    )}
-                                </motion.div>
-                            ) : practiceResults ? (
-                                <div className="text-xl font-black text-indigo-500 dark:text-indigo-400">Practice Over</div>
-                            ) : (
-                                <div
-                                    className="text-xl font-black text-yellow-500 dark:text-yellow-400 cursor-pointer hover:scale-105 transition-transform"
-                                    onClick={() => setHideMastery(false)}
-                                    title="Show Trophies"
-                                >
-                                    Map Mastered! 🏆
-                                </div>
-                            )}
-                        </div>
-                    </>
-                ) : (
-                    /* PRACTICE MODE HEADER */
-                    <div className="w-full flex flex-col gap-2 min-w-0 text-slate-800 dark:text-white md:flex-row md:items-center md:justify-between md:gap-3">
-
-                        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto md:flex-nowrap shrink-0">
-                            <button onClick={exitPracticeMode} className="flex items-center gap-1.5 text-xs sm:text-sm bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-500 dark:bg-slate-800 dark:hover:bg-red-900/50 dark:text-slate-300 dark:hover:text-red-400 px-2.5 py-2 sm:px-4 rounded-xl transition-colors font-bold border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50">
-                                <LogOut size={16} className="shrink-0" /> <span className="hidden sm:inline">Exit</span>
+                        </>
+                    ) : (
+                        /* PRACTICE MODE HEADER */
+                        <>
+                            <button onClick={exitPracticeMode} className={`${quiet} flex h-10 min-h-0 shrink-0 items-center gap-1.5 px-3 py-0 text-sm hover:text-red-600 dark:hover:text-red-400`}>
+                                <LogOut size={16} className="shrink-0" aria-hidden /> <span className="hidden sm:inline">Exit</span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => setHardMode(!hardMode)}
                                 title="Hard mode ON: countries you already guessed correctly stay as plain map shapes (no flag fill). OFF: those territories show their flags so you can use them as landmarks."
-                                className={`flex items-center gap-1 text-[11px] leading-tight sm:text-sm px-2.5 py-2 sm:px-4 rounded-xl transition-colors font-bold border shadow-sm whitespace-nowrap ${hardMode ? 'bg-red-100 hover:bg-red-200 text-red-600 border-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 dark:border-red-800' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600 border-emerald-300 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800'}`}
+                                className={`flex h-10 min-h-0 shrink-0 items-center whitespace-nowrap rounded-lg border px-3 py-0 text-xs sm:text-sm ${hardMode ? 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-300' : 'border-slate-200 text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-[#3A4670]'}`}
                             >
                                 <span className="sm:hidden">{hardMode ? 'Hard: ON' : 'Hard: OFF'}</span>
                                 <span className="hidden sm:inline">{hardMode ? 'Hard Mode: ON' : 'Hard Mode: OFF'}</span>
                             </button>
-                        </div>
 
-                        <div className="order-2 flex flex-col items-center flex-1 min-w-0 w-full mx-0 md:mx-4">
-                            <div className="h-5 flex items-center justify-center mb-1">
-                                {status === 'error' ? (
-                                    <span className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-widest">Wrong! Find green shape</span>
-                                ) : (
-                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Find this country</span>
+                            <div className="order-last flex w-full min-w-0 flex-col gap-1 md:order-none md:mx-2 md:w-auto md:flex-1">
+                                <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                    {status === 'error' ? 'Wrong! Find green shape' : 'Find this country'}
+                                </span>
+
+                                {current && (
+                                    <motion.div
+                                        animate={status === 'error' ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className={`flex w-full min-w-0 items-center gap-3 rounded-[10px] border bg-[#fff] px-2.5 py-2 transition-colors dark:bg-[#121829] ${targetBorder}`}
+                                    >
+                                        <img key={current.code} src={current.image} alt="Flag" className="fl-in h-9 w-14 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:h-10 sm:w-[60px]" />
+                                        <h2 className={`min-w-0 flex-1 break-words text-base font-bold leading-tight hyphens-auto sm:text-xl ${status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                                            {getCountryNameDisplay(current)}
+                                        </h2>
+                                        {status === 'correct' && <span key="correct" className={`fl-in ${badge} bg-emerald-500/15 text-emerald-700 dark:text-emerald-300`}><Check size={12} strokeWidth={3} aria-hidden /> Correct!</span>}
+                                        {status === 'error' && <span key="error" className={`fl-in ${badge} bg-red-500/15 text-red-700 dark:text-red-300`}><X size={12} strokeWidth={3} aria-hidden /> Wrong!</span>}
+                                        {status === 'idle' && <span className={`${badge} bg-blue-500/15 text-blue-700 dark:text-blue-300`}><Dumbbell size={12} aria-hidden /> Practice</span>}
+                                    </motion.div>
                                 )}
                             </div>
 
-                            {current && (
-                                <motion.div
-                                    animate={
-                                        status === 'correct' ? { scale: [1, 1.05, 1], borderColor: '#10b981' } :
-                                            status === 'error' ? { x: [-5, 5, -5, 5, 0], borderColor: '#ef4444' } :
-                                                { borderColor: theme === 'dark' ? 'rgba(67, 56, 202, 0.5)' : '#c7d2fe' }
-                                    }
-                                    transition={{ duration: 0.3 }}
-                                    className="flex w-full max-w-full min-w-0 items-center gap-2 sm:gap-3 bg-indigo-50 dark:bg-indigo-900/50 p-2 pt-7 sm:pt-2 sm:pr-6 rounded-xl border border-indigo-200 dark:border-indigo-700/50 shadow-xl relative"
-                                >
-                                    <img src={current.image} alt="Flag" className="h-9 w-14 shrink-0 object-cover rounded-md shadow-sm border border-slate-200 dark:border-transparent sm:h-10 sm:w-16" />
-                                    <h2 className={`min-w-0 flex-1 text-sm sm:text-xl md:text-2xl font-black text-center leading-tight break-words hyphens-auto ${status === 'correct' ? 'text-emerald-500 dark:text-emerald-400' : status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-indigo-900 dark:text-indigo-100'}`}>
-                                        {getCountryNameDisplay(current)}
-                                    </h2>
-
-                                    <AnimatePresence>
-                                        {status !== 'idle' && (
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.5, y: 10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.5 }}
-                                                className={`absolute top-1.5 right-2 sm:-right-2 sm:-top-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-lg z-20 ${
-                                                    status === 'correct' ? 'bg-emerald-500' : 'bg-red-500'
-                                                }`}
-                                            >
-                                                {status === 'correct' ? 'Correct!' : 'Wrong!'}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-
-                                    {status === 'idle' && (
-                                        <div className="absolute top-1.5 right-2 sm:-top-2 sm:-right-2 bg-indigo-500 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md flex items-center gap-1 max-w-[calc(100%-0.5rem)]">
-                                            <Dumbbell size={12} className="shrink-0" /> <span className="truncate">Practice</span>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            )}
-                        </div>
-
-                        <div className="order-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-4 bg-slate-50 dark:bg-slate-800 px-2 py-2 sm:px-4 rounded-xl border border-slate-200 dark:border-slate-700 md:mr-12 md:w-auto md:flex-nowrap md:justify-end shrink-0">
-                            <div className="flex items-center gap-1 font-mono text-xs sm:text-base font-bold text-slate-700 dark:text-slate-300"><Timer size={14} className="shrink-0 text-indigo-500 dark:text-indigo-400 sm:w-4 sm:h-4"/>{formatTime(practiceElapsedTime)}</div>
-                            <div className="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden />
-                            <div className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-300 whitespace-nowrap">Rem: <span className="text-slate-800 dark:text-white font-bold">{practicePool.length}</span></div>
-                            <div className="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden />
-                            <div className="text-xs sm:text-sm font-bold text-red-500 dark:text-red-400 flex items-center gap-1 whitespace-nowrap"><X size={14} className="sm:w-4 sm:h-4 shrink-0" /> {practiceMistakes}</div>
-                        </div>
-                    </div>
-                )}
-            </div>
+                            <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                                <span className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={15} aria-hidden />{formatTime(practiceElapsedTime)}</span>
+                                <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Rem: <span className="font-bold text-slate-900 dark:text-white">{practicePool.length}</span></span>
+                                <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {practiceMistakes}</span>
+                                <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
+                                    {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
+                                </BarButton>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </header>
 
             {/* --- FULL MAP MASTERY OVERLAY --- */}
             <AnimatePresence>
                 {totalStats.percent === 100 && !isPracticeMode && !practiceResults && !current && !showGallery && !hideMastery && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-[5] p-4 mt-20">
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-200 dark:border-slate-700 w-full pointer-events-auto relative">
-
-                            <button onClick={() => setHideMastery(true)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors bg-slate-100 dark:bg-slate-700 rounded-full" title="Hide window to view map">
-                                <X size={16} />
+                    <div className="pointer-events-none absolute inset-0 z-[15] mt-20 flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`${dialog} pointer-events-auto relative flex w-full max-w-md flex-col gap-6 p-6 sm:p-8`}>
+                            <button onClick={() => setHideMastery(true)} className="absolute right-3 top-3 flex h-9 min-h-0 w-9 items-center justify-center rounded-lg p-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title="Hide window to view map" aria-label="Hide window to view map">
+                                <X size={18} aria-hidden />
                             </button>
-
-                            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce mt-2">
-                                <Trophy size={64} />
+                            <div className="flex items-center gap-4 pr-8">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
+                                <div>
+                                    <h2 className="text-3xl font-bold">Map Master!</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">Incredible! You have successfully mapped all <strong className="text-slate-900 dark:text-white">{totalStats.total}</strong> countries.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Map Master! 🌍</h2>
-                                <p className="text-slate-500 dark:text-slate-400">Incredible! You have successfully mapped all <strong className="text-indigo-600 dark:text-indigo-400">{totalStats.total}</strong> countries.</p>
-                            </div>
-                            <div className="w-full flex flex-col gap-3">
-                                <button onClick={handleShare} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                                    <Share2 size={20} /> Share Success
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <button onClick={handleShare} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}>
+                                    <Share2 size={18} aria-hidden /> Share Success
                                 </button>
-                                <button onClick={() => startPracticeMode()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                                    <Dumbbell size={20} /> Keep Practicing
+                                <button onClick={() => startPracticeMode()} className={`${quiet} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}>
+                                    <Dumbbell size={18} aria-hidden /> Keep Practicing
                                 </button>
                             </div>
                         </motion.div>
@@ -806,81 +749,86 @@ export default function MapGame() {
             {/* --- PRACTICE RESULTS OVERLAY --- */}
             <AnimatePresence>
                 {practiceResults && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-200 dark:border-slate-700 w-full">
-                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-4 rounded-full text-indigo-500 dark:text-indigo-400"><Dumbbell size={64} /></div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+                        <div className={`${dialog} flex w-full max-w-md flex-col gap-6 p-6 sm:p-8`}>
                             <div>
-                                <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Practice Complete!</h2>
-                                <p className="text-slate-500 dark:text-slate-400">You located <strong className="text-indigo-600 dark:text-indigo-400">{practiceResults.count}</strong> countries on the map.</p>
+                                <h2 className="text-3xl font-bold">Practice Complete!</h2>
+                                <p className="mt-1 text-slate-500 dark:text-slate-400">You located <strong className="text-slate-900 dark:text-white">{practiceResults.count}</strong> countries on the map.</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="bg-red-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-red-100 dark:border-red-900/30">
-                                    <div className="text-xs uppercase font-bold text-red-500 mb-1">Mistakes</div>
-                                    <div className="text-3xl font-bold text-red-600 dark:text-red-400">{practiceResults.mistakes}</div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Mistakes</div>
+                                    <div className={`mt-1 text-3xl font-bold ${practiceResults.mistakes ? 'text-red-500' : 'text-emerald-500'}`}>{practiceResults.mistakes}</div>
                                 </div>
-                                <div className="bg-indigo-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                                    <div className="text-xs uppercase font-bold text-indigo-500 mb-1">Time</div>
-                                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{practiceResults.time}</div>
+                                <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Time</div>
+                                    <div className="mt-1 text-3xl font-bold tabular-nums">{practiceResults.time}</div>
                                 </div>
                             </div>
-                            <div className="w-full flex flex-col gap-3">
-                                <button onClick={() => startPracticeMode(lastPracticePool)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"><Repeat size={20} /> Practice Again</button>
-                                <button onClick={exitPracticeMode} className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">Back to Map</button>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <button onClick={() => startPracticeMode(lastPracticePool)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Practice Again</button>
+                                <button onClick={exitPracticeMode} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to Map</button>
                             </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* --- MAP CONTAINER --- */}
-            <div className={`w-full h-full relative cursor-grab active:cursor-grabbing outline-none transition-colors duration-500 ${theme === 'light' ? 'bg-[#f8fafc]' : 'bg-[#0f172a]'}`}>
+            <div className="relative h-full w-full cursor-grab outline-none active:cursor-grabbing">
                 {renderMap}
 
-                <div className="absolute bottom-8 right-8 flex flex-col gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl z-20">
-                    <button onClick={handleZoomIn} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><ZoomIn size={24}/></button>
-                    <button onClick={handleResetZoom} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><Maximize size={24}/></button>
-                    <button onClick={handleZoomOut} className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl transition-colors"><ZoomOut size={24}/></button>
+                <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
+                    <BarButton onClick={handleZoomIn} label="Zoom in"><ZoomIn size={19} aria-hidden /></BarButton>
+                    <BarButton onClick={handleResetZoom} label="Reset zoom"><Maximize size={18} aria-hidden /></BarButton>
+                    <BarButton onClick={handleZoomOut} label="Zoom out"><ZoomOut size={19} aria-hidden /></BarButton>
                 </div>
             </div>
 
             {/* --- GALLERY MODAL --- */}
             <AnimatePresence>
                 {showGallery && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
-                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900 gap-4">
-                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4" onClick={() => setShowGallery(false)}>
+                        <div className={`${dialog} flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden`} onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:p-6 dark:border-slate-700">
+                                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Map Collection</h2>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm">Review your mastered countries.</p>
+                                        <h2 className="text-2xl font-bold">Map Collection</h2>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">Review your mastered countries.</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }} disabled={selectedFlags.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedFlags.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-slate-700 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}</button>
-                                        <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
-                                            <button onClick={resetProgress} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 rounded-full transition-colors" title="Reset Progress"><RotateCcw size={20} /></button>
-                                            <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"><X size={24} className="text-slate-500 dark:text-slate-400" /></button>
+                                        <button
+                                            onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }}
+                                            disabled={selectedFlags.length === 0 && totalStats.mastered < 5}
+                                            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold ${selectedFlags.length > 0 || totalStats.mastered >= 5 ? primary : disabledBtn}`}
+                                        >
+                                            <Dumbbell size={16} aria-hidden /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}
+                                        </button>
+                                        <div className="ml-1 flex gap-2 border-l border-slate-200 pl-3 dark:border-slate-700">
+                                            <button onClick={resetProgress} className="flex h-10 min-h-0 w-10 items-center justify-center rounded-lg border border-slate-200 p-0 text-slate-500 hover:border-red-400 hover:text-red-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-500/60 dark:hover:text-red-400" title="Reset Progress" aria-label="Reset Progress"><RotateCcw size={18} aria-hidden /></button>
+                                            <BarButton onClick={() => setShowGallery(false)} label="Close"><X size={20} aria-hidden /></BarButton>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 text-sm pt-2 border-t border-slate-200 dark:border-slate-800">
-                                    <button onClick={selectAllMastered} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><CheckSquare size={16} /> Select All Mastered</button>
-                                    <button onClick={deselectAll} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"><Square size={16} /> Clear Selection</button>
+                                <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-700">
+                                    <button onClick={selectAllMastered} className="flex min-h-0 items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"><CheckSquare size={16} aria-hidden /> Select All Mastered</button>
+                                    <button onClick={deselectAll} className="flex min-h-0 items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-600 hover:text-red-600 dark:text-slate-300 dark:hover:text-red-400"><Square size={16} aria-hidden /> Clear Selection</button>
 
                                     <div className="ml-auto flex items-center">
                                         {showCheatConfirm ? (
-                                            <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-bold px-3 py-1 rounded bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors animate-pulse">
-                                                <Unlock size={16} /> Unlock all map progress? Click to confirm!
+                                            <button onClick={handleCheatProgress} className="flex min-h-0 items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-1 font-bold text-red-600 dark:text-red-300">
+                                                <Unlock size={16} aria-hidden /> Unlock all map progress? Click to confirm!
                                             </button>
                                         ) : (
-                                            <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-slate-500 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 font-medium px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                                                <Unlock size={16} /> Cheat Progress
+                                            <button onClick={handleCheatProgress} className="flex min-h-0 items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400">
+                                                <Unlock size={16} aria-hidden /> Cheat Progress
                                             </button>
                                         )}
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-6 bg-slate-100 dark:bg-slate-950">
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-5">
                                     {activeData.map(flag => {
                                         const p = progress[flag.code] || { streak: 0, seen: 0 }
                                         const isMastered = p.streak >= TARGET_STREAK
@@ -894,37 +842,37 @@ export default function MapGame() {
                                         return (
                                             <div key={flag.code}
                                                  onClick={() => canSelect && toggleFlagSelection(flag.code)}
-                                                 className={`relative aspect-[4/3] rounded-xl overflow-hidden shadow-sm border transition-all duration-200 group 
-                                                     ${isSelected ? 'ring-4 ring-blue-500 border-blue-600 z-10 scale-[1.02] cursor-pointer'
-                                                     : (isMastered ? 'border-emerald-300 dark:border-emerald-800 ring-2 ring-emerald-500/20 cursor-pointer'
-                                                         : (isLocked ? 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 cursor-default' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-80 cursor-default'))}
+                                                 className={`group relative aspect-[4/3] overflow-hidden rounded-[6px] border
+                                                     ${isSelected ? 'z-10 cursor-pointer border-blue-500 ring-2 ring-blue-500'
+                                                     : (isMastered ? 'cursor-pointer border-emerald-500/60'
+                                                         : (isLocked ? 'cursor-default border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-[#0F1424]' : 'cursor-default border-slate-200 opacity-80 dark:border-slate-700'))}
                                                  `}
                                             >
                                                 {isLocked ? (
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 gap-2">
-                                                        <Lock size={24} />
-                                                        <span className="text-xs font-bold uppercase tracking-widest opacity-50">Locked</span>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-600">
+                                                        <Lock size={22} aria-hidden />
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider">Locked</span>
                                                     </div>
                                                 ) : (
                                                     <>
                                                         <img
                                                             src={flag.image}
                                                             alt={isMastered ? displayName : "Flag"}
-                                                            className={`w-full h-full object-cover transition-all ${isSelected ? 'opacity-100' : (isMastered ? 'opacity-100' : 'opacity-80 grayscale-[0.3]')}`}
+                                                            className={`h-full w-full object-cover ${isSelected || isMastered ? '' : 'opacity-80 grayscale-[0.3]'}`}
                                                             loading="lazy"
                                                         />
 
-                                                        {isSelected && <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center"><div className="bg-blue-500 text-white rounded-full p-1.5 shadow-lg"><Check size={20} strokeWidth={4} /></div></div>}
+                                                        {isSelected && <div className="absolute inset-0 flex items-center justify-center bg-blue-500/20"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"><Check size={18} strokeWidth={3.5} aria-hidden /></span></div>}
 
-                                                        {!isSelected && isMastered && <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-1 shadow-sm"><Check size={12} strokeWidth={4} /></div>}
+                                                        {!isSelected && isMastered && <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={12} strokeWidth={3.5} aria-hidden /></span>}
 
-                                                        {!isSelected && !isMastered && isSeen && <div className="absolute bottom-0 w-full bg-slate-900/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">{p.streak}/3</div>}
+                                                        {!isSelected && !isMastered && isSeen && <div className="absolute bottom-0 w-full bg-slate-950/70 py-1 text-center text-[10px] font-bold text-white">{p.streak}/3</div>}
                                                     </>
                                                 )}
 
                                                 {!isLocked && (
-                                                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                                                        <span className="text-white text-xs font-bold text-center">{isMastered ? displayName : "Yet to find"}</span>
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                                        <span className="text-center text-xs font-bold text-white">{isMastered ? displayName : "Yet to find"}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -932,7 +880,7 @@ export default function MapGame() {
                                     })}
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

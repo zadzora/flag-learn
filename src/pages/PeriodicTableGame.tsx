@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
-import { Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
 import {
-    ArrowLeft, Moon, Sun, Grid3x3, Dumbbell, RotateCcw, LogOut, Timer,
-    Flame, Trophy, CheckCircle2, Unlock, ChevronRight,
+    Grid3x3, Dumbbell, RotateCcw, LogOut, Timer,
+    Flame, Trophy, CheckCircle2, Unlock, ChevronRight, Check,
 } from "lucide-react"
 import PeriodicTableBoard, { type CellState } from "../components/PeriodicTableBoard"
+import TopBar from "../components/TopBar"
 import {
     ELEMENTS, ELEMENT_MODES, ELEMENTS_LAST_MODE_KEY, CATEGORY_META, CATEGORY_ORDER, MARK_STYLE, elementMode,
     formatMass, positionLabel, answerLabel, firstSightLine, streakLabel,
@@ -84,6 +84,11 @@ function secondsSince(startedAt: number): number {
 
 function nowMs(): number {
     return Date.now()
+}
+
+/** The shared mark ring, minus its pulse: the ring alone points, and nothing on the card throbs. */
+function markStyle(mark: CellMark): string {
+    return MARK_STYLE[mark].replace("animate-pulse", "").trim()
 }
 
 export default function PeriodicTableGame() {
@@ -415,180 +420,167 @@ export default function PeriodicTableGame() {
     const isFirstSight = current != null && firstSightOf === current.symbol
     const firstSight = isFirstSight && current ? firstSightLine(current, mode, lang) : null
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670] dark:disabled:hover:border-slate-700"
+    const badge = "rounded-[5px] px-1.5 py-0.5 font-bold"
+
     return (
-        <div className={`min-h-screen font-sans transition-colors duration-500 ${isPractice
-            ? "bg-cyan-50 text-slate-800 dark:bg-cyan-950 dark:text-cyan-50"
-            : "bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100"}`}>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Periodic Table" back="/science" theme={theme} onToggleTheme={() => setTheme(prev => (prev === "light" ? "dark" : "light"))}>
+                {sessionStreak > 1 && (
+                    <span className="flex items-center gap-1 text-sm font-bold text-orange-500 dark:text-orange-400" title="Correct in a row this session">
+                        <Flame size={16} aria-hidden /> {sessionStreak}
+                    </span>
+                )}
+            </TopBar>
 
-            <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4">
-
-                {/* Header */}
-                <div className="flex items-center gap-2">
-                    <Link
-                        to="/science"
-                        title="Back to Science"
-                        className="rounded-full border border-white/70 bg-white/80 p-3 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl transition-transform hover:scale-110 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-300"
-                    >
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div className="min-w-0 flex-1 text-center">
-                        <h1 className="truncate text-lg font-black sm:text-xl">Periodic Table</h1>
-                        <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">{modeMeta.detail}</p>
-                    </div>
-                    {sessionStreak > 1 && (
-                        <div className="flex flex-col items-center px-1">
-                            <Flame size={18} className="text-orange-400" />
-                            <span className="text-xs font-black leading-none text-orange-400">{sessionStreak}</span>
-                        </div>
-                    )}
-                    <button
-                        type="button"
-                        onClick={() => setTheme(prev => (prev === "light" ? "dark" : "light"))}
-                        aria-label="Toggle theme"
-                        className="rounded-full border border-white/70 bg-white/80 p-3 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl transition-transform hover:scale-110 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-300"
-                    >
-                        {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
-                </div>
+            <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
 
                 {/* Direction tabs - each with its own progress */}
-                <div className="mt-4 flex gap-1.5 overflow-x-auto rounded-2xl border border-white/70 bg-white/75 p-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85">
+                <div className="flex gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" role="tablist" aria-label="Direction">
                     {ELEMENT_MODES.map(({ key, short, icon: Icon, label }) => (
                         <button
                             key={key}
                             type="button"
+                            role="tab"
+                            aria-selected={mode === key}
                             onClick={() => switchMode(key)}
                             disabled={isPractice}
                             title={label}
-                            className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-bold transition-all disabled:opacity-40 ${mode === key
-                                ? "bg-cyan-500 text-white shadow-sm"
-                                : "text-slate-500 hover:bg-white/70 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-700/70"}`}
+                            className={`flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-0 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${mode === key
+                                ? "bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]"
+                                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                         >
-                            <Icon size={15} className="shrink-0" />
+                            <Icon size={15} className="hidden shrink-0 sm:block" aria-hidden />
                             <span className="truncate">{short}</span>
                         </button>
                     ))}
                 </div>
 
                 {/* Progress */}
-                <div className="mt-3 flex items-center gap-3 px-1">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <div className="mt-5">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate text-slate-500 dark:text-slate-400">{modeMeta.detail}</span>
+                        <span className="shrink-0 tabular-nums text-slate-500 dark:text-slate-400">
+                            <span className="font-bold text-slate-900 dark:text-white">{stats.mastered}</span> / {stats.total} mastered
+                        </span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                         <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
+                            className="h-full bg-emerald-500"
                             animate={{ width: `${stats.percent}%` }}
                             transition={{ duration: 0.4 }}
                         />
                     </div>
-                    <span className="shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        {stats.mastered}/{stats.total} mastered
-                    </span>
                 </div>
 
                 {/* The round */}
-                <div className="mt-4">
+                <div className="mt-6">
                     {practiceResult ? (
-                        <div className="rounded-3xl border border-white/70 bg-white/80 p-8 text-center shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/80">
-                            <Trophy size={44} className="mx-auto text-amber-400" />
-                            <h2 className="mt-3 text-2xl font-black">Practice done</h2>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                {practiceResult.count} elements · {practiceResult.time} · {practiceResult.mistakes} mistake{practiceResult.mistakes === 1 ? "" : "s"}
-                            </p>
-                            <div className="mt-6 flex flex-wrap justify-center gap-2">
-                                <button type="button" onClick={startPractice} className="rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-bold text-white transition-transform hover:scale-105 active:scale-95">
+                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
+                                <div>
+                                    <h2 className="!text-3xl font-bold">Practice done</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+                                        {practiceResult.count} elements · {practiceResult.time} · {practiceResult.mistakes} mistake{practiceResult.mistakes === 1 ? "" : "s"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <button type="button" onClick={startPractice} className={`${primary} flex-1 py-3.5`}>
                                     Again
                                 </button>
-                                <button type="button" onClick={exitPractice} className="rounded-2xl bg-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition-transform hover:scale-105 active:scale-95 dark:bg-slate-700 dark:text-slate-200">
+                                <button type="button" onClick={exitPractice} className={`${quiet} flex-1 py-3.5`}>
                                     Back to learning
                                 </button>
                             </div>
-                        </div>
+                        </section>
                     ) : !current ? (
-                        <div className="rounded-3xl border border-white/70 bg-white/80 p-8 text-center shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/80">
-                            <CheckCircle2 size={44} className="mx-auto text-emerald-400" />
-                            <h2 className="mt-3 text-2xl font-black">All 118 mastered</h2>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Nothing left to learn in this direction. Keep it warm with a timed lap, or switch direction above.
-                            </p>
-                            <button type="button" onClick={startPractice} className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-bold text-white transition-transform hover:scale-105 active:scale-95">
-                                <Dumbbell size={16} /> Practice all
+                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-emerald-500 dark:border-slate-700"><CheckCircle2 size={28} aria-hidden /></span>
+                                <div>
+                                    <h2 className="!text-3xl font-bold">All 118 mastered</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+                                        Nothing left to learn in this direction. Keep it warm with a timed lap, or switch direction above.
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" onClick={startPractice} className={`${primary} flex items-center justify-center gap-2 py-3.5`}>
+                                <Dumbbell size={18} aria-hidden /> Practice all
                             </button>
-                        </div>
+                        </section>
                     ) : (
-                        <div className={`rounded-3xl border p-5 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-colors sm:p-6 ${status === "error"
-                            ? "border-rose-300 bg-rose-50/90 dark:border-rose-500/40 dark:bg-rose-950/50"
+                        // The card stays put between questions; only what is inside it changes.
+                        <section className={`rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
+                            ? "border-red-400 dark:border-red-500/60"
                             : status === "mastered"
-                                ? "border-amber-300 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-950/40"
+                                ? "border-amber-400 dark:border-amber-500/60"
                                 : status === "correct"
-                                    ? "border-emerald-300 bg-emerald-50/90 dark:border-emerald-500/40 dark:bg-emerald-950/40"
-                                    : "border-white/70 bg-white/80 dark:border-slate-700/70 dark:bg-slate-800/80"}`}>
+                                    ? "border-emerald-400 dark:border-emerald-500/60"
+                                    : "border-slate-200 dark:border-slate-700"}`}>
 
-                            <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="flex min-h-6 items-center justify-between gap-2">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isReview && !isPractice ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-500"}`}>
                                     {isPractice ? "Practice" : isReview ? "Review" : "Learning"}
                                 </span>
                                 {isPractice ? (
-                                    <span className="flex items-center gap-1 text-xs font-bold text-cyan-600 dark:text-cyan-300">
-                                        <Timer size={14} /> {formatTime(practiceElapsed)} · {practicePool?.length ?? 0} left
+                                    <span className="flex items-center gap-1.5 text-sm font-bold tabular-nums text-slate-600 dark:text-slate-300">
+                                        <Timer size={15} aria-hidden /> <span className="font-mono">{formatTime(practiceElapsed)}</span>
+                                        <span className="font-normal text-slate-500 dark:text-slate-400">· {practicePool?.length ?? 0} left</span>
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-1">
+                                    <span className="flex items-center gap-1" aria-label={`${streakDots.filter(Boolean).length} of ${TARGET_STREAK} in a row`}>
                                         {streakDots.map((filled, i) => (
-                                            <span key={i} className={`h-1.5 w-4 rounded-full ${filled ? "bg-emerald-400" : "bg-slate-200 dark:bg-slate-700"}`} />
+                                            <span key={i} className={`h-1.5 w-6 rounded-sm ${filled ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`} />
                                         ))}
                                     </span>
                                 )}
                             </div>
 
-                            {/* Prompt */}
+                            {/* Prompt - the container stays, only the element inside is swapped. */}
                             <div className="flex flex-col items-center py-6">
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={`${mode}-${current.symbol}`}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                        transition={{ duration: 0.18 }}
-                                        className="flex flex-col items-center"
-                                    >
-                                        {mode === "symbol" ? (
-                                            <div className="flex h-32 w-32 flex-col items-center justify-center rounded-3xl bg-slate-900 text-white shadow-lg dark:bg-slate-700 sm:h-36 sm:w-36">
-                                                <span className="text-5xl font-black sm:text-6xl">{current.symbol}</span>
+                                <div key={`${mode}-${current.symbol}`} className="fl-in flex flex-col items-center">
+                                    {mode === "symbol" ? (
+                                        <div className="flex h-32 w-32 flex-col items-center justify-center rounded-[10px] border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900 sm:h-36 sm:w-36">
+                                            <span className="text-5xl font-extrabold tracking-[-0.02em] sm:text-6xl">{current.symbol}</span>
+                                        </div>
+                                    ) : mode === "name" ? (
+                                        <>
+                                            <p className="text-3xl font-extrabold tracking-[-0.02em] sm:text-4xl">{current.name}</p>
+                                            {slovakName(current, lang) && (
+                                                <p className="mt-1 text-lg font-bold text-slate-400 dark:text-slate-500">{current.sk}</p>
+                                            )}
+                                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">What is its symbol?</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="flex h-24 w-24 flex-col items-center justify-center rounded-[10px] border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+                                                <span className="text-4xl font-extrabold tracking-[-0.02em]">{current.symbol}</span>
                                             </div>
-                                        ) : mode === "name" ? (
-                                            <>
-                                                <p className="text-3xl font-black sm:text-4xl">{current.name}</p>
-                                                {slovakName(current, lang) && (
-                                                    <p className="mt-1 text-lg font-bold text-slate-400 dark:text-slate-500">{current.sk}</p>
-                                                )}
-                                                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">What is its symbol?</p>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="flex h-24 w-24 flex-col items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg dark:bg-slate-700">
-                                                    <span className="text-4xl font-black">{current.symbol}</span>
-                                                </div>
-                                                <p className="mt-3 text-xl font-bold">{current.name}</p>
-                                                {slovakName(current, lang) && (
-                                                    <p className="text-sm font-bold text-slate-400 dark:text-slate-500">{current.sk}</p>
-                                                )}
-                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                                    {mode === "category" ? "Which family is it in?" : "Click its cell in the table below"}
-                                                </p>
-                                            </>
-                                        )}
-                                    </motion.div>
-                                </AnimatePresence>
+                                            <p className="mt-3 text-xl font-bold">{current.name}</p>
+                                            {slovakName(current, lang) && (
+                                                <p className="text-sm font-bold text-slate-400 dark:text-slate-500">{current.sk}</p>
+                                            )}
+                                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                                {mode === "category" ? "Which family is it in?" : "Click its cell in the table below"}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Told, not asked - the first time only. Stays up while the
                                 answer is on screen: pulling it the instant the key is
                                 pressed would shift everything below it. */}
                             {firstSight && (
-                                <div className="mb-3 flex flex-col items-center rounded-2xl border border-indigo-200 bg-indigo-50/90 px-4 py-3 text-indigo-700 dark:border-indigo-500/40 dark:bg-indigo-950/50 dark:text-indigo-200">
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">New element</span>
-                                    <p className="mt-1 text-center text-base">
+                                <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-center text-blue-900 dark:text-blue-100">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">New element</span>
+                                    <p className="mt-1 text-base">
                                         {firstSight.lead}{" "}
-                                        <span className="font-black">{firstSight.answer}</span>
+                                        <span className="font-extrabold">{firstSight.answer}</span>
                                         {firstSight.tail ? ` ${firstSight.tail}` : ""}
                                         {current && slovakName(current, lang) && mode !== "name" && (
                                             <span className="opacity-70"> - {current.sk}</span>
@@ -614,7 +606,7 @@ export default function PeriodicTableGame() {
                                         autoCorrect="off"
                                         autoCapitalize={mode === "name" ? "characters" : "sentences"}
                                         spellCheck={false}
-                                        className="min-w-0 flex-1 rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-center text-lg font-bold outline-none transition-colors focus:border-cyan-400 read-only:opacity-70 dark:border-slate-700 dark:bg-slate-900"
+                                        className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-4 py-3 text-center text-lg font-bold outline-none transition-colors focus:border-slate-500 read-only:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
                                     />
                                     <button
                                         type="button"
@@ -622,9 +614,9 @@ export default function PeriodicTableGame() {
                                         // Fixed width: "Check" and the arrow are different
                                         // sizes, and a button that resizes under the cursor
                                         // is a button you can miss.
-                                        className="flex w-24 shrink-0 items-center justify-center rounded-2xl bg-cyan-500 px-0 py-3 font-bold text-white transition-transform hover:scale-105 active:scale-95"
+                                        className={`${primary} flex w-24 shrink-0 items-center justify-center px-0 py-3`}
                                     >
-                                        {status === "idle" ? "Check" : <ChevronRight size={20} />}
+                                        {status === "idle" ? "Check" : <ChevronRight size={20} aria-label="Next" />}
                                     </button>
                                 </div>
                             ) : modeMeta.input === "choice" ? (
@@ -647,7 +639,7 @@ export default function PeriodicTableGame() {
                                                 type="button"
                                                 onClick={() => submitChoice(key)}
                                                 disabled={status !== "idle"}
-                                                className={`flex min-h-[3.25rem] flex-col items-center justify-center rounded-xl px-2 py-1.5 text-center text-xs font-bold leading-tight transition-all ${family.chip} ${status === "idle" ? "hover:ring-2 hover:ring-indigo-500 hover:brightness-105" : ""} ${mark ? MARK_STYLE[mark] : ""}`}
+                                                className={`flex min-h-[3.25rem] flex-col items-center justify-center rounded-lg px-2 py-1.5 text-center text-xs font-bold leading-tight transition-shadow ${family.chip} ${status === "idle" ? "hover:ring-2 hover:ring-slate-900 dark:hover:ring-white" : ""} ${mark ? markStyle(mark) : ""}`}
                                             >
                                                 {family.label}
                                                 {lang === "sk" && (
@@ -658,7 +650,7 @@ export default function PeriodicTableGame() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="rounded-2xl bg-white/70 p-2 dark:bg-slate-900/50">
+                                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900">
                                     <PeriodicTableBoard
                                         blank
                                         // On a first sight the target is pointed at, so the
@@ -676,27 +668,22 @@ export default function PeriodicTableGame() {
                                 them. The hidden copy carries the same element, so the space
                                 held is the space needed. */}
                             <div className="mt-3 flex min-h-[2.5rem] items-center justify-center">
-                                <AnimatePresence mode="wait">
-                                    {feedback && (
-                                        <motion.p
-                                            key={feedback}
-                                            initial={{ opacity: 0, y: -4 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            // No exit animation, for the same reason: a line
-                                            // about the last element must not still be
-                                            // fading over the next one.
-                                            className={`whitespace-pre-line text-center text-sm font-bold ${status === "error"
-                                                ? "text-rose-600 dark:text-rose-300"
-                                                : status === "mastered"
-                                                    ? "text-amber-600 dark:text-amber-300"
-                                                    : status === "correct"
-                                                        ? "text-emerald-600 dark:text-emerald-300"
-                                                        : "text-slate-500 dark:text-slate-400"}`}
-                                        >
-                                            {feedback}
-                                        </motion.p>
-                                    )}
-                                </AnimatePresence>
+                                {feedback && (
+                                    // Fades in only. A line about the last element must not
+                                    // still be fading over the next one.
+                                    <p
+                                        key={feedback}
+                                        className={`fl-in whitespace-pre-line text-center text-sm font-bold ${status === "error"
+                                            ? "text-red-600 dark:text-red-400"
+                                            : status === "mastered"
+                                                ? "text-amber-600 dark:text-amber-400"
+                                                : status === "correct"
+                                                    ? "text-emerald-600 dark:text-emerald-400"
+                                                    : "text-slate-500 dark:text-slate-400"}`}
+                                    >
+                                        {feedback}
+                                    </p>
+                                )}
                             </div>
 
                             <div
@@ -705,44 +692,44 @@ export default function PeriodicTableGame() {
                                 // element has already been drawn - and since the row
                                 // reads from `current`, what fades out is the answer
                                 // to the question just asked.
-                                className={`flex flex-wrap items-center justify-center gap-2 border-t border-slate-200/70 pt-3 text-xs dark:border-slate-700/70 ${shownElement ? "opacity-100 transition-opacity duration-200" : "opacity-0"}`}
+                                className={`flex flex-wrap items-center justify-center gap-2 border-t border-slate-200 pt-3 text-xs dark:border-slate-700 ${shownElement ? "opacity-100 transition-opacity duration-200" : "opacity-0"}`}
                                 aria-hidden={!shownElement}
                             >
-                                <span className="font-black">{current.number}</span>
-                                <span className="font-black">{current.symbol}</span>
-                                <span className="font-bold">{current.name}</span>
+                                <span className="font-bold tabular-nums">{current.number}</span>
+                                <span className="font-extrabold">{current.symbol}</span>
+                                <span className="font-semibold">{current.name}</span>
                                 {slovakName(current, lang) && (
-                                    <span className="font-bold text-slate-400 dark:text-slate-500">{current.sk}</span>
+                                    <span className="font-semibold text-slate-400 dark:text-slate-500">{current.sk}</span>
                                 )}
-                                <span className={`rounded-full px-2 py-0.5 font-bold ${CATEGORY_META[current.category].chip}`}>
+                                <span className={`${badge} ${CATEGORY_META[current.category].chip}`}>
                                     {CATEGORY_META[current.category].label}
                                 </span>
                                 <span className="text-slate-500 dark:text-slate-400">{positionLabel(current)}</span>
                                 <span className="text-slate-500 dark:text-slate-400">{formatMass(current)} u</span>
                             </div>
-                        </div>
+                        </section>
                     )}
                 </div>
 
                 {/* Tools */}
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                     {isPractice ? (
-                        <button type="button" onClick={exitPractice} className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-2.5 text-xs font-bold text-slate-600 shadow-sm backdrop-blur-xl transition-transform hover:scale-105 active:scale-95 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-300">
-                            <LogOut size={14} /> Exit practice
+                        <button type="button" onClick={exitPractice} className={`${quiet} flex items-center gap-2 px-4 py-2 text-sm`}>
+                            <LogOut size={15} aria-hidden /> Exit practice
                         </button>
                     ) : (
                         <>
-                            <button type="button" onClick={() => setShowTable(v => !v)} className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-2.5 text-xs font-bold text-slate-600 shadow-sm backdrop-blur-xl transition-transform hover:scale-105 active:scale-95 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-300">
-                                <Grid3x3 size={14} /> {showTable ? "Hide table" : "My table"}
+                            <button type="button" onClick={() => setShowTable(v => !v)} className={`${quiet} flex items-center gap-2 px-4 py-2 text-sm`}>
+                                <Grid3x3 size={15} aria-hidden /> {showTable ? "Hide table" : "My table"}
                             </button>
                             <button
                                 type="button"
                                 onClick={startPractice}
                                 disabled={masteredList.length === 0}
                                 title={masteredList.length === 0 ? "Master an element first" : `Practice ${masteredList.length} mastered`}
-                                className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/80 px-4 py-2.5 text-xs font-bold text-slate-600 shadow-sm backdrop-blur-xl transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-300"
+                                className={`${quiet} flex items-center gap-2 px-4 py-2 text-sm`}
                             >
-                                <Dumbbell size={14} /> Practice ({masteredList.length})
+                                <Dumbbell size={15} aria-hidden /> Practice ({masteredList.length})
                             </button>
                         </>
                     )}
@@ -757,12 +744,12 @@ export default function PeriodicTableGame() {
                             exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                         >
-                            <div className="mt-4 rounded-3xl border border-white/70 bg-white/80 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/80 sm:p-4">
-                                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
-                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            <section className={`${panel} mt-4 p-3 sm:p-4`}>
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+                                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                                         {stats.mastered} mastered · {stats.learning} learning · {stats.unseen} untouched
                                     </p>
-                                    <p className="text-[10px] text-slate-400">Tap a cell for its details</p>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500">Tap a cell for its details</p>
                                 </div>
 
                                 <PeriodicTableBoard
@@ -779,13 +766,13 @@ export default function PeriodicTableGame() {
                                             initial={{ opacity: 0, y: -6 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0 }}
-                                            className="mt-3 rounded-2xl bg-slate-100 p-3 text-xs dark:bg-slate-900/60"
+                                            className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-900"
                                         >
                                             {/* Every fact here is behind the direction that
                                                 teaches it, so opening a cell can never hand
                                                 over an answer the player is still working on. */}
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                                <span className="text-base font-black">
+                                                <span className="text-base font-extrabold">
                                                     {knowledge[detail.symbol].identity ? detail.symbol : "?"}
                                                 </span>
                                                 <span className="font-bold">
@@ -800,11 +787,11 @@ export default function PeriodicTableGame() {
                                                     Z = {knowledge[detail.symbol].position ? detail.number : "?"}
                                                 </span>
                                                 {knowledge[detail.symbol].category ? (
-                                                    <span className={`rounded-full px-2 py-0.5 font-bold ${CATEGORY_META[detail.category].chip}`}>
+                                                    <span className={`${badge} ${CATEGORY_META[detail.category].chip}`}>
                                                         {CATEGORY_META[detail.category].label}
                                                     </span>
                                                 ) : (
-                                                    <span className="rounded-full bg-slate-200 px-2 py-0.5 font-bold text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
+                                                    <span className={`${badge} bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400`}>
                                                         Family: ?
                                                     </span>
                                                 )}
@@ -822,18 +809,18 @@ export default function PeriodicTableGame() {
                                             )}
 
                                             {/* Four directions, four separate things to know. */}
-                                            <div className="mt-2 flex flex-wrap gap-1.5 border-t border-slate-200/70 pt-2 dark:border-slate-700/70">
+                                            <div className="mt-2 flex flex-wrap gap-1.5 border-t border-slate-200 pt-2 dark:border-slate-700">
                                                 {ELEMENT_MODES.map(m => {
                                                     const streak = knowledge[detail.symbol].streaks[m.key]
                                                     const done = streak >= TARGET_STREAK
                                                     return (
                                                         <span
                                                             key={m.key}
-                                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${done
-                                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
-                                                                : "bg-slate-200 text-slate-500 dark:bg-slate-700/60 dark:text-slate-400"}`}
+                                                            className={`${badge} inline-flex items-center gap-1 text-[10px] uppercase tracking-wider ${done
+                                                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                                                : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"}`}
                                                         >
-                                                            {m.short} {done ? "✓" : streakLabel(streak)}
+                                                            {m.short} {done ? <Check size={11} strokeWidth={3} aria-label="learned" /> : streakLabel(streak)}
                                                         </span>
                                                     )
                                                 })}
@@ -842,27 +829,31 @@ export default function PeriodicTableGame() {
                                     )}
                                 </AnimatePresence>
 
-                                <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-200/70 pt-3 dark:border-slate-700/70">
+                                <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
                                     <button
                                         type="button"
                                         onClick={() => (confirmWipe === "known" ? applyMap(masterAll(ELEMENTS)) : arm("known"))}
-                                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/60"
+                                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold ${confirmWipe === "known"
+                                            ? "border-amber-400 text-amber-700 dark:border-amber-500/60 dark:text-amber-300"
+                                            : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                                     >
-                                        <Unlock size={13} /> {confirmWipe === "known" ? "Sure? Mark all mastered" : "I know these already"}
+                                        <Unlock size={14} aria-hidden /> {confirmWipe === "known" ? "Sure? Mark all mastered" : "I know these already"}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => (confirmWipe === "reset" ? applyMap(freshProgress(ELEMENTS)) : arm("reset"))}
-                                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 ${confirmWipe === "reset"
+                                            ? "border-red-400 dark:border-red-500/60"
+                                            : "border-transparent hover:text-red-700 dark:hover:text-red-300"}`}
                                     >
-                                        <RotateCcw size={13} /> {confirmWipe === "reset" ? `Sure? Wipe ${modeMeta.short}` : "Reset this direction"}
+                                        <RotateCcw size={14} aria-hidden /> {confirmWipe === "reset" ? `Sure? Wipe ${modeMeta.short}` : "Reset this direction"}
                                     </button>
                                 </div>
-                            </div>
+                            </section>
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
+            </main>
             <Analytics />
         </div>
     )

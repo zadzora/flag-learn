@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { Link, useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ComposableMap, Geographies, Geography, Line, Marker, ZoomableGroup } from "react-simple-maps"
 import {
-    ArrowLeft, Crown, Loader2, Moon, Sun, Swords, Shield, Flag, X,
+    Crown, Loader2, Swords, Shield, Flag, X,
     Trophy, AlertTriangle, Timer, Sparkles, ChevronDown,
 } from "lucide-react"
+import TopBar from "../components/TopBar"
 import { ref, get, onValue, set, update, remove, runTransaction, serverTimestamp } from "firebase/database"
 import { db, ensureSignedIn, observeSession } from "../../lib/firebase"
 import { countryByCode } from "../utils/countryPool"
@@ -37,6 +38,15 @@ const RESULTS_SEEN_KEY = (id: string) => `flag-master-wars-results-${id}`
 
 /** How long the result of an attack stays on screen before the board returns. */
 const RESULT_MS = 2600
+
+/* The flag-wall chrome: flat panels and quiet buttons, so the map stays the colour. */
+const PANEL = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+const DIALOG = `${PANEL} shadow-xl`
+const PRIMARY = "rounded-lg bg-slate-900 font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+const QUIET = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+const INPUT = "w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
+const CLOSE = "flex h-9 w-9 min-h-0 shrink-0 items-center justify-center rounded-lg border border-slate-200 p-0 text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-[#3A4670] dark:hover:text-white"
+const LABEL = "text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
 
 /**
  * Firebase reports a rules rejection as PERMISSION_DENIED. That is a completely
@@ -762,8 +772,10 @@ export default function FlagWars() {
         return (
             <Shell theme={theme} onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
                 <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="max-w-sm text-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-6 border border-white/70 dark:border-slate-700/70">
-                        <AlertTriangle className="mx-auto text-amber-500 mb-3" size={32} />
+                    <div className={`${PANEL} max-w-sm p-6 text-center`}>
+                        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700">
+                            <AlertTriangle size={24} aria-hidden />
+                        </span>
                         <p className="font-bold mb-1">World Conqueror is offline</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{fatalError}</p>
                     </div>
@@ -785,24 +797,24 @@ export default function FlagWars() {
     return (
         <Shell theme={theme} onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
             {/* Header */}
-            <div className="px-4 pt-4 pb-2 flex items-center gap-2 flex-wrap">
-                <div className="px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-xs font-bold">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
+                <div className="flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-800">
                     Season {season.number}
-                    <span className="text-slate-400 font-medium"> · {season.daysLeft}d left</span>
+                    <span className="ml-1 font-medium text-slate-500 dark:text-slate-400"> · {season.daysLeft}d left</span>
                 </div>
-                <div className="px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-xs font-bold flex items-center gap-1.5">
-                    <Swords size={13} className={left > 0 ? "text-rose-500" : "text-slate-400"} />
+                <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold tabular-nums dark:border-slate-700 dark:bg-slate-800" title="Attacks left today">
+                    <Swords size={13} aria-hidden className={left > 0 ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"} />
                     {budgetKnown ? `${left}/${DAILY_ATTACKS}` : `-/${DAILY_ATTACKS}`}
                     {budgetKnown && left === 0 && <RefillCountdown />}
                 </div>
-                <div className="px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-xs font-bold flex items-center gap-1.5">
-                    <Flag size={13} style={{ color: myPlayer ? colorForPlayer(myPlayer.color) : undefined }} />
+                <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold tabular-nums dark:border-slate-700 dark:bg-slate-800" title="Territories held">
+                    <Flag size={13} aria-hidden style={{ color: myPlayer ? colorForPlayer(myPlayer.color) : undefined }} />
                     {mine.length}
                 </div>
             </div>
 
             {/* Board */}
-            <div ref={measureBoard} className="flex-1 relative min-h-0">
+            <div ref={measureBoard} className="flex-1 relative min-h-0 border-t border-slate-200 dark:border-slate-700">
                 {board}
 
                 <SiegePanel
@@ -816,7 +828,7 @@ export default function FlagWars() {
                 />
 
                 {authChecked && !hasEmpire && !needsName && toDefend.length === 0 && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-xs font-bold shadow-lg whitespace-nowrap">
+                    <div className={`${PANEL} absolute top-2 left-1/2 -translate-x-1/2 px-4 py-2 text-xs font-bold whitespace-nowrap`}>
                         Pick any country - it becomes your homeland
                     </div>
                 )}
@@ -826,26 +838,26 @@ export default function FlagWars() {
                     <button
                         type="button"
                         onClick={() => setShowStandings(v => !v)}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-xs font-bold shadow-lg"
+                        className={`${QUIET} flex min-h-0 w-full items-center gap-2 px-3 py-2 text-xs font-bold`}
                     >
-                        <Trophy size={14} className="text-amber-500" />
+                        <Trophy size={14} aria-hidden className="text-amber-500" />
                         Empires
-                        <span className="ml-auto text-slate-400 font-medium">{standings.length}</span>
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showStandings ? 'rotate-180' : ''}`} />
+                        <span className="ml-auto font-medium tabular-nums text-slate-500 dark:text-slate-400">{standings.length}</span>
+                        <ChevronDown size={14} aria-hidden className={`text-slate-400 transition-transform ${showStandings ? 'rotate-180' : ''}`} />
                     </button>
                     <button
                             type="button"
                             onClick={openHallOfFame}
                             disabled={loadingHall}
-                            className="mt-1.5 w-full flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-[11px] font-bold shadow-lg disabled:opacity-60"
+                            className={`${QUIET} mt-1.5 flex min-h-0 w-full items-center gap-2 px-3 py-1.5 text-[11px] font-bold disabled:opacity-60`}
                         >
                             {loadingHall
                                 ? <Loader2 size={12} className="animate-spin text-slate-400" />
-                                : <Crown size={12} className="text-amber-500" />}
+                                : <Crown size={12} aria-hidden className="text-amber-500" />}
                             Hall of Fame
                     </button>
                     {showStandings && (
-                        <div className="mt-1.5 rounded-2xl bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 p-2 shadow-lg max-h-56 overflow-y-auto">
+                        <div className={`${PANEL} mt-1.5 max-h-56 overflow-y-auto p-1.5`}>
                             {standings.length === 0 && (
                                 <p className="text-xs text-slate-500 dark:text-slate-400 p-2">
                                     Nobody has claimed anything yet. The whole map is up for grabs.
@@ -854,13 +866,13 @@ export default function FlagWars() {
                             {standings.map((row, index) => (
                                 <div
                                     key={row.uid}
-                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-xl text-xs ${row.uid === uid ? 'bg-slate-100 dark:bg-slate-700/60' : ''}`}
+                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs ${row.uid === uid ? 'bg-slate-50 dark:bg-slate-700/50' : ''}`}
                                 >
-                                    <span className="w-4 text-slate-400 font-bold">{index + 1}</span>
+                                    <span className="w-4 font-bold tabular-nums text-slate-400 dark:text-slate-500">{index + 1}</span>
                                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colorForPlayer(row.color) }} />
                                     <span className="truncate font-semibold flex-1">{row.name}</span>
-                                    {index === 0 && <Crown size={12} className="text-amber-500 shrink-0" />}
-                                    <span className="font-black tabular-nums">{row.territories}</span>
+                                    {index === 0 && <Crown size={12} aria-hidden className="text-amber-500 shrink-0" />}
+                                    <span className="font-bold tabular-nums">{row.territories}</span>
                                 </div>
                             ))}
                         </div>
@@ -868,7 +880,7 @@ export default function FlagWars() {
                 </div>
 
                 {/* Legend */}
-                <div className="absolute right-3 bottom-3 px-3 py-2 rounded-2xl bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 text-[10px] font-medium shadow-lg space-y-1">
+                <div className={`${PANEL} absolute right-3 bottom-3 px-3 py-2 text-[10px] font-medium text-slate-600 dark:text-slate-300 space-y-1`}>
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-2 rounded-sm border-2 border-amber-500" />
                         Can attack
@@ -881,8 +893,8 @@ export default function FlagWars() {
             </div>
 
             {writeError && (
-                <div className="px-4 pb-2">
-                    <p className="text-xs text-rose-500 font-semibold text-center">{writeError}</p>
+                <div className="px-4 py-2">
+                    <p className="text-xs text-red-600 dark:text-red-400 font-semibold text-center">{writeError}</p>
                 </div>
             )}
 
@@ -931,9 +943,9 @@ export default function FlagWars() {
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-6 border border-white/70 dark:border-slate-700/70"
+                            className={`${DIALOG} w-full max-w-sm p-6`}
                         >
-                            <h2 className="font-black text-lg mb-1">Name your empire</h2>
+                            <h2 className="!text-lg font-bold mb-1">Name your empire</h2>
                             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                                 This is what other players see on the territories you hold.
                             </p>
@@ -944,18 +956,18 @@ export default function FlagWars() {
                                 maxLength={24}
                                 autoFocus
                                 placeholder="Your name"
-                                className={`w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 outline-none font-semibold ${nameError ? 'ring-2 ring-rose-400' : ''}`}
+                                className={`${INPUT} ${nameError ? '!border-red-400 dark:!border-red-500/60' : ''}`}
                             />
-                            <p className={`text-xs font-semibold mt-2 mb-3 ${nameError ? 'text-rose-500' : 'text-transparent'}`}>
+                            <p className={`text-xs font-semibold mt-2 mb-3 ${nameError ? 'text-red-600 dark:text-red-400' : 'text-transparent'}`}>
                                 {nameError || "placeholder"}
                             </p>
                             <button
                                 type="button"
                                 onClick={handleJoin}
                                 disabled={!nameDraft.trim() || busy}
-                                className="w-full py-3 rounded-2xl bg-rose-500 text-white font-bold disabled:opacity-40 flex items-center justify-center gap-2"
+                                className={`${PRIMARY} w-full py-3 flex items-center justify-center gap-2`}
                             >
-                                {busy ? <Loader2 size={18} className="animate-spin" /> : <Swords size={18} />}
+                                {busy ? <Loader2 size={18} className="animate-spin" /> : <Swords size={18} aria-hidden />}
                                 Enter the war
                             </button>
                         </motion.div>
@@ -984,19 +996,19 @@ export default function FlagWars() {
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-6 border border-white/70 dark:border-slate-700/70"
+                            className={`${DIALOG} w-full max-w-sm p-6`}
                         >
-                            <h2 className="font-black text-lg mb-3">World Conqueror</h2>
+                            <h2 className="!text-lg font-bold mb-3">World Conqueror</h2>
                             <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2.5 mb-5">
-                                <li className="flex gap-2"><span className="text-rose-500 font-black">1.</span> Claim any free country as your homeland.</li>
-                                <li className="flex gap-2"><span className="text-rose-500 font-black">2.</span> From then on you can only attack countries bordering your empire.</li>
-                                <li className="flex gap-2"><span className="text-rose-500 font-black">3.</span> To take a country, name its capital or spot its flag - faster than its current owner managed.</li>
-                                <li className="flex gap-2"><span className="text-rose-500 font-black">4.</span> {DAILY_ATTACKS} attacks a day. The season ends in {season.daysLeft} days and the map resets.</li>
+                                <li className="flex gap-2.5"><span className="font-bold tabular-nums text-slate-400 dark:text-slate-500">1.</span> Claim any free country as your homeland.</li>
+                                <li className="flex gap-2.5"><span className="font-bold tabular-nums text-slate-400 dark:text-slate-500">2.</span> From then on you can only attack countries bordering your empire.</li>
+                                <li className="flex gap-2.5"><span className="font-bold tabular-nums text-slate-400 dark:text-slate-500">3.</span> To take a country, name its capital or spot its flag - faster than its current owner managed.</li>
+                                <li className="flex gap-2.5"><span className="font-bold tabular-nums text-slate-400 dark:text-slate-500">4.</span> {DAILY_ATTACKS} attacks a day. The season ends in {season.daysLeft} days and the map resets.</li>
                             </ul>
                             <button
                                 type="button"
                                 onClick={() => { localStorage.setItem(INTRO_KEY, "1"); setShowIntro(false) }}
-                                className="w-full py-3 rounded-2xl bg-rose-500 text-white font-bold"
+                                className={`${PRIMARY} w-full py-3`}
                             >
                                 Let's go
                             </button>
@@ -1016,25 +1028,8 @@ function Shell({ theme, onToggleTheme, children }: {
     children: ReactNode
 }) {
     return (
-        <div className="h-screen flex flex-col text-slate-800 dark:text-slate-100 overflow-hidden">
-            <div className="flex items-center justify-between px-4 pt-4">
-                <Link
-                    to="/"
-                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/70 dark:border-slate-700/70"
-                    aria-label="Back home"
-                >
-                    <ArrowLeft size={18} />
-                </Link>
-                <h1 className="font-black tracking-tight">World Conqueror</h1>
-                <button
-                    type="button"
-                    onClick={onToggleTheme}
-                    aria-label="Toggle theme"
-                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/70 dark:border-slate-700/70"
-                >
-                    {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                </button>
-            </div>
+        <div className="h-screen flex flex-col text-slate-900 dark:text-[#E8ECF6] overflow-hidden">
+            <TopBar title="World Conqueror" theme={theme} onToggleTheme={onToggleTheme} />
             {children}
         </div>
     )
@@ -1046,7 +1041,7 @@ function Backdrop({ children }: { children: ReactNode }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/70 flex items-center justify-center p-4"
         >
             {children}
         </motion.div>
@@ -1064,7 +1059,7 @@ function RefillCountdown() {
 
     const hours = Math.floor(ms / 3_600_000)
     const minutes = Math.floor((ms % 3_600_000) / 60_000)
-    return <span className="text-slate-400 font-medium">· {hours}h {minutes}m</span>
+    return <span className="font-medium text-slate-500 dark:text-slate-400">· {hours}h {minutes}m</span>
 }
 
 /**
@@ -1076,59 +1071,18 @@ function RefillCountdown() {
  * slides the continents across a still ocean instead of dragging the water
  * along with them.
  *
- * Every rect deliberately reaches far past the 800x600 viewBox. Scaling to fit
+ * The rect deliberately reaches far past the 800x600 viewBox. Scaling to fit
  * leaves the visible svg wider or taller than the projection on almost every
  * screen, and a sea that stopped at the viewBox edge would show bare page down
- * two sides. The gradients are pinned to user space instead, so the colour ramp
- * still follows the map and the overflow just carries the end colour.
+ * two sides. One flat colour, like the rest of the chrome: the owners' colours
+ * on the land are the picture, the water only has to be clearly not land.
  */
 function OceanBackdrop({ theme }: { theme: 'light' | 'dark' }) {
-    const dark = theme === 'dark'
     const cover = { x: -MAP_WIDTH, y: -MAP_HEIGHT, width: MAP_WIDTH * 3, height: MAP_HEIGHT * 3 }
 
     return (
         <g pointerEvents="none">
-            <defs>
-                {/* The ramp runs well past the top and bottom of the viewBox:
-                    a narrow screen letterboxes the map, and a gradient that
-                    ended at the projection would cap those bands with one flat
-                    colour instead of open water. */}
-                <linearGradient
-                    id="fw-ocean"
-                    gradientUnits="userSpaceOnUse"
-                    x1={0} y1={-MAP_HEIGHT * 0.75} x2={0} y2={MAP_HEIGHT * 1.75}
-                >
-                    {dark ? (
-                        <>
-                            <stop offset="0%" stopColor="#05131f" />
-                            <stop offset="30%" stopColor="#06192b" />
-                            <stop offset="70%" stopColor="#0a3757" />
-                            <stop offset="100%" stopColor="#0e4a75" />
-                        </>
-                    ) : (
-                        <>
-                            <stop offset="0%" stopColor="#dff2fd" />
-                            <stop offset="30%" stopColor="#d5edfc" />
-                            <stop offset="70%" stopColor="#a9dcf6" />
-                            <stop offset="100%" stopColor="#7cc0e8" />
-                        </>
-                    )}
-                </linearGradient>
-
-                {/* Same off-canvas glow the page background uses, so the board
-                    reads as part of it rather than a window cut into it. */}
-                <radialGradient
-                    id="fw-ocean-glow"
-                    gradientUnits="userSpaceOnUse"
-                    cx={MAP_WIDTH * 0.14} cy={-30} r={MAP_WIDTH * 0.75}
-                >
-                    <stop offset="0%" stopColor={dark ? "#38bdf8" : "#ffffff"} stopOpacity={dark ? 0.16 : 0.55} />
-                    <stop offset="100%" stopColor={dark ? "#38bdf8" : "#ffffff"} stopOpacity={0} />
-                </radialGradient>
-            </defs>
-
-            <rect {...cover} fill="url(#fw-ocean)" />
-            <rect {...cover} fill="url(#fw-ocean-glow)" />
+            <rect {...cover} fill={theme === 'dark' ? "#0B1626" : "#CFE2F3"} />
         </g>
     )
 }
@@ -1279,11 +1233,11 @@ function SiegePanel({ now, toDefend, mine, busy, onDefend, onCollect, onDismiss 
     // One line per siege, scrolling past about eight, so ten at once still sits
     // in the corner instead of burying the map.
     return (
-        <div className="absolute top-2 right-2 w-56 max-w-[70vw] z-20 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/70 dark:border-slate-700/70 shadow-lg overflow-hidden">
-            <div className="max-h-[46vh] overflow-y-auto divide-y divide-slate-200/70 dark:divide-slate-700/70">
+        <div className={`${PANEL} absolute top-2 right-2 w-56 max-w-[70vw] z-20 overflow-hidden`}>
+            <div className="max-h-[46vh] overflow-y-auto divide-y divide-slate-200 dark:divide-slate-700">
                 {toDefend.map(siege => (
-                    <div key={siege.code} className="flex items-center gap-1.5 pl-2 pr-1.5 py-1.5">
-                        <Shield size={12} className="text-amber-500 shrink-0" />
+                    <div key={siege.code} className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5">
+                        <Shield size={12} aria-hidden className="text-amber-500 shrink-0" />
                         <div className="min-w-0 flex-1 leading-tight">
                             <p className="text-[11px] font-bold truncate">{nameOf(siege)}</p>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
@@ -1293,7 +1247,7 @@ function SiegePanel({ now, toDefend, mine, busy, onDefend, onCollect, onDismiss 
                         <button
                             type="button"
                             onClick={() => onDefend(siege)}
-                            className="shrink-0 px-2 py-1 rounded-xl bg-amber-500 text-white text-[10px] font-black"
+                            className="min-h-0 shrink-0 rounded-md bg-amber-500 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-amber-600"
                         >
                             Defend
                         </button>
@@ -1304,10 +1258,10 @@ function SiegePanel({ now, toDefend, mine, busy, onDefend, onCollect, onDismiss 
                     const expired = siegeState(siege, now) === "expired"
                     const won = expired || !defenceHeld(siege)
                     return (
-                        <div key={siege.code} className="flex items-center gap-1.5 pl-2 pr-1.5 py-1.5">
+                        <div key={siege.code} className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5">
                             {won
-                                ? <Sparkles size={12} className="text-emerald-500 shrink-0" />
-                                : <Shield size={12} className="text-slate-400 shrink-0" />}
+                                ? <Sparkles size={12} aria-hidden className="text-emerald-500 shrink-0" />
+                                : <Shield size={12} aria-hidden className="text-slate-400 shrink-0" />}
                             <div className="min-w-0 flex-1 leading-tight">
                                 <p className="text-[11px] font-bold truncate">{nameOf(siege)}</p>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
@@ -1322,8 +1276,8 @@ function SiegePanel({ now, toDefend, mine, busy, onDefend, onCollect, onDismiss 
                                 type="button"
                                 disabled={busy}
                                 onClick={() => expired ? onCollect(siege) : onDismiss(siege)}
-                                className={`shrink-0 px-2 py-1 rounded-xl text-[10px] font-black disabled:opacity-50 ${
-                                    expired ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700'
+                                className={`min-h-0 shrink-0 px-2.5 py-1 text-[10px] font-bold disabled:opacity-50 ${
+                                    expired ? 'rounded-md bg-emerald-600 text-white hover:bg-emerald-700' : `${QUIET} !rounded-md`
                                 }`}
                             >
                                 {expired ? "Collect" : "OK"}
@@ -1333,8 +1287,8 @@ function SiegePanel({ now, toDefend, mine, busy, onDefend, onCollect, onDismiss 
                 })}
 
                 {waiting.map(siege => (
-                    <div key={siege.code} className="flex items-center gap-1.5 px-2 py-1.5">
-                        <Swords size={12} className="text-rose-500 shrink-0" />
+                    <div key={siege.code} className="flex items-center gap-1.5 px-2.5 py-1.5">
+                        <Swords size={12} aria-hidden className="text-slate-500 dark:text-slate-400 shrink-0" />
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate leading-tight">
                             {nameOf(siege)} · you scored {siege.score} · {timeLeft(siege)} left
                         </p>
@@ -1386,11 +1340,11 @@ function TerritorySheet({ code, territories, sieges, now, uid, attacksLeft: left
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             className="fixed left-0 right-0 bottom-0 z-40 p-3"
         >
-            <div className="mx-auto max-w-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl border border-white/70 dark:border-slate-700/70 shadow-2xl p-4">
+            <div className={`${DIALOG} mx-auto max-w-md p-4`}>
                 <div className="flex items-center gap-3">
-                    <img src={country.image} alt="" className="w-14 h-9 object-cover rounded-md shadow" />
+                    <img src={country.image} alt="" className="w-16 h-11 object-cover rounded-[4px] shadow-[0_2px_10px_rgba(10,14,26,0.18)]" />
                     <div className="min-w-0 flex-1">
-                        <p className="font-black truncate">{country.name}</p>
+                        <p className="font-bold truncate">{country.name}</p>
                         {held ? (
                             <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
                                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: ownerColor }} />
@@ -1400,13 +1354,13 @@ function TerritorySheet({ code, territories, sieges, now, uid, attacksLeft: left
                             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Unclaimed</p>
                         )}
                         {siege && (
-                            <p className="text-[11px] text-amber-500 font-semibold truncate">
+                            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold truncate">
                                 Under siege by {siege.attackerName} · {siege.score} to beat
                             </p>
                         )}
                     </div>
-                    <button type="button" onClick={onClose} className="p-2 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close">
-                        <X size={18} />
+                    <button type="button" onClick={onClose} className={CLOSE} aria-label="Close">
+                        <X size={18} aria-hidden />
                     </button>
                 </div>
 
@@ -1414,9 +1368,9 @@ function TerritorySheet({ code, territories, sieges, now, uid, attacksLeft: left
                     <button
                         type="button"
                         onClick={onDefend}
-                        className="mt-4 w-full py-3 rounded-2xl bg-amber-500 text-white font-bold flex items-center justify-center gap-2"
+                        className="mt-4 w-full py-3 rounded-lg bg-amber-500 text-white font-bold hover:bg-amber-600 flex items-center justify-center gap-2"
                     >
-                        <Shield size={18} />
+                        <Shield size={18} aria-hidden />
                         Defend · beat {siege.score}
                     </button>
                 ) : check.ok ? (
@@ -1424,14 +1378,14 @@ function TerritorySheet({ code, territories, sieges, now, uid, attacksLeft: left
                         type="button"
                         onClick={onAttack}
                         disabled={busy}
-                        className="mt-4 w-full py-3 rounded-2xl bg-rose-500 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                        className={`${PRIMARY} mt-4 w-full py-3 flex items-center justify-center gap-2`}
                     >
-                        {busy ? <Loader2 size={18} className="animate-spin" /> : <Swords size={18} />}
+                        {busy ? <Loader2 size={18} className="animate-spin" /> : <Swords size={18} aria-hidden />}
                         {check.besieges ? `Lay siege to ${country.name}` : "Claim it"}
                     </button>
                 ) : (
                     <p className="mt-4 text-xs text-center text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 py-2">
-                        {isMine ? <Shield size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-amber-500" />}
+                        {isMine ? <Shield size={14} aria-hidden className="text-emerald-500" /> : <AlertTriangle size={14} aria-hidden className="text-amber-500" />}
                         {blockedText[check.reason]}
                     </p>
                 )}
@@ -1443,7 +1397,7 @@ function TerritorySheet({ code, territories, sieges, now, uid, attacksLeft: left
                 )}
 
                 {check.ok && check.besieges && (
-                    <p className="mt-2 text-[11px] text-center text-slate-400">
+                    <p className="mt-2 text-[11px] text-center text-slate-500 dark:text-slate-400">
                         {held?.ownerName} gets {SIEGE_HOURS}h to answer the same questions. Outscore them and the land is yours.
                     </p>
                 )}
@@ -1522,27 +1476,27 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.92, opacity: 0 }}
-                className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl p-5 border border-white/70 dark:border-slate-700/70"
+                className={`${DIALOG} w-full max-w-md p-5 sm:p-6`}
             >
                 {/* Clock */}
-                <div className="flex items-center gap-2 mb-1 text-xs font-bold">
-                    <Timer size={14} className={mode === "defend" ? "text-amber-500" : "text-rose-500"} />
-                    <span className={`tabular-nums ${mode === "defend" && scoreToBeat !== undefined && liveScore <= scoreToBeat ? "text-rose-500" : ""}`}>
+                <div className="flex items-center gap-2 mb-2 text-xs font-bold">
+                    <Timer size={14} aria-hidden className={mode === "defend" ? "text-amber-500" : "text-slate-500 dark:text-slate-400"} />
+                    <span className={`tabular-nums ${mode === "defend" && scoreToBeat !== undefined && liveScore <= scoreToBeat ? "text-red-600 dark:text-red-400" : ""}`}>
                         {liveScore}
                     </span>
                     {scoreToBeat !== undefined && (
-                        <span className="text-slate-400 font-medium truncate">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium truncate">
                             · beat {scoreToBeat}{rivalName ? ` (${rivalName})` : ""}
                         </span>
                     )}
-                    <span className="ml-auto text-slate-400 font-medium shrink-0">
+                    <span className="ml-auto text-slate-500 dark:text-slate-400 font-medium tabular-nums shrink-0">
                         {step + 1} / {round.questions.length}
                     </span>
                 </div>
-                <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mb-4">
+                <div className="h-1.5 rounded-sm bg-slate-200 dark:bg-slate-700 overflow-hidden mb-5">
                     <div
-                        className={`h-full rounded-full ${
-                            scoreToBeat !== undefined && liveScore <= scoreToBeat ? 'bg-rose-500'
+                        className={`h-full rounded-sm ${
+                            scoreToBeat !== undefined && liveScore <= scoreToBeat ? 'bg-red-500'
                             : remaining > 0.35 ? 'bg-emerald-500' : 'bg-amber-500'
                         }`}
                         style={{ width: `${remaining * 100}%` }}
@@ -1550,16 +1504,17 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                 </div>
 
                 {/* No flag here: it used to answer the flag question outright. */}
-                <p className="text-[11px] uppercase tracking-widest text-slate-400 font-bold mb-1">
+                <p className={`${LABEL} mb-1`}>
                     {mode === "defend" ? `Defending ${round.target.name}` : `Attacking ${round.target.name}`}
                 </p>
-                <p className="font-bold text-sm mb-3">{question.prompt}</p>
+                <p className="font-bold mb-4">{question.prompt}</p>
 
                 {question.kind === "name-flag" && (
                     <img
+                        key={question.shown.image}
                         src={question.shown.image}
                         alt=""
-                        className="w-full max-w-[13rem] mx-auto aspect-[3/2] object-cover rounded-xl shadow mb-3"
+                        className="fl-in w-full max-w-[15rem] mx-auto aspect-[3/2] object-cover rounded-[4px] shadow-[0_2px_10px_rgba(10,14,26,0.18)] mb-4"
                     />
                 )}
 
@@ -1572,13 +1527,13 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                             autoFocus
                             autoComplete="off"
                             placeholder="Type your answer"
-                            className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 outline-none font-semibold"
+                            className={`${INPUT} text-center text-lg`}
                         />
-                        {hint && <p className="mt-2 text-xs text-amber-500 font-semibold">{hint}</p>}
+                        {hint && <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold">{hint}</p>}
                         <button
                             type="button"
                             onClick={submitTyped}
-                            className="mt-3 w-full py-3 rounded-2xl bg-rose-500 text-white font-bold"
+                            className={`${PRIMARY} mt-3 w-full py-3`}
                         >
                             Answer
                         </button>
@@ -1592,9 +1547,9 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                                 key={option.code}
                                 type="button"
                                 onClick={() => option.code === question.answerCode ? advance() : finish(false)}
-                                className="aspect-[3/2] rounded-xl overflow-hidden border-2 border-transparent hover:border-rose-400 transition-colors"
+                                className="aspect-[3/2] min-h-0 rounded-[6px] overflow-hidden border-2 border-transparent p-0 hover:border-slate-900 dark:hover:border-white transition-colors"
                             >
-                                <img src={option.image} alt="" className="w-full h-full object-cover" />
+                                <img src={option.image} alt="" className="w-full h-full object-cover rounded-[4px]" />
                             </button>
                         ))}
                     </div>
@@ -1607,7 +1562,7 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                                 key={option}
                                 type="button"
                                 onClick={() => option === question.answer ? advance() : finish(false)}
-                                className="px-3 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 text-sm font-semibold hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors text-left leading-tight"
+                                className={`${QUIET} px-3 py-3 text-sm font-semibold text-left leading-tight`}
                             >
                                 {option}
                             </button>
@@ -1615,7 +1570,7 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
                     </div>
                 )}
 
-                <p className="mt-3 text-xs text-center text-slate-400">
+                <p className="mt-4 text-xs text-center text-slate-500 dark:text-slate-400">
                     {question.kind === "typed"
                         ? "Typos are forgiven - a wrong answer only costs you time."
                         : "One shot - a wrong pick loses the attack."}
@@ -1629,25 +1584,25 @@ function AttackRound({ round, mode, scoreToBeat, rivalName, onDone }: {
 
 function StandingsTable({ standings, uid }: { standings: Standing[]; uid: string | null }) {
     return (
-        <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-900/60 text-[10px] font-black uppercase tracking-wider text-slate-400">
+        <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <span className="w-4">#</span>
                 <span className="flex-1">Empire</span>
                 <span className="w-10 text-right">Land</span>
                 <span className="w-14 text-right">Strength</span>
             </div>
-            <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
+            <div className="max-h-56 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-700">
                 {standings.map((row, index) => (
                     <div
                         key={row.uid}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-xs ${row.uid === uid ? 'bg-sky-50 dark:bg-sky-900/30 font-bold' : ''}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs ${row.uid === uid ? 'bg-slate-50 dark:bg-slate-700/50 font-bold' : ''}`}
                     >
-                        <span className="w-4 text-slate-400 font-bold">{index + 1}</span>
+                        <span className="w-4 text-slate-400 dark:text-slate-500 font-bold tabular-nums">{index + 1}</span>
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colorForPlayer(row.color) }} />
                         <span className="flex-1 truncate">{row.name}</span>
-                        {index === 0 && <Crown size={12} className="text-amber-500 shrink-0" />}
+                        {index === 0 && <Crown size={12} aria-hidden className="text-amber-500 shrink-0" />}
                         <span className="w-10 text-right tabular-nums">{row.territories}</span>
-                        <span className="w-14 text-right tabular-nums text-slate-400">{row.strength}</span>
+                        <span className="w-14 text-right tabular-nums text-slate-500 dark:text-slate-400">{row.strength}</span>
                     </div>
                 ))}
             </div>
@@ -1668,14 +1623,16 @@ function SeasonResults({ result, uid, onClose }: {
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.92, opacity: 0 }}
-                className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-5 border border-white/70 dark:border-slate-700/70"
+                className={`${DIALOG} w-full max-w-sm p-6`}
             >
                 <div className="text-center mb-4">
-                    <Crown className="mx-auto text-amber-500 mb-1" size={30} />
-                    <p className="text-[11px] uppercase tracking-widest text-slate-400 font-bold">
+                    <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700">
+                        <Crown size={24} aria-hidden />
+                    </span>
+                    <p className={LABEL}>
                         Season {result.number} is over
                     </p>
-                    <p className="font-black text-lg leading-tight">{result.winner?.name} wins</p>
+                    <p className="mt-1 font-bold text-lg leading-tight">{result.winner?.name} wins</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                         {result.winner?.territories} territories held at the end
                     </p>
@@ -1691,7 +1648,7 @@ function SeasonResults({ result, uid, onClose }: {
                 <button
                     type="button"
                     onClick={onClose}
-                    className="mt-4 w-full py-3 rounded-2xl bg-rose-500 text-white font-bold"
+                    className={`${PRIMARY} mt-4 w-full py-3`}
                 >
                     Start the new season
                 </button>
@@ -1707,13 +1664,13 @@ function HallOfFame({ seasons, onClose }: { seasons: HallOfFameEntry[]; onClose:
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.92, opacity: 0 }}
-                className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-5 border border-white/70 dark:border-slate-700/70"
+                className={`${DIALOG} w-full max-w-sm p-5`}
             >
-                <div className="flex items-center gap-2 mb-3">
-                    <Crown className="text-amber-500" size={20} />
-                    <h2 className="font-black text-lg flex-1">Hall of Fame</h2>
-                    <button type="button" onClick={onClose} className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close">
-                        <X size={18} />
+                <div className="flex items-center gap-2.5 mb-3">
+                    <Crown className="text-amber-500" size={20} aria-hidden />
+                    <h2 className="!text-lg font-bold flex-1">Hall of Fame</h2>
+                    <button type="button" onClick={onClose} className={CLOSE} aria-label="Close">
+                        <X size={18} aria-hidden />
                     </button>
                 </div>
 
@@ -1722,10 +1679,10 @@ function HallOfFame({ seasons, onClose }: { seasons: HallOfFameEntry[]; onClose:
                         No season has finished yet. The first name here is still up for grabs.
                     </p>
                 ) : (
-                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
+                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-700">
                         {seasons.map(entry => (
-                            <div key={entry.number} className="flex items-center gap-2.5 py-2">
-                                <span className="w-16 text-[11px] font-black text-slate-400 shrink-0">
+                            <div key={entry.number} className="flex items-center gap-2.5 py-2.5">
+                                <span className="w-16 text-[11px] font-bold text-slate-400 dark:text-slate-500 shrink-0">
                                     Season {entry.number}
                                 </span>
                                 <span
@@ -1733,7 +1690,7 @@ function HallOfFame({ seasons, onClose }: { seasons: HallOfFameEntry[]; onClose:
                                     style={{ background: colorForPlayer(entry.winnerColor) }}
                                 />
                                 <span className="flex-1 truncate font-bold text-sm">{entry.winnerName}</span>
-                                <span className="text-xs text-slate-400 tabular-nums shrink-0">
+                                <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
                                     {entry.territories} land
                                 </span>
                             </div>
@@ -1758,67 +1715,67 @@ function OutcomeBanner({ outcome, onClose }: { outcome: Outcome; onClose: () => 
 
     const copy: Record<Outcome["kind"], { icon: ReactNode; title: string; body: string }> = {
         claimed: {
-            icon: <Sparkles className="text-amber-500" size={30} />,
+            icon: <Sparkles className="text-amber-500" size={24} aria-hidden />,
             title: `${where} is yours`,
             body: "Unclaimed land, taken outright. Hold it and someone will come for it.",
         },
         "claim-failed": {
-            icon: <X className="text-slate-400" size={30} />,
+            icon: <X className="text-slate-400" size={24} aria-hidden />,
             title: `${where} slipped away`,
             body: "Wrong answer - the attack failed. That attack is spent.",
         },
         "siege-opened": {
-            icon: <Swords className="text-rose-500" size={30} />,
+            icon: <Swords className="text-red-500" size={24} aria-hidden />,
             title: `You scored ${outcome.score} on ${where}`,
             body: `${outcome.otherName ?? "The holder"} has ${SIEGE_HOURS}h to answer the same questions. Beat your score and they keep it; fall short or never show, and it is yours.`,
         },
         "siege-failed": {
-            icon: <X className="text-slate-400" size={30} />,
+            icon: <X className="text-slate-400" size={24} aria-hidden />,
             title: `The siege of ${where} collapsed`,
             body: "Wrong answer, so there is nothing for the holder to answer. That attack is spent.",
         },
         defended: {
-            icon: <Shield className="text-emerald-500" size={30} />,
+            icon: <Shield className="text-emerald-500" size={24} aria-hidden />,
             title: `${where} held`,
             body: `You scored ${outcome.score} against ${outcome.otherName}'s ${outcome.otherScore}. The land stays yours.`,
         },
         lost: {
-            icon: <Flag className="text-rose-500" size={30} />,
+            icon: <Flag className="text-red-500" size={24} aria-hidden />,
             title: `${where} is lost`,
             body: `${outcome.otherName} scored ${outcome.otherScore}, you managed ${outcome.score}. The territory is theirs.`,
         },
         "claimed-unopposed": {
-            icon: <Sparkles className="text-amber-500" size={30} />,
+            icon: <Sparkles className="text-amber-500" size={24} aria-hidden />,
             title: `${where} fell without a fight`,
             body: `Nobody answered inside ${SIEGE_HOURS} hours, so the territory is yours.`,
         },
         "write-failed": {
-            icon: <AlertTriangle className="text-amber-500" size={30} />,
+            icon: <AlertTriangle className="text-amber-500" size={24} aria-hidden />,
             title: "That did not save",
             body: "The result could not be written. Check your connection - the attack was spent, but nothing changed hands.",
         },
         "defence-too-late": {
-            icon: <Timer className="text-rose-500" size={30} />,
+            icon: <Timer className="text-red-500" size={24} aria-hidden />,
             title: `${where} ran out of time`,
             body: `The ${SIEGE_HOURS} hours were up before your answer landed, so ${outcome.otherName ?? "the attacker"} takes it. Defences have to be in before the clock stops.`,
         },
         "defence-moot": {
-            icon: <Shield className="text-slate-400" size={30} />,
+            icon: <Shield className="text-slate-400" size={24} aria-hidden />,
             title: `Nothing left to defend at ${where}`,
             body: "That siege has already been settled, or the territory changed hands while you were playing.",
         },
         "race-claimed": {
-            icon: <Flag className="text-slate-400" size={30} />,
+            icon: <Flag className="text-slate-400" size={24} aria-hidden />,
             title: `${where} was taken first`,
             body: `${outcome.otherName} claimed it moments before you finished. Your attack is spent, but the land is theirs now - you can lay siege to it next.`,
         },
         "race-besieged": {
-            icon: <Swords className="text-slate-400" size={30} />,
+            icon: <Swords className="text-slate-400" size={24} aria-hidden />,
             title: `${where} is already contested`,
             body: `${outcome.otherName} opened a siege on it first, scoring ${outcome.score}. Only one challenge at a time - wait for that one to settle.`,
         },
         "write-refused": {
-            icon: <AlertTriangle className="text-rose-500" size={30} />,
+            icon: <AlertTriangle className="text-red-500" size={24} aria-hidden />,
             title: "The database refused that",
             body: "Your connection is fine - the write was rejected by the security rules. They probably have not been deployed yet. Nothing changed hands.",
         },
@@ -1834,12 +1791,12 @@ function OutcomeBanner({ outcome, onClose }: { outcome: Outcome; onClose: () => 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="w-full max-w-xs bg-white dark:bg-slate-800 rounded-3xl p-6 border border-white/70 dark:border-slate-700/70 text-center"
+                className={`${DIALOG} block w-full max-w-xs p-6 text-center font-normal`}
             >
-                <div className="flex justify-center mb-2">{icon}</div>
-                <p className="font-black text-lg">{title}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{body}</p>
-                <p className="text-[11px] text-slate-400 mt-3">Tap to dismiss</p>
+                <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700">{icon}</span>
+                <p className="font-bold text-lg leading-tight">{title}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">{body}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-4">Tap to dismiss</p>
             </motion.button>
         </Backdrop>
     )

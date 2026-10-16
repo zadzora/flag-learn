@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { AlertTriangle, ArrowLeft, Moon, Sun, Shuffle } from "lucide-react"
+import { AlertTriangle, Loader2, RefreshCw, Shuffle, Timer } from "lucide-react"
+import TopBar from "../components/TopBar"
 import { generateWordWheelPuzzle, pathLetters, type WheelLetter, type WordWheelPuzzle } from "../utils/wordWheelPuzzle"
 import worldData from "../../data/flags.json"
 
@@ -362,202 +363,196 @@ export default function WordWheelGame() {
         return pts.filter(Boolean).join(" ")
     }, [puzzle, pathIndices])
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const page = "flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]"
+
     if (!initialized) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center text-slate-800 dark:text-slate-100 p-6">
-                <p className="mb-4 text-center">Loading…</p>
-                <Link to="/" className="text-indigo-600 dark:text-indigo-400 font-semibold">
-                    Back
-                </Link>
+            <div className={page}>
+                <TopBar title="Country Wheel" theme={theme} onToggleTheme={toggleTheme} />
+                <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-slate-500 dark:text-slate-400">
+                    <p className="flex items-center gap-2 text-center"><Loader2 size={18} className="animate-spin" aria-hidden /> Loading…</p>
+                    <Link to="/" className={`${quiet} px-5 py-2.5 text-sm`}>
+                        Back
+                    </Link>
+                </main>
             </div>
         )
     }
 
     if (!puzzle) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center text-slate-800 dark:text-slate-100 p-6 gap-4">
-                <p className="text-center max-w-sm">
-                    Couldn&apos;t build this level. Try again or go back and return.
-                </p>
-                <button
-                    type="button"
-                    onClick={() => reloadPuzzle()}
-                    className="px-6 py-3 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-500 transition-colors"
-                >
-                    Try again
-                </button>
-                <Link to="/" className="text-indigo-600 dark:text-indigo-400 font-semibold">
-                    Home
-                </Link>
+            <div className={page}>
+                <TopBar title="Country Wheel" theme={theme} onToggleTheme={toggleTheme} />
+                <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+                    <p className="max-w-sm text-center text-slate-500 dark:text-slate-400">
+                        Couldn&apos;t build this level. Try again or go back and return.
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => reloadPuzzle()}
+                            className={`${primary} px-6 py-3`}
+                        >
+                            Try again
+                        </button>
+                        <Link to="/" className={`${quiet} flex items-center px-6 py-3`}>
+                            Home
+                        </Link>
+                    </div>
+                </main>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center pt-6 pb-10 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500 px-3">
-            <div className="w-full max-w-lg flex justify-between items-center mb-4">
-                <button
-                    type="button"
-                    title="Back to Menu"
-                    onClick={requestNavigateHome}
-                    className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
+        <div className={page}>
+            <TopBar title="Country Wheel" back={requestNavigateHome} theme={theme} onToggleTheme={toggleTheme}>
+                <span
+                    className={`flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums ${timeLeftSec <= 20 ? "text-red-600 dark:text-red-400" : ""}`}
+                    title="Time remaining for this level"
                 >
-                    <ArrowLeft size={20} />
-                </button>
-                <div className="flex items-center gap-2 font-bold text-sm flex-wrap justify-end">
-                    <span
-                        className={
-                            "px-3 py-1.5 rounded-full border font-mono tabular-nums " +
-                            (timeLeftSec <= 20
-                                ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-600"
-                                : "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-600")
-                        }
-                        title="Time remaining for this level"
-                    >
-                        {formatMmSs(timeLeftSec)}
-                    </span>
-                    <span className="bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 px-3 py-1.5 rounded-full border border-violet-200 dark:border-violet-500/30">
-                        Level {level}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                    >
-                        {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
+                    <Timer size={16} aria-hidden /> {formatMmSs(timeLeftSec)}
+                </span>
+                <span className="whitespace-nowrap rounded-md border border-slate-200 px-2 py-1 text-sm font-bold dark:border-slate-700">
+                    Level {level}
+                </span>
+            </TopBar>
+
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                <p className="mb-5 max-w-md text-center text-sm text-slate-500 dark:text-slate-400">
+                    Drag across the wheel — each tile at most once per word. Spell the exact country names within{" "}
+                    {Math.floor(ROUND_SECONDS / 60)} minutes. Every 30 seconds one random letter is revealed.
+                </p>
+
+                <section className={`${panel} mb-6 w-full p-4 sm:p-5`}>
+                    <div className="space-y-4">
+                        {puzzle.entries.map((e) => {
+                            const done = solvedKeys.has(e.key)
+                            return (
+                                <motion.div
+                                    key={e.code + e.key}
+                                    layout
+                                    className="flex flex-wrap items-center justify-center gap-2 sm:justify-start"
+                                >
+                                    {done && (
+                                        <img
+                                            src={e.image}
+                                            alt=""
+                                            className="fl-in h-7 w-10 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
+                                        />
+                                    )}
+                                    <div className="flex flex-wrap justify-center gap-1">
+                                        {e.key.split("").map((ch, i) => {
+                                            const hinted =
+                                                !done && hintRevealed.has(`${e.code}-${i}`)
+                                            return (
+                                                <div
+                                                    key={`${e.code}-${i}`}
+                                                    className={
+                                                        done
+                                                            ? "flex h-11 w-9 items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-500/15 text-lg font-extrabold text-emerald-700 dark:text-emerald-300"
+                                                            : hinted
+                                                              ? "flex h-11 w-9 items-center justify-center rounded-md border border-amber-500/45 bg-amber-500/15 text-lg font-extrabold text-amber-800 dark:text-amber-200"
+                                                              : "flex h-11 w-9 select-none items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-transparent dark:border-slate-700 dark:bg-slate-900"
+                                                    }
+                                                >
+                                                    {done || hinted ? ch : "·"}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    {done && (
+                                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {e.displayName}
+                                        </span>
+                                    )}
+                                </motion.div>
+                            )
+                        })}
+                    </div>
+                </section>
+
+                <div className="mb-2 min-h-[2rem] text-center font-mono text-lg font-bold tracking-[0.2em] text-slate-700 dark:text-slate-200">
+                    {liveWord || "…"}
                 </div>
-            </div>
 
-            <p className="text-center text-sm text-slate-500 dark:text-slate-400 max-w-md mb-4">
-                Drag across the wheel — each tile at most once per word. Spell the exact country names within{" "}
-                {Math.floor(ROUND_SECONDS / 60)} minutes. Every 30 seconds one random letter is revealed.
-            </p>
-
-            <div className="w-full max-w-lg bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl rounded-3xl border border-white/70 dark:border-slate-700/70 shadow-xl p-4 mb-6">
-                <div className="space-y-4">
-                    {puzzle.entries.map((e) => {
-                        const done = solvedKeys.has(e.key)
+                <div
+                    ref={wheelWrapRef}
+                    className={
+                        "relative mb-6 aspect-square w-[min(92vw,340px)] touch-none select-none " +
+                        (showTimeoutAnswers ? "pointer-events-none opacity-40" : "")
+                    }
+                    style={{ touchAction: "none" }}
+                >
+                    {/* overflow-hidden keeps the disc round under the global "no pills" rule. */}
+                    <div className="absolute inset-[8%] overflow-hidden rounded-full border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800" />
+                    <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
+                        {linePoints ? (
+                            <polyline
+                                points={linePoints}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-blue-500 opacity-90 dark:text-blue-400"
+                            />
+                        ) : null}
+                    </svg>
+                    {wheelLetters.map((cell, i) => {
+                        const pos = wheelPositions[i]
+                        const onPath = pathIndices.includes(i)
                         return (
-                            <motion.div
-                                key={e.code + e.key}
-                                layout
-                                className="flex flex-wrap items-center gap-2 justify-center sm:justify-start"
+                            <button
+                                key={cell.id}
+                                type="button"
+                                data-wheel-index={i}
+                                ref={(el) => {
+                                    letterRefs.current[i] = el
+                                }}
+                                className={
+                                    "absolute z-20 -ml-7 -mt-7 flex h-14 w-14 items-center justify-center rounded-full border p-0 text-xl font-extrabold " +
+                                    (onPath
+                                        ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500"
+                                        : "border-slate-300 bg-[#fff] text-slate-900 hover:border-slate-500 dark:border-[#2A3350] dark:bg-[#1C2338] dark:text-white dark:hover:border-[#4A5680]")
+                                }
+                                style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
+                                onPointerDown={(ev) => {
+                                    ev.preventDefault()
+                                    gestureEndedRef.current = false
+                                    ;(ev.target as HTMLElement).setPointerCapture?.(ev.pointerId)
+                                    setDragging(true)
+                                    setPathIndices([i])
+                                }}
                             >
-                                {done && (
-                                    <img
-                                        src={e.image}
-                                        alt=""
-                                        className="w-10 h-7 rounded-md object-cover shadow border border-slate-200 dark:border-slate-600 shrink-0"
-                                    />
-                                )}
-                                <div className="flex gap-1 flex-wrap justify-center">
-                                    {e.key.split("").map((ch, i) => {
-                                        const hinted =
-                                            !done && hintRevealed.has(`${e.code}-${i}`)
-                                        return (
-                                            <div
-                                                key={`${e.code}-${i}`}
-                                                className={
-                                                    done
-                                                        ? "w-9 h-11 rounded-lg bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-300 text-lg"
-                                                        : hinted
-                                                          ? "w-9 h-11 rounded-lg bg-amber-500/15 border border-amber-500/45 flex items-center justify-center font-black text-amber-800 dark:text-amber-200 text-lg"
-                                                          : "w-9 h-11 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-transparent select-none"
-                                                }
-                                            >
-                                                {done || hinted ? ch : "·"}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                {done && (
-                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                        {e.displayName}
-                                    </span>
-                                )}
-                            </motion.div>
+                                {cell.letter}
+                            </button>
                         )
                     })}
                 </div>
-            </div>
 
-            <div className="text-center min-h-[2rem] mb-2 font-mono tracking-[0.2em] text-lg text-slate-700 dark:text-slate-200">
-                {liveWord || "…"}
-            </div>
-
-            <div
-                ref={wheelWrapRef}
-                className={
-                    "relative w-[min(92vw,340px)] aspect-square touch-none select-none mb-6 " +
-                    (showTimeoutAnswers ? "opacity-40 pointer-events-none" : "")
-                }
-                style={{ touchAction: "none" }}
-            >
-                <div className="absolute inset-[8%] rounded-full bg-gradient-to-br from-white/90 to-slate-100/90 dark:from-slate-700/90 dark:to-slate-900/90 border border-white/80 dark:border-slate-600/80 shadow-inner" />
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
-                    {linePoints ? (
-                        <polyline
-                            points={linePoints}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-violet-500 dark:text-violet-400 opacity-90"
-                        />
-                    ) : null}
-                </svg>
-                {wheelLetters.map((cell, i) => {
-                    const pos = wheelPositions[i]
-                    const onPath = pathIndices.includes(i)
-                    return (
-                        <button
-                            key={cell.id}
-                            type="button"
-                            data-wheel-index={i}
-                            ref={(el) => {
-                                letterRefs.current[i] = el
-                            }}
-                            className={
-                                "absolute z-20 w-14 h-14 -ml-7 -mt-7 rounded-2xl font-black text-xl shadow-lg border transition-transform flex items-center justify-center " +
-                                (onPath
-                                    ? "bg-violet-500 text-white border-violet-600 scale-105"
-                                    : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-600 active:scale-95")
-                            }
-                            style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
-                            onPointerDown={(ev) => {
-                                ev.preventDefault()
-                                gestureEndedRef.current = false
-                                ;(ev.target as HTMLElement).setPointerCapture?.(ev.pointerId)
-                                setDragging(true)
-                                setPathIndices([i])
-                            }}
-                        >
-                            {cell.letter}
-                        </button>
-                    )
-                })}
-            </div>
-
-            <div className="flex flex-col items-stretch gap-2 w-full max-w-[240px]">
-                <button
-                    type="button"
-                    onClick={shuffleWheelLetters}
-                    disabled={wheelLetters.length < 2 || showTimeoutAnswers}
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-semibold text-sm hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                >
-                    <Shuffle size={18} aria-hidden /> Shuffle
-                </button>
-                <button
-                    type="button"
-                    onClick={() => reloadPuzzle()}
-                    disabled={showTimeoutAnswers}
-                    className="py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-colors shadow-md shadow-red-600/25 disabled:opacity-40 disabled:pointer-events-none"
-                >
-                    New puzzle
-                </button>
-            </div>
+                <div className="grid w-full max-w-[320px] grid-cols-2 gap-2">
+                    <button
+                        type="button"
+                        onClick={shuffleWheelLetters}
+                        disabled={wheelLetters.length < 2 || showTimeoutAnswers}
+                        className={`${quiet} flex items-center justify-center gap-2 px-4 py-2.5 text-sm disabled:pointer-events-none disabled:opacity-40`}
+                    >
+                        <Shuffle size={17} aria-hidden /> Shuffle
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => reloadPuzzle()}
+                        disabled={showTimeoutAnswers}
+                        className={`${quiet} flex items-center justify-center gap-2 px-4 py-2.5 text-sm disabled:pointer-events-none disabled:opacity-40`}
+                    >
+                        <RefreshCw size={17} aria-hidden /> New puzzle
+                    </button>
+                </div>
+            </main>
 
             <AnimatePresence>
                 {toast && (
@@ -565,9 +560,9 @@ export default function WordWheelGame() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
-                        className="fixed bottom-8 left-4 right-4 flex justify-center pointer-events-none z-50"
+                        className="pointer-events-none fixed bottom-8 left-4 right-4 z-50 flex justify-center"
                     >
-                        <div className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold max-w-md text-center">
+                        <div className="pointer-events-auto max-w-md rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white shadow-xl dark:bg-[#E8ECF6] dark:text-[#0A0E1A]">
                             {toast}
                         </div>
                     </motion.div>
@@ -580,60 +575,63 @@ export default function WordWheelGame() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4"
                     >
                         <motion.div
                             role="dialog"
                             aria-modal="true"
                             aria-labelledby="word-wheel-timeout-title"
                             lang="en"
-                            initial={{ scale: 0.95 }}
+                            initial={{ scale: 0.97 }}
                             animate={{ scale: 1 }}
-                            exit={{ scale: 0.95 }}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-5 max-w-sm border border-slate-200 dark:border-slate-700 w-full"
+                            exit={{ scale: 0.97 }}
+                            className="flex max-h-[90vh] w-full max-w-sm flex-col items-center gap-5 overflow-y-auto rounded-[10px] border border-slate-200 bg-white p-7 text-center shadow-xl dark:border-slate-700 dark:bg-slate-800"
                         >
                             <div className="w-full">
+                                <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700">
+                                    <Timer size={28} aria-hidden />
+                                </span>
                                 <h2
                                     id="word-wheel-timeout-title"
-                                    className="text-2xl font-bold text-slate-800 dark:text-white mb-2"
+                                    className="mb-2 !text-2xl font-bold"
                                 >
                                     Time&apos;s up!
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
+                                <p className="mb-1 text-sm text-slate-500 dark:text-slate-400">
                                     You didn&apos;t spell every country before the timer hit zero.
                                 </p>
-                                <p className="text-slate-600 dark:text-slate-300 text-sm font-semibold mb-4">
+                                <p className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
                                     Countries on this level (answers):
                                 </p>
-                                <ul className="text-left space-y-3" aria-label="Answers for this level">
+                                <ul className="space-y-3 text-left" aria-label="Answers for this level">
                                     {puzzle.entries.map((e) => (
                                         <li
                                             key={e.code}
-                                            className="flex items-center gap-3 text-slate-800 dark:text-slate-100"
+                                            className="flex items-center gap-3"
                                         >
                                             <img
                                                 src={e.image}
                                                 alt={`Flag — ${e.displayName}`}
-                                                className="w-12 h-8 rounded object-cover border border-slate-200 dark:border-slate-600 shrink-0"
+                                                className="h-8 w-12 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
                                             />
-                                            <div className="text-left min-w-0">
+                                            <div className="min-w-0 text-left">
                                                 <div className="font-semibold">{e.displayName}</div>
-                                                <div className="font-mono text-xs text-slate-500 dark:text-slate-400 tracking-widest">
+                                                <div className="font-mono text-xs tracking-widest text-slate-500 dark:text-slate-400">
                                                     {e.key}
                                                 </div>
                                             </div>
                                         </li>
                                     ))}
                                 </ul>
-                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
-                                    You stay on <span className="font-semibold text-slate-600 dark:text-slate-300">level {level}</span>.
+                                <p className="mt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                                    You stay on <span className="font-semibold text-slate-700 dark:text-slate-300">level {level}</span>.
                                     Tap below for a new puzzle — same level, different countries.
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={dismissTimeoutTryAgain}
-                                className="w-full py-3.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-violet-600/20 transition-all active:scale-95"
+                                className={`${primary} w-full py-3.5 text-lg`}
                             >
                                 Try again
                             </button>
@@ -648,35 +646,35 @@ export default function WordWheelGame() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4"
                     >
                         <motion.div
-                            initial={{ scale: 0.95 }}
+                            initial={{ scale: 0.97 }}
                             animate={{ scale: 1 }}
-                            exit={{ scale: 0.95 }}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-6 max-w-sm border border-slate-200 dark:border-slate-700 w-full"
+                            exit={{ scale: 0.97 }}
+                            className="flex w-full max-w-sm flex-col items-center gap-6 rounded-[10px] border border-slate-200 bg-white p-7 text-center shadow-xl dark:border-slate-700 dark:bg-slate-800"
                         >
-                            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full text-red-500 dark:text-red-400">
-                                <AlertTriangle size={48} />
-                            </div>
+                            <span className="flex h-14 w-14 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700 dark:text-red-400">
+                                <AlertTriangle size={28} aria-hidden />
+                            </span>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Quit Country Wheel?</h2>
+                                <h2 className="mb-2 !text-2xl font-bold">Quit Country Wheel?</h2>
                                 <p className="text-slate-500 dark:text-slate-400">
                                     If you leave now, your current run progress will be lost.
                                 </p>
                             </div>
-                            <div className="w-full flex flex-col gap-3 mt-2">
+                            <div className="flex w-full flex-col gap-3">
                                 <button
                                     type="button"
                                     onClick={confirmQuitHome}
-                                    className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-red-500/20 transition-all active:scale-95"
+                                    className="w-full rounded-lg bg-red-500 py-3.5 text-lg font-bold text-white hover:bg-red-600"
                                 >
                                     Yes, Quit
                                 </button>
                                 <button
                                     type="button"
                                     onClick={cancelQuitHome}
-                                    className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95"
+                                    className={`${quiet} w-full py-3.5 text-lg`}
                                 >
                                     Cancel
                                 </button>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
-import { Link } from "react-router-dom"
-import { ArrowLeft, Copy, Trash2, Undo, Move } from "lucide-react"
+import { Copy, Trash2, Undo, Move } from "lucide-react"
+import TopBar from "../components/TopBar"
 import constData from "../../data/constellations.json"
 
 // (0/undefined=bright, 1=medium, 2=dim)
@@ -78,24 +78,32 @@ export default function ConstellationBuilder() {
         return 2.8;
     }
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const label = "mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+    const field = "w-full border border-slate-200 bg-slate-50 text-slate-900 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
+    const iconButton = "flex h-10 min-h-0 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 p-0 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-[#3A4670]"
+    const brushes: { value: number; label: string; dot: string }[] = [
+        { value: 0, label: "Big", dot: "h-3 w-3" },
+        { value: 1, label: "Med", dot: "h-2 w-2" },
+        { value: 2, label: "Dim", dot: "h-1 w-1" },
+    ]
+
     return (
-        <div className="min-h-screen text-slate-100 flex flex-col p-4 sm:p-8 font-sans">
-            <div className="flex items-center gap-4 mb-8">
-                <Link to="/" className="p-3 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"><ArrowLeft size={20} /></Link>
-                <h1 className="text-2xl font-bold text-indigo-400">Constellation Builder</h1>
-            </div>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Constellation Builder" />
 
-            <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto w-full">
+            <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-6 px-4 pb-14 pt-6 sm:px-6 sm:pt-8 md:flex-row">
 
-                <div className="flex-1 flex flex-col gap-4 min-w-0">
-                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-                        <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">1. Select Constellation</label>
-                        <select value={selectedCode} onChange={(e) => setSelectedCode(e.target.value)} className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-xl outline-none focus:border-indigo-500 font-mono mb-4">
+                <div className="flex min-w-0 flex-1 flex-col gap-4">
+                    <section className={`${panel} p-5 sm:p-6`}>
+                        <label htmlFor="builder-constellation" className={label}>1. Select Constellation</label>
+                        <select id="builder-constellation" value={selectedCode} onChange={(e) => setSelectedCode(e.target.value)} className={`${field} mb-4 p-3 font-mono`}>
                             {allConstellations.map(c => <option key={c.code} value={c.code}>[{c.code.toUpperCase()}] {c.name.la[0]} {c.stars.length === 0 ? " (EMPTY)" : ` (${c.stars.length} stars)`}</option>)}
                         </select>
 
-                        <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">2. Background Image</label>
+                        <label htmlFor="builder-bg" className={label}>2. Background Image</label>
                         <input
+                            id="builder-bg"
                             type="text"
                             placeholder="Paste image URL here..."
                             value={bgImage}
@@ -105,73 +113,75 @@ export default function ConstellationBuilder() {
                                 setBgOffsetX(0);
                                 setBgOffsetY(0);
                             }}
-                            className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-xl outline-none focus:border-indigo-500 text-sm mb-4"
+                            className={`${field} mb-4 p-3 text-sm`}
                         />
 
                         {bgImage && (
-                            <div className="flex flex-col gap-3 bg-slate-950 p-4 rounded-xl border border-slate-700">
+                            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
                                 {/* SCALE */}
                                 <div className="flex items-center gap-4">
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide w-12">Scale</label>
-                                    <input type="range" min="10" max="400" value={bgScale} onChange={(e) => setBgScale(parseInt(e.target.value))} className="flex-1 h-1 bg-slate-700 rounded-full appearance-none accent-indigo-500" />
-                                    <span className="text-xs font-bold text-indigo-400 font-mono w-10 text-right">{bgScale}%</span>
+                                    <label className="block w-12 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Scale</label>
+                                    <input type="range" min="10" max="400" value={bgScale} onChange={(e) => setBgScale(parseInt(e.target.value))} className="h-5 min-h-0 flex-1 p-0 accent-blue-500" />
+                                    <span className="w-10 text-right font-mono text-xs font-bold tabular-nums">{bgScale}%</span>
                                 </div>
                                 {/* OFFSET X */}
                                 <div className="flex items-center gap-4">
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide w-12">Pan X</label>
-                                    <input type="range" min="-150" max="150" value={bgOffsetX} onChange={(e) => setBgOffsetX(parseInt(e.target.value))} className="flex-1 h-1 bg-slate-700 rounded-full appearance-none accent-emerald-500" />
-                                    <span className="text-xs font-bold text-emerald-400 font-mono w-10 text-right">{bgOffsetX}</span>
+                                    <label className="block w-12 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pan X</label>
+                                    <input type="range" min="-150" max="150" value={bgOffsetX} onChange={(e) => setBgOffsetX(parseInt(e.target.value))} className="h-5 min-h-0 flex-1 p-0 accent-blue-500" />
+                                    <span className="w-10 text-right font-mono text-xs font-bold tabular-nums">{bgOffsetX}</span>
                                 </div>
                                 {/* OFFSET Y */}
                                 <div className="flex items-center gap-4">
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide w-12">Pan Y</label>
-                                    <input type="range" min="-150" max="150" value={bgOffsetY} onChange={(e) => setBgOffsetY(parseInt(e.target.value))} className="flex-1 h-1 bg-slate-700 rounded-full appearance-none accent-emerald-500" />
-                                    <span className="text-xs font-bold text-emerald-400 font-mono w-10 text-right">{bgOffsetY}</span>
+                                    <label className="block w-12 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pan Y</label>
+                                    <input type="range" min="-150" max="150" value={bgOffsetY} onChange={(e) => setBgOffsetY(parseInt(e.target.value))} className="h-5 min-h-0 flex-1 p-0 accent-blue-500" />
+                                    <span className="w-10 text-right font-mono text-xs font-bold tabular-nums">{bgOffsetY}</span>
                                 </div>
-                                <button onClick={() => { setBgOffsetX(0); setBgOffsetY(0); setBgScale(100) }} className="text-xs text-slate-500 hover:text-white mt-1">Reset Position & Scale</button>
+                                <button type="button" onClick={() => { setBgOffsetX(0); setBgOffsetY(0); setBgScale(100) }} className="mt-1 min-h-0 self-center px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Reset Position & Scale</button>
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl flex-1 flex flex-col max-h-[350px]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wide">Generated JSON</h2>
-                            <button onClick={copyToClipboard} className="flex items-center gap-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition-colors font-bold"><Copy size={14} /> Copy Code</button>
+                    <section className={`${panel} flex max-h-[350px] flex-1 flex-col p-5 sm:p-6`}>
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="!text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Generated JSON</h2>
+                            <button type="button" onClick={copyToClipboard} className="flex min-h-0 items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"><Copy size={14} aria-hidden /> Copy Code</button>
                         </div>
-                        <pre className="text-xs text-indigo-300 font-mono bg-slate-950 p-4 rounded-xl overflow-y-auto whitespace-pre-wrap break-words border border-slate-800 flex-1">
+                        <pre className="flex-1 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                             "stars": {JSON.stringify(localStars)},<br/>
                             "lines": {JSON.stringify(localLines)}
                         </pre>
-                    </div>
+                    </section>
                 </div>
 
-                <div className="flex-1 flex flex-col gap-4 min-w-0">
+                <div className="flex min-w-0 flex-1 flex-col gap-4">
 
-                    <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-wrap gap-4 items-center justify-between">
-                        <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                            <button onClick={() => setStarBrush(0)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${starBrush === 0 ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}>
-                                <circle cx="5" cy="5" r="5" className="w-3 h-3 fill-current rounded-full" /> Big
-                            </button>
-                            <button onClick={() => setStarBrush(1)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${starBrush === 1 ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}>
-                                <circle cx="5" cy="5" r="3" className="w-2 h-2 fill-current rounded-full" /> Med
-                            </button>
-                            <button onClick={() => setStarBrush(2)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${starBrush === 2 ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-800'}`}>
-                                <circle cx="5" cy="5" r="1.5" className="w-1 h-1 fill-current rounded-full" /> Dim
-                            </button>
+                    <section className={`${panel} flex flex-wrap items-center justify-between gap-4 p-3`}>
+                        <div className="grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 p-1 dark:border-slate-700" role="group" aria-label="Star brush">
+                            {brushes.map(b => (
+                                <button
+                                    key={b.value}
+                                    type="button"
+                                    onClick={() => setStarBrush(b.value)}
+                                    aria-pressed={starBrush === b.value}
+                                    className={`flex min-h-9 items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold ${starBrush === b.value ? 'bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+                                >
+                                    <span className={`${b.dot} shrink-0 rounded-full bg-current`} aria-hidden /> {b.label}
+                                </button>
+                            ))}
                         </div>
 
                         <div className="flex gap-2">
-                            <button onClick={undoLastStar} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors text-slate-300" title="Undo Star"><Undo size={18}/></button>
-                            <button onClick={undoLastLine} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors text-slate-300" title="Undo Line"><Move size={18}/></button>
-                            <button onClick={clearAll} className="p-2 bg-red-900/30 hover:bg-red-900/60 text-red-400 rounded-xl transition-colors" title="Clear All"><Trash2 size={18}/></button>
+                            <button type="button" onClick={undoLastStar} className={iconButton} title="Undo Star" aria-label="Undo Star"><Undo size={18} aria-hidden /></button>
+                            <button type="button" onClick={undoLastLine} className={iconButton} title="Undo Line" aria-label="Undo Line"><Move size={18} aria-hidden /></button>
+                            <button type="button" onClick={clearAll} className={`${iconButton} text-red-500 hover:border-red-400 dark:text-red-400`} title="Clear All" aria-label="Clear All"><Trash2 size={18} aria-hidden /></button>
                         </div>
-                    </div>
+                    </section>
 
-                    {/* SVG CANVAS */}
-                    <div className="w-full aspect-square bg-slate-950 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden p-2">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-slate-950 to-slate-950 pointer-events-none"></div>
+                    {/* SVG CANVAS - the night sky is content and stays dark. */}
+                    <div className="relative aspect-square w-full overflow-hidden rounded-[10px] border border-slate-700 bg-[#05070F] p-2">
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-slate-950 to-slate-950"></div>
 
-                        <svg ref={svgRef} viewBox="0 0 100 100" className="w-full h-full overflow-visible drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] z-10 relative cursor-crosshair" onClick={handleSvgClick} onContextMenu={(e) => e.preventDefault()}>
+                        <svg ref={svgRef} viewBox="0 0 100 100" className="relative z-10 h-full w-full cursor-crosshair overflow-visible drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" onClick={handleSvgClick} onContextMenu={(e) => e.preventDefault()}>
 
                             {bgImage && <image href={bgImage} x={imgX} y={imgY} height={bgScale} width={bgScale} preserveAspectRatio="xMidYMid meet" opacity="0.4" pointerEvents="none" />}
 
@@ -194,7 +204,8 @@ export default function ConstellationBuilder() {
                                 return (
                                     <g key={`star-${i}`} onContextMenu={(e) => handleStarRightClick(e, i)} className="cursor-pointer">
                                         <circle cx={star[0]} cy={star[1]} r="4" fill="transparent" /> {/* Hitbox */}
-                                        <circle cx={star[0]} cy={star[1]} r={radius} fill={isConnecting ? "#4ade80" : "white"} className={isConnecting ? "animate-pulse" : "hover:fill-indigo-400"} />
+                                        {isConnecting && <circle cx={star[0]} cy={star[1]} r={radius + 1.4} fill="none" stroke="#4ade80" strokeWidth="0.5" pointerEvents="none" />}
+                                        <circle cx={star[0]} cy={star[1]} r={radius} fill={isConnecting ? "#4ade80" : "white"} className={isConnecting ? "" : "hover:fill-blue-400"} />
                                         <text x={star[0] + 3} y={star[1] + 3} fontSize="3" fill={isConnecting ? "#4ade80" : "#fbbf24"} fontWeight="bold" pointerEvents="none">{i}</text>
                                     </g>
                                 )
@@ -202,7 +213,7 @@ export default function ConstellationBuilder() {
                         </svg>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     )
 }

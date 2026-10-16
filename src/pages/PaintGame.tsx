@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Lightbulb, RefreshCw, Flag, Check, X, ChevronRight } from 'lucide-react'
+import { Lightbulb, RefreshCw, Flag, Check, X, ChevronRight, Flame, Loader2, Paintbrush } from 'lucide-react'
+import TopBar from '../components/TopBar'
 import flagsData from '../../data/flags.json'
 import {
   PAINTABLE_CODES, applyStroke, isLightColor, loadPaintableFlag, refineInjectedRegions,
@@ -346,26 +347,49 @@ export default function PaintGame() {
   const hintsCount = hintsState.hints
   const secsUntilHint = secondsUntilNextHint(hintsState)
 
+  // This page has no theme switch of its own and always plays on the night ground:
+  // the `dark` class turns on every dark: variant below, whatever the app theme is.
+  const pageClass = 'dark flex min-h-[100dvh] flex-col bg-[#0A0E1A] text-slate-900 select-none dark:text-[#E8ECF6]'
+  const panel = 'rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'
+  const primary = 'rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]'
+  const quiet = 'rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]'
+  const disabledButton = 'cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500'
+
   // ── Cycle-complete screen ──
   if (cycleComplete) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center gap-5 bg-[#1a2744] text-white p-8">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="text-7xl">🎨</motion.div>
-        <h1 className="text-3xl font-black text-center">All Done!</h1>
-        <p className="text-white/60 text-center">You painted all {total} flags.</p>
-        <div className="flex gap-10 mt-2">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-4xl font-black text-emerald-400">{completed}</span>
-            <span className="text-white/55 text-sm">Correct</span>
-          </div>
-          <div className="w-px bg-white/10" />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-4xl font-black text-red-400">{incorrectCount}</span>
-            <span className="text-white/55 text-sm">Incorrect</span>
-          </div>
-        </div>
-        <button onClick={() => startNewCycle()} className="px-8 py-4 bg-indigo-500 hover:bg-indigo-400 rounded-2xl font-bold text-lg transition-all shadow-lg">Play Again</button>
-        <button onClick={() => navigate(-1)} className="text-white/40 text-sm">Back to menu</button>
+      <div className={pageClass}>
+        <TopBar title="Paint the Flag" back={() => navigate(-1)} />
+        <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
+          <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+            <div className="flex items-center gap-4">
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700 dark:text-amber-400">
+                <Paintbrush size={28} aria-hidden />
+              </motion.span>
+              <div>
+                <h1 className="!text-3xl font-bold">All Done!</h1>
+                <p className="mt-1 text-slate-500 dark:text-slate-400">You painted all {total} flags.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Correct</div>
+                <div className="mt-1 text-3xl font-bold tabular-nums text-emerald-500 dark:text-emerald-400">{completed}</div>
+              </div>
+              <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Incorrect</div>
+                <div className="mt-1 text-3xl font-bold tabular-nums text-red-500 dark:text-red-400">{incorrectCount}</div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button onClick={() => startNewCycle()} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}>
+                <RefreshCw size={18} aria-hidden /> Play Again
+              </button>
+              <button onClick={() => navigate(-1)} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to menu</button>
+            </div>
+          </section>
+        </main>
       </div>
     )
   }
@@ -373,301 +397,260 @@ export default function PaintGame() {
   // ── Main game ──
   return (
     <>
-    <div className="min-h-dvh flex flex-col bg-[#1a2744] text-white select-none">
+    <div className={pageClass}>
+      <TopBar title="Paint the Flag" back={() => navigate(-1)}>
+        {streak >= 2 && (
+          <span className="flex items-center gap-1 text-sm font-semibold tabular-nums text-orange-500 dark:text-orange-400" title="Painted in a row">
+            <Flame size={15} aria-hidden /> {streak}
+          </span>
+        )}
+        <span className="text-sm font-semibold tabular-nums text-slate-500 dark:text-slate-400" title="Flags painted">{completed}/{total}</span>
+      </TopBar>
 
-      {/* Header */}
-      <div className="flex justify-center px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-3 shrink-0">
-        <div className="w-full max-w-lg flex items-center gap-2">
-          <button onClick={() => navigate(-1)} className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform shrink-0">
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
-              initial={false}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            />
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-5">
+        {/* Cycle progress */}
+        <div className="h-1.5 w-full shrink-0 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
+          <motion.div
+            className="h-full bg-emerald-500"
+            initial={false}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        </div>
+
+        {/* Centered content: name + flag + palette + feedback */}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-5">
+
+          {/* Country name + flags left - swapped in place, never faded out */}
+          <div key={currentCode} className="fl-in flex flex-col items-center gap-0.5">
+            <h2 className="text-center !text-2xl font-bold uppercase tracking-wide">
+              {getFlagName(currentCode)}
+            </h2>
+            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+              {queue.length} flag{queue.length !== 1 ? 's' : ''} left
+            </span>
           </div>
-          <div className="w-10 shrink-0 flex items-center justify-center">
+
+          {/* Flag canvas */}
+          <div className={`relative w-full overflow-hidden rounded-[4px] shadow-[0_2px_10px_rgba(10,14,26,0.18)]${!svgString ? ' min-h-[180px] bg-slate-50 dark:bg-slate-800' : ''}`}>
+            <div
+              ref={svgRef}
+              onPointerDown={handleSvgPointerDown}
+              onPointerMove={handleSvgPointerMove}
+              onPointerUp={handleSvgPointerUp}
+              onPointerCancel={handleSvgPointerCancel}
+              onContextMenu={e => e.preventDefault()}
+              className="w-full"
+              style={{ cursor: selectedColor && gameStatus === 'painting' ? 'crosshair' : 'default', touchAction: 'none' }}
+            />
+
+            {gameStatus === 'loading' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="animate-spin text-slate-400 dark:text-slate-500" size={30} aria-hidden />
+              </div>
+            )}
+
+            {gameStatus === 'unsupported' && (
+              <div className="fl-in absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Flag too complex to paint</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Too many colors or unsupported format</span>
+              </div>
+            )}
+
             <AnimatePresence>
-              {streak >= 2 && (
-                <motion.span
-                  initial={{ scale: 0.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                  className="text-xs font-black text-orange-400 tabular-nums drop-shadow-[0_0_6px_rgba(251,146,60,0.7)]"
-                >
-                  🔥{streak}
-                </motion.span>
+              {gameStatus === 'complete' && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-emerald-500/90 text-white">
+                  <Check size={56} strokeWidth={2.5} aria-hidden />
+                  <p className="text-2xl font-bold">Correct!</p>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <span className="text-xs font-bold text-white/50 shrink-0 tabular-nums">{completed}/{total}</span>
 
-        </div>
-      </div>
-
-      {/* Centered content: name + flag + palette + feedback */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 gap-4 min-h-0">
-
-        {/* Country name + flags left */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentCode}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="flex flex-col items-center gap-0.5"
-          >
-            <h2
-              className="text-2xl font-black tracking-wide uppercase text-center"
-              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
-            >
-              {getFlagName(currentCode)}
-            </h2>
-            <span className="text-xs text-white/35 tabular-nums">
-              {queue.length} flag{queue.length !== 1 ? 's' : ''} left
-            </span>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Flag canvas */}
-        <div className={`relative w-full max-w-lg rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.55)] bg-white/5 ring-[3px] ring-black/50${!svgString ? ' min-h-[180px]' : ''}`}>
-          <div
-            ref={svgRef}
-            onPointerDown={handleSvgPointerDown}
-            onPointerMove={handleSvgPointerMove}
-            onPointerUp={handleSvgPointerUp}
-            onPointerCancel={handleSvgPointerCancel}
-            onContextMenu={e => e.preventDefault()}
-            className="w-full"
-            style={{ cursor: selectedColor && gameStatus === 'painting' ? 'crosshair' : 'default', touchAction: 'none' }}
-          />
-
-          <AnimatePresence>
-            {gameStatus === 'loading' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {gameStatus === 'unsupported' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-800/80 backdrop-blur-sm">
-                <span className="text-white/50 text-sm font-semibold">Flag too complex to paint</span>
-                <span className="text-white/30 text-xs">Too many colors or unsupported format</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {gameStatus === 'complete' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-500/88 backdrop-blur-sm gap-1">
-                <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 280, delay: 0.08 }}>
-                  <Check size={60} strokeWidth={2.5} />
-                </motion.div>
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
-                  className="text-2xl font-black">Correct!</motion.p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Color palette — always occupies space to prevent layout shift */}
-        <div className={`flex flex-wrap gap-3 justify-center mt-[10px] min-h-[58px] transition-opacity duration-200 ${
-          gameStatus === 'painting' && palette.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}>
-          {palette.map(color => {
-            const sel = color === selectedColor
-            const light = isLightColor(color)
-            return (
-              <motion.button key={color} onClick={() => setSelectedColor(sel ? null : color)}
-                animate={{ scale: sel ? 1.22 : 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className="relative focus:outline-none" style={{ touchAction: 'manipulation' }}>
-                <div className="w-12 h-12 rounded-full" style={{
-                  backgroundColor: color,
-                  border: sel ? '3px solid #fff' : light ? '3px solid rgba(0,0,0,0.2)' : '3px solid rgba(255,255,255,0.15)',
-                  boxShadow: sel ? `0 0 0 2px ${color}, 0 5px 16px ${color}99` : '0 3px 8px rgba(0,0,0,0.4)',
-                }} />
-                {sel && (
-                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow">
-                    <X size={9} className="text-white" strokeWidth={3.5} style={{ marginLeft: '0px' }} />
-                  </motion.span>
-                )}
-              </motion.button>
-            )
-          })}
-        </div>
-
-        {/* Feedback / instruction line */}
-        <div className="h-5 flex items-center justify-center">
-          {gameStatus === 'painting' && !wrongFeedback && (
-            <p className="text-white/40 text-xs text-center">
-              {selectedColor ? 'Click a region to color it' : 'Select a color above'}
-            </p>
-          )}
-          {wrongFeedback && (
-            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-              className="text-red-400 text-xs font-bold text-center">
-              {attempts >= 1 ? 'Last attempt — choose carefully!' : 'Some colors are wrong — try again!'}
-            </motion.p>
-          )}
-          {gameStatus === 'given-up' && (
-            <p className="text-amber-300/80 text-xs text-center">Correct colors revealed</p>
-          )}
-        </div>
-
-        {/* Debug panel — visible only when ?code= param is present */}
-        {debugCode !== null && (
-          <div className="w-full max-w-lg bg-black/40 border border-white/10 rounded-xl p-3 flex flex-col gap-2 text-xs font-mono">
-            <div className="flex gap-2 items-center">
-              <span className="text-white/40 shrink-0">code:</span>
-              <input
-                value={debugInput}
-                onChange={e => setDebugInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && debugInput.trim()) {
-                    const c = debugInput.trim().toLowerCase()
-                    setCurrentCode(c)
-                    loadFlag(c)
-                  }
-                }}
-                className="flex-1 bg-transparent border border-white/20 rounded px-2 py-1 text-white outline-none focus:border-white/50"
-                placeholder="e.g. cf"
-                spellCheck={false}
-              />
-              <button
-                onClick={() => { const c = debugInput.trim().toLowerCase(); if (c) { setCurrentCode(c); loadFlag(c) } }}
-                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white transition-colors shrink-0"
-              >Go</button>
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              <span className="text-white/40">regions: <span className="text-emerald-400">{regions.length}</span></span>
-              <span className="text-white/40">palette: <span className="text-emerald-400">{palette.length}</span></span>
-              <span className="text-white/40">painted: <span className="text-emerald-400">{Object.keys(paintedColors).length}</span></span>
-            </div>
-            {palette.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap items-center">
-                {palette.map(c => (
-                  <div key={c} className="flex items-center gap-1">
-                    <div className="w-3.5 h-3.5 rounded-sm border border-white/20" style={{ backgroundColor: c }} />
-                    <span className="text-white/50">{c}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Color palette - always occupies space to prevent layout shift. The swatches stay round: they are paint pots. */}
+          <div className={`mt-[10px] flex min-h-[58px] flex-wrap justify-center gap-4 transition-opacity duration-200 ${
+            gameStatus === 'painting' && palette.length > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}>
+            {palette.map(color => {
+              const sel = color === selectedColor
+              const light = isLightColor(color)
+              return (
+                <motion.button key={color} onClick={() => setSelectedColor(sel ? null : color)}
+                  animate={{ scale: sel ? 1.18 : 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  aria-label={`Use color ${color}`}
+                  aria-pressed={sel}
+                  className="relative min-h-0 p-0 text-slate-900 focus:outline-none dark:text-white" style={{ touchAction: 'manipulation' }}>
+                  <div className="h-12 w-12 rounded-full" style={{
+                    backgroundColor: color,
+                    border: sel ? '3px solid currentColor' : light ? '3px solid rgba(0,0,0,0.2)' : '3px solid rgba(255,255,255,0.15)',
+                    boxShadow: sel ? `0 0 0 2px ${color}` : 'none',
+                  }} />
+                  {sel && (
+                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                      <X size={9} className="text-white" strokeWidth={3.5} aria-hidden />
+                    </span>
+                  )}
+                </motion.button>
+              )
+            })}
           </div>
-        )}
-      </div>
 
-      {/* Bottom controls */}
-      <div className="w-full px-4 pb-9 shrink-0 flex flex-col items-center gap-2 min-h-[240px]">
-
-        {/* Painting controls */}
-        {gameStatus === 'painting' && (
-          <div className="w-full max-w-lg flex flex-col gap-2">
-            {/* Button row: Give Up / Restart / Hint (with dots above hint) */}
-            <div className="flex gap-2 items-end">
-              <button onClick={handleGiveUp}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 transition-all text-sm font-semibold">
-                <Flag size={18} className="opacity-80" />
-                <span>Give Up</span>
-              </button>
-              <button onClick={handleRestart}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 transition-all text-sm font-semibold">
-                <RefreshCw size={18} className="opacity-80" />
-                <span>Restart</span>
-              </button>
-
-              {/* Hint column: dots on top, button below */}
-              <div className="flex-1 flex flex-col items-center gap-1">
-                {/* Hint count dots */}
-                <div className="flex gap-1 items-center h-5">
-                  {[0,1,2].map(i => (
-                    <Lightbulb
-                      key={i}
-                      size={14}
-                      className={i < hintsCount
-                        ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]'
-                        : 'text-white/20'}
-                    />
-                  ))}
-                </div>
-                {/* Hint button (disabled while regenerating) */}
-                <button onClick={handleHint} disabled={hintsCount <= 0}
-                  className={`w-full flex flex-col items-center justify-center gap-1 py-3 rounded-2xl active:scale-95 transition-all text-sm font-semibold text-white ${
-                    hintsCount > 0 ? 'bg-amber-500 hover:bg-amber-400' : 'bg-white/8 text-white/30 cursor-not-allowed'
-                  }`}>
-                  <Lightbulb size={18} />
-                  <span>Hint</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Regen timer */}
-            {hintsCount < MAX_HINTS && secsUntilHint !== null && (
-              <p className="text-center text-white/30 text-[11px]">
-                Next hint in {Math.floor(secsUntilHint / 60)}:{String(secsUntilHint % 60).padStart(2, '0')}
+          {/* Feedback / instruction line */}
+          <div className="flex h-5 items-center justify-center">
+            {gameStatus === 'painting' && !wrongFeedback && (
+              <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                {selectedColor ? 'Click a region to color it' : 'Select a color above'}
               </p>
             )}
-
-            {/* Attempts indicator */}
-            <div className="flex items-center justify-center gap-1.5">
-              {[0, 1].map(i => (
-                <div key={i} className={`w-2 h-2 rounded-full transition-colors ${i < 2 - attempts ? 'bg-emerald-400' : 'bg-red-400/40'}`} />
-              ))}
-              <span className="text-xs text-white/35 ml-1">
-                {2 - attempts} attempt{2 - attempts !== 1 ? 's' : ''} left
-              </span>
-            </div>
-
-            {/* Confirm */}
-            <button onClick={handleConfirm} disabled={!allPainted}
-              className={`w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-                allPainted
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25'
-                  : 'bg-white/8 text-white/30 cursor-not-allowed'
-              }`}>
-              {allPainted
-                ? <><Check size={18} /> Confirm</>
-                : `Color all regions  (${paintedCount} / ${regions.length})`}
-            </button>
+            {wrongFeedback && (
+              <p className="fl-in text-center text-xs font-bold text-red-600 dark:text-red-400">
+                {attempts >= 1 ? 'Last attempt — choose carefully!' : 'Some colors are wrong — try again!'}
+              </p>
+            )}
+            {gameStatus === 'given-up' && (
+              <p className="text-center text-xs font-semibold text-amber-600 dark:text-amber-400">Correct colors revealed</p>
+            )}
           </div>
-        )}
 
-        {/* Given-up controls */}
-        {gameStatus === 'given-up' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-lg">
-            <button onClick={() => advance(false)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-indigo-500 hover:bg-indigo-400 active:scale-95 transition-all font-bold shadow-lg">
-              Next Flag <ChevronRight size={18} />
-            </button>
-          </motion.div>
-        )}
+          {/* Debug panel — visible only when ?code= param is present */}
+          {debugCode !== null && (
+            <div className={`${panel} flex w-full flex-col gap-2 p-3 font-mono text-xs`}>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-slate-500 dark:text-slate-400">code:</span>
+                <input
+                  value={debugInput}
+                  onChange={e => setDebugInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && debugInput.trim()) {
+                      const c = debugInput.trim().toLowerCase()
+                      setCurrentCode(c)
+                      loadFlag(c)
+                    }
+                  }}
+                  className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-2 py-1 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
+                  placeholder="e.g. cf"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={() => { const c = debugInput.trim().toLowerCase(); if (c) { setCurrentCode(c); loadFlag(c) } }}
+                  className={`${primary} shrink-0 px-3 py-1`}
+                >Go</button>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <span className="text-slate-500 dark:text-slate-400">regions: <span className="text-emerald-600 dark:text-emerald-400">{regions.length}</span></span>
+                <span className="text-slate-500 dark:text-slate-400">palette: <span className="text-emerald-600 dark:text-emerald-400">{palette.length}</span></span>
+                <span className="text-slate-500 dark:text-slate-400">painted: <span className="text-emerald-600 dark:text-emerald-400">{Object.keys(paintedColors).length}</span></span>
+              </div>
+              {palette.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {palette.map(c => (
+                    <div key={c} className="flex items-center gap-1">
+                      <div className="h-3.5 w-3.5 rounded-sm border border-slate-300 dark:border-slate-600" style={{ backgroundColor: c }} />
+                      <span className="text-slate-500 dark:text-slate-400">{c}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-        {/* Complete controls */}
-        {gameStatus === 'complete' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
-            className="w-full max-w-lg">
-            <button onClick={() => advance(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-indigo-500 hover:bg-indigo-400 active:scale-[0.98] transition-all font-bold shadow-lg">
-              Next Flag <ChevronRight size={18} />
-            </button>
-          </motion.div>
-        )}
-      </div>
+        {/* Bottom controls */}
+        <div className="flex min-h-[240px] w-full shrink-0 flex-col items-center gap-2 pb-9">
+
+          {/* Painting controls */}
+          {gameStatus === 'painting' && (
+            <div className="flex w-full flex-col gap-2">
+              {/* Button row: Give Up / Restart / Hint (with bulbs above hint) */}
+              <div className="flex items-end gap-2">
+                <button onClick={handleGiveUp}
+                  className={`${quiet} flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold`}>
+                  <Flag size={18} aria-hidden />
+                  <span>Give Up</span>
+                </button>
+                <button onClick={handleRestart}
+                  className={`${quiet} flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold`}>
+                  <RefreshCw size={18} aria-hidden />
+                  <span>Restart</span>
+                </button>
+
+                {/* Hint column: count on top, button below */}
+                <div className="flex flex-1 flex-col items-center gap-1">
+                  <div className="flex h-5 items-center gap-1" aria-label={`${hintsCount} of ${MAX_HINTS} hints left`}>
+                    {[0,1,2].map(i => (
+                      <Lightbulb
+                        key={i}
+                        size={14}
+                        aria-hidden
+                        className={i < hintsCount
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'text-slate-300 dark:text-slate-600'}
+                      />
+                    ))}
+                  </div>
+                  {/* Hint button (disabled while regenerating) */}
+                  <button onClick={handleHint} disabled={hintsCount <= 0}
+                    className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold ${
+                      hintsCount > 0 ? quiet : disabledButton
+                    }`}>
+                    <Lightbulb size={18} aria-hidden className={hintsCount > 0 ? 'text-amber-500 dark:text-amber-400' : ''} />
+                    <span>Hint</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Regen timer */}
+              {hintsCount < MAX_HINTS && secsUntilHint !== null && (
+                <p className="text-center text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                  Next hint in {Math.floor(secsUntilHint / 60)}:{String(secsUntilHint % 60).padStart(2, '0')}
+                </p>
+              )}
+
+              {/* Attempts indicator */}
+              <div className="flex items-center justify-center gap-1.5">
+                {[0, 1].map(i => (
+                  <div key={i} className={`h-2 w-2 rounded-full transition-colors ${i < 2 - attempts ? 'bg-emerald-500' : 'bg-red-500/40'}`} />
+                ))}
+                <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                  {2 - attempts} attempt{2 - attempts !== 1 ? 's' : ''} left
+                </span>
+              </div>
+
+              {/* Confirm */}
+              <button onClick={handleConfirm} disabled={!allPainted}
+                className={`flex w-full items-center justify-center gap-2 py-4 text-base font-bold ${allPainted ? primary : disabledButton}`}>
+                {allPainted
+                  ? <><Check size={18} aria-hidden /> Confirm</>
+                  : `Color all regions  (${paintedCount} / ${regions.length})`}
+              </button>
+            </div>
+          )}
+
+          {/* Given-up controls */}
+          {gameStatus === 'given-up' && (
+            <div className="fl-in w-full">
+              <button onClick={() => advance(false)}
+                className={`${primary} flex w-full items-center justify-center gap-2 py-3.5 font-bold`}>
+                Next Flag <ChevronRight size={18} aria-hidden />
+              </button>
+            </div>
+          )}
+
+          {/* Complete controls */}
+          {gameStatus === 'complete' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+              className="w-full">
+              <button onClick={() => advance(true)}
+                className={`${primary} flex w-full items-center justify-center gap-2 py-4 font-bold`}>
+                Next Flag <ChevronRight size={18} aria-hidden />
+              </button>
+            </motion.div>
+          )}
+        </div>
+      </main>
     </div>
 
       {/* Long-press preview marker — floats above the touch point */}

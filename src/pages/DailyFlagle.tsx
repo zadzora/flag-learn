@@ -1,13 +1,12 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Link } from "react-router-dom"
-import { ArrowLeft, Flame, Trophy, X, Check, MapPin, Moon, Sun } from "lucide-react"
+import { Flame, Trophy, X, Check, MapPin } from "lucide-react"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
-import { dailyMode } from "../utils/dailyModes"
+import TopBar from "../components/TopBar"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
 
 // Types
@@ -22,8 +21,6 @@ const THEME_KEY = "flag-master-theme"
 const DAILY_STORAGE_KEY = "flag-master-daily-save"
 const MAX_GUESSES = 6
 const DAILY_GAME_KEY = "flagle"
-/** Same icon the home card and the hand-off button use. */
-const { icon: FlagleIcon } = dailyMode("flagle")
 
 // Controls the scale of the image based on mistake count (harder zoom)
 const ZOOM_LEVELS = [7, 5, 4, 3, 2, 1]
@@ -263,192 +260,202 @@ export default function DailyFlagle() {
     const currentZoom = status === 'playing' ? ZOOM_LEVELS[guesses.length] : 1
 
     // --- RENDER ---
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const field = "w-full rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 text-center text-xl font-medium outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
+    const label = "text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500 pb-12">
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Daily Flagle" theme={theme} onToggleTheme={toggleTheme}>
+                <span className="hidden text-sm tabular-nums text-slate-500 sm:block dark:text-slate-400">{todayStr}</span>
+                {streak > 0 && (
+                    <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
+                        <Flame size={15} aria-hidden /> {streak}
+                    </span>
+                )}
+            </TopBar>
 
-            {/* Header */}
-            <div className="w-full max-w-lg px-4 flex justify-between items-center mb-6">
-                <Link to="/" className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                    <ArrowLeft size={20} />
-                </Link>
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-14 pt-6 sm:pt-8">
 
-                <div className="flex flex-col items-center">
-                    <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                        <FlagleIcon size={18} className="text-indigo-500" /> DAILY FLAGLE
-                    </h1>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">{todayStr}</span>
-                        {streak > 0 && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-[10px] font-black">
-                                <Flame size={11} /> {streak}
-                            </span>
-                        )}
+                {/* The card stays put; only the zoom and what sits under the flag change. */}
+                <section className={`${panel} flex flex-col gap-5 p-5 sm:p-7`}>
+                    <div className="flex min-h-6 items-center justify-between gap-3">
+                        <span className={label}>
+                            {status === 'playing' ? 'Name this flag' : "Today's flag"}
+                        </span>
+                        <span className="text-xs tabular-nums text-slate-400 sm:hidden dark:text-slate-500">{todayStr}</span>
                     </div>
-                </div>
 
-                <button onClick={toggleTheme} className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
+                    {/* Flag Display Area */}
+                    <div className="relative flex h-52 w-full items-center justify-center overflow-hidden rounded-lg sm:h-60">
+                        <motion.img
+                            src={dailyFlag.image}
+                            alt="Daily Flag"
+                            // IMPORTANT: Set initial to currentZoom to prevent 1x flash
+                            initial={{ scale: currentZoom }}
+                            animate={{ scale: currentZoom }}
+                            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                            className="h-full w-full rounded-[4px] object-contain"
+                            style={{ transformOrigin: 'center center' }}
+                        />
 
-            <div className="w-full max-w-lg px-4 flex flex-col items-center gap-6">
+                        {/* End Game Overlay */}
+                        <AnimatePresence>
+                            {status !== 'playing' && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0E1A]/70 p-4"
+                                >
+                                    <div className="mb-1 text-xs font-bold uppercase tracking-wider text-white/70">
+                                        The flag is
+                                    </div>
+                                    <div className="text-center text-3xl font-extrabold tracking-[-0.02em] text-white">
+                                        {getPrimaryName(dailyFlag)}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
-                {/* Flag Display Area */}
-                <div className="relative w-full h-56 sm:h-64 flex justify-center items-center bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden p-4">
-                    <motion.img
-                        src={dailyFlag.image}
-                        alt="Daily Flag"
-                        // IMPORTANT: Set initial to currentZoom to prevent 1x flash
-                        initial={{ scale: currentZoom }}
-                        animate={{ scale: currentZoom }}
-                        transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="w-full h-full object-contain"
-                        style={{ transformOrigin: 'center center' }}
-                    />
+                    {/* Guesses Status Bar */}
+                    <div className="flex w-full gap-1.5" aria-label={`${guesses.length} of ${MAX_GUESSES} guesses used`}>
+                        {Array.from({ length: MAX_GUESSES }).map((_, i) => {
+                            const isFilled = i < guesses.length
+                            const isCurrent = i === guesses.length && status === 'playing'
 
-                    {/* End Game Overlay */}
-                    <AnimatePresence>
-                        {status !== 'playing' && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
-                            >
-                                <div className="text-white text-sm font-bold uppercase tracking-widest opacity-80 mb-1">
-                                    The flag is
-                                </div>
-                                <div className="text-3xl font-black text-white text-center">
-                                    {getPrimaryName(dailyFlag)}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                            let bgColor = "bg-slate-200 dark:bg-slate-700"
+                            if (isFilled) bgColor = "bg-red-500"
+                            if (isFilled && i === guesses.length - 1 && status === 'won') bgColor = "bg-emerald-500"
+                            if (isCurrent) bgColor = "bg-slate-500 dark:bg-slate-400"
 
-                {/* Guesses Status Bar */}
-                <div className="flex gap-2 w-full justify-center">
-                    {Array.from({ length: MAX_GUESSES }).map((_, i) => {
-                        const isFilled = i < guesses.length
-                        const isCurrent = i === guesses.length && status === 'playing'
-
-                        let bgColor = "bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700"
-                        if (isFilled) bgColor = "bg-red-500 border-red-600 shadow-sm"
-                        if (isFilled && i === guesses.length - 1 && status === 'won') bgColor = "bg-emerald-500 border-emerald-600 shadow-sm"
-                        if (isCurrent) bgColor = "bg-white dark:bg-slate-900 border-indigo-400 dark:border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.3)]"
-
-                        return (
-                            <div key={i} className={`h-3 flex-1 rounded-full border transition-all duration-300 ${bgColor}`} />
-                        )
-                    })}
-                </div>
-
-                {/* Input & Action Area */}
-                <div className="w-full space-y-4">
+                            return (
+                                <div key={i} className={`h-1.5 flex-1 rounded-sm transition-colors duration-300 ${bgColor}`} />
+                            )
+                        })}
+                    </div>
 
                     {/* MAIN GAME INPUT */}
                     {status === 'playing' && (
-                        <>
+                        <div className="flex w-full flex-col gap-3">
                             <input
                                 ref={inputRef}
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={e => e.key === "Enter" && handleGuess()}
                                 placeholder={`Guess ${guesses.length + 1} of ${MAX_GUESSES}...`}
-                                className="w-full px-5 py-4 text-center text-xl font-bold rounded-xl border-2 border-slate-200 dark:border-slate-700 outline-none transition-all bg-white dark:bg-slate-900 focus:border-indigo-500 shadow-sm"
+                                aria-label="Country"
+                                className={field}
                                 autoFocus
+                                autoComplete="off"
                             />
 
-                            <div className="h-6 text-center font-bold text-red-500">
-                                {feedback}
+                            <div className="flex min-h-6 items-center justify-center px-2 text-center font-bold leading-tight text-red-600 dark:text-red-400">
+                                {feedback && <span key={feedback} className="fl-in">{feedback}</span>}
                             </div>
 
                             <button
                                 onClick={handleGuess}
                                 disabled={!input}
-                                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`w-full py-4 text-lg font-bold ${input ? primary : disabledBtn}`}
                             >
                                 Submit Guess
                             </button>
-                        </>
+                        </div>
                     )}
+                </section>
 
-                    {/* MAIN GAME ENDED - RESULTS & BONUS START */}
-                    {status !== 'playing' && bonusStatus === 'idle' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 text-center">
-                            {status === 'won' ? (
-                                <div>
-                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full mb-4">
-                                        <Trophy size={32} />
-                                    </div>
-                                    <h2 className="text-2xl font-bold mb-1 text-slate-800 dark:text-white">Brilliant!</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 mb-4">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
-
-                                    {streak > 0 && (
-                                        <div className="mb-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-xs font-black">
-                                            <Flame size={14} /> {streak} day streak
-                                        </div>
-                                    )}
-
-                                    <div className="border-t border-slate-100 dark:border-slate-700 pt-6">
-                                        <h3 className="font-bold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-widest text-xs">Bonus Round</h3>
-                                        <p className="text-sm mb-4">Do you know the capital city? (1 Try Only!)</p>
-                                        <button onClick={startBonusRound} className="w-full py-3 bg-indigo-100 dark:bg-indigo-900/40 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
-                                            <MapPin size={18} /> Guess Capital
-                                        </button>
+                {/* MAIN GAME ENDED - RESULTS & BONUS START */}
+                {status !== 'playing' && bonusStatus === 'idle' && (
+                    <section className={`${panel} flex flex-col gap-5 p-6 sm:p-7`}>
+                        {status === 'won' ? (
+                            <>
+                                <div className="flex items-center gap-4">
+                                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-emerald-500 dark:border-slate-700">
+                                        <Trophy size={28} aria-hidden />
+                                    </span>
+                                    <div className="min-w-0">
+                                        <h2 className="!text-2xl font-bold">Brilliant!</h2>
+                                        <p className="mt-0.5 text-slate-500 dark:text-slate-400">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
+                                        {streak > 0 && (
+                                            <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
+                                                <Flame size={15} aria-hidden /> {streak} day streak
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
-                            ) : (
-                                <div>
-                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full mb-4">
-                                        <X size={32} />
-                                    </div>
-                                    <h2 className="text-2xl font-bold mb-1 text-slate-800 dark:text-white">Game Over</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 mb-6">
+
+                                <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
+                                    <h3 className={`${label} !text-xs`}>Bonus Round</h3>
+                                    <p className="mb-4 mt-1 text-sm text-slate-600 dark:text-slate-300">Do you know the capital city? (1 Try Only!)</p>
+                                    <button onClick={startBonusRound} className={`${quiet} flex w-full items-center justify-center gap-2 py-3 font-bold`}>
+                                        <MapPin size={18} aria-hidden /> Guess Capital
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700">
+                                    <X size={28} aria-hidden />
+                                </span>
+                                <div className="min-w-0">
+                                    <h2 className="!text-2xl font-bold">Game Over</h2>
+                                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">
                                         {brokeStreak ? 'Your streak is back to zero - start a new one tomorrow!' : 'Better luck tomorrow!'}
                                     </p>
                                 </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {/* BONUS ROUND INPUT */}
-                    {bonusStatus === 'playing' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full space-y-4">
-                            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800/50 text-center">
-                                <MapPin className="mx-auto text-indigo-500 mb-2" size={24} />
-                                <div className="font-bold text-slate-800 dark:text-white">What is the capital of {getPrimaryName(dailyFlag)}?</div>
-                                <div className="text-xs text-red-400 font-bold mt-1 uppercase tracking-wider">1 Chance Only</div>
                             </div>
+                        )}
+                    </section>
+                )}
 
-                            <input
-                                ref={inputRef}
-                                value={input}
-                                onChange={e => setInput(e.target.value)}
-                                onKeyDown={e => e.key === "Enter" && handleBonusGuess()}
-                                placeholder="Type capital city..."
-                                className="w-full px-5 py-4 text-center text-xl font-bold rounded-xl border-2 border-indigo-200 dark:border-indigo-700/50 outline-none transition-all bg-white dark:bg-slate-900 focus:border-indigo-500 shadow-sm"
-                            />
-                            <button onClick={handleBonusGuess} disabled={!input} className="w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                                Lock in Answer
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* BONUS ROUND RESULTS */}
-                    {(bonusStatus === 'won' || bonusStatus === 'lost') && (
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`p-6 rounded-2xl border text-center ${bonusStatus === 'won' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50'}`}>
-                            <div className={`mx-auto w-12 h-12 flex items-center justify-center rounded-full mb-3 text-white ${bonusStatus === 'won' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                                {bonusStatus === 'won' ? <Check size={24} strokeWidth={3}/> : <X size={24} strokeWidth={3}/>}
+                {/* BONUS ROUND INPUT */}
+                {bonusStatus === 'playing' && (
+                    <section className={`${panel} flex flex-col gap-4 p-5 sm:p-7`}>
+                        <div className="flex items-start gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                                <MapPin size={19} aria-hidden />
+                            </span>
+                            <div className="min-w-0">
+                                <div className="font-bold">What is the capital of {getPrimaryName(dailyFlag)}?</div>
+                                <div className="mt-0.5 text-xs font-bold uppercase tracking-wider text-red-500 dark:text-red-400">1 Chance Only</div>
                             </div>
-                            <h3 className="font-black text-xl mb-1">{bonusStatus === 'won' ? 'Nailed it!' : 'Incorrect!'}</h3>
-                            <p className="text-slate-600 dark:text-slate-300">
+                        </div>
+
+                        <input
+                            ref={inputRef}
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleBonusGuess()}
+                            placeholder="Type capital city..."
+                            aria-label="Capital"
+                            className={field}
+                            autoComplete="off"
+                        />
+                        <button onClick={handleBonusGuess} disabled={!input} className={`w-full py-4 text-lg font-bold ${input ? primary : disabledBtn}`}>
+                            Lock in Answer
+                        </button>
+                    </section>
+                )}
+
+                {/* BONUS ROUND RESULTS */}
+                {(bonusStatus === 'won' || bonusStatus === 'lost') && (
+                    <section className={`flex items-start gap-4 rounded-[10px] border p-5 sm:p-6 ${bonusStatus === 'won' ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-red-500/30 bg-red-500/10'}`}>
+                        <span className={`mt-0.5 shrink-0 ${bonusStatus === 'won' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {bonusStatus === 'won' ? <Check size={24} strokeWidth={3} aria-hidden /> : <X size={24} strokeWidth={3} aria-hidden />}
+                        </span>
+                        <div className="min-w-0">
+                            <h3 className="!text-xl font-bold">{bonusStatus === 'won' ? 'Nailed it!' : 'Incorrect!'}</h3>
+                            <p className="mt-0.5 text-slate-600 dark:text-slate-300">
                                 The capital is <strong className="text-slate-900 dark:text-white">{getCapital(dailyFlag)}</strong>.
                             </p>
-                            <div className="mt-4 text-xs font-bold uppercase tracking-widest opacity-50">Come back tomorrow!</div>
-                        </motion.div>
-                    )}
-
-                </div>
+                            <div className={`${label} mt-3`}>Come back tomorrow!</div>
+                        </div>
+                    </section>
+                )}
 
                 {status !== 'playing' && (
                     <DailyStanding
@@ -457,7 +464,7 @@ export default function DailyFlagle() {
                         statsError={statsError}
                         myBucket={myBucket}
                         bucketLabels={Array.from({ length: MAX_GUESSES }, (_, i) => `${i + 1}`)}
-                        accentClass="text-indigo-600 dark:text-indigo-400"
+                        accentClass="text-slate-900 dark:text-white"
                         footnote="Guesses used - X did not solve it"
                     />
                 )}
@@ -466,23 +473,27 @@ export default function DailyFlagle() {
 
                 {/* Guess History List */}
                 {guesses.length > 0 && (
-                    <div className="w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
-                        <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 ml-1 tracking-widest">Your Guesses</h3>
-                        <div className="flex flex-col gap-2">
-                            {guesses.map((g, idx) => (
-                                <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white ${idx === guesses.length - 1 && status === 'won' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                                        {idx === guesses.length - 1 && status === 'won' ? <Check size={14} /> : <X size={14} />}
-                                    </div>
-                                    <span className={`font-medium capitalize ${idx === guesses.length - 1 && status === 'won' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
-                                        {g}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <section className={`${panel} p-5`}>
+                        <h3 className={`${label} mb-2 !text-xs`}>Your Guesses</h3>
+                        <ul className="flex flex-col">
+                            {guesses.map((g, idx) => {
+                                const right = idx === guesses.length - 1 && status === 'won'
+                                return (
+                                    <li key={idx} className="flex items-center gap-3 border-b border-slate-200 py-2.5 last:border-b-0 dark:border-slate-700">
+                                        <span className="w-5 text-xs font-bold tabular-nums text-slate-400 dark:text-slate-500">{idx + 1}</span>
+                                        <span className={right ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}>
+                                            {right ? <Check size={16} strokeWidth={3} aria-hidden /> : <X size={16} strokeWidth={3} aria-hidden />}
+                                        </span>
+                                        <span className={`font-medium capitalize ${right ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                                            {g}
+                                        </span>
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </section>
                 )}
-            </div>
+            </main>
         </div>
     )
 }

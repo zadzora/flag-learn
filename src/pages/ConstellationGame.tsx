@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
-import { Link } from "react-router-dom"
-import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Coffee, CheckSquare, Square, ArrowLeft, Timer, Repeat, Unlock, Star, Lightbulb, MessagesSquare } from "lucide-react"
+import { Lock, X, Check, RefreshCw, RotateCcw, ExternalLink, Dumbbell, CheckSquare, Square, Timer, Repeat, Unlock, Star, Lightbulb, Flame, ChevronRight, PencilLine, Trophy } from "lucide-react"
+import TopBar from "../components/TopBar"
+import SiteFooter from "../components/SiteFooter"
 import constData from "../../data/constellations.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
@@ -173,7 +174,7 @@ export default function ConstellationGame() {
     })
 
     // Theme State
-    const [theme] = useState<'light' | 'dark'>(() => {
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
         return 'light'
     })
@@ -196,6 +197,8 @@ export default function ConstellationGame() {
         else root.classList.remove('dark')
         localStorage.setItem(THEME_KEY, theme)
     }, [theme])
+
+    const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
 
     useEffect(() => {
         localStorage.setItem(LANG_KEY, lang)
@@ -432,163 +435,228 @@ export default function ConstellationGame() {
 
     if (!isLoaded) return null
 
+    const isNewItem = !!current && !isPracticeMode && !isReview && progress[current.code]?.seen === 0
+    const itemStreak = current ? (progress[current.code]?.streak || 0) : 0
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+    const disabledButton = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const iconButton = "flex h-10 min-h-0 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 p-0 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-[#3A4670]"
+    const textButton = "flex min-h-0 items-center gap-1.5 rounded-md px-2 py-1 font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+
+    const langSwitch = (
+        <div className="flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700" role="group" aria-label="Language">
+            {(['en', 'sk'] as const).map(code => (
+                <button
+                    key={code}
+                    type="button"
+                    onClick={() => setLang(code)}
+                    aria-pressed={lang === code}
+                    className={`h-8 min-h-0 rounded-md px-2.5 py-0 text-xs font-bold ${lang === code ? 'bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+                >
+                    {code.toUpperCase()}
+                </button>
+            ))}
+        </div>
+    )
+
     return (
-        <div className={`min-h-screen flex flex-col items-center justify-start pt-8 font-sans transition-colors duration-500 relative
-            ${isPracticeMode ? 'text-indigo-100' : 'text-slate-100'}`}
-        >
-            <Link to="/" className={`absolute left-4 z-40 p-3 rounded-full bg-slate-900/85 shadow-md border border-slate-700/70 text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}><ArrowLeft size={20} /></Link>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            {isPracticeMode ? (
+                <TopBar title={<span className="flex items-center gap-2"><Dumbbell size={17} aria-hidden className="shrink-0" /> Practice Mode</span>} back={() => exitPracticeMode()} theme={theme} onToggleTheme={toggleTheme}>
+                    <span className="flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={16} aria-hidden />{formatTime(practiceElapsedTime)}</span>
+                    <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">Remaining: {practicePool.length}</span>
+                    <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {practiceMistakes}</span>
+                    {langSwitch}
+                </TopBar>
+            ) : (
+                <TopBar title="Constellations" theme={theme} onToggleTheme={toggleTheme}>
+                    {langSwitch}
+                </TopBar>
+            )}
 
-            <div className={`absolute right-4 z-40 flex items-center gap-2 sm:gap-3 ${isPracticeMode ? 'top-[4.75rem] sm:top-20' : 'top-4'}`}>
-                {/* LANGUAGE SELECTOR */}
-                <div className="flex bg-slate-900/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-slate-700">
-                    <button onClick={() => setLang('en')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>EN</button>
-                    <button onClick={() => setLang('sk')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${lang === 'sk' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>SK</button>
-                </div>
-            </div>
-
-            <AnimatePresence>
-                {isPracticeMode && (
-                    <motion.div key="practice-banner" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -50, opacity: 0 }} className="absolute top-0 w-full bg-indigo-900 text-white p-3 flex justify-between items-center px-4 sm:px-8 z-50 shadow-md border-b border-indigo-800">
-                        <button onClick={exitPracticeMode} className="flex items-center gap-1.5 text-xs sm:text-sm font-bold bg-indigo-950 hover:bg-indigo-800 px-4 py-2 rounded-full transition-colors border border-indigo-700"><LogOut size={16} /> Exit</button>
-
-                        <div className="flex items-center justify-center gap-2 font-bold text-lg text-indigo-200">
-                            <Dumbbell size={24} /> <span>Practice Mode</span>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-bold text-indigo-200"><Timer size={16} />{formatTime(practiceElapsedTime)}</div>
-                            <div className="text-sm font-medium opacity-80 hidden sm:block">Remaining: {practicePool.length}</div>
-                            <div className="text-sm font-bold text-red-300 bg-red-950 px-2 py-1 rounded flex items-center gap-1 border border-red-800"><X size={14} /> {practiceMistakes}</div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <div className={`w-full flex-1 flex flex-col items-center px-4 mb-8 ${isPracticeMode ? 'mt-36 sm:mt-32' : 'mt-20'}`}>
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
                 {!isPracticeMode && !practiceResults && (
-                    <motion.div onClick={() => setShowGallery(true)} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none">
-                        <div className="flex justify-between items-center px-1 mb-2">
-                            <div className="flex items-center gap-2 text-indigo-400 font-bold text-lg"><Star size={24} className="fill-indigo-400" /> Constellations</div>
-                            <div className="flex items-center gap-3">
-                                {sessionStreak >= 2 && <div className="flex items-center gap-1 px-3 py-1 rounded-full font-bold shadow-sm border border-orange-900 bg-orange-950/50 text-orange-400">🔥 {sessionStreak}</div>}
-                                <div className="text-sm font-semibold text-slate-400 bg-slate-900 px-3 py-1 rounded-full shadow-sm border border-slate-800 group-hover:border-indigo-700 transition-colors">
-                                    {totalStats.mastered} / {totalStats.total} <span className="text-slate-600 mx-1">|</span> {totalStats.percent}%
-                                </div>
-                            </div>
-                        </div>
-                        <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-800 group-hover:ring-indigo-700 transition-all relative">
-                            <motion.div className="h-full bg-indigo-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
-                        </div>
-                        <p className="text-center text-[10px] sm:text-xs text-slate-500 mt-2 group-hover:text-indigo-400 transition-colors">
+                    // Mastery so far - the whole row opens the collection.
+                    <button type="button" onClick={() => setShowGallery(true)} className="group block w-full select-none px-0 py-0 text-left font-normal" title="Open your collection">
+                        <span className="flex items-center justify-between gap-3 text-sm">
+                            <span className="flex items-center gap-2 font-semibold text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-white">
+                                <Star size={15} aria-hidden className="text-amber-500" /> Your collection <ChevronRight size={15} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
+                            </span>
+                            <span className="flex items-center gap-3">
+                                {sessionStreak >= 2 && (
+                                    <span className="flex items-center gap-1 font-bold text-orange-500 dark:text-orange-400" title="Correct in a row this session">
+                                        <Flame size={15} aria-hidden /> {sessionStreak}
+                                    </span>
+                                )}
+                                <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total} · {totalStats.percent}%</span>
+                            </span>
+                        </span>
+                        <span className="mt-2 block h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
+                            <motion.span className="block h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
+                        </span>
+                        <span className="mt-2 block text-center text-[11px] text-slate-400 group-hover:text-slate-600 sm:text-xs dark:text-slate-500 dark:group-hover:text-slate-300">
                             Click this bar to open your collection
-                        </p>
-                    </motion.div>
+                        </span>
+                    </button>
                 )}
 
-                <AnimatePresence mode="wait">
-                    {current ? (
-                        <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-slate-900 p-6 sm:p-8 rounded-t-xl rounded-b-3xl shadow-xl border border-slate-800 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8">
+                {current ? (
+                    // The card stays put between questions; only the sky inside it changes.
+                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                        <div className="flex min-h-6 items-center justify-between gap-3">
+                            <span className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${isNewItem ? 'text-blue-600 dark:text-blue-400' : isReview ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                {isPracticeMode && <Dumbbell size={13} aria-hidden />}
+                                {isReview && <RefreshCw size={13} aria-hidden />}
+                                {isPracticeMode ? 'Practice' : isReview ? 'Review' : isNewItem ? 'New constellation' : 'Name this constellation'}
+                            </span>
+                            {!isPracticeMode && !isReview && (
+                                <span className="flex items-center gap-1" aria-label={`${itemStreak} of ${TARGET_STREAK} in a row`} title="Three in a row and it's yours">
+                                    {Array.from({ length: TARGET_STREAK }, (_, i) => (
+                                        <span key={i} className={`h-1.5 w-6 rounded-sm ${i < itemStreak || status === 'mastered' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                                    ))}
+                                </span>
+                            )}
+                        </div>
 
-                            <div className="relative w-full aspect-square max-h-[300px]">
-                                <ConstellationRenderer
-                                    stars={current.stars}
-                                    lines={current.lines}
-                                    artUrl={(status === 'mastered' || showHint) ? `/constellations/${current.code}.svg` : undefined}
-                                />
-                                {!isPracticeMode && !isReview && <div className="absolute -top-3 -right-3 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-full border border-slate-800 shadow-sm">🔥 {progress[current.code]?.streak || 0}/3</div>}
-                                {isPracticeMode && <div className="absolute -top-3 -right-3 bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm"><Dumbbell size={12} /> Practice</div>}
-                                {isReview && <div className="absolute -top-3 -right-3 bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Review</div>}
+                        <div key={current.code} className="fl-in relative mx-auto aspect-square w-full max-h-[300px] max-w-[300px]">
+                            <ConstellationRenderer
+                                stars={current.stars}
+                                lines={current.lines}
+                                artUrl={(status === 'mastered' || showHint) ? `/constellations/${current.code}.svg` : undefined}
+                            />
+                        </div>
+
+                        {isNewItem && (
+                            <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-center text-blue-900 dark:text-blue-100">
+                                <div className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">New Constellation!</div>
+                                <div className="mt-1 text-lg">Latin: <span className="font-extrabold">{getPrimaryName(current)}</span></div>
+                                {getLocalName(current) && <div className="mt-0.5 text-sm text-blue-700/80 dark:text-blue-200/80">Locally known as: <strong>{getLocalName(current)}</strong></div>}
                             </div>
+                        )}
 
-                            {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
-                                <div className="w-full bg-indigo-950/50 text-indigo-300 px-5 py-3 rounded-xl border border-indigo-900/50 flex flex-col items-center animate-pulse">
-                                    <span className="text-xs uppercase tracking-wider font-bold mb-1">New Constellation!</span>
-                                    <div className="text-lg">Latin: <span className="font-extrabold text-white">{getPrimaryName(current)}</span></div>
-                                    {getLocalName(current) && <div className="text-sm mt-1 opacity-80">Locally known as: <strong>{getLocalName(current)}</strong></div>}
-                                </div>
+                        <div className="flex w-full flex-col gap-3">
+                            <input
+                                ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleCheck() }} disabled={status !== 'idle'}
+                                aria-label="Answer"
+                                placeholder={isNewItem ? `Latin: ${getPrimaryName(current)}` : "Name this constellation..."}
+                                className={`w-full border px-5 py-4 text-center text-xl font-medium outline-none transition-colors duration-150 dark:text-white
+                                    ${status === 'error' ? 'border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100' : ''}
+                                    ${status === 'correct' || status === 'mastered' ? 'border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100' : ''}
+                                    ${status === 'idle' ? 'border-slate-200 bg-slate-50 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]' : ''}`}
+                                autoFocus autoComplete="off"
+                            />
+
+                            {status === 'idle' && progress[current.code]?.seen !== 0 && (
+                                <button
+                                    type="button"
+                                    onClick={toggleHint}
+                                    aria-pressed={showHint}
+                                    className={`flex min-h-0 items-center gap-1.5 self-center rounded-lg border px-3 py-1.5 text-xs font-bold ${showHint ? 'border-amber-500/50 text-amber-700 dark:text-amber-300' : 'border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-[#3A4670] dark:hover:text-white'}`}
+                                >
+                                    <Lightbulb size={14} aria-hidden className={showHint ? "fill-amber-400 text-amber-500" : ""} />
+                                    {showHint ? "Hide Art" : "Show Art Hint"}
+                                </button>
                             )}
 
-                            <div className="w-full flex flex-col gap-4">
-                                <input
-                                    ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleCheck() }} disabled={status !== 'idle'}
-                                    placeholder={(!isPracticeMode && !isReview && progress[current.code]?.seen === 0) ? `Latin: ${getPrimaryName(current)}` : "Name this constellation..."}
-                                    className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all duration-200 bg-slate-950 text-white ${status === 'error' ? 'border-red-500 bg-red-950/30 text-red-200' : ''} ${status === 'correct' || status === 'mastered' ? 'border-emerald-500 bg-emerald-950/30 text-emerald-200' : ''} ${status === 'idle' ? 'border-slate-800 focus:border-indigo-500' : ''}`}
-                                    autoFocus autoComplete="off"
-                                />
-
-                                {status === 'idle' && progress[current.code]?.seen !== 0 && (
-                                    <button
-                                        onClick={toggleHint}
-                                        className={`self-center flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all ${showHint ? 'bg-amber-900/50 text-amber-400 border border-amber-800/50' : 'bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700'}`}
-                                    >
-                                        <Lightbulb size={14} className={showHint ? "fill-amber-400" : ""} />
-                                        {showHint ? "Hide Art" : "Show Art Hint"}
-                                    </button>
+                            <div className="flex min-h-12 items-center justify-center px-2 text-center">
+                                {feedbackMsg && (
+                                    // The copy carries emoji; the line shows a lucide icon in their place.
+                                    <div key={feedbackMsg} className={`fl-in flex items-start justify-center gap-1.5 whitespace-pre-line font-bold leading-tight ${status === 'error' ? 'text-red-600 dark:text-red-400' : status === 'idle' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                        {status === 'error' && <X size={18} strokeWidth={3} aria-hidden className="shrink-0" />}
+                                        {status === 'idle' && <PencilLine size={17} aria-hidden className="shrink-0" />}
+                                        {status === 'correct' && <Check size={18} strokeWidth={3} aria-hidden className="shrink-0" />}
+                                        {status === 'mastered' && <Trophy size={18} aria-hidden className="shrink-0 text-amber-500" />}
+                                        <span>{feedbackMsg.replace(/\s*\p{Extended_Pictographic}️?\s*$/u, "").replace(/\s*\p{Extended_Pictographic}️?\s+/gu, ". ")}</span>
+                                    </div>
                                 )}
-
-                                <div className="min-h-[3.5rem] flex items-center justify-center text-center px-2">
-                                    <AnimatePresence mode="wait">
-                                        {feedbackMsg && (
-                                            <motion.div key={feedbackMsg || 'empty'} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`font-bold whitespace-pre-line leading-tight ${status === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>
-                                                {feedbackMsg}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCheck}
+                                disabled={status !== 'idle' || !input}
+                                className={`w-full py-4 text-lg font-bold ${status === 'idle' && input ? primary : disabledButton}`}
+                            >
+                                {status === 'idle' ? 'Check Answer' : 'Checking...'}
+                            </button>
+                        </div>
+                    </section>
+                ) : practiceResults ? (
+                    <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                        <div className="flex items-center gap-4">
+                            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300"><Dumbbell size={28} aria-hidden /></span>
+                            <div>
+                                <h2 className="!text-3xl font-bold">Practice Complete!</h2>
+                                <p className="mt-1 text-slate-500 dark:text-slate-400">You identified <strong className="text-slate-900 dark:text-white">{practiceResults.count}</strong> constellations.</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Mistakes</div>
+                                <div className={`mt-1 text-3xl font-bold ${practiceResults.mistakes ? 'text-red-500' : 'text-emerald-500'}`}>{practiceResults.mistakes}</div>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Time</div>
+                                <div className="mt-1 text-3xl font-bold tabular-nums">{practiceResults.time}</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                            <button type="button" onClick={() => startPracticeMode(lastPracticePool)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Practice Again</button>
+                            <button type="button" onClick={exitPracticeMode} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to Overview</button>
+                        </div>
+                    </section>
+                ) : (
+                    totalStats.percent === 100 && !isPracticeMode && (
+                        <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Star size={28} aria-hidden className="fill-amber-400" /></span>
+                                <div>
+                                    <h2 className="!text-3xl font-bold">Constellations Master!</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">Incredible! You have mapped all <strong className="text-slate-900 dark:text-white">{totalStats.total}</strong> constellations!</p>
                                 </div>
-                                <button onClick={handleCheck} disabled={status !== 'idle' || !input} className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-all ${status === 'idle' && input ? 'bg-indigo-600 hover:bg-indigo-500 active:scale-95' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}>{status === 'idle' ? 'Check Answer' : 'Checking...'}</button>
                             </div>
-                        </motion.div>
-                    ) : practiceResults ? (
-                        <motion.div key="practice-results" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-800 mx-4">
-                            <div className="bg-indigo-900/50 p-4 rounded-full text-indigo-400"><Dumbbell size={64} /></div>
-                            <div><h2 className="text-3xl font-bold text-white mb-2">Practice Complete!</h2><p className="text-slate-400">You identified <strong className="text-indigo-400">{practiceResults.count}</strong> constellations.</p></div>
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="bg-red-950/30 p-4 rounded-2xl border border-red-900/50"><div className="text-xs uppercase font-bold text-red-500 mb-1">Mistakes</div><div className="text-3xl font-bold text-red-400">{practiceResults.mistakes}</div></div>
-                                <div className="bg-blue-950/30 p-4 rounded-2xl border border-blue-900/50"><div className="text-xs uppercase font-bold text-blue-500 mb-1">Time</div><div className="text-3xl font-bold text-blue-400">{practiceResults.time}</div></div>
-                            </div>
-                            <div className="w-full flex flex-col gap-3">
-                                <button onClick={() => startPracticeMode(lastPracticePool)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center gap-2"><Repeat size={20} /> Practice Again</button>
-                                <button onClick={exitPracticeMode} className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">Back to Overview</button>
-                            </div>
-                        </motion.div>
-                    ) : (
-                        totalStats.percent === 100 && !isPracticeMode && (
-                            <motion.div key="mastery" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-900 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-800 mx-4">
-                                <div className="bg-yellow-900/30 p-4 rounded-full text-yellow-400 animate-pulse"><Star size={64} className="fill-yellow-400" /></div>
-                                <div><h2 className="text-3xl font-bold text-white mb-2">Constellations Master!</h2><p className="text-slate-400">Incredible! You have mapped all <strong className="text-indigo-400">{totalStats.total}</strong> constellations!</p></div>
-                                <button onClick={() => startPracticeMode()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center gap-2"><Dumbbell size={20} /> Keep Practicing</button>
-                            </motion.div>
-                        )
-                    )}
-                </AnimatePresence>
-            </div>
+                            <button type="button" onClick={() => startPracticeMode()} className={`${primary} flex w-full items-center justify-center gap-2 py-3.5 font-bold`}><Dumbbell size={18} aria-hidden /> Keep Practicing</button>
+                        </section>
+                    )
+                )}
+            </main>
 
             {/* --- GALLERY MODAL --- */}
             <AnimatePresence>
                 {showGallery && (
-                    <motion.div key="gallery-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-800" onClick={e => e.stopPropagation()}>
-                            <div className="p-6 border-b border-slate-800 flex flex-col bg-slate-950 gap-4">
-                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <div><h2 className="text-2xl font-bold text-white">Star Chart Collection</h2><p className="text-slate-400 text-sm">Select constellations to practice.</p></div>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => { if (selectedItems.length > 0) { startPracticeMode(activeData.filter(f => selectedItems.includes(f.code))) } else startPracticeMode() }} disabled={selectedItems.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedItems.length > 0 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-800 hover:bg-indigo-700 text-indigo-100' : 'bg-slate-800 text-slate-600 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedItems.length > 0 ? `Practice (${selectedItems.length})` : `Practice (${totalStats.mastered})`}</button>
-                                        <div className="flex gap-1 ml-2 border-l border-slate-700 pl-3">
-                                            <button onClick={resetProgress} className="p-2 hover:bg-red-900/30 text-slate-500 hover:text-red-400 rounded-full transition-colors"><RotateCcw size={20} /></button>
-                                            <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><X size={24} className="text-slate-400" /></button>
-                                        </div>
+                    <motion.div key="gallery-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4" onClick={() => setShowGallery(false)}>
+                        <motion.div initial={{ scale: 0.97, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.97, opacity: 0 }} className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:p-6 dark:border-slate-700">
+                                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                                    <div>
+                                        <h2 className="!text-2xl font-bold">Star Chart Collection</h2>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">Select constellations to practice.</p>
+                                    </div>
+                                    <div className="flex w-full items-center gap-2 sm:w-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => { if (selectedItems.length > 0) { startPracticeMode(activeData.filter(f => selectedItems.includes(f.code))) } else startPracticeMode() }}
+                                            disabled={selectedItems.length === 0 && totalStats.mastered < 5}
+                                            className={`flex flex-1 items-center justify-center gap-2 px-4 py-2 text-sm font-bold sm:flex-none ${selectedItems.length > 0 || totalStats.mastered >= 5 ? primary : disabledButton}`}
+                                        >
+                                            <Dumbbell size={16} aria-hidden /> {selectedItems.length > 0 ? `Practice (${selectedItems.length})` : `Practice (${totalStats.mastered})`}
+                                        </button>
+                                        <button type="button" onClick={resetProgress} aria-label="Reset progress" title="Reset progress" className={`${iconButton} hover:text-red-500 dark:hover:text-red-400`}><RotateCcw size={18} aria-hidden /></button>
+                                        <button type="button" onClick={() => setShowGallery(false)} aria-label="Close" title="Close" className={iconButton}><X size={20} aria-hidden /></button>
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 text-sm pt-2 border-t border-slate-800">
-                                    <button onClick={selectAllMastered} className="flex items-center gap-1.5 text-slate-300 hover:text-indigo-400 font-medium px-2 py-1 rounded hover:bg-slate-800 transition-colors"><CheckSquare size={16} /> Select All Mastered</button>
-                                    <button onClick={() => setSelectedItems([])} className="flex items-center gap-1.5 text-slate-300 hover:text-red-400 font-medium px-2 py-1 rounded hover:bg-slate-800 transition-colors"><Square size={16} /> Clear</button>
+                                <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-700">
+                                    <button type="button" onClick={selectAllMastered} className={textButton}><CheckSquare size={16} aria-hidden /> Select All Mastered</button>
+                                    <button type="button" onClick={() => setSelectedItems([])} className={textButton}><Square size={16} aria-hidden /> Clear</button>
                                     <div className="ml-auto flex items-center">
-                                        {showCheatConfirm ? <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-red-400 font-bold px-3 py-1 rounded bg-red-900/30 transition-colors animate-pulse"><Unlock size={16} /> Confirm Unlock!</button> : <button onClick={handleCheatProgress} className="flex items-center gap-1.5 text-slate-400 hover:text-amber-400 font-medium px-2 py-1 rounded hover:bg-slate-800 transition-colors"><Unlock size={16} /> Cheat</button>}
+                                        {showCheatConfirm
+                                            ? <button type="button" onClick={handleCheatProgress} className="flex min-h-0 items-center gap-1.5 rounded-md bg-red-500/10 px-3 py-1 font-bold text-red-600 dark:text-red-400"><Unlock size={16} aria-hidden /> Confirm Unlock!</button>
+                                            : <button type="button" onClick={handleCheatProgress} className={`${textButton} text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400`}><Unlock size={16} aria-hidden /> Cheat</button>}
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-6 bg-slate-950">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
                                     {activeData.map(item => {
                                         const p = progress[item.code] || { streak: 0, seen: 0 }
                                         const isMastered = p.streak >= TARGET_STREAK
@@ -596,9 +664,9 @@ export default function ConstellationGame() {
                                         const isSelected = selectedItems.includes(item.code)
 
                                         return (
-                                            <div key={item.code} onClick={() => isMastered && toggleSelection(item.code)} className={`relative aspect-square rounded-xl overflow-hidden shadow-sm border transition-all duration-200 group ${isSelected ? 'ring-4 ring-indigo-500 border-indigo-600 scale-[1.02] cursor-pointer' : (isMastered ? 'border-slate-700 cursor-pointer hover:border-slate-500' : (isLocked ? 'bg-slate-900 border-slate-800 cursor-default' : 'bg-slate-900 border-slate-800 opacity-60 cursor-default'))}`}>
+                                            <div key={item.code} onClick={() => isMastered && toggleSelection(item.code)} className={`group relative aspect-square overflow-hidden rounded-lg border transition-colors duration-200 ${isSelected ? 'cursor-pointer border-blue-500 ring-2 ring-blue-500' : (isMastered ? 'cursor-pointer border-slate-300 hover:border-slate-500 dark:border-slate-700 dark:hover:border-[#4A5680]' : (isLocked ? 'cursor-default border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900' : 'cursor-default border-slate-200 opacity-60 dark:border-slate-700'))}`}>
                                                 {isLocked ? (
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 gap-2"><Lock size={24} /><span className="text-xs font-bold uppercase tracking-widest opacity-50">Locked</span></div>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-600"><Lock size={24} aria-hidden /><span className="text-xs font-bold uppercase tracking-widest opacity-60">Locked</span></div>
                                                 ) : (
                                                     <>
                                                         <ConstellationRenderer
@@ -607,21 +675,21 @@ export default function ConstellationGame() {
                                                             isThumb={true}
                                                             artUrl={isMastered ? `/constellations/${item.code}.svg` : undefined}
                                                         />
-                                                        <div className="absolute top-1 left-1 bg-black/60 px-1.5 py-0.5 rounded text-[10px] font-bold text-white border border-white/10 z-10">{item.code.toUpperCase()}</div>
-                                                        {isSelected && <div className="absolute inset-0 bg-indigo-500/20 flex items-center justify-center z-10"><div className="bg-indigo-500 text-white rounded-full p-1.5 shadow-lg"><Check size={20} strokeWidth={4} /></div></div>}
-                                                        {!isSelected && isMastered && <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-1 z-10"><Check size={10} strokeWidth={4} /></div>}
-                                                        {!isSelected && !isMastered && !isLocked && <div className="absolute bottom-0 w-full bg-slate-900/80 text-white text-[10px] text-center py-1 z-10">{p.streak}/3</div>}
+                                                        <div className="absolute left-1.5 top-1.5 z-10 rounded-[5px] bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white">{item.code.toUpperCase()}</div>
+                                                        {isSelected && <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-500/20"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"><Check size={18} strokeWidth={4} aria-hidden /></div></div>}
+                                                        {!isSelected && isMastered && <div className="absolute right-1.5 top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={11} strokeWidth={4} aria-hidden /></div>}
+                                                        {!isSelected && !isMastered && !isLocked && <div className="absolute bottom-0 z-10 w-full bg-slate-950/80 py-1 text-center text-[10px] text-white">{p.streak}/3</div>}
                                                     </>
                                                 )}
                                                 {!isLocked && (
-                                                    <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-2 z-20">
+                                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 p-2 opacity-0 transition-opacity group-hover:opacity-100">
                                                         {isMastered ? (
                                                             <>
-                                                                <span className="text-white text-sm font-bold text-center">{getPrimaryName(item)}</span>
-                                                                {getLocalName(item) && <span className="text-indigo-300 text-xs text-center mt-1">{getLocalName(item)}</span>}
+                                                                <span className="text-center text-sm font-bold text-white">{getPrimaryName(item)}</span>
+                                                                {getLocalName(item) && <span className="mt-1 text-center text-xs text-blue-300">{getLocalName(item)}</span>}
                                                             </>
                                                         ) : (
-                                                            <span className="text-slate-400 text-xs font-bold text-center uppercase tracking-widest">Master to reveal</span>
+                                                            <span className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">Master to reveal</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -635,31 +703,23 @@ export default function ConstellationGame() {
                 )}
             </AnimatePresence>
 
-            {/* ... Footer ... */}
-            <footer className="w-full py-8 border-t border-slate-800 bg-black text-slate-500 text-sm transition-colors flex flex-col items-center gap-2 mt-auto relative z-10">
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                    <p className="flex items-center gap-1">Made with <Heart size={14} className="text-red-500 fill-red-500" /> for learning</p>
-                    <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
-                        <MessagesSquare size={14} /><span>Discord</span><ExternalLink size={10} className="opacity-70" />
-                    </a>
-                    <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]">
-                        <Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" />
-                    </a>
-                </div>
-
-                {/* NOIRLab credit*/}
-                <a href="https://noirlab.edu/public/education/constellations/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 mt-1 hover:text-indigo-400 transition-colors">
-                    Constellation art provided by NOIRLab/NSF/AURA <ExternalLink size={12} />
-                </a>
-
-                {/* SEO & ABOUT SECTION */}
-                <section className="max-w-2xl mx-auto mt-10 text-center text-slate-500 text-sm px-4 pb-2">
-                    <h2 className="font-bold text-slate-400 mb-2">About Constellation Learn</h2>
-                    <p>
-                        Constellation Learn is a free educational <strong>astronomy quiz</strong> designed to help you <strong>learn the 88 modern constellations</strong> effectively. We use spaced repetition and streak mechanics to help you easily memorize star patterns, stick figures, and Latin names of the night sky.
-                    </p>
-                </section>
-            </footer>
+            <SiteFooter
+                about={
+                    <>
+                        {/* NOIRLab credit*/}
+                        <p>
+                            <a href="https://noirlab.edu/public/education/constellations/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white">
+                                Constellation art provided by NOIRLab/NSF/AURA <ExternalLink size={12} aria-hidden />
+                            </a>
+                        </p>
+                        {/* SEO & ABOUT SECTION */}
+                        <h2 className="mb-1 mt-4 !text-xs font-bold">About Constellation Learn</h2>
+                        <p>
+                            Constellation Learn is a free educational <strong>astronomy quiz</strong> designed to help you <strong>learn the 88 modern constellations</strong> effectively. We use spaced repetition and streak mechanics to help you easily memorize star patterns, stick figures, and Latin names of the night sky.
+                        </p>
+                    </>
+                }
+            />
             <Analytics />
         </div>
     )

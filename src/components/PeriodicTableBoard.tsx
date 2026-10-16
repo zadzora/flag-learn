@@ -41,7 +41,7 @@ const STATE_STYLE: Record<CellState, string> = {
     // Faded and outlined: half-learned has to read as its own state at a glance,
     // not as a slightly different shade of mastered.
     learning: "opacity-55 font-bold",
-    unseen: "bg-slate-200/80 text-slate-400 dark:bg-slate-700/50 dark:text-slate-500 font-semibold",
+    unseen: "bg-slate-200/80 text-slate-400 dark:bg-slate-700 dark:text-slate-500 font-semibold",
 }
 
 /**
@@ -53,8 +53,13 @@ const FAMILY_UNKNOWN = "bg-white text-slate-700 dark:bg-slate-600 dark:text-slat
 
 const MARK_TEXT: Record<CellMark, string> = {
     correct: "text-emerald-600 dark:text-emerald-300",
-    wrong: "text-rose-600 dark:text-rose-300",
+    wrong: "text-red-600 dark:text-red-300",
     hint: "text-indigo-600 dark:text-indigo-300",
+}
+
+/** The shared mark ring without its pulse - the ring alone points, nothing on the board throbs. */
+function markStyle(mark: CellMark): string {
+    return MARK_STYLE[mark].replace("animate-pulse", "").trim()
 }
 
 export default function PeriodicTableBoard({
@@ -117,7 +122,7 @@ export default function PeriodicTableBoard({
                     ].map(({ row, label }) => (
                         <div
                             key={label}
-                            className="flex aspect-square items-center justify-center rounded-[3px] border border-dashed border-slate-300 text-[6px] font-bold text-slate-400 dark:border-slate-600 dark:text-slate-500 sm:text-[7px]"
+                            className="flex aspect-square items-center justify-center rounded-[3px] border border-dashed border-slate-300 text-[6px] font-bold text-slate-400 dark:border-slate-700 dark:text-slate-500 sm:text-[7px]"
                             style={{ gridColumn: 4, gridRow: row }}
                         >
                             {label}
@@ -138,7 +143,7 @@ export default function PeriodicTableBoard({
                         const showsFamily = !known || known.category
                         const category = CATEGORY_META[element.category]
                         const base = blank
-                            ? "bg-slate-200/80 text-transparent dark:bg-slate-700/60"
+                            ? "bg-slate-200/80 text-transparent dark:bg-slate-700"
                             : state === "unseen"
                                 ? STATE_STYLE.unseen
                                 : showsFamily
@@ -166,8 +171,8 @@ export default function PeriodicTableBoard({
                                     ${base}
                                     ${blank ? "" : STATE_STYLE[state]}
                                     ${state === "learning" && !blank ? "ring-1 ring-inset ring-slate-400/60 dark:ring-slate-300/40" : ""}
-                                    ${interactive ? "cursor-pointer hover:z-20 hover:ring-2 hover:ring-indigo-500 hover:brightness-110" : ""}
-                                    ${mark ? MARK_STYLE[mark] : ""}
+                                    ${interactive ? "cursor-pointer hover:z-20 hover:ring-2 hover:ring-slate-900 dark:hover:ring-white" : ""}
+                                    ${mark ? markStyle(mark) : ""}
                                     ${selected === element.symbol ? "ring-2 ring-indigo-500 z-10" : ""}`}
                                 style={{ gridColumn: element.xpos + 1, gridRow: element.ypos + 1 }}
                                 title={blank ? undefined : showsSymbol ? `${showsNumber ? `${element.number} ` : ""}${element.name}` : "Yet to learn"}
@@ -197,13 +202,13 @@ export default function PeriodicTableBoard({
 
             {/* On a phone the table is wider than the screen. Saying so beats
                 leaving half the elements undiscovered behind an edge. */}
-            <p className="px-1 text-[10px] text-slate-400 sm:hidden">Scroll the table sideways to reach groups 9-18.</p>
+            <p className="px-1 text-[11px] text-slate-500 sm:hidden dark:text-slate-400">Scroll the table sideways to reach groups 9-18.</p>
 
             {legend && (
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
                     {CATEGORY_ORDER.map(key => (
-                        <span key={key} className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className={`h-2 w-2 rounded-full ${CATEGORY_META[key].dot}`} />
+                        <span key={key} className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${CATEGORY_META[key].dot}`} />
                             {CATEGORY_META[key].label}
                         </span>
                     ))}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { ArrowLeft, Swords, Loader2, Clock, Users, User, EyeOff } from "lucide-react" // Pridane EyeOff
+import { useNavigate } from "react-router-dom"
+import { Swords, Loader2, Clock, Users, User, EyeOff } from "lucide-react"
+import TopBar from "../components/TopBar"
+import SiteFooter from "../components/SiteFooter"
 import { db } from "../../lib/firebase"
 import { ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
@@ -15,6 +17,20 @@ export default function CreateGame() {
     const [region, setRegion] = useState<'world' | 'us' | 'capitals'>('world')
     const [isBlurMode, setIsBlurMode] = useState(false)
     const [nickname, setNickname] = useState("")
+    const [theme, setTheme] = useState<"light" | "dark">(() => {
+        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "light"
+        return "light"
+    })
+
+    // A fresh load of this page must still honour the saved theme.
+    useEffect(() => {
+        const root = window.document.documentElement
+        if (theme === "dark") root.classList.add("dark")
+        else root.classList.remove("dark")
+        localStorage.setItem("flag-master-theme", theme)
+    }, [theme])
+
+    const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"))
 
     useEffect(() => {
         const savedName = localStorage.getItem("flag-master-nickname")
@@ -83,75 +99,79 @@ export default function CreateGame() {
         }
     }
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const label = "mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+    const segmented = "grid gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
+    const segment = (on: boolean) =>
+        `min-h-10 rounded-md px-2 text-sm font-semibold ${on ? "bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`
+
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 px-4 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-500 overflow-y-auto pb-10">
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            {/* Back and the battle icon share the bar, so the page keeps one header row. */}
+            <TopBar
+                title={<span className="flex items-center gap-2"><Swords size={17} aria-hidden className="shrink-0 text-orange-500" /> PvP Battle</span>}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+            />
 
-            <Link to="/" className="absolute top-4 left-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 hover:scale-110 transition-transform">
-                <ArrowLeft size={20} />
-            </Link>
-
-            <div className="w-full max-w-md mt-12">
-                <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center p-4 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-500 mb-4">
-                        <Swords size={40} />
-                    </div>
-                    <h1 className="text-3xl font-bold">Create Battle</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Setup your multiplayer arena.</p>
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                <div className="mb-6">
+                    <h1 className="!text-3xl font-bold">Create Battle</h1>
+                    <p className="mt-1 text-slate-500 dark:text-slate-400">Setup your multiplayer arena.</p>
                 </div>
 
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-2xl p-6 rounded-3xl shadow-[0_18px_48px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 space-y-5">
+                <section className={`${panel} space-y-6 p-5 sm:p-6`}>
 
                     {/* Nickname */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1 flex items-center gap-2"><User size={16}/> Your Name</label>
+                        <label htmlFor="pvp-nickname" className={label}><User size={14} aria-hidden /> Your Name</label>
                         <input
+                            id="pvp-nickname"
                             type="text"
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
                             placeholder="Enter your nickname..."
-                            className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-transparent focus:border-indigo-500 outline-none font-bold"
+                            className="w-full border border-slate-200 bg-slate-50 px-4 py-3 font-bold outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
                             maxLength={15}
                         />
                     </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-2"></div>
-
                     {/* Max Players */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1 flex items-center gap-2"><Users size={16}/> Max Players</label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className={label}><Users size={14} aria-hidden /> Max Players</div>
+                        <div className={`${segmented} grid-cols-4`}>
                             {[2, 3, 4, 5].map(num => (
-                                <button key={num} onClick={() => setMaxPlayers(num)} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${maxPlayers === num ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>{num}</button>
+                                <button key={num} type="button" onClick={() => setMaxPlayers(num)} className={segment(maxPlayers === num)}>{num}</button>
                             ))}
                         </div>
                     </div>
 
                     {/* Region */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1">Game Mode</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => setRegion('world')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'world' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>World</button>
-                            <button onClick={() => setRegion('us')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'us' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>USA</button>
-                            <button onClick={() => setRegion('capitals')} className={`py-2 rounded-xl font-bold text-xs sm:text-sm transition-all border-2 ${region === 'capitals' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>Capitals</button>
+                        <div className={label}>Game Mode</div>
+                        <div className={`${segmented} grid-cols-3`}>
+                            <button type="button" onClick={() => setRegion('world')} className={segment(region === 'world')}>World</button>
+                            <button type="button" onClick={() => setRegion('us')} className={segment(region === 'us')}>USA</button>
+                            <button type="button" onClick={() => setRegion('capitals')} className={segment(region === 'capitals')}>Capitals</button>
                         </div>
                     </div>
 
                     {/* Rounds */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1">Number of Flags</label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className={label}>Number of Flags</div>
+                        <div className={`${segmented} grid-cols-3`}>
                             {[5, 10, 20].map(num => (
-                                <button key={num} onClick={() => setRoundCount(num)} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${roundCount === num ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>{num} Flags</button>
+                                <button key={num} type="button" onClick={() => setRoundCount(num)} className={segment(roundCount === num)}>{num} Flags</button>
                             ))}
                         </div>
                     </div>
 
                     {/* Time Limit */}
                     <div>
-                        <label className="block text-sm font-bold mb-2 ml-1 flex items-center gap-2"><Clock size={16}/> Time Limit</label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className={label}><Clock size={14} aria-hidden /> Time Limit</div>
+                        <div className={`${segmented} grid-cols-3`}>
                             {[30, 60, 120].map(sec => (
-                                <button key={sec} onClick={() => setTimeLeft(sec)} className={`py-2 rounded-xl font-bold text-sm transition-all border-2 ${timeLimit === sec ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' : 'border-transparent bg-slate-100 dark:bg-slate-700 text-slate-500'}`}>{sec}s</button>
+                                <button key={sec} type="button" onClick={() => setTimeLeft(sec)} className={segment(timeLimit === sec)}>{sec}s</button>
                             ))}
                         </div>
                     </div>
@@ -159,28 +179,34 @@ export default function CreateGame() {
                     {/* Blur Mode Toggle */}
                     <div>
                         <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isBlurMode}
                             onClick={() => setIsBlurMode(!isBlurMode)}
-                            className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-between border-2 transition-all ${isBlurMode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500'}`}
+                            className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left font-semibold ${isBlurMode ? 'border-slate-500 text-slate-900 dark:border-[#4A5680] dark:text-white' : 'border-slate-200 text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-[#3A4670]'}`}
                         >
-                            <span className="flex items-center gap-2"><EyeOff size={18} /> Blur Challenge Mode</span>
-                            <div className={`w-10 h-6 rounded-full relative transition-colors ${isBlurMode ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
-                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${isBlurMode ? 'left-5' : 'left-1'}`}></div>
-                            </div>
+                            <span className="flex items-center gap-2"><EyeOff size={18} aria-hidden /> Blur Challenge Mode</span>
+                            <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${isBlurMode ? 'bg-slate-900 dark:bg-white' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                                <span className={`absolute top-1 h-4 w-4 rounded-full transition-[left] duration-200 ${isBlurMode ? 'left-5 bg-[#fff] dark:bg-[#0A0E1A]' : 'left-1 bg-[#fff] dark:bg-slate-400'}`}></span>
+                            </span>
                         </button>
-                        <p className="text-xs text-slate-400 mt-1 ml-1">Flags start blurry and clear up over time.</p>
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">Flags start blurry and clear up over time.</p>
                     </div>
 
                     <button
+                        type="button"
                         onClick={handleCreateGame}
                         disabled={isCreating}
-                        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-orange-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-4 text-lg font-bold text-white hover:bg-slate-700 disabled:cursor-wait disabled:opacity-80 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
                     >
-                        {isCreating ? <Loader2 className="animate-spin" /> : <Swords />}
+                        {isCreating ? <Loader2 size={20} className="animate-spin" aria-hidden /> : <Swords size={20} aria-hidden />}
                         Create Game Lobby
                     </button>
 
-                </div>
-            </div>
+                </section>
+            </main>
+
+            <SiteFooter />
         </div>
     )
 }

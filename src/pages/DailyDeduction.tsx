@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Link } from "react-router-dom"
-import { ArrowLeft, Check, Flame, Moon, Share2, Sun, Trophy, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Check, Flame, Share2, Target, Trophy, X } from "lucide-react"
 import {
-    MAX_GUESSES, arrowFor, buildDailyPuzzle, buildShareText, evaluateGuess,
+    MAX_GUESSES, buildDailyPuzzle, buildShareText, evaluateGuess,
     lookupGuess, suggestCountries, type Compare, type GuessFeedback, type RegionMatch,
 } from "../utils/deductionPuzzle"
 import { countryByCode } from "../utils/countryPool"
@@ -14,13 +13,11 @@ import {
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
-import { dailyMode } from "../utils/dailyModes"
+import TopBar from "../components/TopBar"
 
 const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-deduction-save"
 const DAILY_GAME_KEY = "deduction"
-/** Same icon the home card and the hand-off button use. */
-const { icon: DeductionIcon } = dailyMode("deduction")
 
 type Status = "playing" | "won" | "lost"
 
@@ -61,22 +58,33 @@ function compact(n: number): string {
 }
 
 const CELL_TONE: Record<RegionMatch, string> = {
-    hit: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
-    near: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40",
-    miss: "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-400/30",
+    hit: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+    near: "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    miss: "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
 }
 
 function toneFor(match: RegionMatch | Compare): string {
     return CELL_TONE[match === "up" || match === "down" ? "miss" : match]
 }
 
+/** Compass bearing as a rotation of one arrow, so the direction reads as an icon, not an emoji. */
+const BEARING: Record<Exclude<GuessFeedback["direction"], "here">, number> = {
+    N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315,
+}
+
+function Bearing({ direction }: { direction: GuessFeedback["direction"] }) {
+    if (direction === "here") return <Target size={16} aria-label="Here" />
+    return <ArrowUp size={16} strokeWidth={2.5} aria-label={direction} style={{ transform: `rotate(${BEARING[direction]}deg)` }} />
+}
+
 function Cell({ label, value, match }: { label: string; value: string; match: RegionMatch | Compare }) {
-    const arrow = match === "up" ? "▲" : match === "down" ? "▼" : ""
     return (
-        <div className={`px-2 py-1.5 rounded-lg border text-center ${toneFor(match)}`}>
-            <div className="text-[9px] font-bold uppercase tracking-wider opacity-60 leading-none mb-1">{label}</div>
-            <div className="text-[11px] font-bold leading-tight truncate">
-                {arrow && <span className="mr-0.5">{arrow}</span>}{value || "-"}
+        <div className={`min-w-0 rounded-md border px-2 py-1.5 text-center ${toneFor(match)}`}>
+            <div className="mb-1 text-[9px] font-bold uppercase leading-none tracking-wider opacity-70">{label}</div>
+            <div className="flex items-center justify-center gap-0.5 text-[11px] font-bold leading-tight">
+                {match === "up" && <ArrowUp size={11} strokeWidth={3} className="shrink-0" aria-label="Higher" />}
+                {match === "down" && <ArrowDown size={11} strokeWidth={3} className="shrink-0" aria-label="Lower" />}
+                <span className="truncate">{value || "-"}</span>
             </div>
         </div>
     )
@@ -84,19 +92,17 @@ function Cell({ label, value, match }: { label: string; value: string; match: Re
 
 function GuessRow({ feedback }: { feedback: GuessFeedback }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`rounded-2xl border p-3 ${feedback.correct
-                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"}`}
+        <div
+            className={`fl-in rounded-[10px] border p-3 ${feedback.correct
+                ? "border-emerald-500/40 bg-emerald-500/10"
+                : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"}`}
         >
-            <div className="flex items-center gap-2.5 mb-2">
-                <img src={feedback.image} alt="" className="w-8 h-6 object-cover rounded border border-slate-200 dark:border-slate-600 shrink-0" />
-                <span className="font-bold text-sm truncate flex-1">{feedback.name}</span>
-                <span className="shrink-0 inline-flex items-center gap-1.5 text-sm font-black">
-                    <span aria-hidden>{arrowFor(feedback.direction)}</span>
-                    <span className={feedback.correct ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}>
+            <div className="mb-2 flex items-center gap-2.5">
+                <img src={feedback.image} alt="" className="h-6 w-9 shrink-0 rounded-[3px] object-cover shadow-[0_1px_4px_rgba(10,14,26,0.18)]" />
+                <span className="flex-1 truncate text-sm font-bold">{feedback.name}</span>
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold">
+                    <span className="text-slate-500 dark:text-slate-400"><Bearing direction={feedback.direction} /></span>
+                    <span className={`tabular-nums ${feedback.correct ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}>
                         {feedback.proximity}%
                     </span>
                 </span>
@@ -107,7 +113,7 @@ function GuessRow({ feedback }: { feedback: GuessFeedback }) {
                 <Cell label="People" value={compact(feedback.population.value)} match={feedback.population.match} />
                 <Cell label="Area" value={`${compact(feedback.area.value)} km²`} match={feedback.area.match} />
             </div>
-        </motion.div>
+        </div>
     )
 }
 
@@ -242,77 +248,63 @@ export default function DailyDeduction() {
         [distribution, myBucket],
     )
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 pb-12 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Daily Deduction" theme={theme} onToggleTheme={() => setTheme(prev => (prev === "light" ? "dark" : "light"))}>
+                <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">#{puzzle.number}</span>
+                {streak > 0 && (
+                    <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
+                        <Flame size={15} aria-hidden /> {streak}
+                    </span>
+                )}
+            </TopBar>
 
-            {/* Header */}
-            <div className="w-full max-w-lg px-4 flex justify-between items-center mb-6">
-                <Link to="/" className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform">
-                    <ArrowLeft size={20} />
-                </Link>
-
-                <div className="flex flex-col items-center">
-                    <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                        <DeductionIcon size={18} className="text-sky-500" /> DAILY DEDUCTION
-                    </h1>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">#{puzzle.number}</span>
-                        {streak > 0 && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-[10px] font-black">
-                                <Flame size={11} /> {streak}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <button
-                    onClick={() => setTheme(prev => (prev === "light" ? "dark" : "light"))}
-                    className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
-
-            <div className="w-full max-w-lg px-4 flex flex-col items-center gap-5">
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-14 pt-6 sm:pt-8">
 
                 {/* How it reads - the arrow needs saying once. */}
                 {guesses.length === 0 && status === "playing" && (
-                    <div className="w-full rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800/50 p-4 text-center">
-                        <p className="font-bold text-sm mb-1">Name the mystery country in {MAX_GUESSES} guesses.</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <div className={`${panel} p-4 sm:p-5`}>
+                        <p className="mb-1 text-sm font-bold">Name the mystery country in {MAX_GUESSES} guesses.</p>
+                        <p className="text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
                             Every guess is answered: <span className="font-bold text-emerald-600 dark:text-emerald-400">green</span> is a match,
                             {" "}<span className="font-bold text-amber-600 dark:text-amber-400">amber</span> is the right continent,
-                            {" "}and ▲ ▼ point toward the answer. The compass arrow shows which way it lies, the percentage how close you are.
+                            {" "}and <ArrowUp size={13} strokeWidth={3} className="inline align-[-2px]" aria-label="up" />{" "}
+                            <ArrowDown size={13} strokeWidth={3} className="inline align-[-2px]" aria-label="down" /> point toward the answer.
+                            The compass arrow shows which way it lies, the percentage how close you are.
                         </p>
                     </div>
                 )}
 
                 {/* Guess counter */}
-                <div className="flex gap-2 w-full justify-center">
+                <div className="flex w-full gap-1.5" aria-label={`${guesses.length} of ${MAX_GUESSES} guesses used`}>
                     {Array.from({ length: MAX_GUESSES }).map((_, i) => {
                         const isFilled = i < guesses.length
                         const isCurrent = i === guesses.length && status === "playing"
                         const won = status === "won" && i === guesses.length - 1
 
-                        let tone = "bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700"
-                        if (isFilled) tone = "bg-slate-400 dark:bg-slate-600 border-slate-500"
-                        if (won) tone = "bg-emerald-500 border-emerald-600 shadow-sm"
-                        if (isCurrent) tone = "bg-white dark:bg-slate-900 border-sky-400 dark:border-sky-500 shadow-[0_0_10px_rgba(56,189,248,0.35)]"
+                        let tone = "bg-slate-200 dark:bg-slate-700"
+                        if (isFilled) tone = "bg-slate-400 dark:bg-slate-500"
+                        if (won) tone = "bg-emerald-500"
+                        if (isCurrent) tone = "bg-blue-500"
 
-                        return <div key={i} className={`h-3 flex-1 rounded-full border transition-all duration-300 ${tone}`} />
+                        return <div key={i} className={`h-1.5 flex-1 rounded-sm transition-colors duration-300 ${tone}`} />
                     })}
                 </div>
 
                 {/* Guess history */}
                 {feedback.length > 0 && (
-                    <div className="w-full flex flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2">
                         {feedback.map(f => <GuessRow key={f.code} feedback={f} />)}
                     </div>
                 )}
 
                 {/* Input */}
                 {status === "playing" && (
-                    <div className="w-full space-y-3">
+                    <div className="flex w-full flex-col gap-3">
                         <div className="relative">
                             <AnimatePresence>
                                 {suggestions.length > 0 && (
@@ -320,13 +312,13 @@ export default function DailyDeduction() {
                                         initial={{ opacity: 0, y: 4 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 4 }}
-                                        className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden z-10"
+                                        className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800"
                                     >
                                         {suggestions.map((s, i) => (
                                             <button
                                                 key={s}
                                                 onMouseDown={e => { e.preventDefault(); handleGuess(s) }}
-                                                className={`w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-sky-900/30 hover:text-sky-700 dark:hover:text-sky-300 transition-colors ${i < suggestions.length - 1 ? "border-b border-slate-100 dark:border-slate-700/50" : ""}`}
+                                                className={`w-full rounded-none px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-white ${i < suggestions.length - 1 ? "border-b border-slate-200 dark:border-slate-700" : ""}`}
                                             >
                                                 {s}
                                             </button>
@@ -346,7 +338,8 @@ export default function DailyDeduction() {
                                     if (e.key === "Escape") setSuggestions([])
                                 }}
                                 placeholder={`Guess ${guesses.length + 1} of ${MAX_GUESSES}...`}
-                                className="w-full px-5 py-4 text-center text-lg font-bold rounded-xl border-2 border-slate-200 dark:border-slate-700 outline-none transition-all bg-white dark:bg-slate-900 focus:border-sky-500 shadow-sm"
+                                aria-label="Country"
+                                className="w-full rounded-lg border border-slate-200 bg-white px-5 py-4 text-center text-lg font-medium outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-[#4A5680]"
                                 autoComplete="off"
                                 autoCorrect="off"
                                 autoCapitalize="off"
@@ -355,12 +348,14 @@ export default function DailyDeduction() {
                             />
                         </div>
 
-                        <div className="h-5 text-center text-sm font-bold text-amber-600 dark:text-amber-400">{message}</div>
+                        <div className="flex min-h-5 items-center justify-center text-center text-sm font-bold text-amber-600 dark:text-amber-400">
+                            {message && <span key={message} className="fl-in">{message}</span>}
+                        </div>
 
                         <button
                             onClick={() => handleGuess()}
                             disabled={!input.trim()}
-                            className="w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all bg-sky-600 hover:bg-sky-700 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`w-full py-4 text-lg font-bold ${input.trim() ? primary : disabledBtn}`}
                         >
                             Submit Guess
                         </button>
@@ -369,43 +364,43 @@ export default function DailyDeduction() {
 
                 {/* Result */}
                 {status !== "playing" && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="w-full bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 text-center"
-                    >
-                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${status === "won"
-                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500"
-                            : "bg-red-100 dark:bg-red-900/30 text-red-500"}`}>
-                            {status === "won" ? <Trophy size={32} /> : <X size={32} />}
-                        </div>
-                        <h2 className="text-2xl font-bold mb-1">{status === "won" ? "Deduced!" : "Game Over"}</h2>
-                        <p className="text-slate-500 dark:text-slate-400 mb-4">
-                            {status === "won"
-                                ? `You found it in ${guesses.length} ${guesses.length === 1 ? "guess" : "guesses"}.`
-                                : brokeStreak
-                                    ? "Your streak is back to zero - start a new one tomorrow!"
-                                    : "Better luck tomorrow!"}
-                        </p>
-
-                        <div className="flex items-center justify-center gap-2.5 mb-5">
-                            <img src={puzzle.answer.image} alt="" className="w-10 h-7 object-cover rounded border border-slate-200 dark:border-slate-600" />
-                            <span className="font-black text-lg">{puzzle.answer.name}</span>
-                        </div>
-
-                        {streak > 0 && (
-                            <div className="mb-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-xs font-black">
-                                <Flame size={14} /> {streak} day streak
+                    <section className={`${panel} flex flex-col gap-5 p-6 sm:p-7`}>
+                        <div className="flex items-center gap-4">
+                            <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 ${status === "won" ? "text-emerald-500" : "text-red-500"}`}>
+                                {status === "won" ? <Trophy size={28} aria-hidden /> : <X size={28} aria-hidden />}
+                            </span>
+                            <div className="min-w-0">
+                                <h2 className="!text-2xl font-bold">{status === "won" ? "Deduced!" : "Game Over"}</h2>
+                                <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+                                    {status === "won"
+                                        ? `You found it in ${guesses.length} ${guesses.length === 1 ? "guess" : "guesses"}.`
+                                        : brokeStreak
+                                            ? "Your streak is back to zero - start a new one tomorrow!"
+                                            : "Better luck tomorrow!"}
+                                </p>
+                                {streak > 0 && (
+                                    <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
+                                        <Flame size={15} aria-hidden /> {streak} day streak
+                                    </p>
+                                )}
                             </div>
-                        )}
+                        </div>
+
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                            <img src={puzzle.answer.image} alt="" className="h-9 w-[54px] shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]" />
+                            <div className="min-w-0">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">The answer</div>
+                                <div className="truncate text-lg font-bold">{puzzle.answer.name}</div>
+                            </div>
+                        </div>
 
                         <button
                             onClick={share}
-                            className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors bg-sky-100 dark:bg-sky-900/40 hover:bg-sky-200 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300"
+                            className={`flex w-full items-center justify-center gap-2 py-3.5 font-bold ${copied ? "rounded-lg bg-emerald-600 text-white" : primary}`}
                         >
-                            {copied ? <><Check size={18} /> Copied!</> : <><Share2 size={18} /> Share result</>}
+                            {copied ? <><Check size={18} aria-hidden /> Copied!</> : <><Share2 size={18} aria-hidden /> Share result</>}
                         </button>
-                    </motion.div>
+                    </section>
                 )}
 
                 {status !== "playing" && (
@@ -415,13 +410,13 @@ export default function DailyDeduction() {
                         statsError={statsError}
                         myBucket={myBucket}
                         bucketLabels={Array.from({ length: MAX_GUESSES }, (_, i) => `${i + 1}`)}
-                        accentClass="text-sky-600 dark:text-sky-400"
+                        accentClass="text-slate-900 dark:text-white"
                         footnote="Guesses used - X did not solve it"
                     />
                 )}
 
                 {status !== "playing" && <NextDailyLink current="deduction" today={todayStr} />}
-            </div>
+            </main>
         </div>
     )
 }

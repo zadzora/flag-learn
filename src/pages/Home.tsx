@@ -1,358 +1,411 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, type ReactNode } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
-    BookOpen, ChevronDown, Globe, Landmark, Swords, Map, Star, Calendar, Trophy,
-    EyeOff, CircleDot, ArrowUpDown, Flame, Paintbrush, Scan, Moon, Sun,
-    Heart, Coffee, ExternalLink, MessagesSquare, Crown, Link2, Atom,
+    ArrowRight, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
 } from "lucide-react"
-import CountryDataCredit from "../components/CountryDataCredit"
+import {
+    AtomIcon, BlurModeIcon, BorderChainIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
+    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, UltimateIcon, WorldConquerorIcon, type ModeIcon,
+} from "../components/ModeIcons"
+import worldData from "../../data/flags.json"
+import usData from "../../data/us_states.json"
+import SiteFooter from "../components/SiteFooter"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
-import { DAILY_MODES } from "../utils/dailyModes"
+import { DAILY_MODES, isDailyFinished } from "../utils/dailyModes"
 
 const LAST_MODE_KEY = "flag-master-last-mode"
+const TARGET_STREAK = 3
 
-const GAME_MODES = [
-    { mode: "world", label: "Countries", detail: "Guess countries from flags", icon: Globe, accent: "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400" },
-    { mode: "us", label: "US States", detail: "Guess states from flags", icon: Map, accent: "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400" },
-    { mode: "capitals", label: "World Capitals", detail: "Guess capitals from flags", icon: Landmark, accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400" },
-] as const
+type FlagRow = { code: string; image: string; difficulty?: number; capital?: (string | null)[] }
+const WORLD = worldData as FlagRow[]
+const US = usData as unknown as FlagRow[]
 
-type Challenge = {
-    to: string
-    label: string
-    detail: string
-    icon: typeof Calendar
-    accent: string
-    hover: string
-    /** localStorage key whose daily streak is shown on the card. */
-    streakKey?: string
-    badge?: string
-    /** A second destination, shown as its own button on the right of the card. */
-    action?: { to: string; icon: typeof Calendar; label: string }
+/** Well-known flags only: the wall should read as "flags" at a glance, not as a quiz. */
+const WALL_POOL = WORLD.filter(f => f.difficulty === 0 && !f.code.includes("-") && f.code !== "aq").map(f => f.image)
+
+type DeckMode = "world" | "us" | "capitals"
+type Deck = { mode: DeckMode; label: string; storageKey: string; items: FlagRow[] }
+
+const DECKS: Deck[] = [
+    { mode: "world", label: "Countries", storageKey: "flag-master-v1", items: WORLD },
+    { mode: "us", label: "US States", storageKey: "flag-master-us-v1", items: US },
+    { mode: "capitals", label: "World Capitals", storageKey: "flag-master-capitals-v1", items: WORLD.filter(f => f.capital && f.capital[0] !== null) },
+]
+
+type Entry = { to: string; label: string; detail: string; icon: ModeIcon; badge?: string; streakKey?: string; action?: { to: string; label: string } }
+
+const MULTIPLAYER: Entry[] = [
+    { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: WorldConquerorIcon, badge: "New", streakKey: STREAK_KEYS.wars, action: { to: "/world-conqueror?hall=1", label: "Hall of Fame" } },
+    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon, badge: "New" },
+    { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon },
+    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
+]
+
+const MORE_MODES: Entry[] = [
+    { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: PaintFlagIcon },
+    { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border", icon: BorderGuessIcon },
+    { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - which country is higher", icon: HigherLowerIcon },
+    { to: "/ultimate", label: "Ultimate Mode", detail: "Locate the flag, then name the country and its capital", icon: UltimateIcon },
+    { to: "/map", label: "Map Locator", detail: "Find countries on the world map", icon: MapLocatorIcon },
+    { to: "/blur", label: "Blur Mode", detail: "Guess the flag as it slowly comes into focus", icon: BlurModeIcon },
+    { to: "/word-wheel", label: "Country Wheel", detail: "Connect letters on the wheel to spell countries", icon: CountryWheelIcon },
+    { to: "/constellations", label: "Constellations", detail: "Map the stars of the night sky", icon: ConstellationsIcon },
+]
+
+function todayUtc(): string {
+    return new Date().toLocaleDateString("en-CA", { timeZone: "UTC" })
+}
+
+/** Small seeded shuffle, so the wall and the card art change daily but not on every render. */
+function seeded<T>(items: T[], seed: string): T[] {
+    let h = 2166136261
+    for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619)
+    const out = [...items]
+    for (let i = out.length - 1; i > 0; i--) {
+        h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0
+        const j = h % (i + 1)
+        ;[out[i], out[j]] = [out[j], out[i]]
+    }
+    return out
+}
+
+function deckProgress(deck: Deck): { mastered: number; total: number; started: boolean; sample: string[] } {
+    const total = deck.items.length
+    let masteredCodes: string[] = []
+    let started = false
+    try {
+        const parsed = JSON.parse(localStorage.getItem(deck.storageKey) ?? "null") as { progress?: Record<string, { streak: number; seen?: number }> } | null
+        const entries = Object.entries(parsed?.progress ?? {})
+        masteredCodes = entries.filter(([, p]) => p.streak >= TARGET_STREAK).map(([code]) => code)
+        started = entries.some(([, p]) => (p.seen ?? 0) > 0 || p.streak > 0)
+    } catch {
+        // Unreadable save - show the deck as untouched.
+    }
+    // The stack shows flags the player already owns; a fresh deck shows its first three.
+    const byCode = new Map(deck.items.map(f => [f.code, f.image]))
+    const owned = masteredCodes.map(c => byCode.get(c)).filter((x): x is string => !!x)
+    const sample = owned.length >= 3 ? owned.slice(-3) : deck.items.slice(0, 3).map(f => f.image)
+    return { mastered: masteredCodes.length, total, started, sample }
 }
 
 /**
- * Reset at midnight UTC - one shot each, and the only cards that carry a streak.
- * Built from `DAILY_MODES` so a mode's icon and label match everywhere it shows.
+ * The deck the hero offers. Countries and Capitals are the main road: whichever
+ * of them the player has started (the last one played wins a tie), Countries for
+ * a newcomer. US States only once both of those are finished.
  */
-const DAILY_CHALLENGES: Challenge[] = DAILY_MODES.map(mode => ({
-    to: mode.to,
-    label: mode.label,
-    detail: mode.detail,
-    icon: mode.icon,
-    accent: mode.accent,
-    hover: mode.hover,
-    streakKey: mode.streakKey,
-    badge: mode.badge,
-}))
+function heroDeck<T extends { mode: DeckMode; mastered: number; total: number; started: boolean }>(decks: T[]): DeckMode {
+    const open = decks.filter(d => (d.mode === "world" || d.mode === "capitals") && d.mastered < d.total)
+    if (open.length === 0) return "us"
+    let last: string | null = null
+    try {
+        last = localStorage.getItem(LAST_MODE_KEY)
+    } catch {
+        // No preference stored.
+    }
+    const lastOpen = open.find(d => d.mode === last && d.started)
+    return (lastOpen ?? open.find(d => d.started) ?? open[0]).mode
+}
 
-/** Everyone else is in the room: the async conquest, live lobbies and the global boards. */
-const MULTIPLAYER: Challenge[] = [
-    { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: Swords, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500", streakKey: STREAK_KEYS.wars, badge: "New", action: { to: "/world-conqueror?hall=1", icon: Crown, label: "Hall of Fame" } },
-    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: Link2, accent: "bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400", hover: "hover:border-violet-400 dark:hover:border-violet-500", badge: "New" },
-    { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real-time", icon: Swords, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500" },
-    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals, or states - global leaderboard", icon: Trophy, accent: "bg-orange-100 dark:bg-orange-900/50 text-orange-500 dark:text-orange-400", hover: "hover:border-orange-400 dark:hover:border-orange-500" },
-]
+function readSnapshot() {
+    const today = todayUtc()
+    const streaks = Object.fromEntries(Object.values(STREAK_KEYS).map(key => [key, activeStreak(readStreak(key), today)])) as Record<string, number>
+    const pool = seeded(WALL_POOL, today)
+    const dailies = DAILY_MODES.map((mode, i) => ({
+        mode,
+        done: isDailyFinished(mode, today),
+        streak: streaks[mode.streakKey] ?? 0,
+        // Decorative only: three flags of the day, never the puzzle's answer.
+        art: pool.slice(i * 3, i * 3 + 3),
+    }))
+    const decks = DECKS.map(deck => ({ ...deck, ...deckProgress(deck) }))
+    return { streaks, dailies, decks, hero: heroDeck(decks), wall: seeded(WALL_POOL, `${today}-wall`) }
+}
 
-const CHALLENGES: Challenge[] = [
-    { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: Paintbrush, accent: "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400", hover: "hover:border-purple-400 dark:hover:border-purple-500" },
-    { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border shape", icon: Scan, accent: "bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400", hover: "hover:border-teal-400 dark:hover:border-teal-500" },
-    { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - guess which country is higher", icon: ArrowUpDown, accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-500 dark:text-rose-400", hover: "hover:border-rose-400 dark:hover:border-rose-500" },
-    { to: "/ultimate", label: "Ultimate Mode", detail: "Locate the flag, then name the country and its capital", icon: Trophy, accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-500 dark:text-amber-400", hover: "hover:border-amber-400 dark:hover:border-amber-500" },
-    { to: "/map", label: "Map Locator", detail: "Find countries on the world map", icon: Map, accent: "bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400", hover: "hover:border-sky-400 dark:hover:border-sky-500" },
-    { to: "/blur", label: "Blur Mode", detail: "Guess the flag as it slowly comes into focus", icon: EyeOff, accent: "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400", hover: "hover:border-indigo-400 dark:hover:border-indigo-500" },
-    { to: "/word-wheel", label: "Country Wheel", detail: "Connect letters on the wheel to spell countries", icon: CircleDot, accent: "bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400", hover: "hover:border-teal-400 dark:hover:border-teal-500" },
-    { to: "/constellations", label: "Constellations", detail: "Map the stars of the night sky", icon: Star, accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-500 dark:text-amber-400", hover: "hover:border-amber-400 dark:hover:border-amber-500" },
-]
-
-function ChallengeList({ items, streaks }: { items: Challenge[]; streaks: Record<string, number> }) {
+function Badge({ children }: { children: ReactNode }) {
     return (
-        <div className="mt-3 flex flex-col gap-2">
-            {items.map(({ to, label, detail, icon: Icon, accent, hover, streakKey, badge, action: Action }) => (
-                // A card with a second destination cannot be one big link - a link
-                // inside a link is not valid - so the row becomes the card and the
-                // two links sit inside it. The inner rounding is a step tighter
-                // than the card's so the corners nest instead of clashing.
-                <div
-                    key={to}
-                    className={`group flex items-center gap-1 p-1.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-white/70 dark:border-slate-700/70 ${hover} transition-all touch-manipulation`}
-                >
-                    <Link
-                        to={to}
-                        className="flex items-center gap-3 flex-1 min-w-0 p-2.5 rounded-xl active:scale-[0.98] transition-transform"
-                    >
-                        <div className={`p-2.5 rounded-xl shrink-0 ${accent}`}>
-                            <Icon size={22} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="font-bold flex items-center gap-2">
-                                {label}
-                                {badge && (
-                                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shrink-0">
-                                        {badge}
-                                    </span>
-                                )}
-                            </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">{detail}</p>
-                        </div>
-                        {streakKey && streaks[streakKey] > 0 && (
-                            <div className="flex flex-col items-center shrink-0">
-                                <Flame size={16} className="text-orange-400" />
-                                <span className="text-xs font-black text-orange-400 leading-none">{streaks[streakKey]}</span>
-                            </div>
-                        )}
-                    </Link>
+        <span className="rounded-[5px] bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+            {children}
+        </span>
+    )
+}
 
-                    {Action && (
-                        <Link
-                            to={Action.to}
-                            aria-label={Action.label}
-                            title={Action.label}
-                            className="shrink-0 self-stretch flex items-center px-3 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/70 active:scale-95 transition-all"
-                        >
-                            <Action.icon size={20} />
-                        </Link>
-                    )}
-                </div>
-            ))}
+function SectionHead({ id, title, aside }: { id: string; title: string; aside?: string }) {
+    return (
+        <div className="mb-4 mt-14 flex items-baseline justify-between gap-4">
+            <h2 id={id} className="scroll-mt-6 !text-2xl font-bold tracking-[-0.02em] sm:!text-[26px]">{title}</h2>
+            {aside && <span className="text-right text-sm text-slate-500 dark:text-[#8C97B3]">{aside}</span>}
         </div>
     )
 }
 
-function getStreaks(): Record<string, number> {
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" })
-    return Object.fromEntries(
-        Object.values(STREAK_KEYS).map(key => [key, activeStreak(readStreak(key), today)])
+function EntryList({ items, streaks }: { items: Entry[]; streaks: Record<string, number> }) {
+    return (
+        <ul className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8">
+            {items.map(({ to, label, detail, icon: Icon, badge, streakKey, action }) => (
+                <li key={to} className="flex items-stretch border-b border-slate-200 dark:border-[#1C2338]">
+                    <Link to={to} className="group flex min-w-0 flex-1 items-center gap-4 py-3.5">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors group-hover:border-slate-400 group-hover:text-slate-900 dark:border-[#2A3350] dark:text-[#A6B0C8] dark:group-hover:border-[#4A5680] dark:group-hover:text-white">
+                            <Icon size={19} aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-2 text-[15px] font-semibold">{label}{badge && <Badge>{badge}</Badge>}</span>
+                            <span className="block truncate text-[13px] text-slate-500 dark:text-[#8C97B3]">{detail}</span>
+                        </span>
+                        {streakKey && (streaks[streakKey] ?? 0) > 0 && (
+                            <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
+                                <Flame size={15} aria-hidden /> {streaks[streakKey]}
+                            </span>
+                        )}
+                        <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-[#556080]" />
+                    </Link>
+                    {action && (
+                        <Link
+                            to={action.to}
+                            className="ml-2 flex shrink-0 items-center gap-1.5 self-center rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-semibold text-amber-700 hover:border-amber-400 dark:border-[#2A3350] dark:text-amber-300 dark:hover:border-amber-400/60"
+                            title={action.label}
+                        >
+                            <Crown size={15} aria-hidden />
+                            <span className="hidden sm:inline">{action.label}</span>
+                            <span className="sr-only sm:hidden">{action.label}</span>
+                        </Link>
+                    )}
+                </li>
+            ))}
+        </ul>
     )
 }
 
 export default function Home() {
-    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') return (localStorage.getItem("flag-master-theme") as 'light' | 'dark') || 'light'
-        return 'light'
+    const [theme, setTheme] = useState<"light" | "dark">(() => {
+        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "light"
+        return "light"
     })
 
     useEffect(() => {
         const root = window.document.documentElement
-        if (theme === 'dark') root.classList.add('dark')
-        else root.classList.remove('dark')
+        if (theme === "dark") root.classList.add("dark")
+        else root.classList.remove("dark")
         localStorage.setItem("flag-master-theme", theme)
     }, [theme])
 
-    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
+    const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"))
 
-    const [showModes, setShowModes] = useState(false)
-    // The dailies are what people come back for, so that section starts open.
-    const [showDaily, setShowDaily] = useState(true)
-    const [showMulti, setShowMulti] = useState(false)
-    const [showMods, setShowMods] = useState(false)
-    const streaks = getStreaks()
-    // Only the daily cards feed the daily header - World Conqueror now has its own section.
-    const topStreak = Math.max(0, ...DAILY_CHALLENGES.map(c => (c.streakKey && streaks[c.streakKey]) || 0))
-    const warsStreak = streaks[STREAK_KEYS.wars] ?? 0
+    // The flag wall only moves while it is on screen: a hundred-odd images sliding
+    // under the rest of the page cost the GPU for nothing once you scroll past them.
+    const heroRef = useRef<HTMLElement>(null)
+    useEffect(() => {
+        const hero = heroRef.current
+        if (!hero || typeof IntersectionObserver === "undefined") return
+        const observer = new IntersectionObserver(([entry]) => hero.classList.toggle("fl-wall-paused", !entry.isIntersecting))
+        observer.observe(hero)
+        return () => observer.disconnect()
+    }, [])
 
     const navigate = useNavigate()
+    // A snapshot of the day: the home screen is read once per visit, not watched.
+    const [{ streaks, dailies, decks, hero, wall }] = useState(readSnapshot)
 
-    function startMode(mode: string) {
+    const solved = dailies.filter(d => d.done).length
+    const lastDeck = decks.find(d => d.mode === hero) ?? decks[0]
+
+    function startMode(mode: DeckMode) {
         localStorage.setItem(LAST_MODE_KEY, mode)
         navigate("/play")
     }
 
+    // Five rows, each the same list started at a different point, doubled so the slide loops seamlessly.
+    const rows = [0, 9, 17, 4, 22].map(offset => {
+        const row = wall.slice(offset).concat(wall.slice(0, offset)).slice(0, 14)
+        return row.concat(row)
+    })
+
     return (
-        <div className="min-h-screen flex flex-col text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className="flex min-h-screen flex-col bg-[#F4F6FB] text-slate-900 dark:bg-[#0A0E1A] dark:text-[#E8ECF6]">
+            <style>{`
+                @keyframes fl-wall-slide { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+                .fl-wall-row { animation: fl-wall-slide 110s linear infinite; will-change: transform; backface-visibility: hidden; }
+                .fl-wall-paused .fl-wall-row { animation-play-state: paused; }
+                .fl-wall-row:nth-child(even) { animation-direction: reverse; animation-duration: 140s; }
+                @media (prefers-reduced-motion: reduce) { .fl-wall-row { animation: none; } }
+            `}</style>
 
-            {/* Theme Toggle */}
-            <button
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform z-10"
-            >
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full px-4 py-8">
-
-                {/* Logo Section */}
-                <div className="text-center mb-8 sm:mb-10">
-                    <img src="/logo2.png" alt="Flag Learn" className="w-auto mx-auto mb-3 sm:mb-4 h-44 sm:h-56" />
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 font-medium text-sm sm:text-base max-w-xs mx-auto">Master geography one flag at a time.</p>
+            {/* Hero: the flags are the picture. */}
+            <header ref={heroRef} className="relative overflow-hidden border-b border-slate-200 dark:border-[#1C2338]">
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col gap-2.5 py-2.5 opacity-20 [mask-image:linear-gradient(90deg,transparent,#000_22%)] sm:left-[46%] sm:opacity-100"
+                >
+                    {rows.map((row, r) => (
+                        <div key={r} className="fl-wall-row flex w-max gap-2.5">
+                            {row.map((src, i) => (
+                                <img key={i} src={src} alt="" className="h-[84px] w-[126px] rounded-[4px] object-cover" />
+                            ))}
+                        </div>
+                    ))}
                 </div>
 
-                <div className="w-full max-w-md sm:max-w-2xl space-y-8">
-
-                    {/* Learning Section */}
-                    <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Learning Path</h2>
+                <nav className="relative z-10 mx-auto flex max-w-[1120px] items-center justify-between px-5 pt-4 sm:px-6">
+                    <Link to="/" className="flex items-center gap-2.5 font-bold tracking-[0.01em]">
+                        <img src="/logo2.png" alt="" className="h-11 w-11" />
+                        Flag Learn
+                    </Link>
+                    <div className="flex items-center gap-1 rounded-xl bg-[#F4F6FB]/85 p-1.5 text-sm text-slate-600 dark:bg-[#0A0E1A]/80 dark:text-[#A6B0C8]">
+                        <a href="#learn" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Learn</a>
+                        <a href="#today" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Daily</a>
+                        <a href="#multiplayer" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Multiplayer</a>
+                        <Link to="/science" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Science</Link>
                         <button
                             type="button"
-                            onClick={() => setShowModes(prev => !prev)}
-                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all active:scale-[0.98] touch-manipulation text-left"
+                            onClick={toggleTheme}
+                            aria-label="Toggle theme"
+                            className="ml-1 flex h-9 min-h-0 w-9 items-center justify-center rounded-lg border border-slate-300 p-0 text-slate-700 hover:border-slate-500 dark:border-[#2A3350] dark:text-[#E8ECF6] dark:hover:border-[#4A5680]"
                         >
-                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
-                                <BookOpen size={32} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-lg">Single Player</h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Pick what you want to learn</p>
-                            </div>
-                            <ChevronDown size={22} className={`shrink-0 text-slate-400 transition-transform ${showModes ? 'rotate-180' : ''}`} />
+                            {theme === "light" ? <Moon size={17} /> : <Sun size={17} />}
                         </button>
-
-                        {showModes && (
-                            <div className="mt-3 flex flex-col gap-2">
-                                {GAME_MODES.map(({ mode, label, detail, icon: Icon, accent }) => (
-                                    <button
-                                        key={mode}
-                                        type="button"
-                                        onClick={() => startMode(mode)}
-                                        className="flex w-full items-center gap-3 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-white/70 dark:border-slate-700/70 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all active:scale-[0.98] touch-manipulation text-left"
-                                    >
-                                        <div className={`p-2.5 rounded-xl shrink-0 ${accent}`}>
-                                            <Icon size={22} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="font-bold">{label}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">{detail}</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
                     </div>
+                </nav>
 
-                    {/* Daily Challenges Section */}
-                    <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Daily Challenges</h2>
+                <div className="relative z-10 mx-auto flex min-h-[420px] max-w-[1120px] items-center px-5 pb-14 pt-10 sm:min-h-[440px] sm:px-6">
+                    <div className="max-w-[520px]">
+                        <h1 className="!text-[clamp(2.4rem,5.2vw,4rem)] font-extrabold !leading-[1] !tracking-[-0.035em]">
+                            Every flag on Earth, one at a time.
+                        </h1>
+                        <p className="mt-5 max-w-[30em] text-[17px] font-light text-slate-600 dark:text-[#A6B0C8]">
+                            Learn them a few at a time, and actually remember them.
+                            {lastDeck.mastered > 0 && <> {lastDeck.mastered} of {lastDeck.total} {lastDeck.label.toLowerCase()} are already yours.</>}
+                        </p>
                         <button
                             type="button"
-                            onClick={() => setShowDaily(prev => !prev)}
-                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all active:scale-[0.98] touch-manipulation text-left"
+                            onClick={() => startMode(lastDeck.mode)}
+                            className="mt-7 inline-flex items-center gap-3 rounded-lg bg-slate-900 px-5 py-3.5 font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
                         >
-                            <div className="bg-emerald-100 dark:bg-emerald-900/50 p-3 rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
-                                <Calendar size={32} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-lg">Daily Challenges</h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">One shot each - resets at midnight UTC</p>
-                            </div>
-                            {topStreak > 0 && (
-                                <div className="flex flex-col items-center shrink-0 mr-1">
-                                    <Flame size={18} className="text-orange-400" />
-                                    <span className="text-xs font-black text-orange-400 leading-none">{topStreak}</span>
-                                </div>
-                            )}
-                            <ChevronDown size={22} className={`shrink-0 text-slate-400 transition-transform ${showDaily ? 'rotate-180' : ''}`} />
+                            <Play size={18} aria-hidden />
+                            {lastDeck.mastered > 0 ? `Continue ${lastDeck.label}` : `Start with ${lastDeck.label}`}
+                            <span className="font-normal text-slate-400 dark:text-slate-500">{lastDeck.mastered} / {lastDeck.total}</span>
                         </button>
-
-                        {showDaily && <ChallengeList items={DAILY_CHALLENGES} streaks={streaks} />}
                     </div>
+                </div>
+            </header>
 
-                    {/* Multiplayer Section */}
-                    <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Multiplayer</h2>
-                        <button
-                            type="button"
-                            onClick={() => setShowMulti(prev => !prev)}
-                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-rose-400 dark:hover:border-rose-500 transition-all active:scale-[0.98] touch-manipulation text-left"
-                        >
-                            <div className="bg-rose-100 dark:bg-rose-900/50 p-3 rounded-xl text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform shrink-0">
-                                <Swords size={32} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-lg">Multiplayer</h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Play against everyone else - live or async</p>
-                            </div>
-                            {warsStreak > 0 && (
-                                <div className="flex flex-col items-center shrink-0 mr-1">
-                                    <Flame size={18} className="text-orange-400" />
-                                    <span className="text-xs font-black text-orange-400 leading-none">{warsStreak}</span>
-                                </div>
-                            )}
-                            <ChevronDown size={22} className={`shrink-0 text-slate-400 transition-transform ${showMulti ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {showMulti && <ChallengeList items={MULTIPLAYER} streaks={streaks} />}
-                    </div>
-
-                    {/* Challenges Section */}
-                    <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">More Modes</h2>
-                        <button
-                            type="button"
-                            onClick={() => setShowMods(prev => !prev)}
-                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-amber-400 dark:hover:border-amber-500 transition-all active:scale-[0.98] touch-manipulation text-left"
-                        >
-                            <div className="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-xl text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform shrink-0">
-                                <Trophy size={32} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-lg">Challenges</h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">More ways to play</p>
-                            </div>
-                            <ChevronDown size={22} className={`shrink-0 text-slate-400 transition-transform ${showMods ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {showMods && <ChallengeList items={CHALLENGES} streaks={streaks} />}
-                    </div>
-
-                    {/* Science Section - its own wing, nothing here is geography */}
-                    <div>
-                        <h2 className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-3 ml-1">Science</h2>
-                        <Link
-                            to="/science"
-                            className="group relative flex w-full items-center gap-4 p-5 min-h-[4.5rem] bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-[0_16px_40px_rgba(15,23,42,0.12)] border border-white/70 dark:border-slate-700/70 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all active:scale-[0.98] touch-manipulation text-left"
-                        >
-                            <div className="bg-cyan-100 dark:bg-cyan-900/50 p-3 rounded-xl text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform shrink-0">
-                                <Atom size={32} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-lg flex items-center gap-2">
-                                    Science
-                                    <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shrink-0">
-                                        New
+            <main className="mx-auto w-full max-w-[1120px] flex-1 px-5 pb-16 sm:px-6">
+                <SectionHead id="learn" title="Learn" />
+                <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {decks.map(deck => (
+                        <li key={deck.mode}>
+                            <button
+                                type="button"
+                                onClick={() => startMode(deck.mode)}
+                                className="group flex w-full flex-col gap-3.5 rounded-[10px] border border-slate-200 bg-white p-3.5 text-left font-normal hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+                            >
+                                <span className="flex w-full items-center gap-4">
+                                {/* A small hand of cards: on hover it fans out, the top card lifting off the pile. */}
+                                <span className="relative h-[52px] w-[76px] shrink-0" aria-hidden>
+                                    {deck.sample.map((src, i) => (
+                                        <img
+                                            key={src}
+                                            src={src}
+                                            alt=""
+                                            className="absolute h-10 w-[60px] rounded-[3px] object-cover shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition-[rotate,translate] duration-300 ease-[cubic-bezier(0.2,0.9,0.3,1.25)] [rotate:var(--r)] group-hover:[rotate:var(--hr)] group-hover:[translate:var(--hx)_var(--hy)]"
+                                            style={{
+                                                left: i * 7,
+                                                top: 10 - i * 4,
+                                                ["--r" as string]: `${[-8, -2, 5][i]}deg`,
+                                                ["--hr" as string]: `${[-18, -4, 12][i]}deg`,
+                                                ["--hx" as string]: `${[-7, 0, 9][i]}px`,
+                                                ["--hy" as string]: `${[2, -4, -7][i]}px`,
+                                            }}
+                                        />
+                                    ))}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-base font-bold">{deck.label}</span>
+                                    <span className="mt-1 block text-xs text-slate-500 dark:text-[#8C97B3]">{deck.mastered} / {deck.total} mastered</span>
+                                    <span className="mt-1.5 block h-1 rounded-sm bg-slate-200 dark:bg-[#1C2338]">
+                                        <span className="block h-full rounded-sm bg-blue-500 dark:bg-blue-400" style={{ width: `${deck.total ? Math.max((deck.mastered / deck.total) * 100, deck.mastered ? 1.5 : 0) : 0}%` }} />
                                     </span>
-                                </h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Learn the periodic table the same way you learn flags</p>
-                            </div>
-                            <ChevronDown size={22} className="shrink-0 text-slate-400 -rotate-90" />
-                        </Link>
-                    </div>
-                </div>
-            </div>
+                                </span>
+                                </span>
+                                <span className="flex items-center justify-center gap-2 rounded-lg bg-slate-900 py-2.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:group-hover:bg-[#DCE3F2]">
+                                    <Play size={15} aria-hidden /> {deck.mastered > 0 ? "Continue" : "Play"}
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+                <SectionHead id="today" title="Today" aside={`${solved} of ${dailies.length} solved · resets 00:00 UTC`} />
+                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {dailies.map(({ mode, done, streak, art }) => (
+                        <li key={mode.key}>
+                            <Link
+                                to={mode.to}
+                                className="group flex h-full flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white transition-[border-color,translate] duration-200 hover:-translate-y-0.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#121829] dark:hover:border-[#3A4670]"
+                            >
+                                <div className="relative flex h-[118px] overflow-hidden">
+                                    {art.map(src => (
+                                        <img key={src} src={src} alt="" className="h-full min-w-0 flex-1 object-cover" />
+                                    ))}
+                                    {done && (
+                                        <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
+                                            <Check size={13} strokeWidth={3} aria-hidden /> Solved
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-1 flex-col px-4 pb-4 pt-3.5">
+                                    <h3 className="flex items-center gap-2 !text-base font-bold">
+                                        {mode.label}
+                                        {mode.badge && <Badge>{mode.badge}</Badge>}
+                                    </h3>
+                                    <p className="mt-1 flex-1 text-[13px] text-slate-500 dark:text-[#8C97B3]">{mode.detail}</p>
+                                    <div className="mt-3 flex items-center justify-between text-[13px]">
+                                        {done ? (
+                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">See your result</span>
+                                        ) : (
+                                            <span className="flex items-center gap-1.5 font-semibold">Play <ArrowRight size={15} aria-hidden className="transition-transform group-hover:translate-x-0.5" /></span>
+                                        )}
+                                        {streak > 0 && (
+                                            <span className="flex items-center gap-1 font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
+                                                <Flame size={15} aria-hidden /> {streak}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
 
-            {/* Footer */}
-            <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2">
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                    <p className="flex items-center gap-1">
-                        Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning
-                    </p>
-                    <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95">
-                        <MessagesSquare size={14} />
-                        <span>Discord</span>
-                        <ExternalLink size={10} className="opacity-70" />
-                    </a>
-                    <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]">
-                        <Coffee size={14} className="text-black/80" />
-                        <span>Buy me a coffee</span>
-                        <ExternalLink size={10} className="opacity-60" />
-                    </a>
-                </div>
-                <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
-                    Flags provided by Flagpedia.net <ExternalLink size={12} />
-                </a>
-                <p className="px-4 text-center text-[11px]">
-                    <CountryDataCredit prefix="Country data from" />
-                </p>
-                <section className="max-w-2xl mx-auto mt-6 text-center text-slate-500 text-xs px-8 pb-2 opacity-70">
+                <SectionHead id="multiplayer" title="Play with others" aside="Live or async" />
+                <EntryList items={MULTIPLAYER} streaks={streaks} />
+
+                <SectionHead id="more" title="More modes" />
+                <EntryList items={MORE_MODES} streaks={streaks} />
+
+                <Link
+                    id="science"
+                    to="/science"
+                    className="group mt-14 flex items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+                >
+                    <span className="flex h-[52px] w-[76px] shrink-0 items-center justify-center text-cyan-600 dark:text-cyan-400">
+                        <AtomIcon size={30} aria-hidden />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2 text-base font-bold">Science <Badge>New</Badge></span>
+                        <span className="mt-1 block text-[13px] text-slate-500 dark:text-[#8C97B3]">The periodic table, physical quantities and formulas, learned the same way as flags</span>
+                    </span>
+                    <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-[#556080]" />
+                </Link>
+            </main>
+
+            <SiteFooter
+                about={
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
                         Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, and <strong>Highscore</strong> speedruns.
                         The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>
-                </section>
-            </footer>
+                }
+            />
         </div>
     )
 }

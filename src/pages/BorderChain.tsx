@@ -18,13 +18,13 @@
  *    the answer sheet. It shows where the chain has been, and nothing else.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ComposableMap, Geographies, Geography, Line, ZoomableGroup } from "react-simple-maps"
 import {
-    ArrowLeft, Bot as BotIcon, Link2, Loader2, Moon, Sun, Trophy, Users,
+    Bot as BotIcon, Link2, Loader2, Trophy, Users,
     WifiOff, Flag, Ban, Sparkles,
 } from "lucide-react"
+import TopBar from "../components/TopBar"
 import { onDisconnect, onValue, ref, remove, serverTimestamp, set, update } from "firebase/database"
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { centroidOf, countryByCode } from "../utils/countryPool"
@@ -46,6 +46,12 @@ const NAME_KEY = "flag-master-nickname"
 const TRAIL_LENGTH = 12
 
 type Feedback = { text: string; tone: "good" | "bad" | "warn" }
+
+/* The flag-wall chrome: flat panels and quiet controls, so the map and the flags stay the colour. */
+const PANEL = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+const CHIP = "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold dark:border-slate-700 dark:bg-slate-800"
+const INPUT = "w-full rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
+const LABEL = "text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
 
 export default function BorderChain() {
     const [theme, setTheme] = useState<'light' | 'dark'>(
@@ -317,7 +323,7 @@ export default function BorderChain() {
         const verdict = judge(input, leg)
 
         if (verdict.kind === "typo") {
-            setFeedback({ text: "So close - check your spelling. ✏️", tone: "warn" })
+            setFeedback({ text: "So close - check your spelling.", tone: "warn" })
             return
         }
         if (verdict.kind === "used") {
@@ -469,9 +475,11 @@ export default function BorderChain() {
     if (offline) {
         return (
             <Shell theme={theme} onTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
-                <div className="mx-auto mt-24 max-w-md rounded-3xl border border-white/70 bg-white/80 p-8 text-center shadow-xl backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/80">
-                    <WifiOff className="mx-auto mb-4 text-slate-400" size={40} />
-                    <h2 className="text-xl font-bold">The table is unreachable</h2>
+                <div className={`${PANEL} mx-4 mt-16 p-8 text-center sm:mx-auto sm:max-w-md`}>
+                    <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                        <WifiOff size={24} aria-hidden />
+                    </span>
+                    <h2 className="!text-xl font-bold">The table is unreachable</h2>
                     <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                         Border Chain needs Firebase anonymous auth and the <code>borderChain</code> rules.
                         Every other mode works without them.
@@ -496,69 +504,70 @@ export default function BorderChain() {
 
     return (
         <Shell theme={theme} onTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
-            <div className="mx-auto w-full max-w-6xl px-4 pb-12">
-                <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Border Chain</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+            <div className="mx-auto w-full max-w-[1120px] px-4 pb-12 pt-6 sm:px-6">
+                <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+                    <div className="min-w-0">
+                        <h1 className="!text-[clamp(1.75rem,3.5vw,2.25rem)] font-extrabold !leading-[1.05] !tracking-[-0.03em]">Border Chain</h1>
+                        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
                             Name a country that borders the last one. Always running - empty seats play themselves.
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 font-semibold shadow-sm ring-1 ring-white/70 dark:bg-slate-800/80 dark:ring-slate-700/70">
-                            <Users size={15} className="text-sky-500" />
-                            {humans} / {TABLE_SEATS}
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className={CHIP} title="Players at the table">
+                            <Users size={15} aria-hidden className="text-slate-500 dark:text-slate-400" />
+                            <span className="tabular-nums">{humans} / {TABLE_SEATS}</span>
                         </span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 font-semibold shadow-sm ring-1 ring-white/70 dark:bg-slate-800/80 dark:ring-slate-700/70">
-                            <Trophy size={15} className="text-amber-500" />
+                        <span className={CHIP}>
+                            <Trophy size={15} aria-hidden className="text-amber-500" />
                             Record {record?.length ?? "-"}
-                            {record?.by ? <span className="font-normal text-slate-400">· {record.by}</span> : null}
+                            {record?.by ? <span className="font-normal text-slate-500 dark:text-slate-400">· {record.by}</span> : null}
                         </span>
                     </div>
                 </header>
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-                    <section className="relative h-[46vh] min-h-[280px] overflow-hidden rounded-3xl border border-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] lg:h-[calc(100vh-13rem)] dark:border-slate-700/70">
+                    <section className="relative h-[46vh] min-h-[280px] overflow-hidden rounded-[10px] border border-slate-200 lg:h-[calc(100vh-14rem)] dark:border-slate-700">
                         {board}
-                        <div className="pointer-events-none absolute bottom-3 left-3 rounded-2xl bg-white/85 px-3 py-2 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:bg-slate-900/85 dark:text-slate-300">
+                        <div className={`${PANEL} pointer-events-none absolute bottom-3 left-3 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300`}>
                             {chain.length} {chain.length === 1 ? "country" : "countries"} in this chain
                         </div>
                     </section>
 
                     <aside className="flex flex-col gap-3">
-                        <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85">
+                        <div className={`${PANEL} relative overflow-hidden p-4`}>
                             <div className="flex items-center gap-3">
                                 {current && (
                                     <img
+                                        key={current.image}
                                         src={current.image}
                                         alt=""
-                                        className="h-10 w-14 rounded-md object-cover shadow ring-1 ring-black/10"
+                                        className="fl-in h-11 w-16 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
                                     />
                                 )}
                                 <div className="min-w-0">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    <p className={LABEL}>
                                         Link from
                                     </p>
                                     <p className="truncate text-xl font-bold">{current?.name ?? "-"}</p>
                                 </div>
                                 <div className="ml-auto text-right">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    <p className={LABEL}>
                                         Ways out
                                     </p>
                                     <p className="text-xl font-bold tabular-nums">{options.length}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                            <div className="mt-3 h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                                 <div
-                                    className={`h-full rounded-full transition-[width] duration-100 ease-linear ${timerPct < 30 ? "bg-rose-500" : "bg-sky-500"}`}
+                                    className={`h-full rounded-sm transition-[width] duration-100 ease-linear ${timerPct < 30 ? "bg-red-500" : "bg-blue-500"}`}
                                     style={{ width: `${timerPct}%` }}
                                 />
                             </div>
 
                             {leg?.lastName && (
                                 <p className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">
-                                    Last link by <span className="font-semibold">{leg.lastName}</span>
+                                    Last link by <span className="font-semibold text-slate-700 dark:text-slate-200">{leg.lastName}</span>
                                 </p>
                             )}
 
@@ -582,21 +591,21 @@ export default function BorderChain() {
                         ) : !seated ? (
                             <form
                                 onSubmit={takeSeat}
-                                className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85"
+                                className={`${PANEL} p-4`}
                             >
-                                <p className="mb-2 text-sm font-semibold">Take a seat to play</p>
+                                <p className="mb-2.5 text-sm font-semibold">Take a seat to play</p>
                                 <div className="flex gap-2">
                                     <input
                                         value={nameDraft}
                                         onChange={e => setNameDraft(e.target.value)}
                                         maxLength={24}
                                         placeholder="Your name"
-                                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-sky-400 dark:border-slate-600 dark:bg-slate-900"
+                                        className={`${INPUT} min-w-0 flex-1 px-3 py-2 font-medium`}
                                     />
                                     <button
                                         type="submit"
                                         disabled={!nameDraft.trim() || !uid}
-                                        className="rounded-xl bg-sky-500 px-4 py-2 font-semibold text-white shadow disabled:opacity-40"
+                                        className="rounded-lg bg-slate-900 px-5 py-2 font-bold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2] dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
                                     >
                                         Sit
                                     </button>
@@ -608,7 +617,7 @@ export default function BorderChain() {
                         ) : (
                             <form
                                 onSubmit={submit}
-                                className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85"
+                                className={`${PANEL} p-4`}
                             >
                                 <input
                                     ref={inputRef}
@@ -620,7 +629,7 @@ export default function BorderChain() {
                                             : locked ? "Locked out for a moment..."
                                                 : `A country bordering ${current?.name ?? "..."}`
                                     }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-lg outline-none focus:border-sky-400 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900"
+                                    className={`${INPUT} px-4 py-3 text-lg font-medium disabled:cursor-not-allowed disabled:opacity-60`}
                                     autoComplete="off"
                                     autoCorrect="off"
                                     spellCheck={false}
@@ -628,15 +637,15 @@ export default function BorderChain() {
                                 <div className="mt-2 flex min-h-[1.25rem] items-center gap-2 text-xs">
                                     {justMoved && (
                                         <span className="inline-flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
-                                            <Ban size={13} /> No two links in a row
+                                            <Ban size={13} aria-hidden /> No two links in a row
                                         </span>
                                     )}
                                     {feedback && (
-                                        <span className={
+                                        <span key={feedback.text} className={`fl-in ${
                                             feedback.tone === "good" ? "font-semibold text-emerald-600 dark:text-emerald-400"
                                                 : feedback.tone === "warn" ? "font-semibold text-amber-600 dark:text-amber-400"
-                                                    : "font-semibold text-rose-600 dark:text-rose-400"
-                                        }>
+                                                    : "font-semibold text-red-600 dark:text-red-400"
+                                        }`}>
                                             {feedback.text}
                                         </span>
                                     )}
@@ -644,25 +653,25 @@ export default function BorderChain() {
                             </form>
                         )}
 
-                        <div className="rounded-3xl border border-white/70 bg-white/85 p-2 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85">
+                        <div className={`${PANEL} p-1.5`}>
                             {table.map((row, index) => (
                                 <div
                                     key={row.id}
-                                    className={`flex items-center gap-2 rounded-2xl px-2.5 py-1.5 text-sm ${row.id === uid ? "bg-sky-50 dark:bg-sky-900/30" : ""}`}
+                                    className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm ${row.id === uid ? "bg-slate-50 dark:bg-slate-700/50" : ""}`}
                                 >
-                                    <span className="w-4 text-right text-xs font-semibold tabular-nums text-slate-400">
+                                    <span className="w-4 text-right text-xs font-semibold tabular-nums text-slate-400 dark:text-slate-500">
                                         {index + 1}
                                     </span>
                                     <span
                                         className="h-2.5 w-2.5 shrink-0 rounded-full"
                                         style={{ background: row.color }}
                                     />
-                                    <span className={`min-w-0 flex-1 truncate ${row.idle ? "text-slate-400" : "font-semibold"}`}>
+                                    <span className={`min-w-0 flex-1 truncate ${row.idle ? "text-slate-400 dark:text-slate-500" : "font-semibold"}`}>
                                         {row.name}
-                                        {row.id === uid && <span className="ml-1 text-xs text-sky-500">you</span>}
+                                        {row.id === uid && <span className="ml-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">you</span>}
                                     </span>
-                                    {row.bot && <BotIcon size={13} className="shrink-0 text-slate-400" />}
-                                    <span className="w-8 text-right text-xs tabular-nums text-slate-400">
+                                    {row.bot && <BotIcon size={13} aria-label="Bot" className="shrink-0 text-slate-400 dark:text-slate-500" />}
+                                    <span className="w-8 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
                                         {row.links}
                                     </span>
                                     <span className="w-10 text-right font-bold tabular-nums">{row.points}</span>
@@ -684,21 +693,9 @@ function Shell({
     theme, onTheme, children,
 }: { theme: 'light' | 'dark'; onTheme: () => void; children: React.ReactNode }) {
     return (
-        <div className="min-h-screen pt-4 font-sans text-slate-800 transition-colors duration-500 dark:text-slate-100">
-            <Link
-                to="/"
-                className="fixed left-4 top-4 z-20 rounded-full border border-white/70 bg-white/80 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl transition-transform hover:scale-110 dark:border-slate-700/70 dark:bg-slate-800/80"
-            >
-                <ArrowLeft size={20} />
-            </Link>
-            <button
-                onClick={onTheme}
-                className="fixed right-4 top-4 z-20 rounded-full border border-white/70 bg-white/80 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl transition-transform hover:scale-110 dark:border-slate-700/70 dark:bg-slate-800/80"
-                aria-label="Toggle theme"
-            >
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <div className="pt-14">{children}</div>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Border Chain" theme={theme} onToggleTheme={onTheme} />
+            {children}
         </div>
     )
 }
@@ -710,18 +707,18 @@ function Shell({
  */
 function DeadEnd({ chain, seconds }: { chain: string[]; seconds: number }) {
     return (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50/90 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-amber-700/50 dark:bg-amber-900/30">
+        <div className="rounded-[10px] border border-amber-500/40 bg-amber-500/10 p-4">
             <p className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300">
-                <Sparkles size={16} /> Dead end - {chain.length} countries
+                <Sparkles size={16} aria-hidden /> Dead end - {chain.length} countries
             </p>
-            <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-200/80">
-                Every neighbour is already in the chain. New chain in {seconds}s.
+            <p className="mt-1 text-xs text-amber-800/80 dark:text-amber-200/80">
+                Every neighbour is already in the chain. New chain in <span className="tabular-nums">{seconds}</span>s.
             </p>
             <div className="mt-3 flex flex-wrap gap-1">
                 {chain.map((code, i) => (
                     <span
                         key={`${code}-${i}`}
-                        className="rounded-md bg-white/70 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-black/20 dark:text-amber-100"
+                        className="rounded-[5px] border border-amber-500/25 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 dark:text-amber-100"
                     >
                         {countryByCode(code)?.name ?? code}
                     </span>
@@ -738,55 +735,37 @@ function ChainFeed({ moves }: { moves: MoveMap }) {
     )
     if (recent.length === 0) {
         return (
-            <p className="px-3 text-xs text-slate-400">
-                <Flag size={12} className="mr-1 inline" />
+            <p className="flex items-center gap-1.5 px-1 text-xs text-slate-500 dark:text-slate-400">
+                <Flag size={12} aria-hidden />
                 A fresh chain - take the first link.
             </p>
         )
     }
     return (
-        <ul className="rounded-3xl border border-white/70 bg-white/70 p-2 text-xs shadow-sm backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/70">
+        <ul className={`${PANEL} divide-y divide-slate-200 px-1.5 py-1 text-xs dark:divide-slate-700`}>
             {recent.map(move => (
-                <li key={move.i} className="flex items-center gap-2 px-2 py-1">
-                    <Link2 size={12} className="shrink-0 text-slate-400" />
+                <li key={move.i} className="flex items-center gap-2 px-2 py-1.5">
+                    <Link2 size={12} aria-hidden className="shrink-0 text-slate-400 dark:text-slate-500" />
                     <span className="min-w-0 flex-1 truncate">
                         <span className="font-semibold">{countryByCode(move.c)?.name ?? move.c}</span>
-                        <span className="text-slate-400"> by {move.n}</span>
+                        <span className="text-slate-500 dark:text-slate-400"> by {move.n}</span>
                     </span>
-                    <span className="tabular-nums text-slate-400">+{move.p}</span>
+                    <span className="tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">+{move.p}</span>
                 </li>
             ))}
         </ul>
     )
 }
 
+/**
+ * Flat water, reaching far past the viewBox so a letterboxed map never shows
+ * bare page down its sides. One colour, like the rest of the chrome.
+ */
 function Ocean({ theme }: { theme: 'light' | 'dark' }) {
-    const dark = theme === 'dark'
     const cover = { x: -MAP_WIDTH, y: -MAP_HEIGHT, width: MAP_WIDTH * 3, height: MAP_HEIGHT * 3 }
     return (
         <g pointerEvents="none">
-            <defs>
-                <linearGradient
-                    id="bc-ocean"
-                    gradientUnits="userSpaceOnUse"
-                    x1={0} y1={-MAP_HEIGHT * 0.75} x2={0} y2={MAP_HEIGHT * 1.75}
-                >
-                    {dark ? (
-                        <>
-                            <stop offset="0%" stopColor="#05131f" />
-                            <stop offset="60%" stopColor="#08243c" />
-                            <stop offset="100%" stopColor="#0e4a75" />
-                        </>
-                    ) : (
-                        <>
-                            <stop offset="0%" stopColor="#e4f4fd" />
-                            <stop offset="60%" stopColor="#bfe4f8" />
-                            <stop offset="100%" stopColor="#8ecae6" />
-                        </>
-                    )}
-                </linearGradient>
-            </defs>
-            <rect {...cover} fill="url(#bc-ocean)" />
+            <rect {...cover} fill={theme === 'dark' ? "#0B1626" : "#CFE2F3"} />
         </g>
     )
 }

@@ -2,8 +2,9 @@ import { useEffect, useState, useRef, useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { db } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
-import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Moon, Sun, Landmark, EyeOff } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Landmark, EyeOff, PartyPopper, PencilLine } from "lucide-react"
+import { motion } from "framer-motion"
+import TopBar from "../components/TopBar"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
@@ -391,72 +392,91 @@ export default function PvPGame() {
 
     // --- RENDER ---
 
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const disabledButton = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-bold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
+    const textInput = "w-full border border-slate-200 bg-slate-50 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
+    const iconBox = "flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700"
+    const tag = "inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+    const page = "flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]"
+    const themeProps = { theme, onToggleTheme: toggleTheme }
+
     if (needsName) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center text-slate-800 dark:text-slate-100 p-4 transition-colors duration-500">
-                <button
-                    onClick={toggleTheme}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl max-w-sm w-full border border-slate-200 dark:border-slate-700">
-                    <h1 className="text-2xl font-bold mb-4 text-center">Join Game</h1>
-                    <label className="block text-sm font-bold mb-2">Enter your nickname</label>
-                    <input
-                        type="text"
-                        value={myName}
-                        onChange={(e) => setMyName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-transparent focus:border-indigo-500 outline-none font-bold mb-4"
-                        placeholder="Your Name"
-                        autoFocus
-                    />
-                    <button
-                        onClick={handleJoinWithName}
-                        disabled={!myName.trim()}
-                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold disabled:opacity-50"
-                    >
-                        Join Lobby
-                    </button>
-                </div>
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-6">
+                    <section className={`${panel} mx-auto w-full max-w-sm p-6 sm:p-7`}>
+                        <h1 className="mb-5 text-center !text-2xl font-bold">Join Game</h1>
+                        <label htmlFor="pvp-join-name" className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Enter your nickname</label>
+                        <input
+                            id="pvp-join-name"
+                            type="text"
+                            value={myName}
+                            onChange={(e) => setMyName(e.target.value)}
+                            className={`${textInput} mb-4 px-4 py-3 font-bold`}
+                            placeholder="Your Name"
+                            autoFocus
+                        />
+                        <button
+                            type="button"
+                            onClick={handleJoinWithName}
+                            disabled={!myName.trim()}
+                            className={`w-full py-3.5 ${myName.trim() ? primary : disabledButton}`}
+                        >
+                            Join Lobby
+                        </button>
+                    </section>
+                </main>
             </div>
         )
     }
 
     if (gameAborted) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4">
-                <div className="bg-white dark:bg-slate-800 p-10 rounded-3xl shadow-2xl text-center max-w-md w-full border border-slate-200 dark:border-slate-700">
-                    <div className="bg-red-100 dark:bg-red-900/30 p-5 rounded-full inline-block mb-6 text-red-500">
-                        <WifiOff size={64} />
-                    </div>
-                    <h1 className="text-3xl font-bold mb-2">Connection Lost</h1>
-                    <p className="text-slate-500 mb-8">
-                        Not enough players to continue.<br/>
-                        The match has been cancelled.
-                    </p>
-                    <Link to="/" className="block w-full py-4 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                        <Home size={20} /> Return to Menu
-                    </Link>
-                </div>
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-6">
+                    <section className={`${panel} flex flex-col items-center p-7 text-center sm:p-9`}>
+                        <span className={`${iconBox} mb-5 text-red-500 dark:text-red-400`}><WifiOff size={28} aria-hidden /></span>
+                        <h1 className="mb-2 !text-3xl font-bold">Connection Lost</h1>
+                        <p className="mb-7 text-slate-500 dark:text-slate-400">
+                            Not enough players to continue.<br/>
+                            The match has been cancelled.
+                        </p>
+                        <Link to="/" className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}>
+                            <Home size={18} aria-hidden /> Return to Menu
+                        </Link>
+                    </section>
+                </main>
             </div>
         )
     }
 
     if (gameFull) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4">
-                <div className="bg-white dark:bg-slate-800 p-10 rounded-3xl shadow-xl text-center max-w-md w-full border border-slate-200 dark:border-slate-700">
-                    <div className="bg-red-100 dark:bg-red-900/30 p-5 rounded-full inline-block mb-6 text-red-500"><AlertTriangle size={64} /></div>
-                    <h1 className="text-3xl font-bold mb-2">Game Full</h1>
-                    <p className="text-slate-500 mb-8">This lobby has reached maximum capacity.</p>
-                    <Link to="/" className="block w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold">Back to Menu</Link>
-                </div>
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-6">
+                    <section className={`${panel} flex flex-col items-center p-7 text-center sm:p-9`}>
+                        <span className={`${iconBox} mb-5 text-red-500 dark:text-red-400`}><AlertTriangle size={28} aria-hidden /></span>
+                        <h1 className="mb-2 !text-3xl font-bold">Game Full</h1>
+                        <p className="mb-7 text-slate-500 dark:text-slate-400">This lobby has reached maximum capacity.</p>
+                        <Link to="/" className={`${primary} flex w-full items-center justify-center py-3.5`}>Back to Menu</Link>
+                    </section>
+                </main>
             </div>
         )
     }
 
-    if (!gameData || !myId) return <div className="min-h-screen flex items-center justify-center text-slate-500"><Loader2 className="animate-spin mr-2"/> Connecting...</div>
+    if (!gameData || !myId) {
+        return (
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
+                <main className="flex flex-1 items-center justify-center gap-2 px-4 py-16 text-slate-500 dark:text-slate-400"><Loader2 className="animate-spin" aria-hidden /> Connecting...</main>
+            </div>
+        )
+    }
 
     const isMeHost = gameData.hostId === myId
     const allPlayers = Object.entries(gameData.players).map(([id, p]) => ({ ...p, id }))
@@ -466,78 +486,80 @@ export default function PvPGame() {
         const canStart = activePlayersCount >= 2
 
         return (
-            <div className="min-h-screen flex flex-col items-center pt-20 px-4 text-slate-800 dark:text-slate-100 transition-colors duration-500">
-                <button onClick={leaveGame} className="absolute top-4 left-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md text-red-500 hover:bg-red-50"><X size={20} /></button>
+            <div className={page}>
+                <TopBar title="Game Lobby" back={leaveGame} {...themeProps} />
 
-                <button
-                    onClick={toggleTheme}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-md border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center max-w-md w-full border border-slate-200 dark:border-slate-700">
-                    <div className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full inline-block mb-4 text-indigo-600 dark:text-indigo-400">
-                        {gameData.settings.region === 'capitals' ? <Landmark size={48} /> : <Users size={48} />}
-                    </div>
-                    <h1 className="text-3xl font-bold mb-2">Game Lobby</h1>
-
-                    <div className="mb-4">
-                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-bold uppercase mr-2">
-                            {gameData.settings.region === 'capitals' ? 'Capitals Mode' : (gameData.settings.region === 'us' ? 'USA Mode' : 'World Mode')}
+                <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                    <section className={`${panel} flex flex-col p-5 text-center sm:p-7`}>
+                        <span className={`${iconBox} mx-auto mb-4 text-slate-500 dark:text-slate-300`}>
+                            {gameData.settings.region === 'capitals' ? <Landmark size={28} aria-hidden /> : <Users size={28} aria-hidden />}
                         </span>
-                        {/* Blur mode indicator */}
-                        {gameData.settings.isBlurMode && (
-                            <span className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold uppercase inline-flex items-center gap-1">
-                                <EyeOff size={12}/> Blur
+                        <h1 className="mb-3 !text-3xl font-bold">Game Lobby</h1>
+
+                        <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                            <span className={`${tag} bg-blue-500/15 text-blue-700 dark:text-blue-300`}>
+                                {gameData.settings.region === 'capitals' ? 'Capitals Mode' : (gameData.settings.region === 'us' ? 'USA Mode' : 'World Mode')}
                             </span>
+                            {/* Blur mode indicator */}
+                            {gameData.settings.isBlurMode && (
+                                <span className={`${tag} bg-slate-500/15 text-slate-600 dark:text-slate-300`}>
+                                    <EyeOff size={11} aria-hidden /> Blur
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="mb-6 flex items-center justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                            <span className="flex items-center gap-1"><Users size={14} aria-hidden /> {activePlayersCount}/{gameData.settings.maxPlayers}</span>
+                            <span className="flex items-center gap-1"><Trophy size={14} aria-hidden /> {gameData.settings.roundCount} Flags</span>
+                            <span className="flex items-center gap-1"><Clock size={14} aria-hidden /> {gameData.settings.timeLimit}s</span>
+                        </div>
+
+                        <div className="mb-6 flex items-center gap-2 rounded-lg border border-slate-200 py-1.5 pl-3 pr-1.5 dark:border-slate-700">
+                            <span className="min-w-0 flex-1 truncate text-left text-xs text-slate-500 dark:text-slate-400">{window.location.origin}/pvp/{gameId}</span>
+                            <button
+                                type="button"
+                                onClick={copyLink}
+                                aria-label="Copy invite link"
+                                title="Copy invite link"
+                                className="flex h-9 min-h-0 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 p-0 text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-[#3A4670]"
+                            >
+                                {copied ? <Check size={16} className="text-emerald-500" aria-hidden /> : <Copy size={16} aria-hidden />}
+                            </button>
+                        </div>
+
+                        <ul className="mb-7 space-y-2 text-left">
+                            {allPlayers.map((p) => (
+                                <li key={p.id} className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${p.id === myId ? 'border-slate-400 dark:border-[#4A5680]' : 'border-slate-200 dark:border-slate-700'}`}>
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <span className={`h-2 w-2 shrink-0 rounded-full ${p.left ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                                        <span className="truncate font-bold">
+                                            {p.name} {p.id === myId && <span className="font-normal text-slate-500 dark:text-slate-400">(You)</span>}
+                                        </span>
+                                        {p.id === gameData.hostId && <span className={`${tag} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>HOST</span>}
+                                    </div>
+                                </li>
+                            ))}
+                            {Array.from({ length: Math.max(0, gameData.settings.maxPlayers - allPlayers.length) }).map((_, i) => (
+                                <li key={i} className="rounded-lg border border-dashed border-slate-300 px-3 py-2.5 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                                    Waiting for player...
+                                </li>
+                            ))}
+                        </ul>
+
+                        {isMeHost ? (
+                            <button
+                                type="button"
+                                onClick={startGame}
+                                disabled={!canStart}
+                                className={`flex w-full items-center justify-center gap-2 py-4 text-lg ${canStart ? primary : disabledButton}`}
+                            >
+                                <Play size={20} aria-hidden /> Start Battle
+                            </button>
+                        ) : (
+                            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400"><Loader2 size={15} className="animate-spin" aria-hidden /> Waiting for host to start...</div>
                         )}
-                    </div>
-
-                    <div className="flex justify-center items-center gap-4 text-slate-500 dark:text-slate-400 mb-6 text-sm">
-                        <span className="flex items-center gap-1"><Users size={14}/> {activePlayersCount}/{gameData.settings.maxPlayers}</span>
-                        <span className="flex items-center gap-1"><Trophy size={14}/> {gameData.settings.roundCount} Flags</span>
-                        <span className="flex items-center gap-1"><Clock size={14}/> {gameData.settings.timeLimit}s</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-3 rounded-xl mb-6 border border-slate-200 dark:border-slate-700">
-                        <span className="text-xs text-slate-400 truncate flex-1">{window.location.origin}/pvp/{gameId}</span>
-                        <button onClick={copyLink} className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm hover:scale-105 transition-transform">
-                            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-                        </button>
-                    </div>
-
-                    <div className="space-y-3 mb-8 text-left">
-                        {allPlayers.map((p) => (
-                            <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border ${p.id === myId ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${p.left ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                                    <span className={`font-bold ${p.id === myId ? 'text-indigo-600 dark:text-indigo-400' : ''}`}>
-                                        {p.name} {p.id === myId && "(You)"}
-                                    </span>
-                                    {p.id === gameData.hostId && <span className="text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded font-bold">HOST</span>}
-                                </div>
-                            </div>
-                        ))}
-                        {Array.from({ length: Math.max(0, gameData.settings.maxPlayers - allPlayers.length) }).map((_, i) => (
-                            <div key={i} className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-center text-sm">
-                                Waiting for player...
-                            </div>
-                        ))}
-                    </div>
-
-                    {isMeHost ? (
-                        <button
-                            onClick={startGame}
-                            disabled={!canStart}
-                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-                        >
-                            <Play size={20} /> Start Battle
-                        </button>
-                    ) : (
-                        <div className="text-sm text-slate-500 animate-pulse">Waiting for host to start...</div>
-                    )}
-                </div>
+                    </section>
+                </main>
             </div>
         )
     }
@@ -554,55 +576,65 @@ export default function PvPGame() {
         const isWinner = myRank === 1
 
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4">
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border border-slate-200 dark:border-slate-700 relative">
-                    <div className={`p-5 rounded-full inline-block mb-4 ${isWinner ? 'bg-yellow-100 text-yellow-500' : 'bg-slate-100 text-slate-500'}`}>
-                        <Trophy size={64} />
-                    </div>
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
 
-                    <h1 className="text-4xl font-black mb-2 uppercase tracking-tight">{isWinner ? "Victory!" : `#${myRank} Place`}</h1>
-                    <p className="text-slate-500 mb-6">{isWinner ? "You are the champion!" : "Good game!"}</p>
+                <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                    <section className={`${panel} flex flex-col p-6 text-center sm:p-8`}>
+                        <span className={`${iconBox} mx-auto mb-4 ${isWinner ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'}`}>
+                            <Trophy size={28} aria-hidden />
+                        </span>
 
-                    <div className="space-y-3 mb-8">
-                        {sortedPlayers.map((p, index) => {
-                            const time = p.finishedAt ? ((p.finishedAt - gameData.startTime) / 1000).toFixed(1) + 's' : 'DNF'
-                            return (
-                                <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border ${p.id === myId ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800' : 'bg-slate-50 border-slate-100 dark:bg-slate-900 dark:border-slate-800'}`}>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-400 text-white' : 'bg-slate-300 text-slate-600'}`}>
-                                            {index + 1}
+                        <h1 className="mb-2 !text-4xl font-extrabold uppercase">{isWinner ? "Victory!" : `#${myRank} Place`}</h1>
+                        <p className="mb-6 text-slate-500 dark:text-slate-400">{isWinner ? "You are the champion!" : "Good game!"}</p>
+
+                        <ol className="mb-7 space-y-2 text-left">
+                            {sortedPlayers.map((p, index) => {
+                                const time = p.finishedAt ? ((p.finishedAt - gameData.startTime) / 1000).toFixed(1) + 's' : 'DNF'
+                                return (
+                                    <li key={p.id} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${p.id === myId ? 'border-slate-400 dark:border-[#4A5680]' : 'border-slate-200 dark:border-slate-700'}`}>
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${index === 0 ? 'bg-amber-500 text-white' : 'border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400'}`}>
+                                                {index + 1}
+                                            </span>
+                                            <span className={`truncate font-bold ${p.left ? 'text-slate-400 line-through dark:text-slate-500' : ''}`}>
+                                                {p.name} {p.left && "(Left)"}
+                                                {p.id === myId && !p.left && <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">(You)</span>}
+                                            </span>
                                         </div>
-                                        <span className={`font-bold ${p.id === myId ? 'text-indigo-600 dark:text-indigo-400' : ''} ${p.left ? 'line-through text-slate-400' : ''}`}>{p.name} {p.left && "(Left)"}</span>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="font-bold">{p.score} pts</div>
-                                        <div className="text-[10px] text-slate-400">{time}</div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                        <div className="shrink-0 text-right">
+                                            <div className="font-bold tabular-nums">{p.score} pts</div>
+                                            <div className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">{time}</div>
+                                        </div>
+                                    </li>
+                                )
+                            })}
+                        </ol>
 
-                    <Link to="/" className="block w-full py-4 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                        <Home size={20} /> Back to Menu
-                    </Link>
-                </div>
+                        <Link to="/" className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}>
+                            <Home size={18} aria-hidden /> Back to Menu
+                        </Link>
+                    </section>
+                </main>
             </div>
         )
     }
 
     if (myPlayer?.finished) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4">
-                <button onClick={leaveGame} className="absolute top-4 left-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md text-red-500"><X size={20} /></button>
-                <div className="text-center animate-pulse">
-                    <h1 className="text-3xl font-bold mb-2">Finished! 🎉</h1>
-                    <p className="text-slate-500">Waiting for others to finish...</p>
-                    <div className="mt-6 p-4 bg-white dark:bg-slate-800 rounded-xl shadow-lg inline-block">
-                        <div className="text-xs text-slate-400 uppercase font-bold">Your Score</div>
-                        <div className="text-3xl font-bold text-indigo-600">{myPlayer.score} / {gameData.flags.length}</div>
-                    </div>
-                </div>
+            <div className={page}>
+                <TopBar title="PvP Battle" back={leaveGame} {...themeProps} />
+                <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-6">
+                    <section className={`${panel} flex flex-col items-center p-7 text-center sm:p-9`}>
+                        <span className={`${iconBox} mb-4 text-emerald-500`}><PartyPopper size={28} aria-hidden /></span>
+                        <h1 className="mb-2 !text-3xl font-bold">Finished!</h1>
+                        <p className="flex items-center gap-2 text-slate-500 dark:text-slate-400"><Loader2 size={15} className="animate-spin" aria-hidden /> Waiting for others to finish...</p>
+                        <div className="mt-6 rounded-lg border border-slate-200 px-6 py-4 dark:border-slate-700">
+                            <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Your Score</div>
+                            <div className="mt-1 text-3xl font-bold tabular-nums">{myPlayer.score} / {gameData.flags.length}</div>
+                        </div>
+                    </section>
+                </main>
             </div>
         )
     }
@@ -612,146 +644,136 @@ export default function PvPGame() {
     //Guard clause to prevent rendering if data is missing
     if (!myPlayer || !currentFlagCode) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
-                <Loader2 className="animate-spin mr-2"/> Connecting to game...
+            <div className={page}>
+                <TopBar title="PvP Battle" {...themeProps} />
+                <main className="flex flex-1 items-center justify-center gap-2 px-4 py-16 text-slate-500 dark:text-slate-400">
+                    <Loader2 className="animate-spin" aria-hidden /> Connecting to game...
+                </main>
             </div>
         )
     }
 
+    const answerLocked = feedbackStatus === 'correct' || feedbackStatus === 'error'
+    // The feedback copy carries emoji; the line shows a lucide icon in their place.
+    const feedbackText = feedback
+        ? feedback.replace(/\s*\p{Extended_Pictographic}️?\s*$/u, "").replace(/\s*\p{Extended_Pictographic}️?\s+/gu, ". ")
+        : ""
+
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
+        <div className={page}>
+            <TopBar title="PvP Battle" back={leaveGame} {...themeProps}>
+                <span className={`flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums ${timeLeft < 10 ? 'text-red-600 dark:text-red-400' : ''}`} title="Time left">
+                    <Timer size={16} aria-hidden /> {timeLeft}s
+                </span>
+            </TopBar>
 
-            <div className="w-full px-4 flex justify-between items-center mb-4">
-                <button onClick={leaveGame} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm text-slate-400 hover:text-red-500"><X size={20}/></button>
-                <div className={`flex items-center gap-1 font-mono font-bold text-lg ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-slate-600 dark:text-slate-300'}`}>
-                    <Timer size={18}/> {timeLeft}s
-                </div>
-
-                <button
-                    onClick={toggleTheme}
-                    className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
-
-            <div className="w-full max-w-lg px-4 mb-2">
-                <div className="flex justify-between items-end mb-2">
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:px-6 sm:pt-8">
+                <div className="mb-2 flex items-end justify-between">
                     <div>
-                        <div className="text-xs font-bold uppercase text-slate-400">You ({myPlayer.name})</div>
-                        <div className="text-2xl font-bold text-indigo-600">{myPlayer.score}</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">You ({myPlayer.name})</div>
+                        <div className="text-2xl font-bold tabular-nums">{myPlayer.score}</div>
                     </div>
-                    <div className="text-sm font-bold bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm text-slate-500">
+                    <div className="text-sm font-bold tabular-nums text-slate-500 dark:text-slate-400">
                         {myPlayer.currentIndex + 1} / {gameData.flags.length}
                     </div>
                 </div>
 
-                <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mb-3">
+                <div className="mb-3 h-1.5 w-full overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                     <motion.div
-                        className="h-full bg-indigo-500"
+                        className="h-full bg-blue-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${(myPlayer.currentIndex / gameData.flags.length) * 100}%` }}
                         transition={{ duration: 0.3 }}
                     />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                     {otherPlayers.map(p => (
                         <div key={p.id} className="flex items-center gap-2 text-xs">
-                            <span className={`w-20 truncate ${p.left ? 'text-red-400 line-through' : 'text-slate-500'}`}>
+                            <span className={`w-20 truncate ${p.left ? 'text-red-500 line-through dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}`}>
                                 {p.name}
                             </span>
-                            <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                                 <motion.div
-                                    className={`h-full ${p.finished ? 'bg-green-500' : 'bg-orange-400'}`}
+                                    className={`h-full ${p.finished ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-500'}`}
                                     animate={{ width: `${(p.currentIndex / gameData.flags.length) * 100}%` }}
                                     transition={{ duration: 0.3 }}
                                 />
                             </div>
-                            <span className="w-4 text-right text-slate-400">{p.score}</span>
+                            <span className="w-4 text-right tabular-nums text-slate-500 dark:text-slate-400">{p.score}</span>
                         </div>
                     ))}
                 </div>
-            </div>
 
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentFlagCode}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-slate-800 p-6 sm:p-10 rounded-t-xl rounded-b-3xl shadow-xl border border-white/50 dark:border-slate-700/50 w-full max-w-lg flex flex-col items-center gap-8 relative mx-4 mt-4"
-                >
-                    <div className="w-full h-48 sm:h-56 flex justify-center">
+                {/* The card stays put between questions; only the flag inside it changes. */}
+                <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode)}` : "Identify the Flag"}
+                    </div>
+
+                    <div className="flex h-48 w-full items-center justify-center sm:h-56">
                         <img
+                            key={currentFlagCode}
                             src={getFlagImage(currentFlagCode)}
                             alt="Flag"
                             style={{
                                 filter: `blur(${blurAmount}px) grayscale(${(blurAmount / 20) * 100}%)`,
                                 transition: 'filter 0.1s linear'
                             }}
-                            className="h-full w-auto object-contain rounded-lg shadow-md border border-slate-100 dark:border-slate-700"
+                            className="fl-in h-full w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
                         />
                     </div>
 
-                    <div className="w-full space-y-4">
-                        <div className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest">
-                            {gameData.settings.region === 'capitals' ? `Capital of ${getCountryName(currentFlagCode)}` : "Identify the Flag"}
-                        </div>
-
+                    <div className="flex w-full flex-col gap-3">
                         <input
                             ref={inputRef}
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && handleCheck()}
-                            disabled={feedbackStatus === 'correct' || feedbackStatus === 'error'}
+                            disabled={answerLocked}
+                            aria-label={gameData.settings.region === 'capitals' ? 'Capital' : 'Answer'}
                             placeholder={gameData.settings.region === 'capitals' ? "Type capital city..." : "Type country name..."}
-                            className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all
-                                dark:bg-slate-900 dark:text-white
-                                ${feedbackStatus === 'error' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200' : ''}
-                                ${feedbackStatus === 'correct' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200' : ''}
-                                ${feedbackStatus === 'warn' ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 text-amber-950 dark:text-amber-100' : ''}
-                                ${feedbackStatus === 'idle' ? 'border-slate-200 dark:border-slate-700' : ''}
+                            className={`w-full border px-5 py-4 text-center text-xl font-medium outline-none transition-colors duration-150 dark:text-white
+                                ${feedbackStatus === 'error' ? 'border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100' : ''}
+                                ${feedbackStatus === 'correct' ? 'border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100' : ''}
+                                ${feedbackStatus === 'warn' ? 'border-amber-400 bg-amber-500/10 text-amber-950 dark:border-amber-500/60 dark:text-amber-100' : ''}
+                                ${feedbackStatus === 'idle' ? 'border-slate-200 bg-slate-50 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]' : ''}
                             `}
                             autoFocus
                             autoComplete="off"
                         />
 
-                        <div className="min-h-[4.5rem] py-2 px-1 text-center font-bold flex flex-col items-center justify-start">
-                            <AnimatePresence mode="wait">
-                                {feedback && (
-                                    <motion.span
-                                        key={feedback}
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
-                                        className={`block max-w-[98%] text-sm sm:text-base leading-snug ${
-                                            feedbackStatus === 'correct'
-                                                ? 'text-emerald-500'
-                                                : feedbackStatus === 'warn'
-                                                    ? 'text-amber-600 dark:text-amber-400'
-                                                    : 'text-red-500'
-                                        }`}
-                                    >
-                                        {feedback}
-                                    </motion.span>
-                                )}
-                            </AnimatePresence>
+                        <div className="flex min-h-[4.5rem] flex-col items-center justify-center px-1 py-2 text-center font-bold">
+                            {feedback && (
+                                <span
+                                    key={feedback}
+                                    className={`fl-in flex max-w-[98%] items-start justify-center gap-1.5 text-sm leading-snug sm:text-base ${
+                                        feedbackStatus === 'correct'
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : feedbackStatus === 'warn'
+                                                ? 'text-amber-600 dark:text-amber-400'
+                                                : 'text-red-600 dark:text-red-400'
+                                    }`}
+                                >
+                                    {feedbackStatus === 'correct' && <Check size={18} strokeWidth={3} aria-hidden className="mt-0.5 shrink-0" />}
+                                    {feedbackStatus === 'warn' && <PencilLine size={17} aria-hidden className="mt-0.5 shrink-0" />}
+                                    {feedbackStatus === 'error' && <X size={18} strokeWidth={3} aria-hidden className="mt-0.5 shrink-0" />}
+                                    <span>{feedbackText}</span>
+                                </span>
+                            )}
                         </div>
 
                         <button
+                            type="button"
                             onClick={handleCheck}
-                            disabled={!input || feedbackStatus === 'correct' || feedbackStatus === 'error'}
-                            className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all text-white
-                                ${feedbackStatus === 'correct' || feedbackStatus === 'error' ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'}
-                            `}
+                            disabled={!input || answerLocked}
+                            className={`w-full py-4 text-lg ${!input || answerLocked ? disabledButton : primary}`}
                         >
-                            {feedbackStatus === 'correct' || feedbackStatus === 'error' ? 'Wait...' : 'Submit Answer'}
+                            {answerLocked ? 'Wait...' : 'Submit Answer'}
                         </button>
                     </div>
-                </motion.div>
-            </AnimatePresence>
+                </section>
+            </main>
         </div>
     )
 }

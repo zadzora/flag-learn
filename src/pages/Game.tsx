@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef, useMemo, type MouseEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Analytics } from "@vercel/analytics/react"
-import { Link } from "react-router-dom"
-import { Lock, X, Check, RefreshCw, RotateCcw, Heart, ExternalLink, Dumbbell, LogOut, Moon, Sun, Coffee, Trophy, Share2, CheckSquare, Square, Globe, Map, ArrowLeft, Timer, Repeat, Landmark, Unlock, MessagesSquare, Info } from "lucide-react"
+import { Lock, X, Check, RotateCcw, Dumbbell, Trophy, Share2, CheckSquare, Square, Timer, Repeat, Unlock, Info, ChevronRight, Flame } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import CountryFactsPanel, { type CountryFactsUi } from "../components/CountryFactsPanel"
-import CountryDataCredit from "../components/CountryDataCredit"
+import TopBar from "../components/TopBar"
+import SiteFooter from "../components/SiteFooter"
 import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
@@ -608,20 +608,6 @@ export default function Game() {
         return { total, mastered, percent: Math.round((mastered / total) * 100) }
     }, [progress, activeData])
 
-    const fireVariants = {
-        idle: { scale: 1, rotate: 0 },
-        low: { scale: [1, 1.1, 1], transition: { repeat: Infinity, duration: 1.5 } },
-        medium: { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0], textShadow: "0px 0px 8px rgba(255, 165, 0, 0.8)", transition: { repeat: Infinity, duration: 0.8 } },
-        high: { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0], textShadow: "0px 0px 15px rgba(255, 69, 0, 1)", transition: { repeat: Infinity, duration: 0.4 } }
-    }
-
-    const getFireLevel = (streak: number) => {
-        if (streak >= 10) return "high"
-        if (streak >= 5) return "medium"
-        if (streak >= 2) return "low"
-        return "idle"
-    }
-
     /** Hide API capital until mastered in Capitals (disk save); if user is in Capitals mode, also trust live React progress (may update before the next save). */
     const countryFactsModalCapitalMasked =
         countryFactsModalFlag != null &&
@@ -640,273 +626,187 @@ export default function Game() {
 
     if (!isLoaded) return null
 
+    const deckTitle = gameMode === 'world' ? 'Countries' : gameMode === 'us' ? 'US States' : 'World Capitals'
+    const isNewFlag = !!current && !isPracticeMode && !isReview && progress[current.code]?.seen === 0
+    const flagStreak = current ? (progress[current.code]?.streak || 0) : 0
+    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
+    const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+
     return (
-        <div className={`min-h-screen flex flex-col items-center justify-start pt-8 font-sans transition-colors duration-500 
-            ${isPracticeMode
-            ? 'bg-indigo-50 dark:bg-indigo-950 text-slate-800 dark:text-indigo-100'
-            : 'bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100'
-        }`}
-        >
-            <Link
-                to="/"
-                className={`absolute left-4 z-40 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}
-                title="Back to Menu"
-            >
-                <ArrowLeft size={20} />
-            </Link>
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            {isPracticeMode ? (
+                <TopBar title="Practice" back={() => exitPracticeMode()} theme={theme} onToggleTheme={toggleTheme}>
+                    <span className="flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={16} aria-hidden />{formatTime(practiceElapsedTime)}</span>
+                    <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">{practicePool.length} left</span>
+                    <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {practiceMistakes}</span>
+                </TopBar>
+            ) : (
+                <TopBar title={deckTitle} theme={theme} onToggleTheme={toggleTheme} />
+            )}
 
-            <div className={`absolute right-4 z-40 flex max-w-[min(100vw-5rem,28rem)] flex-row-reverse flex-wrap items-center justify-end gap-2 sm:max-w-none sm:flex-nowrap sm:gap-3 ${isPracticeMode ? 'top-14 sm:top-[3.75rem]' : 'top-4'}`}>
-                {!isPracticeMode && (
-                    <div className="flex min-w-0 items-stretch overflow-hidden rounded-2xl border border-white/70 bg-white/75 shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-800/85">
-                        <AnimatePresence mode="wait" initial={false}>
-                            <motion.div
-                                key={gameMode}
-                                initial={{ opacity: 0, x: 18 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -14 }}
-                                transition={{ duration: 0.22, ease: "easeOut" }}
-                                className="flex max-w-[10rem] flex-col justify-center border-r border-slate-200/90 px-2.5 py-1.5 sm:max-w-[12.5rem] sm:px-3 dark:border-slate-600/90"
-                            >
-                                <span className="text-[10px] font-extrabold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-                                    {SECTION_LABELS[gameMode].title}
-                                </span>
-                                <span className="mt-0.5 text-[9px] leading-snug text-slate-500 dark:text-slate-400 sm:text-[10px]">
-                                    {SECTION_LABELS[gameMode].detail}
-                                </span>
-                                <span className="mt-1 text-[8px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                    Icons · switch section
-                                </span>
-                            </motion.div>
-                        </AnimatePresence>
-                        <div
-                            className="flex shrink-0 items-center gap-0.5 p-1"
-                            role="tablist"
-                            aria-label="Quiz section — tap an icon to switch"
-                        >
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={gameMode === "world"}
-                                onClick={() => switchGameMode("world")}
-                                title={`Countries — ${SECTION_LABELS.world.detail}`}
-                                className={`rounded-xl p-2 transition-all ${gameMode === "world" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
-                            >
-                                <Globe size={20} aria-hidden />
-                                <span className="sr-only">Countries</span>
-                            </button>
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={gameMode === "us"}
-                                onClick={() => switchGameMode("us")}
-                                title={`US States — ${SECTION_LABELS.us.detail}`}
-                                className={`rounded-xl p-2 transition-all ${gameMode === "us" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
-                            >
-                                <Map size={20} aria-hidden />
-                                <span className="sr-only">US States</span>
-                            </button>
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={gameMode === "capitals"}
-                                onClick={() => switchGameMode("capitals")}
-                                title={`World Capitals — ${SECTION_LABELS.capitals.detail}`}
-                                className={`rounded-xl p-2 transition-all ${gameMode === "capitals" ? "bg-white text-indigo-600 shadow-sm ring-2 ring-indigo-400/45 dark:bg-slate-700 dark:text-white dark:ring-indigo-500/40" : "text-slate-500 hover:bg-white/60 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-white"}`}
-                            >
-                                <Landmark size={20} aria-hidden />
-                                <span className="sr-only">World Capitals</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                <button
-                    onClick={toggleTheme}
-                    className="p-2.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-[0_12px_28px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
-
-            <AnimatePresence>
-                {isPracticeMode && (
-                    <motion.div
-                        initial={{ y: -50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -50, opacity: 0 }}
-                        className="absolute top-0 w-full bg-indigo-600/95 dark:bg-indigo-800/90 backdrop-blur-md text-white p-2 flex justify-between items-center px-4 sm:px-8 z-30 shadow-[0_10px_24px_rgba(79,70,229,0.3)]"
-                    >
-                        <button onClick={() => exitPracticeMode()} className="flex items-center gap-1 text-xs bg-indigo-700 dark:bg-indigo-900 hover:bg-indigo-800 px-3 py-1.5 rounded-full transition-colors"><LogOut size={14} /> Exit</button>
-                        <div className="flex items-center gap-4 mr-12 sm:mr-0">
-                            <div className="flex items-center gap-1 font-mono text-sm sm:text-base font-bold text-indigo-100"><Timer size={16} />{formatTime(practiceElapsedTime)}</div>
-                            <div className="flex items-center gap-2 font-bold hidden sm:flex"><Dumbbell size={20} /><span>Practice Mode</span></div>
-                            <div className="text-sm font-medium opacity-80 hidden sm:block">Remaining: {practicePool.length}</div>
-                            <div className="text-sm font-bold text-red-200 bg-red-900/30 px-2 py-0.5 rounded flex items-center gap-1 border border-red-500/30"><X size={14} /> {practiceMistakes}</div>
-                        </div>
-                        <div className="w-10 hidden sm:block"></div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <div className={`w-full flex-1 flex flex-col items-center px-4 mb-8 ${isPracticeMode ? 'mt-24 sm:mt-24' : 'mt-16 sm:mt-12'}`}>
+            <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
                 {!isPracticeMode && !practiceResults && (
-                    <motion.div layout onClick={handleOpenGallery} className="w-full max-w-lg mb-8 cursor-pointer group z-20 relative select-none" animate={status === 'mastered' ? { scale: [1, 1.05, 1] } : {}} transition={{ delay: 0.4, duration: 0.3 }}>
-                        <div className="flex justify-between items-center px-1 mb-2">
-                            <div className="flex items-center gap-2">
-                                <img src="/logo2.png" alt="Logo" className="h-10 w-auto object-contain" />
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <AnimatePresence>
+                    <>
+                        {/* The three decks, named - no icons to decode. */}
+                        <div className="grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" role="tablist" aria-label="Deck">
+                            {(['world', 'us', 'capitals'] as const).map(mode => (
+                                <button
+                                    key={mode}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={gameMode === mode}
+                                    onClick={() => switchGameMode(mode)}
+                                    title={SECTION_LABELS[mode].detail}
+                                    className={`min-h-10 rounded-md px-2 text-sm font-semibold ${gameMode === mode ? 'bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+                                >
+                                    {mode === 'capitals' ? 'Capitals' : SECTION_LABELS[mode].title}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Mastery so far - the whole row opens the collection. */}
+                        <button type="button" onClick={handleOpenGallery} className="group mt-5 block w-full px-0 py-0 text-left font-normal" title="Open your collection">
+                            <span className="flex items-center justify-between gap-3 text-sm">
+                                <span className="flex items-center gap-2 font-semibold text-slate-600 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-white">
+                                    Your collection <ChevronRight size={15} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
+                                </span>
+                                <span className="flex items-center gap-3">
                                     {sessionStreak >= 2 && (
-                                        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} className={`flex items-center gap-1 px-3 py-1 rounded-full font-bold shadow-sm border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 select-none`}>
-                                            <motion.span variants={fireVariants} animate={getFireLevel(sessionStreak)} className="text-lg">🔥</motion.span><span className="text-sm">{sessionStreak}</span>
-                                        </motion.div>
+                                        <span className="flex items-center gap-1 font-bold text-orange-500 dark:text-orange-400" title="Correct in a row this session">
+                                            <Flame size={15} aria-hidden /> {sessionStreak}
+                                        </span>
                                     )}
-                                </AnimatePresence>
-                                <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-indigo-300 dark:group-hover:border-indigo-700 transition-colors">
-                                    {totalStats.mastered} / {totalStats.total} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {totalStats.percent}%
-                                </div>
-                            </div>
-                        </div>
-                        <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner ring-1 ring-slate-300/50 dark:ring-slate-700 group-hover:ring-indigo-300 transition-all relative">
-                            <motion.div className="h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
-                        </div>
-                        <p className="text-center text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            Click this bar to open your collection
-                        </p>
-                    </motion.div>
+                                    <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total} · {totalStats.percent}%</span>
+                                </span>
+                            </span>
+                            <span className="mt-2 block h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
+                                <motion.span className="block h-full bg-emerald-500" initial={false} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} />
+                            </span>
+                        </button>
+                    </>
                 )}
 
-                <AnimatePresence mode="wait">
-                    {current ? (
-                        <motion.div key={current.code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: isPracticeMode ? 0.05 : 0.2 }} className="bg-white/85 dark:bg-slate-800/80 backdrop-blur-2xl p-6 sm:p-8 rounded-t-2xl rounded-b-3xl shadow-[0_18px_48px_rgba(15,23,42,0.14)] border border-white/70 dark:border-slate-700/70 w-full max-w-lg flex flex-col items-center gap-6 relative z-0 mb-8 transition-colors duration-300">
-                            <div className={`absolute top-0 left-0 w-full h-4 rounded-t-xl bg-gradient-to-r ${isPracticeMode ? 'from-indigo-600 via-blue-500 to-indigo-600' : 'from-indigo-500 via-purple-500 to-pink-500'}`}></div>
-
-                            <div className="flex w-full flex-col gap-2">
-                                <div className="flex min-h-[1.75rem] justify-end px-0.5">
-                                    {!isPracticeMode && !isReview && (
-                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-slate-800 px-3 py-1 text-xs font-bold text-white shadow-sm dark:border-slate-600 dark:bg-slate-950">
-                                            🔥 {progress[current.code]?.streak || 0}/3
-                                        </div>
-                                    )}
-                                    {isPracticeMode && (
-                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-sm dark:bg-indigo-500 dark:border-white/20">
-                                            <Dumbbell size={12} /> Practice
-                                        </div>
-                                    )}
-                                    {!isPracticeMode && isReview && (
-                                        <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                                            <RefreshCw size={12} /> Review
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="relative group flex h-48 w-full justify-center sm:h-56">
-                                    {status !== 'mastered' && <motion.img src={current.image} alt="Flag" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full w-auto max-w-full object-contain rounded-lg border border-slate-100 shadow-md dark:border-slate-700" />}
-                                    {status === 'mastered' && <motion.img src={current.image} alt="Flying Flag" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute top-0 z-50 h-full w-auto max-w-full object-contain rounded-lg border border-slate-100 shadow-md dark:border-slate-700" />}
-                                </div>
-                            </div>
-
-                            {!isPracticeMode && !isReview && progress[current.code]?.seen === 0 && (
-                                <div className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-5 py-3 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col items-center animate-pulse">
-                                    <span className="text-xs uppercase tracking-wider font-bold opacity-70 mb-1">New Flag!</span>
-                                    <div className="text-lg text-center">
-                                        {gameMode === 'capitals' ? 'Capital of ' : 'Type: '}
-                                        <span className="font-extrabold text-blue-900 dark:text-blue-200">
-                                            {gameMode === 'capitals' ? getCountryName(current) : getCorrectAnswerDisplay(current)}
-                                        </span>
-                                        {gameMode === 'capitals' && <div className="mt-1 text-sm">is <span className="font-bold">{getCorrectAnswerDisplay(current)}</span></div>}
-                                    </div>
-                                </div>
+                {current ? (
+                    // The card stays put between questions; only the flag inside it changes.
+                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                        <div className="flex min-h-6 items-center justify-between gap-3">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isNewFlag ? 'text-blue-600 dark:text-blue-400' : isReview ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                {isPracticeMode ? 'Practice' : isReview ? 'Review' : isNewFlag ? 'New flag' : 'Name this flag'}
+                            </span>
+                            {!isPracticeMode && !isReview && (
+                                <span className="flex items-center gap-1" aria-label={`${flagStreak} of ${TARGET_STREAK} in a row`} title="Three in a row and it's yours">
+                                    {Array.from({ length: TARGET_STREAK }, (_, i) => (
+                                        <span key={i} className={`h-1.5 w-6 rounded-sm ${i < flagStreak || status === 'mastered' ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                                    ))}
+                                </span>
                             )}
+                        </div>
 
-                            <div className="w-full flex flex-col gap-4">
-                                <input
-                                    ref={inputRef}
-                                    value={input}
-                                    onChange={e => setInput(e.target.value)}
-                                    onKeyDown={e => { if (e.key === "Enter") handleCheck() }}
-                                    onFocus={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                                    disabled={status !== 'idle'}
-                                    placeholder={
-                                        (!isPracticeMode && !isReview && progress[current.code]?.seen === 0)
-                                            ? `Type: ${getCorrectAnswerDisplay(current)}`
-                                            : (gameMode === 'capitals' ? `Capital of ${getCountryName(current)}...` : "Type country name...")
-                                    }
-                                    className={`w-full px-5 py-4 text-center text-xl font-medium rounded-xl border-2 outline-none transition-all duration-200 shadow-sm dark:bg-slate-900 dark:text-white ${status === 'error' ? 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600 text-red-900 dark:text-red-200' : ''} ${status === 'correct' || status === 'mastered' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200' : ''} ${status === 'idle' ? 'border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500' : ''}`}
-                                    autoFocus
-                                    autoComplete="off"
-                                />
-                                <div className="min-h-[3.5rem] flex items-center justify-center text-center px-2">
-                                    <AnimatePresence mode="wait">
-                                        {feedbackMsg && (
-                                            <motion.div key={feedbackMsg} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`font-bold whitespace-pre-line leading-tight ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{feedbackMsg}</motion.div>
-                                        )}
-                                    </AnimatePresence>
+                        <div className="relative flex h-48 w-full items-center justify-center sm:h-56">
+                            {status !== 'mastered' && (
+                                <img key={current.code} src={current.image} alt="Flag" className="fl-in h-full w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]" />
+                            )}
+                            {status === 'mastered' && (
+                                <motion.img src={current.image} alt="" initial={{ scale: 1, y: 0, opacity: 1 }} animate={{ scale: 0.1, y: -400, opacity: 0 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute top-0 z-50 h-full w-auto max-w-full rounded-[4px] object-contain" />
+                            )}
+                        </div>
+
+                        {isNewFlag && (
+                            <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-center text-blue-900 dark:text-blue-100">
+                                <div className="text-lg">
+                                    {gameMode === 'capitals' ? 'Capital of ' : 'This is '}
+                                    <span className="font-extrabold">{gameMode === 'capitals' ? getCountryName(current) : getCorrectAnswerDisplay(current)}</span>
+                                    {gameMode === 'capitals' && <> is <span className="font-extrabold">{getCorrectAnswerDisplay(current)}</span></>}
                                 </div>
-                                <button onClick={handleCheck} disabled={status !== 'idle' || !input} className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all ${status === 'idle' && input ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 active:scale-95' : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'}`}>{status === 'idle' ? 'Check Answer' : 'Checking...'}</button>
+                                <div className="mt-0.5 text-xs text-blue-700/80 dark:text-blue-200/70">Type it below - next time you're on your own.</div>
                             </div>
-                        </motion.div>
-                    ) : practiceResults ? (
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4">
-                            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-full text-indigo-500 dark:text-indigo-400"><Dumbbell size={64} /></div>
-                            <div><h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Practice Complete!</h2><p className="text-slate-500 dark:text-slate-400">You reviewed <strong className="text-indigo-600 dark:text-indigo-400">{practiceResults.count}</strong> flags.</p></div>
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800"><div className="text-xs uppercase font-bold text-red-400 mb-1">Mistakes</div><div className="text-3xl font-bold text-red-600 dark:text-red-300">{practiceResults.mistakes}</div></div>
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800"><div className="text-xs uppercase font-bold text-blue-400 mb-1">Time</div><div className="text-3xl font-bold text-blue-600 dark:text-blue-300">{practiceResults.time}</div></div>
-                            </div>
-                            <div className="w-full flex flex-col gap-3">
-                                <button onClick={() => startPracticeMode(lastPracticePool)} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Repeat size={20} /> Practice Again</button>
-                                <button onClick={exitPracticeMode} className="w-full py-3.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-all active:scale-95">Back to Overview</button>
-                            </div>
-                        </motion.div>
-                    ) : (
-                        totalStats.percent === 100 && !isPracticeMode && (
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center flex flex-col items-center gap-6 max-w-md border border-slate-100 dark:border-slate-700 mx-4">
-                                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-500 dark:text-yellow-400 animate-bounce"><Trophy size={64} /></div>
-                                <div>
-                                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
-                                        Flag Master!
-                                    </h2>
+                        )}
 
-                                    <p className="text-slate-500 dark:text-slate-400">
-                                        Incredible! You have mastered all{" "}
-                                        <strong className="text-indigo-600 dark:text-indigo-400">
-                                            {totalStats.total}
-                                        </strong>{" "}
-                                        {gameMode === "world"
-                                            ? "flags of the world"
-                                            : gameMode === "us"
-                                                ? "US state flags"
-                                                : gameMode === "capitals"
-                                                    ? "world capitals"
-                                                    : ""}
-                                        !
+                        <div className="flex w-full flex-col gap-3">
+                            <input
+                                ref={inputRef}
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                onKeyDown={e => { if (e.key === "Enter") handleCheck() }}
+                                onFocus={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                disabled={status !== 'idle'}
+                                aria-label={gameMode === 'capitals' ? 'Capital' : 'Answer'}
+                                placeholder={isNewFlag ? `Type: ${getCorrectAnswerDisplay(current)}` : (gameMode === 'capitals' ? `Capital of ${getCountryName(current)}...` : "Type country name...")}
+                                className={`w-full border px-5 py-4 text-center text-xl font-medium outline-none transition-colors duration-150 dark:text-white
+                                    ${status === 'error' ? 'border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100' : ''}
+                                    ${status === 'correct' || status === 'mastered' ? 'border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100' : ''}
+                                    ${status === 'idle' ? 'border-slate-200 bg-slate-50 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]' : ''}`}
+                                autoFocus
+                                autoComplete="off"
+                            />
+                            <div className="flex min-h-12 items-center justify-center px-2 text-center">
+                                {feedbackMsg && (
+                                    <div key={feedbackMsg} className={`fl-in whitespace-pre-line font-bold leading-tight ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                        {feedbackMsg}
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleCheck}
+                                disabled={status !== 'idle' || !input}
+                                className={`w-full py-4 text-lg font-bold ${status === 'idle' && input ? primary : 'cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500'}`}
+                            >
+                                {status === 'idle' ? 'Check answer' : 'Checking...'}
+                            </button>
+                        </div>
+                    </section>
+                ) : practiceResults ? (
+                    <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                        <div>
+                            <h2 className="!text-3xl font-bold">Practice complete</h2>
+                            <p className="mt-1 text-slate-500 dark:text-slate-400">You reviewed <strong className="text-slate-900 dark:text-white">{practiceResults.count}</strong> flags.</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Mistakes</div>
+                                <div className={`mt-1 text-3xl font-bold ${practiceResults.mistakes ? 'text-red-500' : 'text-emerald-500'}`}>{practiceResults.mistakes}</div>
+                            </div>
+                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Time</div>
+                                <div className="mt-1 text-3xl font-bold tabular-nums">{practiceResults.time}</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                            <button onClick={() => startPracticeMode(lastPracticePool)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Practice again</button>
+                            <button onClick={exitPracticeMode} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to overview</button>
+                        </div>
+                    </section>
+                ) : (
+                    totalStats.percent === 100 && !isPracticeMode && (
+                        <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                            <div className="flex items-center gap-4">
+                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
+                                <div>
+                                    <h2 className="!text-3xl font-bold">Flag Master</h2>
+                                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+                                        You have mastered all <strong className="text-slate-900 dark:text-white">{totalStats.total}</strong>{" "}
+                                        {gameMode === "world" ? "flags of the world" : gameMode === "us" ? "US state flags" : "world capitals"}.
                                     </p>
                                 </div>
-                                <div className="w-full flex flex-col gap-3">
-                                    <button onClick={handleShare} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Share2 size={20} /> Share Success</button>
-                                    <button onClick={() => startPracticeMode()} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><Dumbbell size={20} /> Keep Practicing</button>
-                                </div>
-                            </motion.div>
-                        )
-                    )}
-                </AnimatePresence>
-            </div>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <button onClick={handleShare} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Share2 size={18} aria-hidden /> Share</button>
+                                <button onClick={() => startPracticeMode()} className={`${quiet} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Dumbbell size={18} aria-hidden /> Keep practising</button>
+                            </div>
+                        </section>
+                    )
+                )}
+            </main>
 
-            {/* ... Footer ... */}
-            <footer className="w-full py-6 border-t border-slate-200/60 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-sm transition-colors flex flex-col items-center gap-2 mt-auto">
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                    <p className="flex items-center gap-1">Made with <Heart size={14} className="text-red-400 fill-red-400" /> for learning</p>
-                    <a href="https://discord.gg/qcwW5evMU9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95"><MessagesSquare size={14} /><span>Discord</span><ExternalLink size={10} className="opacity-70" /></a>
-                    <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFDD00] text-black font-bold text-[10px] shadow-sm hover:scale-105 transition-transform active:scale-95 hover:bg-[#ffea5c]"><Coffee size={14} className="text-black/80" /><span>Buy me a coffee</span><ExternalLink size={10} className="opacity-60" /></a>
-                </div>
-                <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Flags provided by Flagpedia.net <ExternalLink size={12} /></a>
-                <p className="max-w-2xl px-4 text-center text-xs">
-                    <CountryDataCredit prefix="Country data from" />
-                </p>
-                <section className="max-w-2xl mx-auto mt-12 text-center text-slate-500 text-sm px-4 pb-2"><h2 className="font-bold text-slate-600 dark:text-slate-400 mb-2">About Flag Learn</h2><p>Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively. Unlike other <strong>flag games</strong>, we use spaced repetition and streak mechanics to make learning fun.</p></section>
-            </footer>
+            <SiteFooter
+                about={
+                    <p>
+                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively.
+                        Unlike other <strong>flag games</strong>, it uses spaced repetition and streak mechanics to make learning stick.
+                    </p>
+                }
+            />
 
             {/* --- GALLERY MODAL --- */}
             <AnimatePresence>

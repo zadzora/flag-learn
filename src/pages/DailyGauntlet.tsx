@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Link } from "react-router-dom"
 import {
-    ArrowDown, ArrowLeft, ArrowUp, ChevronRight, Flag, Flame, Loader2, MapPin,
-    Moon, Play, RefreshCw, Sun, Users, X,
+    ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, EyeOff, Flag, Flame, Loader2, MapPin,
+    Paintbrush, Play, RefreshCw, Scan, Users, X, type LucideIcon,
 } from "lucide-react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps"
 import worldData from "../../data/flags.json"
@@ -26,6 +25,7 @@ import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../uti
 import DailyStanding from "../components/DailyStanding"
 import CountUpValue from "../components/CountUpValue"
 import NextDailyLink from "../components/NextDailyLink"
+import TopBar from "../components/TopBar"
 
 const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-gauntlet-save"
@@ -104,6 +104,16 @@ type RoundProps = {
     onDone: (score: number) => void
 }
 
+/** Each round's icon - the same ones the home screen uses for the standalone modes. */
+const ROUND_ICONS: Record<GauntletRoundKind, LucideIcon> = {
+    blur: EyeOff,
+    paint: Paintbrush,
+    border: Scan,
+    "higher-lower": ArrowUpDown,
+}
+
+const panelClass = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+
 /** Every round sits in the same card, so the five feel like one game. */
 function RoundShell({
     kind,
@@ -113,42 +123,49 @@ function RoundShell({
     children: React.ReactNode
 }) {
     const meta = ROUND_META[kind]
+    const Icon = ROUND_ICONS[kind]
     return (
-        <div className="w-full flex flex-col items-center gap-4">
-            <div className="text-center">
-                <h2 className="font-black text-lg flex items-center justify-center gap-2">
-                    <span aria-hidden>{meta.emoji}</span> {meta.label}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{meta.blurb}</p>
+        <section className={`${panelClass} flex w-full flex-col items-center gap-4 p-5 sm:p-7`}>
+            <div className="flex w-full items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                    <Icon size={19} aria-hidden />
+                </span>
+                <div className="min-w-0">
+                    <h2 className="!text-lg font-bold leading-tight">{meta.label}</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{meta.blurb}</p>
+                </div>
             </div>
             {children}
-        </div>
+        </section>
     )
 }
 
 /** The one-line verdict every round shows just before it hands over. */
 function RoundVerdict({ score, note }: { score: number; note: string }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`w-full p-4 rounded-2xl border text-center ${
+        <div
+            className={`fl-in w-full rounded-lg border px-4 py-3 text-center ${
                 score > 0
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50"
-                    : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50"
+                    ? "border-emerald-500/40 bg-emerald-500/10"
+                    : "border-red-500/40 bg-red-500/10"
             }`}
         >
-            <div className="font-black text-2xl">{score > 0 ? `+${score} pts` : "0 pts"}</div>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">{note}</p>
-        </motion.div>
+            <div className={`text-2xl font-bold tabular-nums ${score > 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-600 dark:text-red-300"}`}>
+                {score > 0 ? `+${score} pts` : "0 pts"}
+            </div>
+            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{note}</p>
+        </div>
     )
 }
 
 const guessInputClass =
-    "w-full px-5 py-4 text-center text-lg font-bold rounded-xl border-2 border-slate-200 dark:border-slate-700 outline-none transition-all bg-white dark:bg-slate-900 focus:border-indigo-500 shadow-sm"
+    "w-full rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 text-center text-lg font-medium outline-none transition-colors placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-[#4A5680]"
 
 const primaryButtonClass =
-    "w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+    "w-full rounded-lg bg-slate-900 py-4 text-lg font-bold text-white enabled:hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:enabled:hover:bg-[#DCE3F2] disabled:cursor-not-allowed disabled:border disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:disabled:border-slate-700 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
+
+const secondaryButtonClass =
+    "rounded-lg border border-slate-200 bg-white text-slate-700 enabled:hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:enabled:hover:border-[#3A4670]"
 
 // ─── Round 1: Blur ────────────────────────────────────────────────────────────
 
@@ -216,44 +233,47 @@ function BlurRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
 
     return (
         <RoundShell kind="blur">
-            <div className="relative w-full h-52 sm:h-60 flex justify-center bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700 p-4 shadow-xl overflow-hidden">
-                {!imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <Loader2 className="animate-spin text-slate-400" size={30} />
-                    </div>
-                )}
-                <img
-                    src={imageFor(code)}
-                    alt="Guess the flag"
-                    onLoad={handleImageLoad}
-                    style={{
-                        filter: result
-                            ? "none"
-                            : `blur(${blur}px) grayscale(${(blur / MAX_BLUR) * 100}%)`,
-                        transition: "filter 0.1s linear",
-                        opacity: imageLoaded ? 1 : 0,
-                    }}
-                    className="h-full w-auto object-contain drop-shadow-md"
-                />
-                {!result && imageLoaded && (
-                    <>
-                        <div className="absolute bottom-0 left-0 w-full h-1.5 bg-slate-200 dark:bg-slate-700">
-                            <div
-                                className="h-full bg-purple-500 transition-[width] duration-100 ease-linear"
-                                style={{ width: `${(blur / MAX_BLUR) * 100}%` }}
-                            />
+            <div className="flex w-full flex-col gap-3">
+                <div className="flex min-h-6 items-center justify-end">
+                    {!result && imageLoaded && (
+                        <span className="text-sm font-bold tabular-nums" title="Points if you answer now">{potential} pts</span>
+                    )}
+                </div>
+                <div className="relative flex h-48 w-full items-center justify-center sm:h-56">
+                    {!imageLoaded && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center">
+                            <Loader2 className="animate-spin text-slate-400" size={30} aria-hidden />
                         </div>
-                        <div className="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-xl border border-white/10 shadow-lg">
-                            {potential} pts
-                        </div>
-                    </>
-                )}
+                    )}
+                    <img
+                        src={imageFor(code)}
+                        alt="Guess the flag"
+                        onLoad={handleImageLoad}
+                        style={{
+                            filter: result
+                                ? "none"
+                                : `blur(${blur}px) grayscale(${(blur / MAX_BLUR) * 100}%)`,
+                            transition: "filter 0.1s linear",
+                            opacity: imageLoaded ? 1 : 0,
+                        }}
+                        className="h-full w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
+                    />
+                </div>
+                {/* The track always holds its place; the fill drains as the flag sharpens. */}
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700" aria-hidden>
+                    {!result && imageLoaded && (
+                        <div
+                            className="h-full bg-blue-500 transition-[width] duration-100 ease-linear"
+                            style={{ width: `${(blur / MAX_BLUR) * 100}%` }}
+                        />
+                    )}
+                </div>
             </div>
 
             {result ? (
                 <RoundVerdict score={result.score} note={result.note} />
             ) : (
-                <div className="w-full space-y-3">
+                <div className="flex w-full flex-col gap-3">
                     <input
                         ref={inputRef}
                         value={input}
@@ -268,7 +288,7 @@ function BlurRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                     <button onClick={submit} disabled={!input.trim() || !imageLoaded} className={primaryButtonClass}>
                         Lock in Answer
                     </button>
-                    <p className="text-center text-[11px] text-slate-400">One answer only - the longer you wait, the fewer points.</p>
+                    <p className="text-center text-xs text-slate-500 dark:text-slate-400">One answer only - the longer you wait, the fewer points.</p>
                 </div>
             )}
         </RoundShell>
@@ -450,10 +470,10 @@ function PaintRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
     return (
         <RoundShell kind="paint">
             {code && (
-                <h3 className="text-xl font-black tracking-wide uppercase text-center -mt-1">{displayName(code)}</h3>
+                <h3 className="-mt-1 text-center !text-xl font-bold uppercase tracking-wide">{displayName(code)}</h3>
             )}
 
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-slate-100 dark:bg-slate-800/50 ring-1 ring-slate-200 dark:ring-slate-700 min-h-[150px]">
+            <div className="relative min-h-[150px] w-full overflow-hidden rounded-[4px] bg-slate-50 shadow-[0_2px_10px_rgba(10,14,26,0.18)] dark:bg-slate-900">
                 <div
                     ref={svgRef}
                     onPointerDown={handlePointerDown}
@@ -466,13 +486,14 @@ function PaintRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                 />
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-slate-400" size={30} />
+                        <Loader2 className="animate-spin text-slate-400" size={30} aria-hidden />
                     </div>
                 )}
             </div>
 
             {!result && (
-                <div className="flex flex-wrap gap-3 justify-center min-h-[48px]">
+                // The swatches stay round: they are paint pots, not buttons.
+                <div className="flex min-h-[48px] flex-wrap justify-center gap-4">
                     {palette.map(color => {
                         const selected = color === selectedColor
                         const light = isLightColor(color)
@@ -480,22 +501,23 @@ function PaintRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                             <motion.button
                                 key={color}
                                 onClick={() => setSelectedColor(selected ? null : color)}
-                                animate={{ scale: selected ? 1.2 : 1 }}
+                                animate={{ scale: selected ? 1.18 : 1 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                                className="focus:outline-none"
+                                className="min-h-0 p-0 text-slate-900 focus:outline-none dark:text-white"
                                 style={{ touchAction: "manipulation" }}
                                 aria-label={`Use color ${color}`}
+                                aria-pressed={selected}
                             >
                                 <div
-                                    className="w-11 h-11 rounded-full"
+                                    className="h-11 w-11 rounded-full"
                                     style={{
                                         backgroundColor: color,
                                         border: selected
-                                            ? "3px solid #6366f1"
+                                            ? "3px solid currentColor"
                                             : light
                                               ? "3px solid rgba(0,0,0,0.2)"
                                               : "3px solid rgba(255,255,255,0.35)",
-                                        boxShadow: selected ? `0 0 0 2px ${color}, 0 5px 16px ${color}99` : "0 3px 8px rgba(0,0,0,0.25)",
+                                        boxShadow: selected ? `0 0 0 2px ${color}` : "none",
                                     }}
                                 />
                             </motion.button>
@@ -507,21 +529,21 @@ function PaintRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
             {result ? (
                 <RoundVerdict score={result.score} note={result.note} />
             ) : (
-                <div className="w-full space-y-3">
+                <div className="flex w-full flex-col gap-3">
                     <div className="h-5 text-center text-xs font-bold">
                         {wrongFeedback ? (
-                            <span className="text-red-500">Some colors are wrong - one attempt left!</span>
+                            <span key="wrong" className="fl-in text-red-600 dark:text-red-400">Some colors are wrong - one attempt left!</span>
                         ) : (
-                            <span className="text-slate-400">
+                            <span className="text-slate-500 dark:text-slate-400">
                                 {selectedColor ? "Tap a region to color it" : "Pick a color to start"}
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                         {PAINT_ATTEMPT_POINTS.map((_, i) => (
                             <span
                                 key={i}
-                                className={`w-2 h-2 rounded-full ${i < attemptsLeft ? "bg-emerald-400" : "bg-red-400/40"}`}
+                                className={`h-2 w-2 rounded-full ${i < attemptsLeft ? "bg-emerald-500" : "bg-red-500/40"}`}
                             />
                         ))}
                         <span className="ml-1">
@@ -534,9 +556,9 @@ function PaintRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                     </button>
                     <button
                         onClick={handleGiveUp}
-                        className="w-full py-2.5 rounded-xl font-bold text-sm bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className={`${secondaryButtonClass} flex w-full items-center justify-center gap-2 py-2.5 text-sm font-bold`}
                     >
-                        <Flag size={15} /> Give up
+                        <Flag size={15} aria-hidden /> Give up
                     </button>
                 </div>
             )}
@@ -687,20 +709,20 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
         ? result.score > 0
             ? isDark ? "#10b981" : "#34d399"
             : isDark ? "#f59e0b" : "#fbbf24"
-        : isDark ? "#6366f1" : "#818cf8"
-    const otherFill = isDark ? "#475569" : "#b8c5d1"
+        : isDark ? "#3b82f6" : "#60a5fa"
+    const otherFill = isDark ? "#253050" : "#C3CBDC"
     const zoom = mapPos?.zoom ?? 2
     const attemptsLeft = BORDER_ATTEMPT_POINTS.length - attempts
 
     return (
         <RoundShell kind="border">
-            <div className="relative w-full h-56 sm:h-64 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden bg-[#bfdbfe] dark:bg-slate-900">
+            <div className="relative h-56 w-full overflow-hidden rounded-lg border border-slate-200 bg-[#E4EBF7] sm:h-64 dark:border-slate-700 dark:bg-[#0F1424]">
                 {loading || !mapPos || !targetFlag ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-slate-400" size={30} />
+                        <Loader2 className="animate-spin text-slate-400" size={30} aria-hidden />
                     </div>
                 ) : (
-                    <div className="pointer-events-none w-full h-full">
+                    <div className="pointer-events-none h-full w-full">
                         <ComposableMap
                             projection="geoMercator"
                             projectionConfig={{ scale: 140 }}
@@ -717,8 +739,8 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                                             const style = {
                                                 fill: isTarget ? targetFill : otherFill,
                                                 stroke: isTarget
-                                                    ? isDark ? "#a5b4fc" : "#4338ca"
-                                                    : isDark ? "#94a3b8" : "#64748b",
+                                                    ? isDark ? "#B9DEFE" : "#1d4ed8"
+                                                    : isDark ? "#3A4670" : "#8C97B3",
                                                 strokeWidth: (isTarget ? 2.5 : 0.8) / zoom,
                                                 outline: "none",
                                                 transition: "fill 300ms",
@@ -728,7 +750,6 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                                                     key={geo.rsmKey}
                                                     geography={geo}
                                                     style={{ default: style, hover: style, pressed: style }}
-                                                    className={isTarget && !result ? "animate-pulse" : ""}
                                                 />
                                             )
                                         })
@@ -743,7 +764,7 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
             {result ? (
                 <RoundVerdict score={result.score} note={result.note} />
             ) : (
-                <div className="w-full space-y-3">
+                <div className="flex w-full flex-col gap-3">
                     <div className="relative">
                         <input
                             ref={inputRef}
@@ -756,7 +777,7 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                             autoComplete="off"
                         />
                         {suggestions.length > 0 && (
-                            <div className="absolute z-20 left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                            <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
                                 {suggestions.map(s => (
                                     <button
                                         key={s}
@@ -764,7 +785,7 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                                             setInput(s)
                                             submit(s)
                                         }}
-                                        className="w-full px-4 py-2.5 text-left text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700"
+                                        className="w-full px-4 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700"
                                     >
                                         {s}
                                     </button>
@@ -776,7 +797,7 @@ function BorderRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                     <button onClick={() => submit()} disabled={!input.trim() || loading} className={primaryButtonClass}>
                         Submit
                     </button>
-                    <p className="text-center text-[11px] text-slate-400">
+                    <p className="text-center text-xs text-slate-500 dark:text-slate-400">
                         {attemptsLeft} attempt{attemptsLeft !== 1 ? "s" : ""} left - worth{" "}
                         {BORDER_ATTEMPT_POINTS[attempts] ?? 0} pts
                     </p>
@@ -855,32 +876,36 @@ function HigherLowerRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
 
     return (
         <RoundShell kind="higher-lower">
-            <div className="flex items-center gap-2 rounded-full bg-indigo-100 dark:bg-indigo-950/80 px-3 py-1 text-[11px] font-bold text-indigo-800 dark:text-indigo-200">
-                {metric === "population" ? <Users size={13} /> : <MapPin size={13} />}
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {metric === "population" ? <Users size={13} aria-hidden /> : <MapPin size={13} aria-hidden />}
                 {metric === "population" ? "Population" : "Land area"}
-                <span className="opacity-60">
+                <span className="font-semibold normal-case tracking-normal text-slate-400 dark:text-slate-500">
                     - {correct}/{HL_STEPS} right
                 </span>
             </div>
 
-            <div className="w-full grid grid-cols-2 gap-3">
+            <div className="grid w-full grid-cols-2 gap-3">
                 {[
                     { code: leftCode, value: leftValue },
                     { code: rightCode, value: rightValue },
                 ].map((side, i) => (
                     <div
                         key={`${side.code}-${i}`}
-                        className={`rounded-2xl border p-4 flex flex-col items-center gap-2 shadow-sm transition-colors ${
+                        className={`flex flex-col items-center gap-2 rounded-lg border p-4 transition-colors ${
                             i === 1 && reveal === "correct"
-                                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700"
+                                ? "border-emerald-500/50 bg-emerald-500/10"
                                 : i === 1 && reveal === "wrong"
-                                  ? "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
-                                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                                  ? "border-red-500/50 bg-red-500/10"
+                                  : "border-slate-200 dark:border-slate-700"
                         }`}
                     >
-                        <img src={imageFor(side.code ?? "")} alt="" className="h-12 w-auto rounded shadow-sm" />
-                        <div className="text-sm font-bold text-center leading-tight">{displayName(side.code ?? "")}</div>
-                        <div className="text-sm font-black text-indigo-600 dark:text-indigo-400 min-h-[1.25rem]">
+                        <img
+                            src={imageFor(side.code ?? "")}
+                            alt=""
+                            className="fl-in h-14 w-auto max-w-full rounded-[4px] object-contain shadow-[0_2px_10px_rgba(10,14,26,0.18)]"
+                        />
+                        <div className="text-center text-sm font-bold leading-tight">{displayName(side.code ?? "")}</div>
+                        <div className="min-h-[1.25rem] text-sm font-bold">
                             {side.value === null ? (
                                 "???"
                             ) : i === 0 ? (
@@ -889,10 +914,9 @@ function HigherLowerRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                                 // The mystery number counts up on reveal - the payoff beat of the round.
                                 <motion.span
                                     key={side.code}
-                                    initial={{ scale: 0.85, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ type: "spring", stiffness: 380, damping: 22 }}
-                                    className="inline-block"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="inline-block tabular-nums"
                                 >
                                     <CountUpValue
                                         target={side.value}
@@ -901,41 +925,35 @@ function HigherLowerRound({ puzzle, saved, onProgress, onDone }: RoundProps) {
                                     />
                                 </motion.span>
                             ) : (
-                                <motion.span
-                                    animate={{ opacity: [0.45, 1, 0.45] }}
-                                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                                    className="inline-block text-slate-400 dark:text-slate-500"
-                                >
-                                    ???
-                                </motion.span>
+                                <span className="inline-block text-slate-400 dark:text-slate-500">???</span>
                             )}
                         </div>
                     </div>
                 ))}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                Is <strong>{displayName(rightCode ?? "")}</strong>&apos;s {metric === "area" ? "area" : "population"} higher
-                or lower than <strong>{displayName(leftCode ?? "")}</strong>&apos;s?
+            <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                Is <strong className="text-slate-900 dark:text-white">{displayName(rightCode ?? "")}</strong>&apos;s {metric === "area" ? "area" : "population"} higher
+                or lower than <strong className="text-slate-900 dark:text-white">{displayName(leftCode ?? "")}</strong>&apos;s?
             </p>
 
-            <div className="w-full grid grid-cols-2 gap-3">
+            <div className="grid w-full grid-cols-2 gap-3">
                 <button
                     onClick={() => guess("higher")}
                     disabled={reveal !== null}
-                    className="py-4 rounded-xl font-bold text-base bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className={`${secondaryButtonClass} flex items-center justify-center gap-2 py-4 text-base font-bold`}
                 >
-                    <ArrowUp size={18} /> Higher
+                    <ArrowUp size={18} aria-hidden className="text-emerald-600 dark:text-emerald-400" /> Higher
                 </button>
                 <button
                     onClick={() => guess("lower")}
                     disabled={reveal !== null}
-                    className="py-4 rounded-xl font-bold text-base bg-rose-500 hover:bg-rose-600 text-white shadow-lg active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className={`${secondaryButtonClass} flex items-center justify-center gap-2 py-4 text-base font-bold`}
                 >
-                    <ArrowDown size={18} /> Lower
+                    <ArrowDown size={18} aria-hidden className="text-red-500 dark:text-red-400" /> Lower
                 </button>
             </div>
-            <p className="text-center text-[11px] text-slate-400">
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400">
                 {HL_STEP_POINTS} pts per comparison - one wrong answer ends the round.
             </p>
         </RoundShell>
@@ -1050,114 +1068,101 @@ export default function DailyGauntlet() {
     )
 
     const RoundComponent = ROUND_COMPONENTS[currentKind]
+    const toggleTheme = () => setTheme(t => (t === "light" ? "dark" : "light"))
+    const NextIcon = ROUND_ICONS[currentKind]
 
     return (
-        <div className="min-h-screen flex flex-col items-center pt-8 pb-12 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-500">
-            {/* Header */}
-            <div className="w-full max-w-lg px-4 flex justify-between items-center mb-5">
-                <Link
-                    to="/"
-                    className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    <ArrowLeft size={20} />
-                </Link>
-                <div className="flex flex-col items-center">
-                    <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                        <GauntletIcon size={18} className="text-amber-500" /> DAILY GAUNTLET
-                    </h1>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-                            #{puzzle.number} - {today}
-                        </span>
-                        {streak > 0 && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-[10px] font-black">
-                                <Flame size={11} /> {streak}
-                            </span>
-                        )}
+        <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
+            <TopBar title="Daily Gauntlet" theme={theme} onToggleTheme={toggleTheme}>
+                {streak > 0 && (
+                    <span className="flex items-center gap-1 text-sm font-semibold tabular-nums text-orange-500 dark:text-orange-400" title="Day streak">
+                        <Flame size={15} aria-hidden /> {streak}
+                    </span>
+                )}
+            </TopBar>
+
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-14 pt-6 sm:pt-8">
+                {/* Round rail */}
+                <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        #{puzzle.number} - {today}
+                    </p>
+                    <div className="flex gap-1.5">
+                        {ROUND_ORDER.map((kind, i) => {
+                            const done = i < save.scores.length
+                            const active = i === roundIndex && save.phase === "playing"
+                            const Icon = ROUND_ICONS[kind]
+                            return (
+                                <div key={kind} className="flex flex-1 flex-col items-center gap-1.5" title={ROUND_META[kind].label}>
+                                    <div
+                                        className={`h-1.5 w-full rounded-sm transition-colors ${
+                                            done ? "bg-emerald-500" : active ? "bg-blue-500" : "bg-slate-200 dark:bg-slate-700"
+                                        }`}
+                                    />
+                                    <span
+                                        className={`flex items-center gap-1 text-[11px] font-bold tabular-nums ${
+                                            done
+                                                ? "text-emerald-600 dark:text-emerald-400"
+                                                : active
+                                                  ? "text-blue-600 dark:text-blue-400"
+                                                  : "text-slate-400 dark:text-slate-500"
+                                        }`}
+                                    >
+                                        <Icon size={12} aria-hidden /> {done ? save.scores[i] : "-"}
+                                    </span>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
-                <button
-                    onClick={() => setTheme(t => (t === "light" ? "dark" : "light"))}
-                    aria-label="Toggle theme"
-                    className="p-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-white/70 dark:border-slate-700/70 shadow-md text-slate-600 dark:text-slate-300 hover:scale-110 transition-transform"
-                >
-                    {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-                </button>
-            </div>
 
-            {/* Round rail */}
-            <div className="w-full max-w-lg px-4 mb-6">
-                <div className="flex gap-1.5">
-                    {ROUND_ORDER.map((kind, i) => {
-                        const done = i < save.scores.length
-                        const active = i === roundIndex && save.phase === "playing"
-                        return (
-                            <div key={kind} className="flex-1 flex flex-col items-center gap-1">
-                                <div
-                                    className={`w-full h-1.5 rounded-full transition-colors ${
-                                        done ? "bg-emerald-500" : active ? "bg-indigo-500" : "bg-slate-200 dark:bg-slate-700"
-                                    }`}
-                                />
-                                <span
-                                    className={`text-[10px] font-black tabular-nums ${
-                                        done
-                                            ? "text-emerald-600 dark:text-emerald-400"
-                                            : active
-                                              ? "text-indigo-600 dark:text-indigo-400"
-                                              : "text-slate-300 dark:text-slate-600"
-                                    }`}
-                                >
-                                    {ROUND_META[kind].emoji} {done ? save.scores[i] : "-"}
-                                </span>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
-
-            <div className="w-full max-w-lg px-4 flex flex-col items-center gap-5">
                 {/* Intro */}
                 {save.phase === "intro" && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="w-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-xl"
+                    <motion.section
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className={`${panelClass} flex w-full flex-col gap-5 p-5 sm:p-7`}
                     >
-                        <div className="text-center mb-5">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 dark:bg-amber-900/30 text-amber-500 rounded-full mb-3">
-                                <GauntletIcon size={30} />
+                        <div className="flex items-start gap-4">
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700 dark:text-amber-400">
+                                <GauntletIcon size={24} aria-hidden />
+                            </span>
+                            <div>
+                                <h2 className="!text-2xl font-bold">Four rounds, one score</h2>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                    One round from each mode, {TOTAL_POINTS} points on the line. No restarts - today&apos;s
+                                    run is your run.
+                                </p>
                             </div>
-                            <h2 className="text-2xl font-black mb-1">Four rounds, one score</h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                                One round from each mode, {TOTAL_POINTS} points on the line. No restarts - today&apos;s
-                                run is your run.
-                            </p>
                         </div>
-                        <div className="flex flex-col gap-2 mb-5">
-                            {ROUND_ORDER.map((kind, i) => (
-                                <div
-                                    key={kind}
-                                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800"
-                                >
-                                    <span className="w-7 h-7 shrink-0 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-black text-slate-400">
-                                        {i + 1}
-                                    </span>
-                                    <span className="text-lg" aria-hidden>
-                                        {ROUND_META[kind].emoji}
-                                    </span>
-                                    <div className="min-w-0">
-                                        <p className="font-bold text-sm">{ROUND_META[kind].label}</p>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{ROUND_META[kind].blurb}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <ol className="flex flex-col gap-2">
+                            {ROUND_ORDER.map((kind, i) => {
+                                const Icon = ROUND_ICONS[kind]
+                                return (
+                                    <li
+                                        key={kind}
+                                        className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                                    >
+                                        <span className="w-4 shrink-0 text-center text-xs font-bold tabular-nums text-slate-400 dark:text-slate-500">
+                                            {i + 1}
+                                        </span>
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                                            <Icon size={17} aria-hidden />
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold">{ROUND_META[kind].label}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{ROUND_META[kind].blurb}</p>
+                                        </div>
+                                    </li>
+                                )
+                            })}
+                        </ol>
                         <button onClick={() => patch({ phase: "playing" })} className={primaryButtonClass}>
                             <span className="flex items-center justify-center gap-2">
-                                <Play size={20} fill="currentColor" /> Start the Gauntlet
+                                <Play size={18} aria-hidden /> Start the Gauntlet
                             </span>
                         </button>
-                    </motion.div>
+                    </motion.section>
                 )}
 
                 {/* Active round */}
@@ -1173,79 +1178,87 @@ export default function DailyGauntlet() {
 
                 {/* Between rounds */}
                 {save.phase === "recap" && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="w-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-xl text-center"
+                    <motion.section
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className={`${panelClass} flex w-full flex-col gap-5 p-5 text-center sm:p-7`}
                     >
-                        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">
-                            Round {roundIndex} of {ROUND_ORDER.length} done
-                        </p>
-                        <div className="text-4xl font-black mb-1 text-emerald-500">{total}</div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">points so far</p>
-                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 mb-5">
-                            <p className="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-1">Next up</p>
-                            <p className="font-bold">
-                                {ROUND_META[currentKind].emoji} {ROUND_META[currentKind].label}
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                Round {roundIndex} of {ROUND_ORDER.length} done
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">{ROUND_META[currentKind].blurb}</p>
+                            <div className="mt-1 text-5xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{total}</div>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">points so far</p>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 text-left dark:border-slate-700">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                                <NextIcon size={19} aria-hidden />
+                            </span>
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Next up</p>
+                                <p className="font-bold">{ROUND_META[currentKind].label}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{ROUND_META[currentKind].blurb}</p>
+                            </div>
                         </div>
                         <button onClick={() => patch({ phase: "playing" })} className={primaryButtonClass}>
                             <span className="flex items-center justify-center gap-2">
-                                Continue <ChevronRight size={20} />
+                                Continue <ChevronRight size={20} aria-hidden />
                             </span>
                         </button>
-                    </motion.div>
+                    </motion.section>
                 )}
 
                 {/* Final score */}
                 {save.phase === "done" && (
                     <>
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="w-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-xl text-center"
+                        <motion.section
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`${panelClass} flex w-full flex-col items-center gap-5 p-5 text-center sm:p-7`}
                         >
-                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Final score</p>
-                            <div className="text-6xl font-black my-1 text-amber-500">{total}</div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">out of {TOTAL_POINTS}</p>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Final score</p>
+                                <div className="my-1 text-6xl font-extrabold tabular-nums tracking-tight">{total}</div>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">out of {TOTAL_POINTS}</p>
+                            </div>
 
                             {streak > 0 && (
-                                <div className="mb-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 text-xs font-black">
-                                    <Flame size={14} /> {streak} day streak
+                                <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-500 dark:text-orange-400">
+                                    <Flame size={15} aria-hidden /> {streak} day streak
                                 </div>
                             )}
                             {save.brokeStreak && (
-                                <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Your streak is back to zero - start a new one tomorrow.
                                 </p>
                             )}
 
-                            <div className="flex flex-col gap-2 mb-5">
-                                {ROUND_ORDER.map((kind, i) => (
-                                    <div
-                                        key={kind}
-                                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800"
-                                    >
-                                        <span className="text-lg" aria-hidden>
-                                            {ROUND_META[kind].emoji}
-                                        </span>
-                                        <span className="font-bold text-sm flex-1 text-left">{ROUND_META[kind].label}</span>
-                                        <span
-                                            className={`font-black tabular-nums ${
-                                                (save.scores[i] ?? 0) > 0 ? "text-emerald-500" : "text-red-400"
-                                            }`}
+                            <ul className="flex w-full flex-col gap-2">
+                                {ROUND_ORDER.map((kind, i) => {
+                                    const Icon = ROUND_ICONS[kind]
+                                    return (
+                                        <li
+                                            key={kind}
+                                            className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
                                         >
-                                            {save.scores[i] ?? 0}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                                            <Icon size={17} aria-hidden className="shrink-0 text-slate-500 dark:text-slate-400" />
+                                            <span className="flex-1 text-left text-sm font-bold">{ROUND_META[kind].label}</span>
+                                            <span
+                                                className={`font-bold tabular-nums ${
+                                                    (save.scores[i] ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                                                }`}
+                                            >
+                                                {save.scores[i] ?? 0}
+                                            </span>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
 
-                            <p className="text-xs text-slate-400 flex items-center justify-center gap-1.5">
-                                <RefreshCw size={12} /> A new gauntlet unlocks at midnight UTC.
+                            <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                <RefreshCw size={12} aria-hidden /> A new gauntlet unlocks at midnight UTC.
                             </p>
-                        </motion.div>
+                        </motion.section>
 
                         <DailyStanding
                             distribution={distribution}
@@ -1261,7 +1274,7 @@ export default function DailyGauntlet() {
                         <NextDailyLink current="gauntlet" today={today} />
                     </>
                 )}
-            </div>
+            </main>
         </div>
     )
 }

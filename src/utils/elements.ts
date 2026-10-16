@@ -1,4 +1,4 @@
-import { Atom, MapPin, Palette, Type, type LucideIcon } from "lucide-react"
+import { ElementFamilyIcon, LocateElementIcon, NameToSymbolIcon, SymbolToNameIcon, type ModeIcon } from "../components/ModeIcons"
 import elementsData from "../../data/elements.json"
 import { freshProgress, isMastered, mergeProgress, TARGET_STREAK, type SrProgressMap } from "./spacedRepetition"
 
@@ -175,7 +175,7 @@ export type ElementMode = {
     /** Fits on the tab. */
     short: string
     detail: string
-    icon: LucideIcon
+    icon: ModeIcon
     /** Its own progress map: knowing Fe means Iron is not knowing where Fe sits. */
     storageKey: string
     /** How the answer is given - a typed string, a cell on the table, or one of the families. */
@@ -198,7 +198,7 @@ export const ELEMENT_MODES: ElementMode[] = [
         label: "Symbol to name",
         short: "Symbol",
         detail: "See the symbol, name the element",
-        icon: Atom,
+        icon: SymbolToNameIcon,
         storageKey: "science-elements-symbol-v1",
         input: "text",
         placeholder: "Element name...",
@@ -208,7 +208,7 @@ export const ELEMENT_MODES: ElementMode[] = [
         label: "Name to symbol",
         short: "Name",
         detail: "See the element, write its symbol",
-        icon: Type,
+        icon: NameToSymbolIcon,
         storageKey: "science-elements-name-v1",
         input: "text",
         placeholder: "Symbol...",
@@ -220,7 +220,7 @@ export const ELEMENT_MODES: ElementMode[] = [
         label: "Element family",
         short: "Family",
         detail: "Alkali metal, halogen, noble gas - which is it?",
-        icon: Palette,
+        icon: ElementFamilyIcon,
         storageKey: "science-elements-category-v1",
         input: "choice",
     },
@@ -229,7 +229,7 @@ export const ELEMENT_MODES: ElementMode[] = [
         label: "Find it on the table",
         short: "Locate",
         detail: "Click the element's cell in the table",
-        icon: MapPin,
+        icon: LocateElementIcon,
         storageKey: "science-elements-locate-v1",
         input: "cell",
     },

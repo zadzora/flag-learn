@@ -1,4 +1,5 @@
-import { Ruler, Sigma, type LucideIcon } from "lucide-react"
+import { Sigma } from "lucide-react"
+import { RulerIcon, type ModeIcon } from "../components/ModeIcons"
 import { freshProgress, isMastered, mergeProgress, type SrProgressMap } from "./spacedRepetition"
 
 /**
@@ -119,7 +120,7 @@ export type QuantityMode = {
     label: string
     short: string
     detail: string
-    icon: LucideIcon
+    icon: ModeIcon
     /** Its own progress map: knowing force is F is not knowing it is in newtons. */
     storageKey: string
     placeholder: string
@@ -131,7 +132,7 @@ export const QUANTITY_MODES: QuantityMode[] = [
         label: "Quantity to SI unit",
         short: "Unit",
         detail: "See the quantity, write its SI unit",
-        icon: Ruler,
+        icon: RulerIcon,
         storageKey: "science-quantities-unit-v1",
         placeholder: "Unit...",
     },

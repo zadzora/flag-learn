@@ -35,7 +35,7 @@ import {
     ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, achievementById, allowedLook, continentOf, unlocksOf,
     type CarLook, type Continent, type Progress,
 } from "../utils/roadTripGoals"
-import { CountryCard, DriftMeter, Garage, NitroMeter, Passport, QuizCard, RallyPanel, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
+import { CountryCard, DriftMeter, Garage, Joystick, NitroMeter, Passport, QuizCard, RallyPanel, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
 import { createTripAudio, type TripAudio } from "../utils/roadTripAudio"
 import {
     LANDMARK_PALETTES, buildLandmarks, discoverAt, drawHiddenLandmarks, drawLakes, drawLandmarkLabels, lakeRings, loadLandmarkData,
@@ -147,6 +147,8 @@ const NITRO_DRAIN = 0.45
 const NITRO_ACCEL = 30 * L
 /** Top speed on nitro, as a multiple of the normal one. */
 const NITRO_TOP = 1.55
+/** How far the touch joystick must be pushed before it does anything, as a share of its reach. */
+const STICK_DEADZONE = 0.18
 
 const SKID_LIFE_S = 9
 const MAX_SKIDS = 1600
@@ -213,6 +215,8 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const [drift, setDrift] = useState<DriftView | null>(null)
     const [nitro, setNitro] = useState<NitroView>({ charge: 0, active: false })
     const [muted, setMuted] = useState(() => localStorage.getItem(SOUND_KEY) === "off")
+    /** A touch screen gets the joystick; a mouse and keyboard do not need it. */
+    const [touch] = useState(() => window.matchMedia?.("(pointer: coarse)").matches ?? false)
     const [rally, setRally] = useState<RallyView | null>(null)
     const [rallyResult, setRallyResult] = useState<RallyResultView | null>(() => (rallyMode ? finishedRally(today) : null))
     const [resultOpen, setResultOpen] = useState(true)
@@ -233,6 +237,8 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const pausedRef = useRef(false)
     /** Held by the on-screen nitro button, for touch. */
     const nitroHeldRef = useRef(false)
+    /** Where the touch joystick is pushed, -1..1 each way, or null when it is let go. */
+    const joystickRef = useRef<{ x: number; y: number } | null>(null)
     /** Hands a garage pick to the loop, and reads the garage off it. */
     const garageRef = useRef<(look: CarLook) => void>(() => {})
     const garageViewRef = useRef<() => GarageView | null>(() => null)
@@ -1103,7 +1109,17 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             let steerIn = (held("KeyD", "ArrowRight") ? 1 : 0) - (held("KeyA", "ArrowLeft") ? 1 : 0)
             const handbrake = held("Space")
 
-            if (pointer && !throttle && !brake && !steerIn) {
+            const stick = joystickRef.current
+            if (stick && !throttle && !brake && !steerIn) {
+                // The touch joystick: push it the way you want to go. The car steers itself round
+                // to that direction, and the further the push the more throttle.
+                const push = Math.hypot(stick.x, stick.y)
+                if (push > STICK_DEADZONE) {
+                    const off = wrapAngle(Math.atan2(stick.y, stick.x) - car.heading)
+                    steerIn = Math.max(-1, Math.min(1, off * 2.2))
+                    throttle = (Math.abs(off) < 2 ? 1 : 0.45) * Math.min(1, (push - STICK_DEADZONE) / 0.55)
+                }
+            } else if (pointer && !throttle && !brake && !steerIn) {
                 // Touch and mouse: hold a point and the car steers itself towards it.
                 const z = cam.zoom
                 const wx = cam.x + (pointer.x - cw / 2) / z
@@ -1848,7 +1864,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                         ) : (
                             <>
                                 <span className="hidden sm:inline">W / S gas and brake · A / D steer · Space handbrake · Shift nitro · M map</span>
-                                <span className="sm:hidden">Hold the map to drive towards it</span>
+                                <span className="sm:hidden">{touch ? "Push the joystick to drive · hold Nitro to boost" : "Hold the map to drive towards it"}</span>
                             </>
                         )}
                     </p>
@@ -1864,6 +1880,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                     {drift && <DriftMeter drift={drift} />}
                 </AnimatePresence>
                 {ready && <NitroMeter nitro={nitro} onHold={held => { nitroHeldRef.current = held }} />}
+                {ready && touch && <Joystick onMove={stick => { joystickRef.current = stick }} />}
                 <AnimatePresence>
                     {quiz && <QuizCard key={quiz.index} quiz={quiz} onPick={pickAnswer} />}
                 </AnimatePresence>
@@ -1878,6 +1895,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                         <RallyResult
                             result={rallyResult}
                             number={rally?.number ?? 0}
+                            today={today}
                             onClose={() => setResultOpen(false)}
                             standing={
                                 <DailyStanding
@@ -1887,8 +1905,10 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                                     myBucket={rallyResult.bucket}
                                     bucketLabels={RALLY_BUCKET_LABELS}
                                     accentClass="text-[#E5484D]"
-                                    footnote="Finish time - everyone drove the same start today"
+                                    footnote="Finish time - same start for everyone"
                                     solvedWord="finished"
+                                    failLabel={null}
+                                    compact
                                 />
                             }
                         />

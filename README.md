@@ -1,6 +1,6 @@
 # 🌍 Flag Learn (Geography, Science & Astronomy Quiz)
 
-An interactive educational quiz game built with React, TypeScript, and Tailwind CSS. Master world geography, flags, capitals, and even the night sky through engaging game modes and spaced repetition!
+An interactive educational quiz game built with React, TypeScript, and Tailwind CSS. Master world geography, flags, capitals, and even the night sky through engaging game modes and spaced repetition - or just drive a car around the world and watch the flags appear!
 
 ---
 
@@ -21,7 +21,9 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **📅 Daily Flagle:** A new mystery flag to guess every single day.
 - **🧭 Daily Deduction:** Name the mystery country in six guesses. Every guess comes back answered on five fronts: **continent** and **region** (green for a match, amber when you have the right continent but the wrong corner of it), **population** and **area** with an arrow pointing toward the answer's, and a **compass bearing** with a closeness percentage — so even a wild opening guess tells you which way to walk. All 197 countries in the pool are legal guesses, the answer is drawn from 150 well-known ones, and the result copies out as a spoiler-free emoji grid.
 - **🧩 Daily Connections:** Sixteen countries, four hidden groups of four. Sort them all with at most four mistakes — a brand new grid every day, built from regions, capitals, currencies, country names, size, and flag design.
+- **🏁 Daily Rally:** Road Trip as a race. Everyone starts at the same unmarked spot on the covered world map, with no zoom-out and only three target countries named; read the flags you uncover to work out where you are, then drive to all three as fast as you can. The clock starts on your first input and keeps running through a reload, so scouting first does not pay. Every finish time lands in the shared "Today's Standing" panel.
 - **🗺️ Map Locator:** Interactive SVG world map. Find the correct country by clicking on its territory.
+- **🚗 Road Trip:** Drive a little 3D car around a world map that starts covered, and the flags show through wherever you have been. Real car handling - W/S to drive and brake, A/D to steer, drifts that the car slides into on its own, nitro earned from drifting - and a touch joystick on phones. Oceans are walls you bounce off; a handful of ports (Calais-Dover, Lisbon-New York, Dakar-Recife, Johor-Darwin, Kamchatka-Alaska) sail you between continents, and smaller islands get their own automatic ferries. Uncover 98% of a country to guess it and reveal its flag, stamp capitals into your passport, discover hidden rivers, lakes, ranges and peaks, earn badges and unlock cars and paints in the garage. Progress is saved in your browser.
 - **⚔️ PvP Battle:** Challenge your friends in real-time multiplayer flag battles.
 - **🗡️ World Conqueror:** A world map fought over one country at a time, asynchronously — nobody has to be online at once, but there is a real opponent behind every conquest. Claim a homeland, then push only at the border of your own empire. Empty land falls to whoever answers its three questions in time; land somebody already holds has to be **besieged** — you play for a score, its owner gets 24 hours to answer the *same* questions and beat it, and it changes hands if they fall short or never show up. The questions come from the target's own continent, so the fight stays where it is happening on the map. Defending is free and never spends an attack. Ten attacks a day, a one-week season, then the map wipes, the final table goes out to everyone, and the champion is written into a permanent Hall of Fame. The **Enabling the Firebase modes** section below covers the one-off setup and the design notes.
 - **🔗 Border Chain:** *(needs the one-off Firebase setup below)* One global table that is already running when you arrive. A country sits on the board; anyone at the table can take the next link by naming a country that borders it and has not been used yet, and the fastest correct answer takes it. Nobody may take two links in a row, an obscure link is worth more than an obvious one, and the chain runs until every neighbour of the country it is standing on has already been used — a dead end, usually somewhere around twenty countries in. It is **not turn-based**: ten seats taking ten-second turns would leave ninety seconds between your goes. Empty seats are held by bots named after people who had to work the borders out for real, and they stand further back the more humans are at the table.
@@ -47,6 +49,8 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **A board derived from the map, not hand-drawn:** World Conqueror's 168 territories and their borders come out of `public/world-map.json` in three passes (`scripts/gen-neighbours.mjs`): land borders from shared TopoJSON arcs — a shared arc *is* a shared border — then sea crossings between coastlines within 400 km **whose shortest line does not cross a third country**, then a top-up so no island falls below three neighbours. Without that middle test Britain ends up bordering landlocked Luxembourg; without the pass at all the Old World reaches the Americas only through French Guiana, and Russia does not touch Alaska. The generator refuses to write a graph that is not fully connected, so no homeland can ever be boxed in.
 - **Questions that survive being on a map:** World Conqueror asks about other countries, never the one being taken — that one is on screen, so its continent, its neighbours and its flag are all free information. What the territory sets is where the questions come from: its **own continent**, narrowed to a band around its `difficulty` rating in `flags.json`. Taking ground in Africa means answering about Africa, and about countries as obscure as the one being taken, so a push into the Pacific is a harder push than one across Europe. The three are drawn when the attack starts, never derived from the territory: a fixed set could be looked up once and pasted back in half a second, which scored ~968 and shrank the next attacker's clock to nothing.
 - **Multiplayer that holds together without a server:** Border Chain runs one live table with no backend of its own. Its chain is stored as a comma-delimited string rather than a list, because that is the only shape the database rules can actually police — `newChain === oldChain + code + ','` proves a write only ever appends, and a `contains` check proves the country is new; neither is expressible over a list, whose indices the rules cannot address. The bots that hold the empty seats are a pure function of the chain's state, so every browser at the table derives the same move and whichever one writes it, they agree — no host, no election, and the rules turn every loser of that race into a no-op.
+- **A map you can drive on:** Road Trip projects the world map with Equal Earth, which is equal-area, so the "% uncovered" treats every region fairly - a Mercator map would make Greenland worth more than Africa. What counts as road is flood-filled from the ports rather than listed, so adding a port to an island is all it takes to make it drivable. The uncovered ground is saved as the trail you drove, not as a bitmap, so a whole trip fits comfortably in `localStorage`.
+- **One rally for everyone:** The Daily Rally derives its start and its three targets from the date alone, so every player drives the same course. Targets are capitals a few minutes' drive away over land, never across a strait, and the start is never next to a port.
 - **Progress & Streaks:** Saves your learning progress, mastered items, and a separate day streak per daily mode locally. Finishing one daily hands you straight to the next one you have not played today instead of dead-ending on "come back tomorrow", and each mode closes with the same anonymous "Today's Standing" panel showing where your result landed among everyone who played.
 - **Practice Mode:** Review items you've already mastered with a built-in timer and mistake counter.
 - **Highscore Leaderboards:** Firebase-backed global boards per category (flags / capitals / US states); personal bests keyed per browser.
@@ -301,10 +305,23 @@ quantities, formulas and symbols beside the English ones, and on the quantities
 page a Slovak unit name (`sekunda`, `ampér`, `mól`) is accepted while it is on.
 `scienceLang.list()` prints the translations of whichever page is open.
 
+[`data/capitals.json`](data/capitals.json) holds each country's capital and its
+coordinates, used by Road Trip for capital stamps and by the Daily Rally to
+choose its start and targets. [`public/landmarks.json`](public/landmarks.json)
+holds the rivers, lakes, mountain ranges and peaks hidden on the Road Trip map.
+Both come from [Natural Earth](https://www.naturalearthdata.com/) (public
+domain). Regenerate them with:
+
+```bash
+node scripts/gen-capitals.mjs    # data/capitals.json
+node scripts/gen-landmarks.mjs   # public/landmarks.json
+```
+
 Sources (full details in [`data/CREDITS.md`](data/CREDITS.md)):
 
 - Names, capital, area, currency, region — [mledoze/countries](https://github.com/mledoze/countries) ([ODbL 1.0](https://opendatacommons.org/licenses/odbl/1.0/))
 - Population — [World Bank, SP.POP.TOTL](https://data.worldbank.org/indicator/SP.POP.TOTL) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
+- Capitals, rivers, lakes, mountain ranges and peaks — [Natural Earth](https://www.naturalearthdata.com/) (public domain)
 
 > Previously this data was fetched live from the REST Countries API, which has
 > since been deprecated (its endpoints now redirect to a notice and are
@@ -317,5 +334,5 @@ Flags provided by Flagpedia.net.
 
 Constellation mythological art provided by NOIRLab/NSF/AURA.
 
-Country data: mledoze/countries (ODbL 1.0) and the World Bank (CC BY 4.0). See [`data/CREDITS.md`](data/CREDITS.md).
+Country data: mledoze/countries (ODbL 1.0) and the World Bank (CC BY 4.0). Capitals and Road Trip landmarks: Natural Earth (public domain). See [`data/CREDITS.md`](data/CREDITS.md).
     

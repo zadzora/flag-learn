@@ -21,7 +21,7 @@ export const RALLY_TARGETS = 3
 
 /** Upper bounds of the standing buckets, in seconds; the last bucket is everything slower. */
 const BANDS_S = [60, 90, 120, 180, 240, 300, 420, 600]
-export const RALLY_BUCKET_LABELS = ["Under 1:00", "Under 1:30", "Under 2:00", "Under 3:00", "Under 4:00", "Under 5:00", "Under 7:00", "Under 10:00", "10:00 or more"]
+export const RALLY_BUCKET_LABELS = ["<1:00", "<1:30", "<2:00", "<3:00", "<4:00", "<5:00", "<7:00", "<10:00", "10:00+"]
 
 export function rallyBucket(ms: number): number {
     const s = ms / 1000

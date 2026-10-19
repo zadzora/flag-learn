@@ -17,6 +17,10 @@ type Props = {
     footnote?: string
     /** Wording for the share of players who did not land in the failure bucket. */
     solvedWord?: string
+    /** Label of the failure row; null leaves it out, for a mode nobody can fail. */
+    failLabel?: string | null
+    /** Thinner rows and a wider label column, for a long axis inside a dialog. */
+    compact?: boolean
 }
 
 /**
@@ -32,9 +36,11 @@ export default function DailyStanding({
     accentClass,
     footnote,
     solvedWord = "solved it",
+    failLabel = "X",
+    compact = false,
 }: Props) {
     const maxBucketCount = distribution
-        ? Math.max(...distribution.solved, distribution.failed, 1)
+        ? Math.max(...distribution.solved, failLabel === null ? 0 : distribution.failed, 1)
         : 0
 
     const rows = distribution
@@ -46,19 +52,21 @@ export default function DailyStanding({
                   isMine: myBucket === i + 1,
                   won: true,
               })),
-              {
-                  key: "fail",
-                  label: "X",
-                  count: distribution.failed,
-                  isMine: myBucket === null,
-                  won: false,
-              },
+              ...(failLabel === null
+                  ? []
+                  : [{
+                        key: "fail",
+                        label: failLabel,
+                        count: distribution.failed,
+                        isMine: myBucket === null,
+                        won: false,
+                    }]),
           ]
         : []
 
     return (
-        <div className="w-full rounded-[10px] border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-            <h3 className="mb-4 flex items-center gap-2 !text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        <div className={`w-full rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 ${compact ? "p-4" : "p-5"}`}>
+            <h3 className={`flex items-center gap-2 !text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${compact ? "mb-2" : "mb-4"}`}>
                 <BarChart3 size={14} aria-hidden /> Today&apos;s Standing
             </h3>
 
@@ -77,16 +85,16 @@ export default function DailyStanding({
             ) : (
                 <>
                     <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
-                        <span className={`text-4xl font-extrabold tracking-[-0.02em] ${accentClass}`}>Top {standing.topPercent}%</span>
+                        <span className={`${compact ? "text-3xl" : "text-4xl"} font-extrabold tracking-[-0.02em] ${accentClass}`}>Top {standing.topPercent}%</span>
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">of today&apos;s players</span>
                     </div>
-                    <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                    <p className={`text-sm text-slate-500 dark:text-slate-400 ${compact ? "mb-2" : "mb-4"}`}>
                         You finished ahead of{" "}
                         <strong className="text-slate-900 dark:text-white">{standing.beatPercent}%</strong> of them
                         {standing.tiedCount > 1 && <> - {standing.tiedCount} players got the same result</>}.
                     </p>
 
-                    <div className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    <div className={`flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${compact ? "mb-2" : "mb-4"}`}>
                         <span className="flex items-center gap-1.5">
                             <Users size={13} aria-hidden /> {distribution.total} {distribution.total === 1 ? "player" : "players"} today
                         </span>
@@ -95,24 +103,24 @@ export default function DailyStanding({
                         </span>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className={`flex flex-col ${compact ? "gap-1" : "gap-1.5"}`}>
                         {rows.map(row => (
                             <div key={row.key} className="flex items-center gap-2">
                                 <span
-                                    className={`w-9 text-center text-xs font-bold tabular-nums ${
+                                    className={`shrink-0 text-center font-bold tabular-nums ${compact ? "w-12 whitespace-nowrap text-[11px]" : "w-9 text-xs"} ${
                                         row.isMine ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"
                                     }`}
                                 >
                                     {row.label}
                                 </span>
-                                <div className="h-5 flex-1 overflow-hidden rounded-sm bg-slate-100 dark:bg-slate-900">
+                                <div className={`${compact ? "h-4" : "h-5"} flex-1 overflow-hidden rounded-sm bg-slate-100 dark:bg-slate-900`}>
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{
                                             width: `${Math.max(row.count > 0 ? 8 : 0, (row.count / maxBucketCount) * 100)}%`,
                                         }}
                                         transition={{ duration: 0.5, ease: "easeOut" }}
-                                        className={`flex h-full items-center justify-end rounded-sm pr-2 text-[10px] font-bold ${
+                                        className={`flex h-full items-center justify-end rounded-sm text-[10px] font-bold ${row.count > 0 ? "pr-2" : ""} ${
                                             row.isMine
                                                 ? row.won
                                                     ? "bg-emerald-500 text-white"
@@ -128,7 +136,7 @@ export default function DailyStanding({
                     </div>
 
                     {footnote && (
-                        <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{footnote}</p>
+                        <p className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${compact ? "mt-2" : "mt-3"}`}>{footnote}</p>
                     )}
                 </>
             )}

@@ -9,6 +9,7 @@ import { Award, Check, Flame, Globe2, Lock, Mountain, Share2, Stamp, Trophy, X }
 import type { Choice } from "../utils/roadTripLog"
 import type { LandmarkKind } from "../utils/roadTripLandmarks"
 import { formatRallyTime } from "../utils/roadTripRally"
+import NextDailyLink from "./NextDailyLink"
 import { drawCar } from "../utils/roadTripDraw"
 import type { CarLook, CarModel, Paint } from "../utils/roadTripGoals"
 
@@ -251,11 +252,13 @@ export function RallyPanel({ rally }: { rally: RallyView }) {
 }
 
 /** The finished rally: the time, where it lands among today's players, the streak, a share line. */
-export function RallyResult({ result, number, standing, onClose }: {
+export function RallyResult({ result, number, standing, today, onClose }: {
     result: RallyResultView
     number: number
     /** Rendered by the page, which owns the live subscription. */
     standing: ReactNode
+    /** For the hand-off to the next unfinished daily, like every other daily mode's end screen. */
+    today: string
     onClose: () => void
 }) {
     const [copied, setCopied] = useState(false)
@@ -274,17 +277,19 @@ export function RallyResult({ result, number, standing, onClose }: {
                 initial={{ y: 24, scale: 0.95 }}
                 animate={{ y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 360, damping: 28 }}
-                className={`my-auto w-full max-w-[460px] p-5 ${PANEL}`}
+                className={`my-auto w-full max-w-[460px] p-4 ${PANEL}`}
                 role="dialog"
                 aria-label="Rally finished"
             >
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Rally #{number} finished</p>
-                <p className="mt-1 text-5xl font-black tabular-nums tracking-tight">{formatRallyTime(result.ms)}</p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    {result.streak > 1 ? `${result.streak}-day streak` : "Come back tomorrow for a new start"}
-                </p>
-                <div className="mt-4">{standing}</div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3">
+                    <p className="text-4xl font-black tabular-nums tracking-tight">{formatRallyTime(result.ms)}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {result.streak > 1 ? `${result.streak}-day streak` : "Come back tomorrow for a new start"}
+                    </p>
+                </div>
+                <div className="mt-3">{standing}</div>
+                <div className="mt-3 flex gap-2">
                     <button
                         type="button"
                         onClick={share}
@@ -301,6 +306,9 @@ export function RallyResult({ result, number, standing, onClose }: {
                         Keep exploring
                     </button>
                 </div>
+                <div className="mt-3">
+                    <NextDailyLink current="rally" today={today} />
+                </div>
             </motion.div>
         </motion.div>
     )
@@ -313,7 +321,7 @@ export function DriftMeter({ drift }: { drift: DriftView }) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="pointer-events-none absolute inset-x-0 bottom-[10rem] mx-auto flex w-fit items-baseline gap-2 rounded-full border border-amber-300 bg-white px-4 py-1.5 dark:border-amber-500/60 dark:bg-slate-800"
+            className="pointer-events-none absolute inset-x-0 bottom-[14.5rem] mx-auto flex w-fit items-baseline sm:bottom-[10rem] gap-2 rounded-full border border-amber-300 bg-white px-4 py-1.5 dark:border-amber-500/60 dark:bg-slate-800"
             aria-live="off"
         >
             <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300">Drift</span>
@@ -327,6 +335,56 @@ export function DriftMeter({ drift }: { drift: DriftView }) {
             </motion.span>
             <span className="text-base font-bold tabular-nums">{drift.points.toLocaleString()}</span>
         </motion.div>
+    )
+}
+
+/** How far the knob travels from the centre, in CSS pixels. */
+const STICK_REACH = 40
+
+/**
+ * The on-screen joystick for touch. It reports where it is pushed as x and y
+ * from -1 to 1 (null when let go); the page turns that into steering towards
+ * that direction and a throttle as strong as the push.
+ */
+export function Joystick({ onMove }: { onMove: (stick: { x: number; y: number } | null) => void }) {
+    const [knob, setKnob] = useState({ x: 0, y: 0 })
+    const centre = useRef<{ x: number; y: number } | null>(null)
+
+    const follow = (e: React.PointerEvent) => {
+        if (!centre.current) return
+        let dx = e.clientX - centre.current.x, dy = e.clientY - centre.current.y
+        const d = Math.hypot(dx, dy)
+        if (d > STICK_REACH) { dx *= STICK_REACH / d; dy *= STICK_REACH / d }
+        setKnob({ x: dx, y: dy })
+        onMove({ x: dx / STICK_REACH, y: dy / STICK_REACH })
+    }
+    const release = () => {
+        centre.current = null
+        setKnob({ x: 0, y: 0 })
+        onMove(null)
+    }
+
+    return (
+        <div
+            role="presentation"
+            aria-label="Joystick"
+            onPointerDown={e => {
+                e.currentTarget.setPointerCapture(e.pointerId)
+                const r = e.currentTarget.getBoundingClientRect()
+                centre.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+                follow(e)
+            }}
+            onPointerMove={follow}
+            onPointerUp={release}
+            onPointerCancel={release}
+            onContextMenu={e => e.preventDefault()}
+            className="pointer-events-auto absolute bottom-[7.5rem] left-4 z-10 h-28 w-28 touch-none select-none rounded-full border border-slate-300 bg-white/55 dark:border-slate-600 dark:bg-slate-800/55"
+        >
+            <span
+                className="absolute left-1/2 top-1/2 block h-12 w-12 rounded-full border border-slate-300 bg-white shadow-md dark:border-slate-500 dark:bg-slate-700"
+                style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
+            />
+        </div>
     )
 }
 
@@ -373,7 +431,7 @@ export function TripToast({ toast }: { toast: Toast }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className={`pointer-events-none absolute inset-x-0 bottom-[7.5rem] mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-bold dark:border-slate-700 dark:bg-slate-800 ${tone}`}
+            className={`pointer-events-none absolute inset-x-0 bottom-[12rem] mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full sm:bottom-[7.5rem] border border-slate-200 bg-white px-4 py-1.5 text-sm font-bold dark:border-slate-700 dark:bg-slate-800 ${tone}`}
             role="status"
         >
             {toast.tone === "stamp" && <Stamp size={15} aria-hidden />}

@@ -114,8 +114,13 @@ const SAIL_MAX_S = 2.6
 const BITMAP_BUDGET_MS = 6
 /** Above this zoom the flags are cut live from a sharp raster instead of drawn from the small bitmaps. */
 const CLOSE_ZOOM = 2.4
-/** Close-up flag rasters kept around; each is a few megabytes. */
-const RASTER_CACHE = 24
+/**
+ * Close-up flag rasters kept around; each is about 7 MB. Phones get far fewer:
+ * mobile Safari caps the memory all canvases and bitmaps may share, and two
+ * dozen of these alone can blank or crash the page there. A phone's small
+ * screen shows only a few countries at once anyway.
+ */
+const RASTER_CACHE = typeof window !== "undefined" && Math.min(window.screen.width, window.screen.height) < 700 ? 8 : 24
 
 /** Share of a country's road that uncovers the rest of it. The last scraps of coast are a chore, not a game. */
 const COUNTRY_DONE = 0.98

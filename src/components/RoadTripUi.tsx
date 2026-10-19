@@ -241,7 +241,8 @@ export function RallyPanel({ rally }: { rally: RallyView }) {
                                 </span>
                             )}
                         </span>
-                        <span className="truncate text-xs font-semibold">{t.label}</span>
+                        {/* Wraps rather than truncates: "Roma..." on a phone hides which country to find. */}
+                        <span className="min-w-0 text-[11px] font-semibold leading-tight sm:text-xs">{t.label}</span>
                     </li>
                 ))}
             </ul>

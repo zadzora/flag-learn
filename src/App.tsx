@@ -24,6 +24,7 @@ import Science from "./pages/Science"
 import PeriodicTableGame from "./pages/PeriodicTableGame"
 import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
 import FormulasGame from "./pages/FormulasGame"
+import RoadTrip from "./pages/RoadTrip"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -51,6 +52,9 @@ export default function App() {
                 <Route path="/border-guess" element={<BorderGuessGame />} />
                 <Route path="/border-chain" element={<BorderChain />} />
                 <Route path="/world-conqueror" element={<FlagWars />} />
+                {/* Keyed: the same page in two modes must not share one mounted instance. */}
+                <Route path="/road-trip" element={<RoadTrip key="trip" />} />
+                <Route path="/daily-rally" element={<RoadTrip key="rally" mode="rally" />} />
 
                 {/* Science - no flags, no map, its own wing under /science. */}
                 <Route path="/science" element={<Science />} />

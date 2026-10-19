@@ -1,4 +1,5 @@
-import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyGauntletIcon, type ModeIcon } from "../components/ModeIcons"
+import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyGauntletIcon, DailyRallyIcon } from "../components/DailyModeIcons"
+import type { ModeIcon } from "../components/ModeIcons"
 import { STREAK_KEYS } from "./dailyStreak"
 
 /**
@@ -14,7 +15,7 @@ import { STREAK_KEYS } from "./dailyStreak"
  * instead of dead-ending on "come back tomorrow".
  */
 
-export type DailyModeKey = "connections" | "deduction" | "flagle" | "gauntlet"
+export type DailyModeKey = "connections" | "deduction" | "flagle" | "gauntlet" | "rally"
 
 export type DailyMode = {
     key: DailyModeKey
@@ -97,6 +98,20 @@ export const DAILY_MODES: DailyMode[] = [
         streakKey: STREAK_KEYS.gauntlet,
         saveKeys: ["flag-master-gauntlet-save"],
         isFinished: save => save.phase === "done",
+    },
+    {
+        key: "rally",
+        to: "/daily-rally",
+        label: "Daily Rally",
+        tagline: "Unknown start, three countries, against the clock",
+        icon: DailyRallyIcon,
+        detail: "Start somewhere unknown on the covered map and race to three countries",
+        accent: "bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400",
+        hover: "hover:border-rose-400 dark:hover:border-rose-500",
+        badge: "NEW",
+        streakKey: STREAK_KEYS.rally,
+        saveKeys: ["road-trip-rally-save"],
+        isFinished: save => save.status === "done",
     },
 ]
 

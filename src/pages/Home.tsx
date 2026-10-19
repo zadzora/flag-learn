@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
-    ArrowRight, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
+    ArrowRight, Car, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
 } from "lucide-react"
 import {
     AtomIcon, BlurModeIcon, BorderChainIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
@@ -42,6 +42,7 @@ const MULTIPLAYER: Entry[] = [
 ]
 
 const MORE_MODES: Entry[] = [
+    { to: "/road-trip", label: "Road Trip", detail: "Drive around the world map and uncover the flags beneath it", icon: Car, badge: "New" },
     { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: PaintFlagIcon },
     { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border", icon: BorderGuessIcon },
     { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - which country is higher", icon: HigherLowerIcon },
@@ -109,13 +110,10 @@ function heroDeck<T extends { mode: DeckMode; mastered: number; total: number; s
 function readSnapshot() {
     const today = todayUtc()
     const streaks = Object.fromEntries(Object.values(STREAK_KEYS).map(key => [key, activeStreak(readStreak(key), today)])) as Record<string, number>
-    const pool = seeded(WALL_POOL, today)
-    const dailies = DAILY_MODES.map((mode, i) => ({
+    const dailies = DAILY_MODES.map(mode => ({
         mode,
         done: isDailyFinished(mode, today),
         streak: streaks[mode.streakKey] ?? 0,
-        // Decorative only: three flags of the day, never the puzzle's answer.
-        art: pool.slice(i * 3, i * 3 + 3),
     }))
     const decks = DECKS.map(deck => ({ ...deck, ...deckProgress(deck) }))
     return { streaks, dailies, decks, hero: heroDeck(decks), wall: seeded(WALL_POOL, `${today}-wall`) }
@@ -333,17 +331,15 @@ export default function Home() {
                     ))}
                 </ul>
                 <SectionHead id="today" title="Today" aside={`${solved} of ${dailies.length} solved · resets 00:00 UTC`} />
-                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {dailies.map(({ mode, done, streak, art }) => (
+                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    {dailies.map(({ mode, done, streak }) => (
                         <li key={mode.key}>
                             <Link
                                 to={mode.to}
                                 className="group flex h-full flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white transition-[border-color,translate] duration-200 hover:-translate-y-0.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#121829] dark:hover:border-[#3A4670]"
                             >
-                                <div className="relative flex h-[118px] overflow-hidden">
-                                    {art.map(src => (
-                                        <img key={src} src={src} alt="" className="h-full min-w-0 flex-1 object-cover" />
-                                    ))}
+                                <div className="relative flex h-[118px] items-center justify-center border-b border-slate-200 bg-slate-50 dark:border-[#1C2338] dark:bg-[#0F1424]">
+                                    <mode.icon size={84} aria-hidden />
                                     {done && (
                                         <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
                                             <Check size={13} strokeWidth={3} aria-hidden /> Solved

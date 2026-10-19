@@ -265,6 +265,97 @@
 }
 
 /*
+ * The daily icons (components/DailyModeIcons.tsx) move one part of themselves
+ * on hover: once, on the way in, never looping. They answer to the icon itself
+ * and to any `.group` link around it, so hovering anywhere on a card plays it.
+ * Origins are set inline in viewBox units, which is what `px` means inside an
+ * SVG with the default `transform-box: view-box`.
+ */
+@keyframes di-snap {
+    0%, 100% { transform: scale(1); }
+    40% { transform: scale(1.05, 1.2); }
+    70% { transform: scale(0.98, 0.94); }
+}
+@keyframes di-hop {
+    0%, 100% { transform: translateY(0); }
+    45% { transform: translateY(-2.6px); }
+}
+@keyframes di-tilt {
+    0%, 100% { transform: rotate(0); }
+    40% { transform: rotate(-8deg) translate(-0.6px, -0.6px); }
+}
+@keyframes di-swing {
+    0%, 100% { transform: rotate(0); }
+    30% { transform: rotate(-50deg); }
+    58% { transform: rotate(24deg); }
+    80% { transform: rotate(-8deg); }
+}
+@keyframes di-cloth {
+    0%, 100% { transform: skewY(0) scaleX(1); }
+    30% { transform: skewY(-8deg) scaleX(0.95); }
+    65% { transform: skewY(5deg) scaleX(1.02); }
+}
+@keyframes di-focus {
+    0%, 100% { transform: translate(0, 0); }
+    45% { transform: translate(var(--dx), var(--dy)); }
+}
+@keyframes di-twinkle {
+    0%, 100% { transform: scale(1) rotate(0); }
+    50% { transform: scale(1.45) rotate(90deg); }
+}
+@keyframes di-goal {
+    0%, 100% { fill: #fff; }
+    40%, 70% { fill: #fde68a; }
+}
+@keyframes di-car {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    30% { transform: translate(2px, -0.8px) rotate(-4deg); }
+    60% { transform: translate(0.8px, 0) rotate(1deg); }
+}
+@keyframes di-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes di-road {
+    to { stroke-dashoffset: -8.4; }
+}
+@keyframes di-tick {
+    to { transform: rotate(360deg); }
+}
+@keyframes di-drop {
+    0%, 60%, 100% { transform: translateY(0); }
+    35% { transform: translateY(-3.2px); }
+    78% { transform: translateY(-1px); }
+}
+@keyframes di-shadow {
+    0%, 60%, 100% { transform: scale(1); }
+    35% { transform: scale(0.55); }
+}
+@keyframes di-speed {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    45% { transform: translateX(-2.4px); opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :is(.group:hover, .group:focus-visible, .di:hover) {
+        & .di-snap { animation: di-snap 520ms cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+        & .di-hop { animation: di-hop 420ms ease-out both; }
+        & .di-tilt { animation: di-tilt 640ms ease-in-out both; }
+        & .di-swing { animation: di-swing 760ms ease-in-out both; }
+        & .di-cloth { animation: di-cloth 700ms ease-in-out both; }
+        & .di-focus { animation: di-focus 520ms ease-in-out both; }
+        & .di-twinkle { animation: di-twinkle 600ms ease-in-out 120ms both; }
+        & .di-goal { animation: di-goal 700ms ease-in-out 300ms both; }
+        & .di-car { animation: di-car 560ms ease-out both; }
+        & .di-spin { animation: di-spin 560ms ease-out both; }
+        & .di-road { animation: di-road 560ms linear both; }
+        & .di-tick { animation: di-tick 700ms cubic-bezier(0.5, 0, 0.3, 1) both; }
+        & .di-drop { animation: di-drop 640ms ease-out 140ms both; }
+        & .di-shadow { animation: di-shadow 640ms ease-out 140ms both; }
+        & .di-speed { animation: di-speed 560ms ease-out both; }
+    }
+}
+
+/*
  * Blur is off everywhere, but an element still carrying `backdrop-filter:
  * blur(0px)` is a backdrop root, and fading one in or out (every dialog's dim
  * layer did) makes Chrome repaint everything beneath it on each frame. No

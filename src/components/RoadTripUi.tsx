@@ -251,6 +251,20 @@ export function RallyPanel({ rally }: { rally: RallyView }) {
     )
 }
 
+/** The day's fastest finish, in gold above the standing's bars. */
+export function RallyRecord({ ms, mine }: { ms: number; mine: boolean }) {
+    return (
+        <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-gradient-to-r from-amber-100 to-amber-50 px-2.5 py-1.5 dark:border-amber-400/40 dark:from-amber-400/20 dark:to-amber-400/5">
+            <Trophy size={15} className="shrink-0 text-amber-500 dark:text-amber-300" aria-hidden />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-200">Fastest today</span>
+            {mine && (
+                <span className="rounded-sm bg-amber-500 px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-white dark:bg-amber-400 dark:text-slate-900">You</span>
+            )}
+            <span className="ml-auto text-base font-black tabular-nums text-amber-600 dark:text-amber-300">{formatRallyTime(ms)}</span>
+        </div>
+    )
+}
+
 /** The finished rally: the time, where it lands among today's players, the streak, a share line. */
 export function RallyResult({ result, number, standing, today, onClose }: {
     result: RallyResultView

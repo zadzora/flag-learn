@@ -19,6 +19,9 @@
       ".read": true,
       "$game": {
         "$date": {
+          "best": {
+            ".write": "$game.matches(/^[a-z0-9-]{1,24}$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.isNumber() && newData.val() >= 1000 && newData.val() < 86400000 && (!data.exists() || newData.val() < data.val())"
+          },
           "$bucket": {
             ".write": "$game.matches(/^[a-z0-9-]{1,24}$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $bucket.matches(/^(g[1-9]|fail)$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
             ".validate": "newData.isNumber() && newData.val() >= 0"

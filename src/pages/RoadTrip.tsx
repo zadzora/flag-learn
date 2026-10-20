@@ -35,7 +35,7 @@ import {
     ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, achievementById, allowedLook, continentOf, unlocksOf,
     type CarLook, type Continent, type Progress,
 } from "../utils/roadTripGoals"
-import { CountryCard, DriftMeter, Garage, Joystick, NitroMeter, Passport, QuizCard, RallyPanel, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
+import { CountryCard, DriftMeter, Garage, Joystick, NitroMeter, Passport, QuizCard, RallyPanel, RallyRecord, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
 import { createTripAudio, type TripAudio } from "../utils/roadTripAudio"
 import {
     LANDMARK_PALETTES, buildLandmarks, discoverAt, drawHiddenLandmarks, drawLakes, drawLandmarkLabels, lakeRings, loadLandmarkData,
@@ -46,7 +46,9 @@ import {
 } from "../utils/roadTripRally"
 import { getTodayString } from "../utils/dailySeed"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
-import { computeStanding, submitDailyResult, subscribeDailyStats, type DailyDistribution } from "../utils/dailyStats"
+import {
+    computeStanding, submitDailyBest, submitDailyResult, subscribeDailyBest, subscribeDailyStats, type DailyDistribution,
+} from "../utils/dailyStats"
 import DailyStanding from "../components/DailyStanding"
 import { capitalOf, capitalPoints, emptyLog, loadLog, quizChoices, saveLog, type Choice } from "../utils/roadTripLog"
 
@@ -221,6 +223,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const [rallyResult, setRallyResult] = useState<RallyResultView | null>(() => (rallyMode ? finishedRally(today) : null))
     const [resultOpen, setResultOpen] = useState(true)
     const [distribution, setDistribution] = useState<DailyDistribution | null>(null)
+    const [bestMs, setBestMs] = useState<number | null>(null)
     const [statsError, setStatsError] = useState(false)
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -1808,6 +1811,14 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
         if (!finished) return
         return subscribeDailyStats(RALLY_GAME_KEY, today, RALLY_BUCKET_LABELS.length, setDistribution, () => setStatsError(true))
     }, [finished, today])
+    // The day's record. Offered again whenever a finished result is shown: the write only lands
+    // when it beats the stored time, and a run finished before the record existed still counts.
+    const myMs = rallyMode ? rallyResult?.ms ?? null : null
+    useEffect(() => {
+        if (myMs === null) return
+        submitDailyBest(RALLY_GAME_KEY, today, myMs).catch(() => {})
+        return subscribeDailyBest(RALLY_GAME_KEY, today, setBestMs)
+    }, [myMs, today])
     const standing = useMemo(
         () => (distribution && rallyResult ? computeStanding(distribution, rallyResult.bucket) : null),
         [distribution, rallyResult],
@@ -1909,6 +1920,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                                     solvedWord="finished"
                                     failLabel={null}
                                     compact
+                                    record={bestMs !== null && <RallyRecord ms={bestMs} mine={Math.round(rallyResult.ms) === bestMs} />}
                                 />
                             }
                         />

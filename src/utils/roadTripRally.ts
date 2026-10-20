@@ -19,9 +19,12 @@ export const RALLY_SAVE_KEY = "road-trip-rally-save"
 export const RALLY_TRIP_KEY = "road-trip-rally-trip"
 export const RALLY_TARGETS = 3
 
-/** Upper bounds of the standing buckets, in seconds; the last bucket is everything slower. */
-const BANDS_S = [60, 90, 120, 180, 240, 300, 420, 600]
-export const RALLY_BUCKET_LABELS = ["<1:00", "<1:30", "<2:00", "<3:00", "<4:00", "<5:00", "<7:00", "<10:00", "10:00+"]
+/**
+ * Upper bounds of the standing buckets, in seconds; the last bucket is everything slower.
+ * A practised run takes well under a minute, so the bands are fine at the fast end.
+ */
+const BANDS_S = [10, 15, 20, 30, 45, 60, 90, 120]
+export const RALLY_BUCKET_LABELS = ["<0:10", "<0:15", "<0:20", "<0:30", "<0:45", "<1:00", "<1:30", "<2:00", "2:00+"]
 
 export function rallyBucket(ms: number): number {
     const s = ms / 1000

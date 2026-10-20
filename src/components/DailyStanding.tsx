@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
 import { BarChart3, Users } from "lucide-react"
+import type { ReactNode } from "react"
 import type { DailyDistribution, DailyStanding as Standing } from "../utils/dailyStats"
 
 type Props = {
@@ -21,6 +22,8 @@ type Props = {
     failLabel?: string | null
     /** Thinner rows and a wider label column, for a long axis inside a dialog. */
     compact?: boolean
+    /** Shown above the bars - e.g. the day's best time - and to the first player too. */
+    record?: ReactNode
 }
 
 /**
@@ -38,6 +41,7 @@ export default function DailyStanding({
     solvedWord = "solved it",
     failLabel = "X",
     compact = false,
+    record,
 }: Props) {
     const maxBucketCount = distribution
         ? Math.max(...distribution.solved, failLabel === null ? 0 : distribution.failed, 1)
@@ -79,9 +83,12 @@ export default function DailyStanding({
                     Loading today&apos;s results...
                 </p>
             ) : !standing || distribution.total < 2 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                    You are the first player today - come back later to see how you compare.
-                </p>
+                <>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        You are the first player today - come back later to see how you compare.
+                    </p>
+                    {record && <div className="mt-3">{record}</div>}
+                </>
             ) : (
                 <>
                     <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
@@ -102,6 +109,8 @@ export default function DailyStanding({
                             {Math.round(standing.solveRate * 100)}% {solvedWord}
                         </span>
                     </div>
+
+                    {record && <div className={compact ? "mb-2" : "mb-3"}>{record}</div>}
 
                     <div className={`flex flex-col ${compact ? "gap-1" : "gap-1.5"}`}>
                         {rows.map(row => (

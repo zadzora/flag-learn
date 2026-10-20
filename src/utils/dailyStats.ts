@@ -1,4 +1,4 @@
-import { increment, onValue, ref, update } from "firebase/database"
+import { increment, onValue, ref, runTransaction, update } from "firebase/database"
 import { db } from "../../lib/firebase"
 
 /**
@@ -7,6 +7,7 @@ import { db } from "../../lib/firebase"
  * Firebase layout (one counter per outcome bucket, incremented server side):
  *   dailyStats/{gameKey}/{YYYY-MM-DD}/g1 .. g6   -> solved in N guesses
  *   dailyStats/{gameKey}/{YYYY-MM-DD}/fail       -> did not solve it
+ *   dailyStats/{gameKey}/{YYYY-MM-DD}/best       -> the day's best raw result (lower only)
  */
 
 export type DailyDistribution = {
@@ -77,6 +78,34 @@ export async function submitDailyResult(
 ) {
     const bucket = guesses !== null && guesses >= 1 && guesses <= maxGuesses ? `g${guesses}` : "fail"
     await update(ref(db, statsPath(gameKey, date)), { [bucket]: increment(1) })
+}
+
+/**
+ * The day's single best raw result (e.g. the Daily Rally's fastest time in ms),
+ * kept beside the bucket counters at `dailyStats/{gameKey}/{date}/best`.
+ * The rules only accept a value lower than the stored one, so a transaction
+ * that loses a race is retried against the new record rather than overwriting it.
+ */
+export async function submitDailyBest(gameKey: string, date: string, value: number) {
+    await runTransaction(ref(db, `${statsPath(gameKey, date)}/best`), (current: unknown) =>
+        typeof current === "number" && current <= value ? undefined : Math.round(value),
+    )
+}
+
+/** Live subscription to the day's best result; null until somebody has one. */
+export function subscribeDailyBest(
+    gameKey: string,
+    date: string,
+    onData: (best: number | null) => void,
+) {
+    return onValue(
+        ref(db, `${statsPath(gameKey, date)}/best`),
+        (snapshot) => {
+            const value = snapshot.val()
+            onData(typeof value === "number" && Number.isFinite(value) ? value : null)
+        },
+        () => onData(null),
+    )
 }
 
 /**

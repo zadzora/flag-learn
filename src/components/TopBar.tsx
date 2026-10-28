@@ -1,6 +1,7 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Moon, Sun } from "lucide-react"
+import { readStore } from "../utils/profileStore"
 
 type Props = {
     /** Page name, shown after the wordmark. */
@@ -25,6 +26,21 @@ export function BarButton({ onClick, label, children }: { onClick: () => void; l
         >
             {children}
         </button>
+    )
+}
+
+/** The way to the profile from any page, wearing the player's current rank. */
+function ProfileLink() {
+    const [rank] = useState(() => readStore()?.rank ?? 0)
+    return (
+        <Link
+            to="/profile"
+            aria-label="Your profile"
+            title="Your profile"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
+        >
+            <img src={`/badges/rank-${rank}.webp`} alt="" className="h-7 w-7" />
+        </Link>
     )
 }
 
@@ -58,6 +74,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                 )}
                 <div className="ml-auto flex items-center gap-2">
                     {children}
+                    <ProfileLink />
                     {theme && onToggleTheme && (
                         <BarButton onClick={onToggleTheme} label={theme === "light" ? "Dark theme" : "Light theme"}>
                             {theme === "light" ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}

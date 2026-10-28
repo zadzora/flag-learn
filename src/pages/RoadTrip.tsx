@@ -42,7 +42,7 @@ import {
     type LandmarkKind, type Landmarks,
 } from "../utils/roadTripLandmarks"
 import {
-    RALLY_BUCKET_LABELS, RALLY_GAME_KEY, RALLY_TARGETS, RALLY_TRIP_KEY, buildRally, loadRallySave, rallyBucket, saveRallySave,
+    RALLY_BUCKETS, RALLY_GAME_KEY, RALLY_TARGETS, RALLY_TRIP_KEY, buildRally, loadRallySave, rallyBucket, rallyBucketLabels, saveRallySave,
 } from "../utils/roadTripRally"
 import { getTodayString } from "../utils/dailySeed"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
@@ -178,7 +178,14 @@ function wallClock(): number {
 function finishedRally(date: string): RallyResultView | null {
     const save = loadRallySave(date)
     if (save.status !== "done" || save.finishedMs === null) return null
-    return { ms: save.finishedMs, bucket: rallyBucket(save.finishedMs), streak: activeStreak(readStreak(STREAK_KEYS.rally), date) }
+    // A run finished before the bands followed the route was placed in the base bands.
+    const bands = save.bands ?? undefined
+    return {
+        ms: save.finishedMs,
+        bucket: rallyBucket(save.finishedMs, bands),
+        labels: rallyBucketLabels(bands),
+        streak: activeStreak(readStreak(STREAK_KEYS.rally), date),
+    }
 }
 
 function wrapAngle(a: number): number {
@@ -637,10 +644,12 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             } else {
                 const ms = wallClock() - rallyRun.startedAt
                 rallyRun.finishedMs = ms
+                rallyRun.bands = rallyPlan.bands
                 rallyRun.status = "done"
                 const streak = activeStreak(recordDailyResult(STREAK_KEYS.rally, today, true), today)
-                submitDailyResult(RALLY_GAME_KEY, today, 9, rallyBucket(ms)).catch(() => {})
-                setRallyResult({ ms, bucket: rallyBucket(ms), streak })
+                const bucket = rallyBucket(ms, rallyPlan.bands)
+                submitDailyResult(RALLY_GAME_KEY, today, RALLY_BUCKETS, bucket).catch(() => {})
+                setRallyResult({ ms, bucket, labels: rallyBucketLabels(rallyPlan.bands), streak })
             }
             saveRallySave(rallyRun)
             publishRally()
@@ -1809,7 +1818,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const finished = rallyMode && rallyResult !== null
     useEffect(() => {
         if (!finished) return
-        return subscribeDailyStats(RALLY_GAME_KEY, today, RALLY_BUCKET_LABELS.length, setDistribution, () => setStatsError(true))
+        return subscribeDailyStats(RALLY_GAME_KEY, today, RALLY_BUCKETS, setDistribution, () => setStatsError(true))
     }, [finished, today])
     // The day's record. Offered again whenever a finished result is shown: the write only lands
     // when it beats the stored time, and a run finished before the record existed still counts.
@@ -1914,7 +1923,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                                     standing={standing}
                                     statsError={statsError}
                                     myBucket={rallyResult.bucket}
-                                    bucketLabels={RALLY_BUCKET_LABELS}
+                                    bucketLabels={rallyResult.labels}
                                     accentClass="text-[#E5484D]"
                                     footnote="Finish time - same start for everyone"
                                     solvedWord="finished"

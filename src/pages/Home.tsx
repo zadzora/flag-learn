@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from "react"
+import { useState, useEffect, useRef, type MouseEvent, type ReactNode } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
     ArrowRight, Car, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
@@ -12,6 +12,9 @@ import usData from "../../data/us_states.json"
 import SiteFooter from "../components/SiteFooter"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
 import { DAILY_MODES, isDailyFinished } from "../utils/dailyModes"
+import { BadgeMedal, RankShield } from "../components/BadgeArt"
+import { RANKS, TIER_NAMES, TRACKS, nextGoal, pointsOf, rankOf, unitFor } from "../utils/achievements"
+import { PROFILE_EVENT, readStore } from "../utils/profileStore"
 
 const LAST_MODE_KEY = "flag-master-last-mode"
 const TARGET_STREAK = 3
@@ -39,6 +42,7 @@ const MULTIPLAYER: Entry[] = [
     { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon, badge: "New" },
     { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon },
     { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
+    { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon, badge: "New" },
 ]
 
 const MORE_MODES: Entry[] = [
@@ -127,6 +131,64 @@ function Badge({ children }: { children: ReactNode }) {
     )
 }
 
+// The nav's section links glide down the page instead of jumping; Science is a
+// separate page, so it stays an ordinary route change.
+function scrollToSection(e: MouseEvent<HTMLAnchorElement>) {
+    const id = e.currentTarget.hash.slice(1)
+    const target = document.getElementById(id)
+    if (!target) return
+    e.preventDefault()
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    history.replaceState(history.state, "", `#${id}`)
+}
+
+/** Rank, badge count and the nearest badge - read once, like the rest of the home screen. */
+function readProfile() {
+    const store = readStore()
+    if (!store) return { rank: 0, points: 0, badges: 0, goal: null }
+    const points = pointsOf(store)
+    return { rank: rankOf(points), points, badges: Object.keys(store.earned).length, goal: nextGoal(store) }
+}
+
+function ProfileStrip({ profile }: { profile: ReturnType<typeof readProfile> }) {
+    const { goal } = profile
+    return (
+        <Link
+            to="/profile"
+            className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+        >
+            <span className="flex items-center gap-3">
+                <RankShield rank={profile.rank} size={44} />
+                <span>
+                    <span className="block font-bold">{RANKS[profile.rank].name}</span>
+                    <span className="block text-xs text-slate-500 dark:text-[#8C97B3]">
+                        {profile.badges} of {TRACKS.length} badges · {profile.points.toLocaleString()} pts
+                    </span>
+                </span>
+            </span>
+            {goal && (
+                <span className="flex min-w-0 flex-1 items-center gap-3 sm:border-l sm:border-slate-200 sm:pl-6 sm:dark:border-[#1C2338]">
+                    <BadgeMedal id={goal.track.id} tier={goal.tier - 1} size={36} />
+                    <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm">
+                            <span className="text-slate-500 dark:text-[#8C97B3]">Next: </span>
+                            <strong>{goal.track.title}</strong>
+                            <span className="text-slate-500 dark:text-[#8C97B3]"> {TIER_NAMES[goal.tier]} - {(goal.target - goal.value).toLocaleString()} more {unitFor(goal.track, goal.target - goal.value)}</span>
+                        </span>
+                        <span className="mt-1.5 block h-1 rounded-sm bg-slate-200 dark:bg-[#1C2338]">
+                            <span className="block h-full rounded-sm bg-amber-500 dark:bg-amber-400" style={{ width: `${(goal.value / goal.target) * 100}%` }} />
+                        </span>
+                    </span>
+                </span>
+            )}
+            <span className="ml-auto flex items-center gap-1 text-sm font-bold">
+                Your profile <ChevronRight size={16} aria-hidden />
+            </span>
+        </Link>
+    )
+}
+
 function SectionHead({ id, title, aside }: { id: string; title: string; aside?: string }) {
     return (
         <div className="mb-4 mt-14 flex items-baseline justify-between gap-4">
@@ -202,6 +264,13 @@ export default function Home() {
     const navigate = useNavigate()
     // A snapshot of the day: the home screen is read once per visit, not watched.
     const [{ streaks, dailies, decks, hero, wall }] = useState(readSnapshot)
+    // The one live part: on a first visit the profile is created just after this page mounts.
+    const [profile, setProfile] = useState(readProfile)
+    useEffect(() => {
+        const reload = () => setProfile(readProfile())
+        window.addEventListener(PROFILE_EVENT, reload)
+        return () => window.removeEventListener(PROFILE_EVENT, reload)
+    }, [])
 
     const solved = dailies.filter(d => d.done).length
     const lastDeck = decks.find(d => d.mode === hero) ?? decks[0]
@@ -248,10 +317,14 @@ export default function Home() {
                         Flag Learn
                     </Link>
                     <div className="flex items-center gap-1 rounded-xl bg-[#F4F6FB]/85 p-1.5 text-sm text-slate-600 dark:bg-[#0A0E1A]/80 dark:text-[#A6B0C8]">
-                        <a href="#learn" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Learn</a>
-                        <a href="#today" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Daily</a>
-                        <a href="#multiplayer" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Multiplayer</a>
+                        <a href="#learn" onClick={scrollToSection} className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Learn</a>
+                        <a href="#today" onClick={scrollToSection} className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Daily</a>
+                        <a href="#multiplayer" onClick={scrollToSection} className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Multiplayer</a>
                         <Link to="/science" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Science</Link>
+                        <Link to="/profile" aria-label="Your profile" className="flex items-center gap-1.5 rounded-lg px-2 py-1 hover:text-slate-900 dark:hover:text-white">
+                            <RankShield rank={profile.rank} size={24} />
+                            <span className="hidden sm:inline">Profile</span>
+                        </Link>
                         <button
                             type="button"
                             onClick={toggleTheme}
@@ -330,6 +403,8 @@ export default function Home() {
                         </li>
                     ))}
                 </ul>
+                <ProfileStrip profile={profile} />
+
                 <SectionHead id="today" title="Today" aside={`${solved} of ${dailies.length} solved · resets 00:00 UTC`} />
                 <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {dailies.map(({ mode, done, streak }) => (
@@ -396,7 +471,7 @@ export default function Home() {
                 about={
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
-                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, and <strong>Highscore</strong> speedruns.
+                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong> and <strong>Map Speedrun</strong> races.
                         The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>

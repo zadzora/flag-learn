@@ -20,16 +20,43 @@ export const RALLY_TRIP_KEY = "road-trip-rally-trip"
 export const RALLY_TARGETS = 3
 
 /**
- * Upper bounds of the standing buckets, in seconds; the last bucket is everything slower.
- * A practised run takes well under a minute, so the bands are fine at the fast end.
+ * Upper bounds of the standing buckets, in seconds, for a rally of ordinary
+ * length; the last bucket is everything slower. A practised run of that length
+ * takes well under a minute, so the bands are fine at the fast end.
  */
-const BANDS_S = [10, 15, 20, 30, 45, 60, 90, 120]
-export const RALLY_BUCKET_LABELS = ["<0:10", "<0:15", "<0:20", "<0:30", "<0:45", "<1:00", "<1:30", "<2:00", "2:00+"]
+const BASE_BANDS_S = [10, 15, 20, 30, 45, 60, 90, 120]
+/** The route length the base bands were made for: three targets a few hundred kilometres out. */
+const BASE_ROUTE_KM = 3000
+export const RALLY_BUCKETS = BASE_BANDS_S.length + 1
 
-export function rallyBucket(ms: number): number {
+/**
+ * The day's bands, stretched to its route. A rally across a continent cannot be
+ * judged on the clock of one across three neighbours - everybody would land in
+ * "2:00+". Stretched times are rounded to steps a person reads (5s, then 15s,
+ * then 30s), and a rally no longer than the base keeps the base bands exactly.
+ */
+export function rallyBands(routeKm: number): number[] {
+    const scale = Math.max(1, routeKm / BASE_ROUTE_KM)
+    const bands: number[] = []
+    for (const base of BASE_BANDS_S) {
+        const raw = base * scale
+        const step = raw < 60 ? 5 : raw < 180 ? 15 : 30
+        let s = Math.max(step, Math.round(raw / step) * step)
+        if (bands.length && s <= bands[bands.length - 1]) s = bands[bands.length - 1] + step
+        bands.push(s)
+    }
+    return bands
+}
+
+export function rallyBucket(ms: number, bands: number[] = BASE_BANDS_S): number {
     const s = ms / 1000
-    const i = BANDS_S.findIndex(limit => s < limit)
-    return i < 0 ? BANDS_S.length + 1 : i + 1
+    const i = bands.findIndex(limit => s < limit)
+    return i < 0 ? bands.length + 1 : i + 1
+}
+
+export function rallyBucketLabels(bands: number[] = BASE_BANDS_S): string[] {
+    const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+    return [...bands.map(s => `<${clock(s)}`), `${clock(bands[bands.length - 1])}+`]
 }
 
 export type RallyTarget = { index: number; code: string; label: string }
@@ -38,13 +65,22 @@ export type Rally = {
     number: number
     start: { x: number; y: number; heading: number }
     targets: RallyTarget[]
+    /** The day's standing bands, in seconds - see `rallyBands`. */
+    bands: number[]
 }
 
-/** Targets are this far from the start, as the crow flies - far enough to need finding, near enough for a few minutes' drive. */
-const MIN_KM = 450
-const MAX_KM = 2000
-/** And at least this far from each other, so one stretch of road does not collect two of them. */
-const SPREAD_KM = 350
+/**
+ * How far the targets are from the start, and from each other, as the crow
+ * flies. The car covers ~400 km a second flat out, so the old 450 km floor put
+ * a target one breath from the start and three of them in one neighbourhood.
+ * The first tier is the rally as meant: targets anywhere across the continent,
+ * in different directions. The second is only a fallback for a start where the
+ * first cannot place three, so a day can never fail to build.
+ */
+const TIERS = [
+    { minKm: 1200, maxKm: 6500, spreadKm: 1500 },
+    { minKm: 600, maxKm: 4000, spreadKm: 700 },
+]
 /** Only countries with this much road: Luxembourg as a target would be a needle in a haystack. */
 const MIN_TARGET_CELLS = 400
 /** Nor Russia or Canada: driving into the first one is no search at all. */
@@ -74,6 +110,12 @@ function km([lon1, lat1]: [number, number], [lon2, lat2]: [number, number]): num
     return 12742 * Math.asin(Math.sqrt(a))
 }
 
+/** The shortest crow-flies route from the start through every target, in any order. */
+function shortestRoute(from: [number, number], stops: [number, number][]): number {
+    if (!stops.length) return 0
+    return Math.min(...stops.map((s, i) => km(from, s) + shortestRoute(s, stops.filter((_, j) => j !== i))))
+}
+
 export function buildRally(world: World, date: string): Rally {
     const rng = seededRng(`road-trip-rally:${date}`)
     type Spot = { code: string; index: number; landmass: number; at: [number, number]; x: number; y: number }
@@ -94,40 +136,43 @@ export function buildRally(world: World, date: string): Rally {
     /** A start this close to a port could sail the car to another continent on its first turn. */
     const nearPort = (s: Spot) => world.ports.some(p => Math.hypot(p.x - s.x, p.y - s.y) < 30)
 
-    for (let attempt = 0; attempt < 80; attempt++) {
-        const start = spots[Math.floor(rng() * spots.length)]
-        if (nearPort(start)) continue
-        const pool = seededShuffle(
-            spots.filter(s => {
-                if (s.code === start.code || s.landmass !== start.landmass) return false
-                const cells = world.countries[s.index].roadCells
-                if (cells < MIN_TARGET_CELLS || cells > MAX_TARGET_CELLS) return false
-                const d = km(start.at, s.at)
-                if (d < MIN_KM || d > MAX_KM) return false
-                return landLine(world, start.x, start.y, s.x, s.y) >= MIN_LAND_LINE
-            }),
-            rng,
-        )
-        const picked: Spot[] = []
-        for (const s of pool) {
-            if (picked.every(p => km(p.at, s.at) >= SPREAD_KM)) picked.push(s)
-            if (picked.length === RALLY_TARGETS) break
-        }
-        if (picked.length < RALLY_TARGETS) continue
+    for (const { minKm, maxKm, spreadKm } of TIERS) {
+        for (let attempt = 0; attempt < 120; attempt++) {
+            const start = spots[Math.floor(rng() * spots.length)]
+            if (nearPort(start)) continue
+            const pool = seededShuffle(
+                spots.filter(s => {
+                    if (s.code === start.code || s.landmass !== start.landmass) return false
+                    const cells = world.countries[s.index].roadCells
+                    if (cells < MIN_TARGET_CELLS || cells > MAX_TARGET_CELLS) return false
+                    const d = km(start.at, s.at)
+                    if (d < minKm || d > maxKm) return false
+                    return landLine(world, start.x, start.y, s.x, s.y) >= MIN_LAND_LINE
+                }),
+                rng,
+            )
+            const picked: Spot[] = []
+            for (const s of pool) {
+                if (picked.every(p => km(p.at, s.at) >= spreadKm)) picked.push(s)
+                if (picked.length === RALLY_TARGETS) break
+            }
+            if (picked.length < RALLY_TARGETS) continue
 
-        // Not on the capital itself: a little way off, still inside the same country.
-        let sx = start.x, sy = start.y
-        const angle = rng() * Math.PI * 2, dist = 4 + rng() * 10
-        const ox = start.x + Math.cos(angle) * dist, oy = start.y + Math.sin(angle) * dist
-        if (isRoad(world, ox, oy) && world.cellCountry[Math.floor(oy / CELL) * GRID_W + Math.floor(ox / CELL)] - 1 === start.index) {
-            sx = ox
-            sy = oy
-        }
-        return {
-            date,
-            number: dailyNumber(date),
-            start: { x: sx, y: sy, heading: rng() * Math.PI * 2 },
-            targets: picked.map(s => ({ index: s.index, code: s.code, label: world.countries[s.index].label })),
+            // Not on the capital itself: a little way off, still inside the same country.
+            let sx = start.x, sy = start.y
+            const angle = rng() * Math.PI * 2, dist = 4 + rng() * 10
+            const ox = start.x + Math.cos(angle) * dist, oy = start.y + Math.sin(angle) * dist
+            if (isRoad(world, ox, oy) && world.cellCountry[Math.floor(oy / CELL) * GRID_W + Math.floor(ox / CELL)] - 1 === start.index) {
+                sx = ox
+                sy = oy
+            }
+            return {
+                date,
+                number: dailyNumber(date),
+                start: { x: sx, y: sy, heading: rng() * Math.PI * 2 },
+                targets: picked.map(s => ({ index: s.index, code: s.code, label: world.countries[s.index].label })),
+                bands: rallyBands(shortestRoute(start.at, picked.map(p => p.at))),
+            }
         }
     }
     throw new Error(`[rally] no rally could be built for ${date}`)
@@ -141,11 +186,13 @@ export type RallySave = {
     startedAt: number | null
     reached: string[]
     finishedMs: number | null
+    /** The bands the finished run was placed in, so the result card can show them before the world is built. */
+    bands: number[] | null
     status: "playing" | "done"
 }
 
 export function loadRallySave(date: string): RallySave {
-    const fresh: RallySave = { date, startedAt: null, reached: [], finishedMs: null, status: "playing" }
+    const fresh: RallySave = { date, startedAt: null, reached: [], finishedMs: null, bands: null, status: "playing" }
     try {
         const raw = JSON.parse(localStorage.getItem(RALLY_SAVE_KEY) ?? "null")
         if (!raw || raw.date !== date) {
@@ -158,6 +205,7 @@ export function loadRallySave(date: string): RallySave {
             startedAt: typeof raw.startedAt === "number" ? raw.startedAt : null,
             reached: Array.isArray(raw.reached) ? raw.reached : [],
             finishedMs: typeof raw.finishedMs === "number" ? raw.finishedMs : null,
+            bands: Array.isArray(raw.bands) && raw.bands.length === RALLY_BUCKETS - 1 ? raw.bands : null,
             status: raw.status === "done" ? "done" : "playing",
         }
     } catch {

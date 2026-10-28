@@ -8,6 +8,7 @@ import TopBar from "../components/TopBar"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
+import { bumpCounterOnce } from "../utils/profileStore"
 
 type Flag = {
     code: string
@@ -327,6 +328,17 @@ export default function PvPGame() {
             setBlurAmount(0)
         }
     }, [currentFlagCode, feedbackStatus, gameData?.settings.isBlurMode, gameData?.status])
+
+    // A win counts towards the Duelist badge - once per game, however often the result is reopened.
+    // Mirrors the podium below: score first, then the earlier finish. A lobby of one wins nothing.
+    useEffect(() => {
+        if (!gameData || !myId || !gameId) return
+        const players = Object.entries(gameData.players)
+        const over = gameData.status === 'finished' || (myPlayer?.finished && players.filter(([, p]) => !p.left).every(([, p]) => p.finished))
+        if (!over || players.length < 2) return
+        const [bestId] = [...players].sort(([, a], [, b]) => b.score - a.score || (a.finishedAt || Infinity) - (b.finishedAt || Infinity))[0]
+        if (bestId === myId) bumpCounterOnce("pvp", gameId)
+    }, [gameData, myId, myPlayer, gameId])
 
 
     const handleCheck = () => {

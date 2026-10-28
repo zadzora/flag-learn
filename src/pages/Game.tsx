@@ -9,6 +9,7 @@ import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
+import { recordBest } from "../utils/profileStore"
 
 // --- TYPES ---
 type Flag = {
@@ -509,6 +510,8 @@ export default function Game() {
 
         if (isCorrect) {
             setSessionStreak(prev => prev + 1)
+            // The Sharp eye badge: the best run of right answers, kept on the profile.
+            recordBest("sharp-eye", sessionStreak + 1)
         } else {
             setSessionStreak(0)
         }

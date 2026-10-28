@@ -18,6 +18,7 @@ import { fetchPopulationAndArea } from "../utils/restCountryMetric"
 import TopBar, { BarButton } from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import CountUpValue from "../components/CountUpValue"
+import { recordBest } from "../utils/profileStore"
 
 const THEME_KEY = "flag-master-theme"
 
@@ -322,6 +323,7 @@ export default function HigherLowerGame() {
         window.setTimeout(() => {
             setRevealPhase(null)
             if (ok) {
+                recordBest("higher-lower", revealed.length + 1)
                 advanceAfterRound(true, { left: pair.left, right: pair.right }, rightStat)
             } else {
                 // A single wrong guess ends the run.

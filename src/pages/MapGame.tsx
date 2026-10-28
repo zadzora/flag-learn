@@ -1,9 +1,12 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight } from "lucide-react"
 import { BarButton } from "../components/TopBar"
+import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
+import { MAP_REGIONS, PENALTY_SECONDS, formatRunTime, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion } from "../utils/mapSpeedrun"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
+import { bumpCounter } from "../utils/profileStore"
 import worldData from "../../data/flags.json"
 
 const geoUrl = "/world-map.json"
@@ -92,10 +95,45 @@ function checkCountryMatch(geo: any, target: Flag | null) {
     });
 }
 
-export default function MapGame() {
-    const activeData = useMemo(() => {
-        return (worldData as unknown as Flag[]).filter(f => !UNSUPPORTED_MAP_CODES.includes(f.code));
-    }, [])
+const MAP_FLAGS = (worldData as unknown as Flag[]).filter(f => !UNSUPPORTED_MAP_CODES.includes(f.code))
+
+// Each map feature resolves to its flag once; the speedrun asks on every render which country a shape is.
+type MapFeature = { rsmKey: string; properties?: { name?: string; NAME?: string } }
+const geoFlagCache = new Map<string, Flag | null>()
+function flagForGeo(geo: MapFeature): Flag | null {
+    const key = geo.properties?.name || geo.properties?.NAME || geo.rsmKey
+    if (!geoFlagCache.has(key)) geoFlagCache.set(key, MAP_FLAGS.find(f => checkCountryMatch(geo, f)) ?? null)
+    return geoFlagCache.get(key) ?? null
+}
+
+const REGION_COUNTS =Object.fromEntries(MAP_REGIONS.map(r => [r.id, regionPool(MAP_FLAGS, r.id).length])) as Record<MapRegion, number>
+
+/** A timed run: `queue` holds what is still to come after `current`. */
+type SpeedrunRun = { region: MapRegion; queue: Flag[]; total: number; startedAt: number; penalty: number; mistakes: number; found: string[] }
+
+// Math.random and Date.now live out here: react-hooks/purity rejects them inside the component.
+function newSpeedrun(region: MapRegion, pool: Flag[]): SpeedrunRun {
+    const queue = [...pool].sort(() => 0.5 - Math.random())
+    return { region, queue, total: pool.length, startedAt: Date.now(), penalty: 0, mistakes: 0, found: [] }
+}
+
+/** A missed country goes back somewhere later in the queue - never straight away. */
+function requeue(queue: Flag[], target: Flag): Flag[] {
+    const next = [...queue]
+    const minIndex = next.length > 0 ? 1 : 0
+    next.splice(minIndex + Math.floor(Math.random() * (next.length - minIndex + 1)), 0, target)
+    return next
+}
+
+function secondsSince(startedAt: number): number {
+    return (Date.now() - startedAt) / 1000
+}
+
+/** `/map` is the learning mode; `/map-speedrun` is the same map raced against the clock and other players. */
+export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun" }) {
+    const isSpeedrunMode = mode === "speedrun"
+    const navigate = useNavigate()
+    const activeData = MAP_FLAGS
 
     const [progress, setProgress] = useState<Record<string, FlagProgress>>({})
     const [current, setCurrent] = useState<Flag | null>(null)
@@ -120,6 +158,24 @@ export default function MapGame() {
     const [practiceElapsedTime, setPracticeElapsedTime] = useState(0)
     const [practiceResults, setPracticeResults] = useState<{ mistakes: number, time: string, count: number } | null>(null)
     const [lastPracticePool, setLastPracticePool] = useState<Flag[]>([])
+
+    // --- SPEEDRUN: the whole region against the clock, best times to the leaderboard ---
+    const [showSpeedrunSetup, setShowSpeedrunSetup] = useState(isSpeedrunMode)
+    const [speedrunRegion, setSpeedrunRegion] = useState<MapRegion>("world")
+    const [run, setRun] = useState<SpeedrunRun | null>(null)
+    const [runResult, setRunResult] = useState<MapRunResult | null>(null)
+    const [runElapsed, setRunElapsed] = useState(0)
+    const [penaltyFxKey, setPenaltyFxKey] = useState(0)
+    // Bumped on every start and exit, so a pending next-country timeout from an abandoned run does nothing.
+    const runToken = useRef(0)
+    // The header lies over the map; region framing fits the region into what it leaves free.
+    const headerRef = useRef<HTMLElement>(null)
+
+    // Countries outside the region are dimmed and ignored while a run (or its setup) is on screen.
+    const playCodes = useMemo(() => {
+        const r = run ? run.region : runResult ? runResult.region : showSpeedrunSetup ? speedrunRegion : null
+        return r ? new Set(regionPool(activeData, r).map(f => f.code)) : null
+    }, [run, showSpeedrunSetup, runResult, speedrunRegion, activeData])
 
     const guessedPracticeFlags = useMemo(() => {
         if (!isPracticeMode) return [];
@@ -152,6 +208,14 @@ export default function MapGame() {
         }
         return () => clearInterval(interval)
     }, [isPracticeMode, practiceStartTime])
+
+    const runStartedAt = run?.startedAt ?? 0
+    const runPenalty = run?.penalty ?? 0
+    useEffect(() => {
+        if (!runStartedAt) return
+        const interval = setInterval(() => setRunElapsed(secondsSince(runStartedAt) + runPenalty), 200)
+        return () => clearInterval(interval)
+    }, [runStartedAt, runPenalty])
 
     function formatTime(seconds: number) {
         const mins = Math.floor(seconds / 60)
@@ -187,11 +251,11 @@ export default function MapGame() {
     useEffect(() => {
         if (isLoaded && Object.keys(progress).length > 0) {
             localStorage.setItem(STORAGE_KEY_MAP, JSON.stringify({ progress }))
-            if (!current && status === 'idle' && !isPracticeMode && !practiceResults) pickRandomCountry(progress)
+            if (!current && status === 'idle' && !isPracticeMode && !practiceResults && !isSpeedrunMode) pickRandomCountry(progress)
         }
-    }, [progress, isLoaded, isPracticeMode, practiceResults])
+    }, [progress, isLoaded, isPracticeMode, practiceResults, isSpeedrunMode])
 
-    const isFirstTime = current ? (progress[current.code]?.seen || 0) === 0 : false
+    const isFirstTime = current && !isPracticeMode && !run ? (progress[current.code]?.seen || 0) === 0 : false
 
     const totalStats = useMemo(() => {
         const total = activeData.length
@@ -306,6 +370,80 @@ export default function MapGame() {
         setTimeout(() => pickRandomCountry(progress), 100)
     }
 
+    function frameRegion(region: MapRegion) {
+        setPosition(regionCamera(region, window.innerWidth, window.innerHeight, headerRef.current?.offsetHeight ?? 0))
+    }
+
+    function changeSpeedrunRegion(region: MapRegion) {
+        setSpeedrunRegion(region)
+        frameRegion(region)
+    }
+
+    function startSpeedrun(region: MapRegion) {
+        const pool = regionPool(activeData, region)
+        if (pool.length === 0) return
+        const token = ++runToken.current
+        setSpeedrunRegion(region)
+        setShowSpeedrunSetup(false)
+        setRunResult(null)
+        setIsReview(false)
+        setRunElapsed(0)
+        // The region framing is only the starting view; from here on the camera is the player's.
+        frameRegion(region)
+        nextSpeedrunCountry(newSpeedrun(region, pool), token)
+    }
+
+    function nextSpeedrunCountry(r: SpeedrunRun, token: number) {
+        if (token !== runToken.current) return
+        setStatus('idle')
+        setClickedGeo(null)
+        if (r.queue.length === 0) {
+            setRunResult({ region: r.region, seconds: roundRunTime(secondsSince(r.startedAt) + r.penalty), mistakes: r.mistakes, count: r.total })
+            bumpCounter("highscore")
+            setRun(null)
+            setCurrent(null)
+            return
+        }
+        const [head, ...rest] = r.queue
+        setRun({ ...r, queue: rest })
+        setCurrent(head)
+    }
+
+    function handleSpeedrunClick(geo: MapFeature, r: SpeedrunRun, target: Flag) {
+        const flag = flagForGeo(geo)
+        if (!flag || !playCodes?.has(flag.code)) return
+
+        const token = runToken.current
+        setClickedGeo(geo.rsmKey)
+        if (checkCountryMatch(geo, target)) {
+            setStatus('correct')
+            const next = { ...r, found: [...r.found, target.code] }
+            setRun(next)
+            setTimeout(() => nextSpeedrunCountry(next, token), 250)
+            return
+        }
+
+        // Missed: the penalty lands now, and the country is asked again later in the run.
+        setStatus('error')
+        const next = { ...r, queue: requeue(r.queue, target), mistakes: r.mistakes + 1, penalty: r.penalty + PENALTY_SECONDS }
+        setRun(next)
+        setRunElapsed(secondsSince(r.startedAt) + next.penalty)
+        setPenaltyFxKey(k => k + 1)
+        setTimeout(() => nextSpeedrunCountry(next, token), 1200)
+    }
+
+    /** Back to the region picker - from a run in progress or from its result. */
+    function exitSpeedrun() {
+        if (run && !confirm("Quit the speedrun? This run will be lost.")) return
+        runToken.current++
+        setRun(null)
+        setRunResult(null)
+        setShowSpeedrunSetup(true)
+        setCurrent(null)
+        setStatus('idle')
+        setClickedGeo(null)
+    }
+
     function handleZoomIn() {
         if (position.zoom >= 15) return
         setPosition(pos => ({ ...pos, zoom: pos.zoom * 1.5 }))
@@ -322,6 +460,11 @@ export default function MapGame() {
 
     function handleCountryClick(geo: any) {
         if (status !== 'idle' || !current) return
+
+        if (run) {
+            handleSpeedrunClick(geo, run, current)
+            return
+        }
 
         const isCorrect = checkCountryMatch(geo, current)
 
@@ -489,7 +632,11 @@ export default function MapGame() {
                                 const isTarget = checkCountryMatch(geo, current)
                                 const isClicked = geo.rsmKey === clickedGeo
 
-                                const guessedTarget = guessedPracticeFlags.find(f => checkCountryMatch(geo, f));
+                                const geoFlag = flagForGeo(geo)
+                                const inPlay = !playCodes || (!!geoFlag && playCodes.has(geoFlag.code))
+                                const guessedTarget = run
+                                    ? (geoFlag && run.found.includes(geoFlag.code) ? geoFlag : undefined)
+                                    : guessedPracticeFlags.find(f => checkCountryMatch(geo, f));
                                 const isGuessed = !!guessedTarget;
 
                                 let fill = theme === 'dark' ? "#1A2135" : "#DDE3EE"
@@ -497,8 +644,16 @@ export default function MapGame() {
                                 let hoverFill = theme === 'dark' ? "#253050" : "#C9D2E3"
                                 let hoverStroke = theme === 'dark' ? "#4A5680" : "#66718F"
 
-                                if (isPracticeMode && isGuessed && status !== 'error') {
-                                    if (!hardMode && guessedTarget) {
+                                if (!inPlay) {
+                                    fill = theme === 'dark' ? "#10162A" : "#EEF1F7"
+                                    stroke = theme === 'dark' ? "#1E2742" : "#C9D2E3"
+                                    hoverFill = fill
+                                    hoverStroke = stroke
+                                }
+
+                                // A speedrun keeps every country it has found in its flag, as landmarks.
+                                if (isGuessed && (run || (isPracticeMode && status !== 'error'))) {
+                                    if ((run || !hardMode) && guessedTarget) {
                                         fill = `url(#flag-${guessedTarget.code})`;
                                         hoverFill = fill;
                                     }
@@ -521,8 +676,8 @@ export default function MapGame() {
                                         hoverFill = fill;
                                     }
                                 } else if (isClicked && (status === 'correct' || status === 'mastered')) {
-                                    if (isPracticeMode) {
-                                        if (!hardMode && current) {
+                                    if (isPracticeMode || run) {
+                                        if ((run || !hardMode) && current) {
                                             fill = `url(#flag-${current.code})`
                                         }
                                     } else {
@@ -542,8 +697,8 @@ export default function MapGame() {
                                         onClick={() => handleCountryClick(geo)}
                                         style={{
                                             default: { fill, stroke, strokeWidth: baseStrokeWidth, outline: "none", transition: "fill 250ms" },
-                                            hover: { fill: isClicked ? fill : hoverFill, stroke: isHighlighted ? stroke : hoverStroke, strokeWidth: Math.max(baseStrokeWidth, 0.3), outline: "none", cursor: "pointer" },
-                                            pressed: { fill: isClicked ? fill : (theme === 'dark' ? "#3A4670" : "#A6B0C8"), strokeWidth: baseStrokeWidth, outline: "none" },
+                                            hover: { fill: isClicked ? fill : hoverFill, stroke: isHighlighted ? stroke : hoverStroke, strokeWidth: inPlay ? Math.max(baseStrokeWidth, 0.3) : baseStrokeWidth, outline: "none", cursor: inPlay ? "pointer" : "default" },
+                                            pressed: { fill: isClicked || !inPlay ? fill : (theme === 'dark' ? "#3A4670" : "#A6B0C8"), strokeWidth: baseStrokeWidth, outline: "none" },
                                         }}
                                     />
                                 )
@@ -574,7 +729,7 @@ export default function MapGame() {
                 </ZoomableGroup>
             </ComposableMap>
         )
-    }, [theme, position, current, clickedGeo, guessedPracticeFlags, status, hardMode, isFirstTime, isPracticeMode, isReview, activeData])
+    }, [theme, position, current, clickedGeo, guessedPracticeFlags, status, hardMode, isFirstTime, isPracticeMode, isReview, activeData, run, playCodes])
 
 
     if (!isLoaded) return <div className="flex h-screen items-center justify-center text-slate-500 dark:text-slate-400"><Loader2 className="animate-spin" /></div>
@@ -596,9 +751,69 @@ export default function MapGame() {
         <div className="relative flex h-screen w-full select-none flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
 
             {/* --- HEADER (overlays the full-bleed map) --- */}
-            <header className="absolute left-0 top-0 z-20 w-full border-b border-slate-200 bg-[#F4F6FB] dark:border-slate-700 dark:bg-[#0A0E1A]">
+            <header ref={headerRef} className="absolute left-0 top-0 z-20 w-full border-b border-slate-200 bg-[#F4F6FB] dark:border-slate-700 dark:bg-[#0A0E1A]">
                 <div className="mx-auto flex w-full max-w-[1120px] min-w-0 flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3 sm:gap-x-3 sm:px-6 md:flex-nowrap">
-                    {!isPracticeMode ? (
+                    {run ? (
+                        /* SPEEDRUN HEADER */
+                        <>
+                            <button onClick={exitSpeedrun} className={`${quiet} flex h-10 min-h-0 shrink-0 items-center gap-1.5 px-3 py-0 text-sm hover:text-red-600 dark:hover:text-red-400`}>
+                                <LogOut size={16} className="shrink-0" aria-hidden /> <span className="hidden sm:inline">Exit</span>
+                            </button>
+
+                            <div className="order-last flex w-full min-w-0 flex-col gap-1 md:order-none md:mx-2 md:w-auto md:flex-1">
+                                <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                    {status === 'error' ? `Wrong! +${PENALTY_SECONDS}s - it was the green shape` : 'Find this country'}
+                                </span>
+
+                                {current && (
+                                    <motion.div
+                                        animate={status === 'error' ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className={`flex w-full min-w-0 items-center gap-3 rounded-[10px] border bg-[#fff] px-2.5 py-2 transition-colors dark:bg-[#121829] ${targetBorder}`}
+                                    >
+                                        <img key={current.code} src={current.image} alt="Flag" className="fl-in h-9 w-14 shrink-0 rounded-[4px] object-cover shadow-[0_2px_10px_rgba(10,14,26,0.18)] sm:h-10 sm:w-[60px]" />
+                                        <h2 className={`min-w-0 flex-1 break-words text-base font-bold leading-tight hyphens-auto sm:text-xl ${status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                                            {getCountryNameDisplay(current)}
+                                        </h2>
+                                        <span className={`${badge} bg-blue-500/15 text-blue-700 dark:text-blue-300`}><Timer size={12} aria-hidden /> {regionInfo(run.region).label}</span>
+                                    </motion.div>
+                                )}
+                            </div>
+
+                            <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                                <span className="relative">
+                                    <motion.span
+                                        key={penaltyFxKey}
+                                        animate={penaltyFxKey > 0 ? { scale: [1, 1.16, 1] } : undefined}
+                                        transition={{ duration: 0.45 }}
+                                        className={`flex items-center gap-1 font-mono text-sm font-bold tabular-nums ${status === 'error' ? 'text-red-600 dark:text-red-400' : ''}`}
+                                        title="Time"
+                                    >
+                                        <Timer size={15} aria-hidden />{formatRunTime(runElapsed, false)}
+                                    </motion.span>
+                                    <AnimatePresence>
+                                        {status === 'error' && (
+                                            <motion.span
+                                                key={penaltyFxKey}
+                                                initial={{ opacity: 0, y: 0 }}
+                                                animate={{ opacity: [0, 1, 1, 0], y: 36 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                                className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded-md bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow-xl"
+                                            >
+                                                +{PENALTY_SECONDS}s
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+                                </span>
+                                <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Left: <span className="font-bold tabular-nums text-slate-900 dark:text-white">{run.queue.length + (status === 'idle' ? 1 : 0)}</span></span>
+                                <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {run.mistakes}</span>
+                                <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
+                                    {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
+                                </BarButton>
+                            </div>
+                        </>
+                    ) : !isPracticeMode ? (
                         <>
                             <Link to="/" aria-label="Back" className={backClass}>
                                 <ArrowLeft size={19} aria-hidden />
@@ -610,7 +825,7 @@ export default function MapGame() {
 
                             {/* The country to find: second row on phones, centre of the bar from md up. */}
                             <div className="order-last flex w-full min-w-0 flex-col gap-1 md:order-none md:mx-2 md:w-auto md:flex-1">
-                                {!practiceResults && (
+                                {!practiceResults && !isSpeedrunMode && (
                                     <span className={`text-[11px] font-bold uppercase tracking-wider ${isFirstTime && status === 'idle' && !isReview ? 'text-blue-600 dark:text-blue-400' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}>
                                         {isFirstTime && status === 'idle' && !isReview ? 'New! Find the blue shape' : status === 'error' ? 'Wrong! Find green shape' : 'Find this country'}
                                     </span>
@@ -633,6 +848,8 @@ export default function MapGame() {
                                     </motion.div>
                                 ) : practiceResults ? (
                                     <div className="text-lg font-bold">Practice Over</div>
+                                ) : isSpeedrunMode ? (
+                                    <div className="flex items-center gap-2 text-lg font-bold"><Timer size={19} aria-hidden /> Map Speedrun</div>
                                 ) : (
                                     <button
                                         type="button"
@@ -651,16 +868,18 @@ export default function MapGame() {
                                         <Flame size={16} aria-hidden /> {streakNow}/3
                                     </span>
                                 )}
-                                <button
-                                    type="button"
-                                    onClick={() => setShowGallery(true)}
-                                    title="Open your map collection — browse mastered countries and practice selected regions."
-                                    className={`${quiet} flex h-10 min-h-0 items-center gap-2 px-3 py-0 text-sm`}
-                                >
-                                    <span className="hidden font-semibold sm:inline">Collection</span>
-                                    <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total}</span>
-                                    <ChevronRight size={15} aria-hidden className="text-slate-400" />
-                                </button>
+                                {!isSpeedrunMode && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGallery(true)}
+                                        title="Open your map collection — browse mastered countries and practice selected regions."
+                                        className={`${quiet} flex h-10 min-h-0 items-center gap-2 px-3 py-0 text-sm`}
+                                    >
+                                        <span className="hidden font-semibold sm:inline">Collection</span>
+                                        <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total}</span>
+                                        <ChevronRight size={15} aria-hidden className="text-slate-400" />
+                                    </button>
+                                )}
                                 <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
                                     {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>
@@ -720,7 +939,7 @@ export default function MapGame() {
 
             {/* --- FULL MAP MASTERY OVERLAY --- */}
             <AnimatePresence>
-                {totalStats.percent === 100 && !isPracticeMode && !practiceResults && !current && !showGallery && !hideMastery && (
+                {totalStats.percent === 100 && !isPracticeMode && !practiceResults && !current && !showGallery && !hideMastery && !isSpeedrunMode && (
                     <div className="pointer-events-none absolute inset-0 z-[15] mt-20 flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`${dialog} pointer-events-auto relative flex w-full max-w-md flex-col gap-6 p-6 sm:p-8`}>
                             <button onClick={() => setHideMastery(true)} className="absolute right-3 top-3 flex h-9 min-h-0 w-9 items-center justify-center rounded-lg p-0 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title="Hide window to view map" aria-label="Hide window to view map">
@@ -771,6 +990,21 @@ export default function MapGame() {
                             </div>
                         </div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* --- SPEEDRUN SETUP / RESULT --- */}
+            <AnimatePresence>
+                {(showSpeedrunSetup || runResult) && (
+                    <MapSpeedrunPanel
+                        key={runResult ? 'result' : 'setup'}
+                        region={speedrunRegion}
+                        counts={REGION_COUNTS}
+                        result={runResult}
+                        onRegionChange={changeSpeedrunRegion}
+                        onStart={startSpeedrun}
+                        onClose={runResult ? exitSpeedrun : () => navigate("/")}
+                    />
                 )}
             </AnimatePresence>
 

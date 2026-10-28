@@ -35,6 +35,7 @@ import {
     liveHumans, openLeg, optionsFor, pointsFor, tableFrom,
     type ChainRecord, type Leg, type MoveMap, type PresenceMap,
 } from "../utils/borderChain"
+import { bumpCounter } from "../utils/profileStore"
 
 const geoUrl = "/world-map.json"
 const MAP_WIDTH = 800
@@ -353,6 +354,7 @@ export default function BorderChain() {
         const points = pointsFor(verdict.code, Math.max(0, serverNow - leg.lastMoveAt))
         const won = await claim(verdict.code, uid, name, serverNow)
         if (won) {
+            bumpCounter("border-chain")
             setFeedback({ text: `${countryByCode(verdict.code)?.name} linked!`, tone: "good" })
             setGained({ points, at: Date.now() })
         } else {

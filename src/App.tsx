@@ -25,6 +25,8 @@ import PeriodicTableGame from "./pages/PeriodicTableGame"
 import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
 import FormulasGame from "./pages/FormulasGame"
 import RoadTrip from "./pages/RoadTrip"
+import Profile from "./pages/Profile"
+import AchievementToasts from "./components/AchievementToasts"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -32,6 +34,7 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/profile" element={<Profile />} />
 
                 <Route path="/play" element={<Game />} />
                 <Route path="/blur" element={<BlurGame />} />
@@ -41,7 +44,8 @@ export default function App() {
                 <Route path="/daily-connections" element={<DailyConnections />} />
                 <Route path="/daily-gauntlet" element={<DailyGauntlet />} />
                 <Route path="/daily-deduction" element={<DailyDeduction />} />
-                <Route path="/map" element={<MapGame />} />
+                <Route path="/map" element={<MapGame key="learn" />} />
+                <Route path="/map-speedrun" element={<MapGame key="speedrun" mode="speedrun" />} />
                 <Route path="/constellations" element={<ConstellationGame />} />
                 <Route path="/builder" element={<ConstellationBuilder />} />
                 <Route path="/ultimate" element={<UltimateGame />} />
@@ -67,6 +71,8 @@ export default function App() {
                 {/* <Route path="/flag-questions" element={<FlagQuestionGame />} /> */}
 
             </Routes>
+            {/* Badges are earned on every page, so they are announced from outside the routes. */}
+            <AchievementToasts />
             <Analytics />
         </BrowserRouter>
     )

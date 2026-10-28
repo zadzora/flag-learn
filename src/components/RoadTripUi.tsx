@@ -29,7 +29,7 @@ export type RallyView = {
     finishedMs: number | null
 }
 /** A finished rally. `bucket` is its band in today's standing. */
-export type RallyResultView = { ms: number; bucket: number; streak: number }
+export type RallyResultView = { ms: number; bucket: number; labels: string[]; streak: number }
 /** The drift combo in progress. */
 export type DriftView = { points: number; mult: number }
 /** What the passport lists, read off the loop when it is opened. */

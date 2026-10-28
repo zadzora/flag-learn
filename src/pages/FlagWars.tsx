@@ -24,6 +24,7 @@ import {
     type HallOfFameEntry, type SeaRoute, type SeasonArchive, type SeasonResult, type Siege, type SiegeMap,
     type Standing, type TerritoryMap, type WarPlayer, type WarRound,
 } from "../utils/flagWars"
+import { bumpCounter } from "../utils/profileStore"
 
 const geoUrl = "/world-map.json"
 
@@ -625,6 +626,8 @@ export default function FlagWars() {
 
     useEffect(() => {
         if (!outcome) return
+        // Land taken counts towards the Conqueror badge; a defence keeps land, it does not take any.
+        if (outcome.kind === "claimed" || outcome.kind === "claimed-unopposed") bumpCounter("conqueror")
         const timer = setTimeout(() => setOutcome(null), RESULT_MS)
         return () => clearTimeout(timer)
     }, [outcome])

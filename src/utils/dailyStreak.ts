@@ -5,6 +5,7 @@
  * so any daily mode can adopt this by calling `recordDailyResult` once its game
  * ends.
  */
+import { markDaily } from "./profileStore"
 
 export type StreakState = {
     streak: number
@@ -62,6 +63,8 @@ export function recordDailyResult(key: string, date: string, won: boolean): Stre
     } catch {
         // Private mode / storage full - the streak just will not persist.
     }
+    // Every daily ends here, which makes this the one place the profile learns a day was played.
+    markDaily(key, date)
     return next
 }
 

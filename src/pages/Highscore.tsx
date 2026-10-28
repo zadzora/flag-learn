@@ -9,6 +9,7 @@ import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db } from "../../lib/firebase"
+import { bumpCounter } from "../utils/profileStore"
 
 type GameMode = "world" | "capitals" | "us"
 
@@ -163,6 +164,7 @@ export default function Highscore() {
         if (nextQueue.length === 0) {
             const total = Math.floor((Date.now() - startTime) / 1000) + penaltySeconds
             setFinishedTime(total)
+            bumpCounter("highscore")
             setFinishedMistakes(mistakes)
             setStarted(false)
             setCurrent(null)

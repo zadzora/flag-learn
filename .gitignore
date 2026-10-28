@@ -29,3 +29,6 @@ dist-ssr
 .env.local
 .env.*.local
 CLAUDE.md
+
+# Image-generation prompts, kept local
+graphic/badges-prompts.md

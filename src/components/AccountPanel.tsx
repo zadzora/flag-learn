@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { Link } from "react-router-dom"
 import type { User } from "firebase/auth"
 import { AlertTriangle, Cloud, CloudOff, Download, Loader2, LogOut, Trash2, Upload } from "lucide-react"
 import Overlay from "./Overlay"
@@ -238,7 +239,7 @@ export default function AccountPanel() {
                                 </button>
                             )}
                         </div>
-                        <p className={`mt-3 text-xs ${muted}`}>Only your game progress is stored. Your email stays with Google sign-in and is never shown to other players.</p>
+                        <p className={`mt-3 text-xs ${muted}`}>Only your game progress is stored. Your email stays with Google sign-in and is never shown to other players. <Link to="/privacy" className="underline underline-offset-2 hover:text-slate-900 dark:hover:text-white">Privacy</Link></p>
                     </>
                 )}
                 {error && <p className="mt-3 text-sm font-semibold text-red-600 dark:text-red-400" role="alert">{error}</p>}

@@ -5,9 +5,10 @@
  * `highscores/<mode>/<playerId>` leaderboard shape as the Highscore page, under
  * `map-<region>` modes - the rules in `firebase-realtime.rules.json` list them.
  */
+import { useCallback, useEffect, useState } from "react"
 import { onValue, ref, set } from "firebase/database"
 import countryStatsData from "../../data/countryStats.json"
-import { db, ensureSignedIn } from "../../lib/firebase"
+import { db, ensureSignedIn, observeSession } from "../../lib/firebase"
 
 export type MapRegion = "world" | "europe" | "africa" | "asia" | "americas"
 
@@ -103,11 +104,33 @@ export function newPlayerId(): string {
     return generated
 }
 
+type BoardRow = { playerId?: string; uid?: string }
+
 /** The id to write under for `uid`, given the board as it stands. */
-export function playerIdFor(uid: string, board: { playerId?: string; uid?: string }[]): string {
+export function playerIdFor(uid: string, board: BoardRow[]): string {
     const id = getPlayerId()
     const mine = board.find(r => r.playerId === id)
     return mine?.uid && mine.uid !== uid ? newPlayerId() : id
+}
+
+/**
+ * Whether a board row is this player's. The account decides when both sides
+ * carry one - a signed-in player's rows from another device are theirs, and a
+ * row another account left under this browser's id is not. Otherwise this
+ * browser's leaderboard id does. Only reads: a visitor gets no id from looking.
+ */
+export function isMyRow(row: BoardRow, uid: string | null): boolean {
+    if (uid && row.uid) return row.uid === uid
+    let id: string | null = null
+    try { id = localStorage.getItem(PLAYER_ID_STORAGE_KEY) } catch { /* no storage, no rows of ours */ }
+    return !!id && row.playerId === id
+}
+
+/** `isMyRow` against the session this browser already has, without creating one. */
+export function useIsMyRow(): (row: BoardRow) => boolean {
+    const [uid, setUid] = useState<string | null>(null)
+    useEffect(() => observeSession(user => setUid(user?.uid ?? null)), [])
+    return useCallback((row: BoardRow) => isMyRow(row, uid), [uid])
 }
 
 export function loadPlayerName(): string {

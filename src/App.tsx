@@ -27,6 +27,7 @@ import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
 import FormulasGame from "./pages/FormulasGame"
 import RoadTrip from "./pages/RoadTrip"
 import Profile from "./pages/Profile"
+import Privacy from "./pages/Privacy"
 import AchievementToasts from "./components/AchievementToasts"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
@@ -36,6 +37,7 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/privacy" element={<Privacy />} />
 
                 <Route path="/play" element={<Game />} />
                 <Route path="/blur" element={<BlurGame />} />

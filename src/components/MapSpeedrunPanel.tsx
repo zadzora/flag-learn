@@ -2,9 +2,10 @@ import { useEffect, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import { Medal, Repeat, Timer, X } from "lucide-react"
 import { BarButton } from "./TopBar"
+import YouTag from "./YouTag"
 import {
-    formatRunTime, getPlayerId, loadPlayerName, normalizePlayerName,
-    saveRun, subscribeLeaderboard, type MapLeaderboardRecord, type SaveOutcome,
+    formatRunTime, loadPlayerName, normalizePlayerName,
+    saveRun, subscribeLeaderboard, useIsMyRow, type MapLeaderboardRecord, type SaveOutcome,
 } from "../utils/mapSpeedrun"
 
 /** `avgKm` is only reported by runs that measure distance (the capitals). */
@@ -48,7 +49,7 @@ const rankColor = ["text-amber-500", "text-slate-400", "text-orange-600 dark:tex
 export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, title, intro, noun, region, counts, result, onRegionChange, onStart, onClose }: Props<R>) {
     const boardRegion = result ? result.region : region
     const [board, setBoard] = useState<{ region: R; entries: MapLeaderboardRecord[] } | null>(null)
-    const [playerId] = useState(getPlayerId)
+    const isMine = useIsMyRow()
     const [name, setName] = useState(loadPlayerName)
     const [notice, setNotice] = useState<SaveOutcome | "failed" | null>(null)
     const [saving, setSaving] = useState(false)
@@ -160,12 +161,13 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                         ) : (
                             <ol className="divide-y divide-slate-200 dark:divide-slate-700">
                                 {entries.slice(0, 20).map((entry, idx) => (
-                                    <li key={entry.playerId} className={`flex items-center justify-between gap-3 py-2 ${entry.playerId === playerId ? "-mx-2 rounded-md bg-blue-500/10 px-2" : ""}`}>
+                                    <li key={entry.playerId} className={`flex items-center justify-between gap-3 py-2 ${isMine(entry) ? "-mx-2 rounded-md bg-blue-500/10 px-2" : ""}`}>
                                         <div className="flex min-w-0 items-center gap-3">
                                             <span className={`flex w-8 shrink-0 items-center gap-0.5 text-xs font-bold tabular-nums ${idx < 3 ? rankColor[idx] : "text-slate-400 dark:text-slate-500"}`}>
                                                 {idx < 3 ? <Medal size={14} aria-hidden /> : "#"}{idx + 1}
                                             </span>
                                             <span className="truncate font-semibold">{entry.name}</span>
+                                            {isMine(entry) && <YouTag />}
                                         </div>
                                         <div className="flex shrink-0 items-center gap-3">
                                             <span className="flex items-center gap-0.5 text-xs font-semibold text-red-500 dark:text-red-400" title="Mistakes">

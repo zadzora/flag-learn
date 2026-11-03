@@ -9,7 +9,8 @@ import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db, ensureSignedIn } from "../../lib/firebase"
-import { playerIdFor } from "../utils/mapSpeedrun"
+import { playerIdFor, useIsMyRow } from "../utils/mapSpeedrun"
+import YouTag from "../components/YouTag"
 import { bumpCounter } from "../utils/profileStore"
 
 type GameMode = "world" | "capitals" | "us"
@@ -82,6 +83,7 @@ export default function Highscore() {
     const [saveNotice, setSaveNotice] = useState<string | null>(null)
 
     const inputRef = useRef<HTMLInputElement>(null)
+    const isMine = useIsMyRow()
 
 
     const activeData = useMemo<QuizItem[]>(() => {
@@ -572,13 +574,14 @@ export default function Highscore() {
                             {modeLeaderboard.slice(0, 50).map((entry, idx) => (
                                 <li
                                     key={`${entry.name}-${idx}`}
-                                    className="flex items-center justify-between gap-3 py-2.5"
+                                    className={`flex items-center justify-between gap-3 py-2.5 ${isMine(entry) ? "-mx-2 rounded-md bg-blue-500/10 px-2" : ""}`}
                                 >
                                     <div className="flex min-w-0 items-center gap-3">
                                         <span className={`flex w-8 shrink-0 items-center gap-0.5 text-xs font-bold tabular-nums ${idx < 3 ? rankColor[idx] : "text-slate-400 dark:text-slate-500"}`}>
                                             {idx < 3 ? <Medal size={14} aria-hidden /> : "#"}{idx + 1}
                                         </span>
                                         <span className="truncate font-semibold">{entry.name}</span>
+                                        {isMine(entry) && <YouTag />}
                                     </div>
                                     <div className="flex shrink-0 items-center gap-3">
                                         <span className="flex items-center gap-0.5 text-xs font-semibold text-red-500 dark:text-red-400" title="Mistakes">

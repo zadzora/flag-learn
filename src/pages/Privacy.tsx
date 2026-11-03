@@ -145,11 +145,6 @@ export default function Privacy() {
                         on legitimate interest. For portability, <Link to="/profile#account" className={link}>Profile → Your progress → Download</Link> gives you
                         all your progress as a file at any time. Write to <Mail /> and you will get an answer within one month.
                     </p>
-                    <p>
-                        You can also complain to the Slovak supervisory authority, the{" "}
-                        <External href="https://dataprotection.gov.sk">Úrad na ochranu osobných údajov Slovenskej republiky</External>, or to the authority
-                        in your own EU country.
-                    </p>
                 </Section>
 
                 <Section title="Children">

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { X } from "lucide-react"
+import { Cloud, X } from "lucide-react"
 import { BadgeMedal, RankShield } from "./BadgeArt"
 import { ATLAS, RANKS, TIER_NAMES, checkProgress, trackById, type Unlock } from "../utils/achievements"
 import { PROGRESS_EVENT } from "../utils/profileStore"
+import { takeNudge } from "../utils/cloudSave"
 
 /**
  * Watches every save on the site and announces what it earns, on whatever page
@@ -24,7 +25,8 @@ const QUIET_ROUTES = ["/road-trip", "/daily-rally"]
 /** Badges first, then continents, then the rank they add up to - the order they make sense in. */
 const ORDER: Record<Unlock["kind"], number> = { welcome: 0, badge: 1, continent: 2, rank: 3 }
 
-type Queued = { key: number; unlock: Unlock }
+/** A badge to announce, or the one-time suggestion to keep the progress in an account. */
+type Queued = { key: number; unlock: Unlock } | { key: number; nudge: true }
 let nextKey = 0
 
 export default function AchievementToasts() {
@@ -36,7 +38,9 @@ export default function AchievementToasts() {
         const run = () => {
             const { unlocks } = checkProgress()
             if (!unlocks.length) return
-            const sorted = unlocks.sort((a, b) => ORDER[a.kind] - ORDER[b.kind]).map(unlock => ({ key: nextKey++, unlock }))
+            const sorted: Queued[] = unlocks.sort((a, b) => ORDER[a.kind] - ORDER[b.kind]).map(unlock => ({ key: nextKey++, unlock }))
+            // The first badge is when a guest first has something to lose: suggest an account once, after it.
+            if (unlocks.some(u => u.kind === "badge" || u.kind === "welcome") && takeNudge()) sorted.push({ key: nextKey++, nudge: true })
             setQueue(q => [...q, ...sorted])
         }
         // Deferred: a page that has just mounted may write its save in its own first effect.
@@ -59,14 +63,14 @@ export default function AchievementToasts() {
 
     useEffect(() => {
         if (!current) return
-        const timer = window.setTimeout(() => setQueue(q => q.slice(1)), current.unlock.kind === "badge" ? SHOW_MS : SHOW_MS + 2500)
+        const timer = window.setTimeout(() => setQueue(q => q.slice(1)), "unlock" in current && current.unlock.kind === "badge" ? SHOW_MS : SHOW_MS + 2500)
         return () => window.clearTimeout(timer)
     }, [current])
 
     const dismiss = () => setQueue(q => q.slice(1))
     const open = () => {
         setQueue([])
-        navigate("/profile")
+        navigate(current && "nudge" in current ? "/profile#account" : "/profile")
     }
 
     return (
@@ -86,7 +90,7 @@ export default function AchievementToasts() {
                             onClick={open}
                             className="flex w-full items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-3.5 pr-10 text-left font-normal shadow-[0_12px_40px_rgba(10,14,26,0.28)] hover:border-slate-400 dark:border-[#2A3352] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
                         >
-                            <ToastBody unlock={current.unlock} />
+                            {"unlock" in current ? <ToastBody unlock={current.unlock} /> : <NudgeBody />}
                         </button>
                         <button
                             type="button"
@@ -104,6 +108,21 @@ export default function AchievementToasts() {
 }
 
 const kicker = "block text-[11px] font-bold uppercase tracking-[0.08em]"
+
+function NudgeBody() {
+    return (
+        <>
+            <span className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-[#16223F] dark:text-blue-300">
+                <Cloud size={28} aria-hidden />
+            </span>
+            <span className="min-w-0">
+                <span className={`${kicker} text-blue-600 dark:text-blue-300`}>Keep your progress</span>
+                <span className="block text-base font-bold text-slate-900 dark:text-white">It lives in this browser only</span>
+                <span className="block text-[13px] text-slate-500 dark:text-[#8C97B3]">Sign in with Google to keep it on any device - optional</span>
+            </span>
+        </>
+    )
+}
 const KICKER_TONE = ["text-slate-500", "text-[#B06A34] dark:text-[#D9955E]", "text-slate-500 dark:text-[#B7C2D3]", "text-amber-600 dark:text-amber-400", "text-sky-600 dark:text-sky-300"]
 
 /** Rays behind the picture for the big moments; still under reduced motion. */

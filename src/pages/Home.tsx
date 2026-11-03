@@ -4,7 +4,7 @@ import {
     ArrowRight, Car, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
 } from "lucide-react"
 import {
-    AtomIcon, BlurModeIcon, BorderChainIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
+    AtomIcon, BlurModeIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
     HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, UltimateIcon, WorldConquerorIcon, type ModeIcon,
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
@@ -43,6 +43,7 @@ const MULTIPLAYER: Entry[] = [
     { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon },
     { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
     { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon, badge: "New" },
+    { to: "/capital-speedrun", label: "Capital Speedrun", detail: "Pin a region's capitals on the map against the clock", icon: CapitalSpeedrunIcon, badge: "New" },
 ]
 
 const MORE_MODES: Entry[] = [
@@ -52,6 +53,7 @@ const MORE_MODES: Entry[] = [
     { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - which country is higher", icon: HigherLowerIcon },
     { to: "/ultimate", label: "Ultimate Mode", detail: "Locate the flag, then name the country and its capital", icon: UltimateIcon },
     { to: "/map", label: "Map Locator", detail: "Find countries on the world map", icon: MapLocatorIcon },
+    { to: "/capital-map", label: "Capital Pinpoint", detail: "Click exactly where each capital is on the map", icon: CapitalPinpointIcon, badge: "New" },
     { to: "/blur", label: "Blur Mode", detail: "Guess the flag as it slowly comes into focus", icon: BlurModeIcon },
     { to: "/word-wheel", label: "Country Wheel", detail: "Connect letters on the wheel to spell countries", icon: CountryWheelIcon },
     { to: "/constellations", label: "Constellations", detail: "Map the stars of the night sky", icon: ConstellationsIcon },
@@ -471,7 +473,7 @@ export default function Home() {
                 about={
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
-                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong> and <strong>Map Speedrun</strong> races.
+                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Capital Pinpoint</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong>, <strong>Map Speedrun</strong> and <strong>Capital Speedrun</strong> races.
                         The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>

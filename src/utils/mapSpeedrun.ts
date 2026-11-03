@@ -7,7 +7,7 @@
  */
 import { onValue, ref, set } from "firebase/database"
 import countryStatsData from "../../data/countryStats.json"
-import { db } from "../../lib/firebase"
+import { db, ensureSignedIn } from "../../lib/firebase"
 
 export type MapRegion = "world" | "europe" | "africa" | "asia" | "americas"
 
@@ -40,7 +40,11 @@ const invMercY = (y: number) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * 180
  * Europe came out a thumbnail.
  */
 export function regionCamera(id: MapRegion, screenW: number, screenH: number, headerH: number): { coordinates: [number, number]; zoom: number } {
-    const bounds = regionInfo(id).bounds
+    return fitCamera(regionInfo(id).bounds, screenW, screenH, headerH)
+}
+
+/** The camera that fits any lon/lat box (`[west, south, east, north]`) into the screen under the header. */
+export function fitCamera(bounds: [number, number, number, number] | null, screenW: number, screenH: number, headerH: number, maxZoom = 12): { coordinates: [number, number]; zoom: number } {
     if (!bounds || screenW <= 0 || screenH <= 0) return { coordinates: [0, 0], zoom: 1 }
     const [west, south, east, north] = bounds
 
@@ -49,7 +53,7 @@ export function regionCamera(id: MapRegion, screenW: number, screenH: number, he
     const usableH = Math.max(1, screenH - headerH) / fit
     const boxW = ((east - west) * Math.PI / 180) * SCALE
     const boxH = (mercY(north) - mercY(south)) * SCALE
-    const zoom = Math.max(1, Math.min(12, 0.94 * Math.min(usableW / boxW, usableH / boxH)))
+    const zoom = Math.max(1, Math.min(maxZoom, 0.94 * Math.min(usableW / boxW, usableH / boxH)))
 
     // Centre the box in the free area, which sits half a header below the middle of the screen.
     const shift = headerH / 2 / fit / zoom / SCALE
@@ -71,21 +75,39 @@ export type MapLeaderboardRecord = {
     bestTimeSeconds: number
     mistakes: number
     playerId: string
+    /** The account that wrote the row; only it may improve it. Rows from before accounts have none. */
+    uid?: string
 }
 
 const PLAYER_ID_STORAGE_KEY = "flag-master-player-id-v1" // shared with the Highscore page
 const PLAYER_NAME_KEY = "flag-master-map-speedrun-name"
 
-const boardPath = (id: MapRegion) => `highscores/map-${id}`
+/** Board keys under `highscores/`: `map-<region>` here, `capmap-<region>` for the capitals. */
+export const mapBoard = (id: MapRegion) => `map-${id}`
+const boardPath = (board: string) => `highscores/${board}`
 
 export function getPlayerId(): string {
-    const existing = localStorage.getItem(PLAYER_ID_STORAGE_KEY)
-    if (existing) return existing
+    return localStorage.getItem(PLAYER_ID_STORAGE_KEY) || newPlayerId()
+}
+
+/**
+ * Starts a fresh leaderboard identity. Needed when this browser's rows belong
+ * to another account - it signed into a different one since - because the
+ * rules let only the writing account improve a row.
+ */
+export function newPlayerId(): string {
     const generated = typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `player-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
     localStorage.setItem(PLAYER_ID_STORAGE_KEY, generated)
     return generated
+}
+
+/** The id to write under for `uid`, given the board as it stands. */
+export function playerIdFor(uid: string, board: { playerId?: string; uid?: string }[]): string {
+    const id = getPlayerId()
+    const mine = board.find(r => r.playerId === id)
+    return mine?.uid && mine.uid !== uid ? newPlayerId() : id
 }
 
 export function loadPlayerName(): string {
@@ -114,14 +136,15 @@ function byTimeThenMistakes(a: MapLeaderboardRecord, b: MapLeaderboardRecord) {
     return a.mistakes - b.mistakes
 }
 
-export function subscribeLeaderboard(id: MapRegion, onChange: (entries: MapLeaderboardRecord[]) => void): () => void {
-    return onValue(ref(db, boardPath(id)), snapshot => {
+export function subscribeLeaderboard(board: string, onChange: (entries: MapLeaderboardRecord[]) => void): () => void {
+    return onValue(ref(db, boardPath(board)), snapshot => {
         const raw = snapshot.val() as Record<string, Partial<MapLeaderboardRecord>> | null
         const entries = Object.entries(raw || {}).map(([pid, value]) => ({
             name: normalizePlayerName(value?.name || "Player") || "Player",
             bestTimeSeconds: typeof value?.bestTimeSeconds === "number" ? value.bestTimeSeconds : 72000,
             mistakes: typeof value?.mistakes === "number" ? value.mistakes : 0,
             playerId: value?.playerId || pid,
+            uid: typeof value?.uid === "string" ? value.uid : undefined,
         }))
         entries.sort(byTimeThenMistakes)
         onChange(entries)
@@ -132,12 +155,13 @@ export type SaveOutcome = "first" | "improved" | "not-better"
 
 /** Writes a run if it beats the player's own record. The rules refuse anything
  *  slower too; checking first only spares the round trip and explains why. */
-export async function saveRun(id: MapRegion, board: MapLeaderboardRecord[], name: string, seconds: number, mistakes: number): Promise<SaveOutcome> {
-    const playerId = getPlayerId()
-    const record: MapLeaderboardRecord = { name, bestTimeSeconds: roundRunTime(seconds), mistakes: Math.min(10000, mistakes), playerId }
+export async function saveRun(boardKey: string, board: MapLeaderboardRecord[], name: string, seconds: number, mistakes: number): Promise<SaveOutcome> {
+    const { uid } = await ensureSignedIn()
+    const playerId = playerIdFor(uid, board)
+    const record: MapLeaderboardRecord = { name, bestTimeSeconds: roundRunTime(seconds), mistakes: Math.min(10000, mistakes), playerId, uid }
     const existing = board.find(r => r.playerId === playerId)
     if (existing && byTimeThenMistakes(record, existing) >= 0) return "not-better"
-    await set(ref(db, `${boardPath(id)}/${playerId}`), record)
+    await set(ref(db, `${boardPath(boardKey)}/${playerId}`), record)
     try { localStorage.setItem(PLAYER_NAME_KEY, name) } catch { /* the name is a convenience */ }
     return existing ? "improved" : "first"
 }

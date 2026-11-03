@@ -14,7 +14,9 @@ the exception - they are centred on their cream disc, because an emblem is place
 on that disc and a star or ribbon must not push it off centre.
 
 Re-run after replacing a sheet. The names below are the contract with
-src/utils/achievements.ts; a sheet whose grid does not match is refused.
+src/utils/achievements.ts; a sheet whose grid does not match is refused. A
+`None` name skips its cell - `icons_3.png` is a mode-icon sheet that came back
+in the badge style, and only its first cell is used as an emblem.
 """
 from pathlib import Path
 import sys
@@ -47,6 +49,7 @@ SHEETS = {
     ]),
     "badges_ranks.png": (4, 2, [f"rank-{i}" for i in range(8)]),
     "badges_fx.png": (3, 2, ["lock", "unlock", "ribbon", "sparkle", "burst", "confetti"]),
+    "icons_3.png": (3, 2, ["capital-map", None, None, None, None, None]),
 }
 
 
@@ -162,11 +165,13 @@ def main() -> None:
         half = int(half * 1.04) + 2
 
         for (rgba, *_), (cy, cx), name in zip(cells, centres, names):
+            if name is None:
+                continue
             canvas = Image.new("RGBA", (half * 2, half * 2), (0, 0, 0, 0))
             img = Image.fromarray(rgba, "RGBA")
             canvas.paste(img, (int(round(half - cx)), int(round(half - cy))))
             canvas.resize((SIZE, SIZE), Image.LANCZOS).save(OUT / f"{name}.webp", "WEBP", quality=90, method=6)
-        print(f"{sheet}: {len(cells)} -> {', '.join(names)}")
+        print(f"{sheet}: {len(cells)} -> {', '.join(n for n in names if n)}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
  * Every badge is a **track**: one metric and four thresholds, bronze to
  * platinum. Its picture is composed, not drawn - a tier frame plus the track's
  * emblem (public/badges, cut from the sheets in graphic/ by
- * scripts/gen-badge-sprites.py) - so 32 emblems and 4 frames are every badge.
+ * scripts/gen-badge-sprites.py) - so 33 emblems and 4 frames are every badge.
  *
  * Metrics are read off the saves the games already keep, which is what makes the
  * badges retroactive: a player who mastered 120 flags before badges existed
@@ -25,6 +25,7 @@ import { DAILY_MODES } from "./dailyModes"
 import { ELEMENTS, ELEMENT_MODES } from "./elements"
 import { QUANTITIES, QUANTITY_MODES } from "./quantities"
 import { FORMULAS, FORMULA_MODES } from "./formulas"
+import { CAPITALS, PROGRESS_KEY as CAPITAL_MAP_KEY } from "./capitalMap"
 import { PROFILE_EVENT, readStore, todayUtc, writeStore, type ProfileStore } from "./profileStore"
 
 const MASTERED = 3
@@ -90,6 +91,7 @@ export function readSnapshot(store: ProfileStore | null): Snapshot {
     const capitals = masteredIn("flag-master-capitals-v1", true)
     const us = masteredIn("flag-master-us-v1", true)
     const map = masteredIn("flag-master-map-v1", true)
+    const capitalMap = masteredIn(CAPITAL_MAP_KEY, true)
     const constellations = masteredIn("flag-master-constellations-v1", true)
 
     const elementMaps = Object.fromEntries(ELEMENT_MODES.map(m => [m.key, masteredIn(m.storageKey, false)]))
@@ -110,13 +112,14 @@ export function readSnapshot(store: ProfileStore | null): Snapshot {
     const counters = store?.counters ?? {}
     const records = store?.records ?? {}
 
-    const learned = world.size + capitals.size + us.size + map.size + constellations.size + elements + quantities + formulas
+    const learned = world.size + capitals.size + us.size + map.size + capitalMap.size + constellations.size + elements + quantities + formulas
 
     const metrics: Record<string, number> = {
         flags: world.size,
         capitals: capitals.size,
         "us-states": us.size,
         map: map.size + numberIn("border-guess-v1", "completed"),
+        "capital-map": capitalMap.size,
         constellations: constellations.size,
         elements,
         quantities,
@@ -187,6 +190,7 @@ export const TRACKS: Track[] = [
     { id: "us-states", title: "Fifty stars", area: "learn", unit: ["state", "states"], tiers: [5, 20, 35, US_TOTAL], detail: "US state flags mastered", to: "/play" },
     { id: "continents", title: "Continental", area: "learn", unit: ["continent", "continents"], tiers: [1, 3, 5, CONTINENTS.length], detail: "Continents with every flag mastered", to: "/play" },
     { id: "map", title: "Map reader", area: "learn", unit: ["country", "countries"], tiers: [10, 50, 120, 200], detail: "Countries placed in Map Locator and Border Guess", to: "/map" },
+    { id: "capital-map", title: "Pinpoint", area: "learn", unit: ["capital", "capitals"], tiers: [10, 50, 120, CAPITALS.length], detail: "Capitals mastered on the map in Capital Pinpoint", to: "/capital-map" },
     { id: "sharp-eye", title: "Sharp eye", area: "learn", unit: ["answer", "answers"], tiers: [10, 25, 50, 100], detail: "Correct answers in a row in the flag quiz", to: "/play" },
     { id: "paint", title: "Painter", area: "learn", unit: ["flag", "flags"], tiers: [5, 25, 75, 150], detail: "Flags painted in Paint the Flag", to: "/paint" },
     { id: "word-wheel", title: "Wordsmith", area: "learn", unit: ["level", "levels"], tiers: [5, 15, 30, 60], detail: "Country Wheel levels solved", to: "/word-wheel" },
@@ -214,7 +218,7 @@ export const TRACKS: Track[] = [
     { id: "conqueror", title: "Conqueror", area: "multiplayer", unit: ["territory", "territories"], tiers: [1, 5, 20, 50], detail: "Territories taken in World Conqueror", to: "/world-conqueror" },
     { id: "pvp", title: "Duelist", area: "multiplayer", unit: ["win", "wins"], tiers: [1, 5, 20, 50], detail: "PvP battles won", to: "/pvp/create" },
     // A run is a whole deck or region against the clock, so the tiers stay low. Any mode counts on its own.
-    { id: "highscore", title: "Speedrunner", area: "multiplayer", unit: ["run", "runs"], tiers: [1, 3, 10, 25], detail: "Speedruns finished, in Highscore or Map Speedrun", to: "/highscore" },
+    { id: "highscore", title: "Speedrunner", area: "multiplayer", unit: ["run", "runs"], tiers: [1, 3, 10, 25], detail: "Speedruns finished, in Highscore, Map Speedrun or Capital Speedrun", to: "/highscore" },
 
     { id: "scholar", title: "Scholar", area: "milestones", unit: ["thing learned", "things learned"], tiers: [25, 150, 400, 800], detail: "Everything mastered, across every topic" },
     { id: "streak", title: "On fire", area: "milestones", unit: ["day", "days"], tiers: [3, 7, 14, 30], detail: "Longest run of days in a row with progress" },

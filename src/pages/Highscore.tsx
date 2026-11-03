@@ -8,7 +8,8 @@ import { onValue, ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
-import { db } from "../../lib/firebase"
+import { db, ensureSignedIn } from "../../lib/firebase"
+import { playerIdFor } from "../utils/mapSpeedrun"
 import { bumpCounter } from "../utils/profileStore"
 
 type GameMode = "world" | "capitals" | "us"
@@ -25,11 +26,11 @@ type LeaderboardRecord = {
     bestTimeSeconds: number
     mistakes: number
     playerId?: string
+    uid?: string
 }
 
 type LeaderboardsByMode = Record<GameMode, LeaderboardRecord[]>
 
-const PLAYER_ID_STORAGE_KEY = "flag-master-player-id-v1"
 const THEME_KEY = "flag-master-theme"
 
 const MODE_LABELS: Record<GameMode, string> = {
@@ -82,16 +83,6 @@ export default function Highscore() {
 
     const inputRef = useRef<HTMLInputElement>(null)
 
-    const playerId = useMemo(() => {
-        if (typeof window === "undefined") return "server-player"
-        const existing = localStorage.getItem(PLAYER_ID_STORAGE_KEY)
-        if (existing) return existing
-        const generated = typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `player-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-        localStorage.setItem(PLAYER_ID_STORAGE_KEY, generated)
-        return generated
-    }, [])
 
     const activeData = useMemo<QuizItem[]>(() => {
         if (gameMode === "us") return usData as unknown as QuizItem[]
@@ -123,6 +114,7 @@ export default function Highscore() {
                     bestTimeSeconds: clampNumber(typeof value?.bestTimeSeconds === "number" ? value.bestTimeSeconds : 0, 0, 72000),
                     mistakes: clampNumber(typeof value?.mistakes === "number" ? value.mistakes : 0, 0, 10000),
                     playerId: value?.playerId || pid,
+                    uid: typeof value?.uid === "string" ? value.uid : undefined,
                 }))
                 entries.sort((a, b) => {
                     if (a.bestTimeSeconds !== b.bestTimeSeconds) return a.bestTimeSeconds - b.bestTimeSeconds
@@ -257,14 +249,23 @@ export default function Highscore() {
         }, 1200)
     }
 
-    const saveScore = () => {
+    const saveScore = async () => {
         if (finishedTime === null) return
         const cleanedName = normalizePlayerName(nameInput)
         if (!cleanedName) return
         const safeFinishedTime = clampNumber(finishedTime, 0, 72000)
         const safeFinishedMistakes = clampNumber(finishedMistakes, 0, 10000)
 
+        // The row belongs to the account that writes it; the rules refuse anyone else.
+        let uid: string
+        try {
+            uid = (await ensureSignedIn()).uid
+        } catch {
+            setSaveNotice("Save failed. Check Firebase connection/config.")
+            return
+        }
         const modeBoard = [...leaderboards[gameMode]]
+        const playerId = playerIdFor(uid, modeBoard)
         const existingIdx = modeBoard.findIndex((r) => r.playerId === playerId)
         let didSave = false
         let notice = ""
@@ -306,6 +307,7 @@ export default function Highscore() {
             bestTimeSeconds: safeFinishedTime,
             mistakes: safeFinishedMistakes,
             playerId,
+            uid,
         }
 
         set(ref(db, `highscores/${gameMode}/${playerId}`), recordToSave)

@@ -10,6 +10,7 @@ import DailyConnections from "./pages/DailyConnections"
 import DailyGauntlet from "./pages/DailyGauntlet"
 import DailyDeduction from "./pages/DailyDeduction"
 import MapGame from "./pages/MapGame"
+import CapitalMapGame from "./pages/CapitalMapGame"
 import ConstellationGame from "./pages/ConstellationGame"
 import ConstellationBuilder from "./pages/ConstellationBuilder"
 import UltimateGame from "./pages/UltimateGame"
@@ -46,6 +47,8 @@ export default function App() {
                 <Route path="/daily-deduction" element={<DailyDeduction />} />
                 <Route path="/map" element={<MapGame key="learn" />} />
                 <Route path="/map-speedrun" element={<MapGame key="speedrun" mode="speedrun" />} />
+                <Route path="/capital-map" element={<CapitalMapGame key="learn" />} />
+                <Route path="/capital-speedrun" element={<CapitalMapGame key="speedrun" mode="speedrun" />} />
                 <Route path="/constellations" element={<ConstellationGame />} />
                 <Route path="/builder" element={<ConstellationBuilder />} />
                 <Route path="/ultimate" element={<UltimateGame />} />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Swords, Loader2, Clock, Users, User, EyeOff } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
-import { db } from "../../lib/firebase"
+import { db, ensureSignedIn } from "../../lib/firebase"
 import { ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -47,8 +47,15 @@ export default function CreateGame() {
         setIsCreating(true)
 
         const gameId = Math.random().toString(36).substring(2, 8)
-        const hostId = "host_" + Math.random().toString(36).substring(2, 9)
-        localStorage.setItem("flag-master-my-id", hostId)
+        // The host is their anonymous account: the rules let only the host start the game.
+        let hostId: string
+        try {
+            hostId = (await ensureSignedIn()).uid
+        } catch {
+            alert("Could not connect to the game server.")
+            setIsCreating(false)
+            return
+        }
 
         let dataSet: any[] = []
         if (region === 'us') {
@@ -77,7 +84,7 @@ export default function CreateGame() {
             startTime: 0,
             players: {
                 [hostId]: {
-                    name: nickname,
+                    name: nickname.trim().slice(0, 24),
                     score: 0,
                     currentIndex: 0,
                     finished: false,

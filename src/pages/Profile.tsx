@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
-import { ArrowRight, Check, PencilLine, X } from "lucide-react"
+import { ArrowRight, Check, PencilLine } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
+import Overlay from "../components/Overlay"
+import AccountPanel, { AccountLine } from "../components/AccountPanel"
 import { BadgeMedal, RankShield } from "../components/BadgeArt"
 import {
     AREAS, ATLAS, LEARNED_POINTS, RANKS, TIER_NAMES, TIER_POINTS, TRACKS, WORLD,
@@ -131,10 +133,13 @@ export default function Profile() {
                                 onClick={() => setPickingAvatar(true)}
                                 aria-label="Choose your flag"
                                 title={owned.length ? "Choose your flag" : "Master a flag to wear it here"}
-                                className="group relative h-[84px] w-[84px] min-h-0 shrink-0 overflow-hidden rounded-[10px] border border-slate-200 bg-slate-100 p-0 dark:border-[#2A3352] dark:bg-[#121829]"
+                                className="group relative flex h-[84px] w-[126px] min-h-0 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-slate-200 bg-slate-100 p-0 dark:border-[#2A3352] dark:bg-[#121829]"
                             >
+                                {/* A flag-shaped frame, and contain rather than cover: a square crop cut the
+                                    hoist off Slovakia and pushed Bangladesh's disc to the edge. Flags that are
+                                    not 3:2 (Nepal, Switzerland, Qatar) letterbox instead of losing a part. */}
                                 {avatar ? (
-                                    <img src={avatar.image} alt="" className="h-full w-full object-cover" />
+                                    <img src={avatar.image} alt="" className="h-full w-full object-contain" />
                                 ) : (
                                     <img src="/badges/flags.webp" alt="" className="mx-auto h-14 w-14" />
                                 )}
@@ -179,6 +184,7 @@ export default function Profile() {
                                 <p className={`mt-0.5 text-sm ${muted}`}>
                                     <strong className="text-slate-900 dark:text-white">{earnedCount}</strong> of {TRACKS.length} badges · {tiersCount} of {TRACKS.length * 4} tiers
                                 </p>
+                                <AccountLine />
                             </div>
                         </div>
 
@@ -242,7 +248,7 @@ export default function Profile() {
                                 <div className="flex flex-wrap gap-[3px]">
                                     {flags.map(f =>
                                         snapshot.worldMastered.has(f.code) ? (
-                                            <img key={f.code} src={f.image} alt="" title={Array.isArray(f.name) ? f.name[0] : f.name} loading="lazy" className="h-4 w-6 rounded-[2px] object-cover" />
+                                            <img key={f.code} src={f.image} alt="" title={Array.isArray(f.name) ? f.name[0] : f.name} loading="lazy" className="h-4 w-6 rounded-[2px] object-contain" />
                                         ) : (
                                             <span key={f.code} className="h-4 w-6 rounded-[2px] bg-slate-200 dark:bg-[#1C2338]" />
                                         ),
@@ -304,6 +310,10 @@ export default function Profile() {
                     </div>
                     <Records store={store} />
                 </div>
+
+                {/* --- Where the progress is kept --- */}
+                <SectionHead title="Your progress" />
+                <AccountPanel />
             </main>
 
             <SiteFooter />
@@ -345,24 +355,6 @@ function BadgeCard({ track, value, onOpen }: { track: Track; value: number; onOp
                 {complete ? "Complete" : `${value.toLocaleString()} / ${target.toLocaleString()}`}
             </span>
         </button>
-    )
-}
-
-function Overlay({ children, onClose, label }: { children: ReactNode; onClose: () => void; label: string }) {
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
-        window.addEventListener("keydown", onKey)
-        return () => window.removeEventListener("keydown", onKey)
-    }, [onClose])
-    return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0A0E1A]/60 p-4 sm:items-center" onClick={onClose} role="dialog" aria-label={label}>
-            <div className={`${panel} relative max-h-[85vh] w-full max-w-[520px] overflow-y-auto p-5 sm:p-6`} onClick={e => e.stopPropagation()}>
-                <button type="button" onClick={onClose} aria-label="Close" className="absolute right-3 top-3 flex h-8 min-h-0 w-8 items-center justify-center rounded-lg p-0 text-slate-400 hover:text-slate-800 dark:hover:text-white">
-                    <X size={18} aria-hidden />
-                </button>
-                {children}
-            </div>
-        </div>
     )
 }
 
@@ -427,7 +419,7 @@ function AvatarPicker({ owned, current, onPick, onClose }: { owned: typeof WORLD
                             title={Array.isArray(f.name) ? f.name[0] : f.name}
                             className={`min-h-0 overflow-hidden rounded-md border-2 p-0 ${f.code === current ? "border-amber-500" : "border-transparent hover:border-slate-400"}`}
                         >
-                            <img src={f.image} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                            <img src={f.image} alt="" loading="lazy" className="aspect-[3/2] w-full object-contain" />
                         </button>
                     ))}
                 </div>
@@ -526,6 +518,7 @@ function Records({ store }: { store: ProfileStore }) {
         ["Rally streak", readStreak(STREAK_KEYS.rally).best, days],
         ["Right answers in a row", store.records["sharp-eye"] ?? 0, n => n.toLocaleString()],
         ["Higher or Lower run", store.records["higher-lower"] ?? 0, n => n.toLocaleString()],
+        ["Capitals in range in a row", store.records.pinpoint ?? 0, n => n.toLocaleString()],
         ["Flags named in a row (Road Trip)", log.streak.best, n => n.toLocaleString()],
         ["Best drift", Math.round(log.drift.best), n => `${n.toLocaleString()} pts`],
     ]

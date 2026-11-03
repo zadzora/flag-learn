@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
-import { db } from "../../lib/firebase"
+import { db, ensureSignedIn } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
 import { Copy, Check, Users, Trophy, Play, Home, Clock, X, Timer, Loader2, AlertTriangle, WifiOff, Landmark, EyeOff, PartyPopper, PencilLine } from "lucide-react"
 import { motion } from "framer-motion"
@@ -48,7 +48,8 @@ export default function PvPGame() {
 
     const [gameData, setGameData] = useState<GameData | null>(null)
 
-    const [myId, setMyId] = useState<string | null>(() => localStorage.getItem("flag-master-my-id"))
+    /** The anonymous account's uid: the rules let each player write only their own row. */
+    const [myId, setMyId] = useState<string | null>(null)
     const [myName, setMyName] = useState<string>(() => localStorage.getItem("flag-master-nickname") || "")
     const [needsName, setNeedsName] = useState(!localStorage.getItem("flag-master-nickname"))
 
@@ -83,13 +84,23 @@ export default function PvPGame() {
 
     // --- 1. Connect ---
     useEffect(() => {
-        if (!gameId) return
-
-        if (!myId) {
-            const newId = "player_" + Math.random().toString(36).substring(2, 9)
-            localStorage.setItem("flag-master-my-id", newId)
-            setMyId(newId)
+        let alive = true
+        ensureSignedIn()
+            .then(user => {
+                if (alive) setMyId(user.uid)
+            })
+            .catch(() => {
+                if (!alive) return
+                alert("Could not connect to the game server.")
+                navigate("/")
+            })
+        return () => {
+            alive = false
         }
+    }, [navigate])
+
+    useEffect(() => {
+        if (!gameId || !myId) return
 
         const gameRef = ref(db, `games/${gameId}`)
 
@@ -103,7 +114,7 @@ export default function PvPGame() {
 
             if (needsName) return
 
-            tryJoinGame(data, myId!)
+            tryJoinGame(data, myId)
         })
 
         const unsubscribe = onValue(gameRef, (snapshot) => {
@@ -173,7 +184,7 @@ export default function PvPGame() {
 
         const playerRef = ref(db, `games/${gameId}/players/${playerId}`)
         set(playerRef, {
-            name: myName,
+            name: myName.trim().slice(0, 24),
             score: 0,
             currentIndex: 0,
             finished: false,
@@ -426,6 +437,7 @@ export default function PvPGame() {
                             type="text"
                             value={myName}
                             onChange={(e) => setMyName(e.target.value)}
+                            maxLength={24}
                             className={`${textInput} mb-4 px-4 py-3 font-bold`}
                             placeholder="Your Name"
                             autoFocus

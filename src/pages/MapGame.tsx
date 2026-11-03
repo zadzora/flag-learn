@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight } from "lucide-react"
 import { BarButton } from "../components/TopBar"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
-import { MAP_REGIONS, PENALTY_SECONDS, formatRunTime, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion } from "../utils/mapSpeedrun"
+import { MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion } from "../utils/mapSpeedrun"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import { bumpCounter } from "../utils/profileStore"
 import worldData from "../../data/flags.json"
@@ -163,7 +163,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
     const [showSpeedrunSetup, setShowSpeedrunSetup] = useState(isSpeedrunMode)
     const [speedrunRegion, setSpeedrunRegion] = useState<MapRegion>("world")
     const [run, setRun] = useState<SpeedrunRun | null>(null)
-    const [runResult, setRunResult] = useState<MapRunResult | null>(null)
+    const [runResult, setRunResult] = useState<MapRunResult<MapRegion> | null>(null)
     const [runElapsed, setRunElapsed] = useState(0)
     const [penaltyFxKey, setPenaltyFxKey] = useState(0)
     // Bumped on every start and exit, so a pending next-country timeout from an abandoned run does nothing.
@@ -998,6 +998,11 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                 {(showSpeedrunSetup || runResult) && (
                     <MapSpeedrunPanel
                         key={runResult ? 'result' : 'setup'}
+                        regions={MAP_REGIONS}
+                        boardFor={mapBoard}
+                        title="Map Speedrun"
+                        intro={<>Click every country as fast as you can. A wrong click adds <strong className="text-slate-900 dark:text-white">+{PENALTY_SECONDS}s</strong> and the country comes back later.</>}
+                        noun="countries"
                         region={speedrunRegion}
                         counts={REGION_COUNTS}
                         result={runResult}

@@ -119,17 +119,10 @@ Console — no tooling, fine for a one-off:
 > `firebase-realtime.rules.json` → **Publish**.
 > The console validates before it publishes, so a syntax error never lands.
 
-CLI — repeatable, and what you want once this happens more than twice. It needs
-two config files that are **not in the repo yet**:
+CLI — repeatable, and what you want once this happens more than twice.
+`.firebaserc` and `firebase.json` in the repo already point it at this project
+and this rules file:
 
-```jsonc
-// .firebaserc
-{ "projects": { "default": "flaglearnpvp" } }
-```
-```jsonc
-// firebase.json
-{ "database": { "rules": "firebase-realtime.rules.json" } }
-```
 ```bash
 npm i -g firebase-tools
 firebase login
@@ -147,6 +140,64 @@ Until both are done World Conqueror and Border Chain show an explanatory
 offline screen and every other mode keeps working untouched. Leave **auto clean-up** off on the
 anonymous provider: it deletes accounts after 30 days, and since the account
 is what owns a territory, that would quietly wipe a player's empire.
+
+### Accounts and the cloud save
+
+Signing in is optional. A guest plays exactly as before, on `localStorage`; the
+profile offers **Sign in with Google**, which keeps a copy of the progress in
+the account so it survives cleared site data and follows the player to another
+device. Guests can also download and restore a backup file, with no account.
+
+What is stored: only the saves listed in `src/utils/cloudMerge.ts`, under
+`users/<uid>/save`, readable and writable by that account alone. No email, name
+or photo goes into the database — the email lives in Firebase Auth. Anonymous
+accounts cannot store anything there.
+
+One-off setup, in this order:
+
+1. **Authentication → Sign-in method → Google → Enable** (pick a support email).
+2. **Authentication → Settings → Authorized domains**: add `flaglearn.eu` and
+   `www.flaglearn.eu`. Leave `localhost` for development. Do **not** add
+   `*.vercel.app` — preview deployments simply cannot sign in.
+3. **Deploy the rules, then the site, close together.** The rules now also
+   require a signed-in (anonymous is enough) player for PvP games and
+   highscores, which the new client does and the old one does not: rules
+   without the new site break PvP and highscore saving, the new site without
+   the rules cannot save to accounts.
+4. Recommended: **Authentication → Settings → User actions → sign-up quota**,
+   kept generous (hundreds per hour from one IP — a school class shares one
+   address); **Google Cloud → APIs & Services → Credentials** restrict the
+   browser API key to the site's domains; check **Realtime Database → Usage**
+   now and then — the Spark plan stops serving at its limits rather than
+   billing.
+
+**App Check (optional).** Create a reCAPTCHA v3 key, register it under App Check
+→ Apps, and set `VITE_RECAPTCHA_SITE_KEY` in the Vercel environment. Leave
+enforcement **off** at first and watch the App Check metrics for how many real
+requests would be refused; enforce only once that is near zero. In `npm run dev`
+the SDK prints a debug token to register in the console.
+
+**Security headers** (`vercel.json`): the Content Security Policy ships as
+`Report-Only` — violations show in the browser console and nothing is blocked.
+Switch the header name to `Content-Security-Policy` once a production session
+(sign-in included) shows none. Clickjacking protection (`frame-ancestors`,
+`X-Frame-Options`) is deliberately not enforced while it is unclear whether the
+game is embedded anywhere in an iframe.
+
+### Testing against the emulators
+
+```bash
+npm test                 # the cloud save's join, plain Node
+npm run test:rules       # the database rules against the emulator (needs Java)
+npm run emulators        # auth + database emulators for manual testing
+```
+
+To click through sign-in without touching real players, run `npm run emulators`
+and start the dev server with
+`VITE_FIREBASE_EMULATORS=1 VITE_FIREBASE_PROJECT_ID=demo-flaglearn VITE_FIREBASE_DATABASE_URL=https://demo-flaglearn-default-rtdb.firebaseio.com npm run dev`.
+The auth emulator stands in for Google with a page of made-up accounts. Load
+the rules into it first:
+`curl -X PUT -H "Authorization: Bearer owner" --data-binary @firebase-realtime.rules.json "http://127.0.0.1:9000/.settings/rules.json?ns=demo-flaglearn-default-rtdb"`.
 
 ### World Conqueror notes
 

@@ -1,22 +1,35 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import { Medal, Repeat, Timer, X } from "lucide-react"
 import { BarButton } from "./TopBar"
 import {
-    MAP_REGIONS, PENALTY_SECONDS, formatRunTime, getPlayerId, loadPlayerName, normalizePlayerName,
-    saveRun, subscribeLeaderboard, type MapLeaderboardRecord, type MapRegion, type SaveOutcome,
+    formatRunTime, getPlayerId, loadPlayerName, normalizePlayerName,
+    saveRun, subscribeLeaderboard, type MapLeaderboardRecord, type SaveOutcome,
 } from "../utils/mapSpeedrun"
 
-export type MapRunResult = { region: MapRegion; seconds: number; mistakes: number; count: number }
+/** `avgKm` is only reported by runs that measure distance (the capitals). */
+export type MapRunResult<R extends string = string> = { region: R; seconds: number; mistakes: number; count: number; avgKm?: number }
 
-type Props = {
-    region: MapRegion
-    /** How many countries each region asks, for the region picker. */
-    counts: Record<MapRegion, number>
+/**
+ * The setup, result and leaderboard of a map speedrun. Shared by the country
+ * speedrun and the capital one; everything that differs comes in as props.
+ */
+type Props<R extends string> = {
+    regions: { id: R; label: string }[]
+    /** The leaderboard key under `highscores/` for a region. */
+    boardFor: (region: R) => string
+    title: string
+    /** The setup screen's explanation of the rules. */
+    intro: ReactNode
+    /** What a run asks for, plural: "countries", "capitals". */
+    noun: string
+    region: R
+    /** How many items each region asks, for the region picker. */
+    counts: Record<R, number>
     /** Set once a run has finished: the panel shows the result and the save form. */
-    result: MapRunResult | null
-    onRegionChange: (region: MapRegion) => void
-    onStart: (region: MapRegion) => void
+    result: MapRunResult<R> | null
+    onRegionChange: (region: R) => void
+    onStart: (region: R) => void
     onClose: () => void
 }
 
@@ -32,16 +45,16 @@ const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700
 const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
 const rankColor = ["text-amber-500", "text-slate-400", "text-orange-600 dark:text-orange-400"]
 
-export default function MapSpeedrunPanel({ region, counts, result, onRegionChange, onStart, onClose }: Props) {
+export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, title, intro, noun, region, counts, result, onRegionChange, onStart, onClose }: Props<R>) {
     const boardRegion = result ? result.region : region
-    const [board, setBoard] = useState<{ region: MapRegion; entries: MapLeaderboardRecord[] } | null>(null)
+    const [board, setBoard] = useState<{ region: R; entries: MapLeaderboardRecord[] } | null>(null)
     const [playerId] = useState(getPlayerId)
     const [name, setName] = useState(loadPlayerName)
     const [notice, setNotice] = useState<SaveOutcome | "failed" | null>(null)
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
 
-    useEffect(() => subscribeLeaderboard(boardRegion, entries => setBoard({ region: boardRegion, entries })), [boardRegion])
+    useEffect(() => subscribeLeaderboard(boardFor(boardRegion), entries => setBoard({ region: boardRegion, entries })), [boardRegion, boardFor])
 
     // A board still showing the previous region would rank the run against the wrong table.
     const entries = board?.region === boardRegion ? board.entries : null
@@ -51,7 +64,7 @@ export default function MapSpeedrunPanel({ region, counts, result, onRegionChang
         if (!result || !cleaned || !entries || saving) return
         setSaving(true)
         try {
-            const outcome = await saveRun(result.region, entries, cleaned, result.seconds, result.mistakes)
+            const outcome = await saveRun(boardFor(result.region), entries, cleaned, result.seconds, result.mistakes)
             setNotice(outcome)
             setSaved(outcome !== "not-better")
         } catch {
@@ -61,18 +74,18 @@ export default function MapSpeedrunPanel({ region, counts, result, onRegionChang
         }
     }
 
-    const regionLabel = MAP_REGIONS.find(r => r.id === boardRegion)?.label ?? "World"
+    const regionLabel = regions.find(r => r.id === boardRegion)?.label ?? "World"
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
             <div className={`${dialog} flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden`}>
                 <div className="flex items-start justify-between gap-3 p-5 pb-0 sm:p-6 sm:pb-0">
                     <div>
-                        <h2 className="!text-2xl font-bold">{result ? "Run complete!" : "Map Speedrun"}</h2>
+                        <h2 className="!text-2xl font-bold">{result ? "Run complete!" : title}</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {result
-                                ? <>You located all <strong className="text-slate-900 dark:text-white">{result.count}</strong> countries of {regionLabel === "World" ? "the world" : regionLabel}.</>
-                                : <>Click every country as fast as you can. A wrong click adds <strong className="text-slate-900 dark:text-white">+{PENALTY_SECONDS}s</strong> and the country comes back later.</>}
+                                ? <>You located all <strong className="text-slate-900 dark:text-white">{result.count}</strong> {noun} of {regionLabel === "World" ? "the world" : regionLabel}.</>
+                                : intro}
                         </p>
                     </div>
                     <BarButton onClick={onClose} label="Close"><X size={20} aria-hidden /></BarButton>
@@ -90,6 +103,12 @@ export default function MapSpeedrunPanel({ region, counts, result, onRegionChang
                                     <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Mistakes</div>
                                     <div className={`mt-1 text-3xl font-bold ${result.mistakes ? "text-red-500 dark:text-red-400" : "text-emerald-500"}`}>{result.mistakes}</div>
                                 </div>
+                                {result.avgKm !== undefined && (
+                                    <div className="col-span-2 flex items-baseline justify-between rounded-lg border border-slate-200 px-4 py-3 dark:border-slate-700">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Average distance of hits</span>
+                                        <span className="font-mono text-lg font-bold tabular-nums">{Math.round(result.avgKm)} km</span>
+                                    </div>
+                                )}
                             </div>
                             {!saved && (
                                 <div className="flex gap-2">
@@ -112,8 +131,8 @@ export default function MapSpeedrunPanel({ region, counts, result, onRegionChang
                             )}
                         </>
                     ) : (
-                        <div className="grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 p-1 sm:grid-cols-5 dark:border-slate-700" role="tablist" aria-label="Region">
-                            {MAP_REGIONS.map(r => {
+                        <div className={`grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 p-1 dark:border-slate-700 ${regions.length > 5 ? "sm:grid-cols-6" : "sm:grid-cols-5"}`} role="tablist" aria-label="Region">
+                            {regions.map(r => {
                                 const selected = r.id === region
                                 return (
                                     <button

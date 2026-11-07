@@ -22,12 +22,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen, Globe2, Loader2, Warehouse, Map as MapIcon, Navigation, RotateCcw, Volume2, VolumeX } from "lucide-react"
+import { BookOpen, Globe2, LifeBuoy, Loader2, Warehouse, Map as MapIcon, Navigation, RotateCcw, Volume2, VolumeX } from "lucide-react"
 import TopBar, { BarButton } from "../components/TopBar"
 import {
     CELL, GEO_URL, GRID_H, GRID_W, REVEAL_RADIUS, TRAIL_BREAK, TRAIL_SPACING, WORLD_H, WORLD_W,
-    buildWorld, countSeen, countSeenByCountry, flagBitmap, flagRaster, flagRect, isRoad, loadFlagImage, loadTrip, onLand,
-    maskFromGrid, pointOnRoute, randomStart, routeLength, saveTrip, trailWriter, uncover, uncoverCountry,
+    BRIDGE_HALF, buildWorld, countSeen, countSeenByCountry, flagBitmap, flagRaster, flagRect, isRoad, loadFlagImage, loadTrip, onLand,
+    maskFromGrid, pointOnRoute, randomStart, routeLength, safeSpotNear, saveTrip, trailWriter, uncover, uncoverCountry,
     type FlagBitmap, type FlagRaster, type Port, type Trip, type World,
 } from "../utils/roadTrip"
 import { CAR_UNITS, PALETTES, drawBoat, drawCar, drawFlames, drawPort, wavePattern } from "../utils/roadTripDraw"
@@ -239,6 +239,8 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const overviewRef = useRef(false)
     const themeRef = useRef(theme)
     const resetRef = useRef<() => void>(() => {})
+    /** Lifts the car off a coast or a ferry loop onto solid road nearby. */
+    const unstuckRef = useRef<() => void>(() => {})
     /** Hands the quiz answer back to the loop, which finishes the country. */
     const answerRef = useRef<(index: number, correct: boolean) => void>(() => {})
     /** Reads the passport off the loop's state. */
@@ -765,8 +767,19 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             }
             return true
         }
-        /** The port the car just came off, which stays quiet until the car drives away from it. */
-        let landedAt: string | null = null
+        /**
+         * The port the car just came off, and any other port within reach of it, which stay quiet
+         * until the car drives away from each. Only the landing port used to be quiet, so a second
+         * port beside it (three ferries leave tiny Vanuatu) boarded the car the moment it moved.
+         */
+        const quiet = new Set<string>()
+        const quietRadius = () => PORT_RADIUS + halfLength() + 0.5
+        const landAt = (port: Port) => {
+            quiet.clear()
+            for (const other of world.ports) {
+                if (Math.hypot(other.x - port.x, other.y - port.y) < quietRadius() * 2) quiet.add(other.id)
+            }
+        }
         let sail: { legs: [number, number][][]; length: number; travelled: number; duration: number; to: Port; leg: number } | null = null
 
         const skids: Skid[] = []
@@ -966,8 +979,10 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
         const coastNormal = (x: number, y: number): [number, number] => {
             let wx = 0, wy = 0
             // The car's centre now stops half a car short of the water, so look from there outwards.
+            // Scaled with the car: on a small island fixed 1 and 2.5 px rings reached the far
+            // coast too, the two sides cancelled, and the bounce went off in a random direction.
             const reach = halfLength()
-            for (const r of [reach * 0.8 + 1, reach + 2.5]) {
+            for (const r of [reach * 0.8 + car.scale, reach + 2.5 * car.scale]) {
                 for (let k = 0; k < 16; k++) {
                     const a = (k / 16) * Math.PI * 2
                     const dx = Math.cos(a), dy = Math.sin(a)
@@ -1027,6 +1042,20 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             }
         }
 
+        unstuckRef.current = () => {
+            if (sail || asking >= 0) return
+            const spot = safeSpotNear(world, car.x, car.y, CAR_LENGTH * car.scale, PORT_RADIUS + halfLength() + 2)
+            if (!spot) return
+            car.x = spot[0]
+            car.y = spot[1]
+            stopCar()
+            quiet.clear()
+            car.unstick = UNSTICK_S
+            cam.x = car.x
+            cam.y = car.y
+            uncoverHere()
+        }
+
         resetRef.current = () => {
             trip.seen.fill(0)
             seenCount = 0
@@ -1040,7 +1069,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             stopCar()
             car.nitro = 0
             sail = null
-            landedAt = null
+            quiet.clear()
             skids.length = 0
             puffs.length = 0
             history = maskFromGrid(trip.seen)
@@ -1107,7 +1136,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                     car.x = sail.to.x
                     car.y = sail.to.y
                     stopCar()
-                    landedAt = sail.to.id
+                    landAt(sail.to)
                     sail = null
                     uncoverHere()
                 }
@@ -1331,10 +1360,10 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
 
             for (const port of world.ports) {
                 const d = Math.hypot(port.x - car.x, port.y - car.y)
-                if (port.id === landedAt) {
+                if (quiet.has(port.id)) {
                     // Quiet only until the car leaves the boarding circle: turning straight round
                     // and driving back in sails back, without first having to wander off.
-                    if (d > PORT_RADIUS + halfLength() + 0.5) landedAt = null
+                    if (d > quietRadius()) quiet.delete(port.id)
                     continue
                 }
                 // Calais and Dover are a few pixels apart: a port across the water must not board the car.
@@ -1416,6 +1445,20 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                 if (!inView(part.x, part.y, part.w, part.h)) continue
                 ctx.fillStyle = part.drivable ? p.land : p.island
                 ctx.fill(part.path, "evenodd")
+            }
+            // Bridges across straits too narrow for a ferry: land, so drawn as land.
+            if (world.bridges.length) {
+                ctx.strokeStyle = p.land
+                ctx.lineWidth = BRIDGE_HALF * 2
+                ctx.lineCap = "round"
+                ctx.beginPath()
+                for (const [ax, ay, bx, by] of world.bridges) {
+                    if (!inView(Math.min(ax, bx) - 2, Math.min(ay, by) - 2, Math.abs(bx - ax) + 4, Math.abs(by - ay) + 4)) continue
+                    ctx.moveTo(ax, ay)
+                    ctx.lineTo(bx, by)
+                }
+                ctx.stroke()
+                ctx.lineCap = "butt"
             }
 
             // Lakes are water like the sea, on the base map from the start.
@@ -1856,6 +1899,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                         </BarButton>
                     </>
                 )}
+                <UnstuckButton onClick={() => unstuckRef.current()} />
             </TopBar>
 
             <main className="relative min-h-0 flex-1 overflow-hidden">
@@ -2034,5 +2078,30 @@ function FlagSlot({ here }: { here: HereView | null }) {
                 </motion.span>
             </AnimatePresence>
         </span>
+    )
+}
+
+/**
+ * Lifts the car onto solid road nearby - off a coast it is wedged against, or out of a pair of
+ * ports that keep sailing it back and forth. Captioned, unlike the other bar buttons, because a
+ * player who is stuck is looking for a way out, not hovering icons for their tooltips.
+ */
+function UnstuckButton({ onClick }: { onClick: () => void }) {
+    return (
+        <div className="flex shrink-0 flex-col items-center">
+            <span className="text-[10px] font-semibold uppercase leading-3 tracking-wide text-slate-500 dark:text-slate-400" aria-hidden>
+                Unstuck
+            </span>
+            <button
+                type="button"
+                // Blur at once: a focused button would be pressed again by Space, the handbrake.
+                onClick={e => { e.currentTarget.blur(); onClick() }}
+                aria-label="Unstuck: move the car onto solid road nearby"
+                title="Unstuck: move the car onto solid road nearby"
+                className="flex h-8 min-h-0 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
+            >
+                <LifeBuoy size={17} aria-hidden />
+            </button>
+        </div>
     )
 }

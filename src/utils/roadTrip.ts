@@ -165,6 +165,8 @@ export type World = {
     cellCountry: Uint8Array
     roadCellCount: number
     ports: Port[]
+    /** Land strips across straits too narrow for a ferry (see BRIDGE_GAP), as segments in world pixels. */
+    bridges: [number, number, number, number][]
     /** The lakes as shapes, for the exact shoreline test in `onLand`. */
     lakes: { path: Path2D; x: number; y: number; w: number; h: number }[]
 }
@@ -276,6 +278,22 @@ function labelLandmasses(land: Uint8Array): { landmass: Uint16Array; landmassAre
 
 /** Islands at least this big (world pixels, ~10 km each way) get a ferry whether or not a country needs them. */
 const MIN_ISLAND = 60
+/**
+ * Coasts this close (world pixels, centre to centre) are joined by a strip of
+ * land instead of a ferry. A ferry across one or two pixels of water put both
+ * ports inside each other's boarding circle - the car sailed back and forth on
+ * the spot - and moving the island's port off the last pixel of coast (see
+ * dockNear) could land it on the mainland, leaving the island with no way back.
+ */
+export const BRIDGE_GAP = 3.5
+/** Half the width of a bridge, world pixels: room for the car at full size. */
+export const BRIDGE_HALF = 1.6
+/**
+ * No two ports closer than this (world pixels). The boarding circle is up to
+ * ~4.6 px and a landing port stays quiet up to ~5.1 px, so ports nearer than
+ * their sum boarded the car again the moment it landed - off to a third island.
+ */
+export const PORT_SPACING = 10
 /** Most coast points an island is measured from; a big island's coast is thinned to this many. */
 const MAX_COAST_SAMPLES = 400
 
@@ -292,8 +310,8 @@ const MAX_COAST_SAMPLES = 400
  */
 function islandFerries(
     countries: Country[], pixelCountry: Uint8Array, land: Uint8Array, road: Uint8Array,
-    landmass: Uint16Array, landmassArea: Uint32Array,
-): Port[] {
+    landmass: Uint16Array, landmassArea: Uint32Array, taken: [number, number][],
+): { ferries: Port[]; bridges: [number, number, number, number][] } {
     const count = landmassArea.length
     const coast: number[][] = Array.from({ length: count }, () => [])
     const reached = new Uint8Array(count)
@@ -352,7 +370,26 @@ function islandFerries(
             cell.push(pts[k], pts[k + 1])
         }
     }
+    /** Drops the coast round a port from the hash, so no other ferry leaves from beside it. */
+    const clearAround = (x: number, y: number) => {
+        const r = Math.ceil(PORT_SPACING / G)
+        const cx = Math.floor(x / G), cy = Math.floor(y / G)
+        for (let gy = cy - r; gy <= cy + r; gy++) {
+            for (let gx = cx - r; gx <= cx + r; gx++) {
+                const key = gy * 4096 + gx
+                const cell = hash.get(key)
+                if (!cell) continue
+                const kept: number[] = []
+                for (let q = 0; q < cell.length; q += 2) {
+                    if (Math.hypot(cell[q] - x, cell[q + 1] - y) >= PORT_SPACING) kept.push(cell[q], cell[q + 1])
+                }
+                if (kept.length) hash.set(key, kept)
+                else hash.delete(key)
+            }
+        }
+    }
     for (let m = 0; m < count; m++) if (reached[m]) addCoast(m)
+    for (const [x, y] of taken) clearAround(x, y)
 
     type Link = { d: number; from: [number, number]; to: [number, number] }
     const nearestTo = (m: number): Link => {
@@ -385,6 +422,7 @@ function islandFerries(
     for (const m of wanted) links.set(m, nearestTo(m))
 
     const ferries: Port[] = []
+    const bridges: [number, number, number, number][] = []
     let n = 0
     while (links.size) {
         let pick = -1
@@ -393,25 +431,51 @@ function islandFerries(
         links.delete(pick)
         if (!Number.isFinite(link.d)) continue
 
-        const id = `ferry-${++n}`
         const a: [number, number] = link.from, b: [number, number] = link.to
-        ferries.push(
-            { id: `${id}-a`, name: "Ferry", x: a[0], y: a[1], to: `${id}-b`, legs: [[a, b]], ferry: true },
-            { id: `${id}-b`, name: "Ferry", x: b[0], y: b[1], to: `${id}-a`, legs: [[b, a]], ferry: true },
-        )
+        const placed: [number, number][] = []
+        if (link.d <= BRIDGE_GAP) {
+            // A strait a car could all but jump: lay land across it, and the flood below drives over.
+            bridges.push([a[0], a[1], b[0], b[1]])
+            paintBridge(land, a[0], a[1], b[0], b[1])
+        } else {
+            const id = `ferry-${++n}`
+            ferries.push(
+                { id: `${id}-a`, name: "Ferry", x: a[0], y: a[1], to: `${id}-b`, legs: [[a, b]], ferry: true },
+                { id: `${id}-b`, name: "Ferry", x: b[0], y: b[1], to: `${id}-a`, legs: [[b, a]], ferry: true },
+            )
+            placed.push(a, b)
+        }
         floodRoad(land, road, b[0], b[1])
         reached[pick] = 1
         addCoast(pick)
+        for (const [x, y] of placed) clearAround(x, y)
 
-        // Only islands whose box comes closer to the new one than their current link need a fresh look.
+        // Only islands whose box comes closer to the new one than their current link need a fresh
+        // look - and any whose link left from coast a new port has just taken.
         const nb = box[pick]
         for (const [m, current] of links) {
             const ob = box[m]
             const dx = Math.max(0, nb[0] - ob[2], ob[0] - nb[2]), dy = Math.max(0, nb[1] - ob[3], ob[1] - nb[3])
-            if (Math.hypot(dx, dy) < current.d) links.set(m, nearestTo(m))
+            const crowded = placed.some(([x, y]) => Math.hypot(current.from[0] - x, current.from[1] - y) < PORT_SPACING)
+            if (crowded || Math.hypot(dx, dy) < current.d) links.set(m, nearestTo(m))
         }
     }
-    return ferries
+    return { ferries, bridges }
+}
+
+/** Makes land of every pixel whose centre is within BRIDGE_HALF of the segment a-b. */
+function paintBridge(land: Uint8Array, ax: number, ay: number, bx: number, by: number) {
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - BRIDGE_HALF - 1)), x1 = Math.min(WORLD_W - 1, Math.ceil(Math.max(ax, bx) + BRIDGE_HALF + 1))
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by) - BRIDGE_HALF - 1)), y1 = Math.min(WORLD_H - 1, Math.ceil(Math.max(ay, by) + BRIDGE_HALF + 1))
+    const dx = bx - ax, dy = by - ay
+    const len2 = dx * dx + dy * dy || 1
+    for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+            const px = x + 0.5, py = y + 0.5
+            const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2))
+            if (Math.hypot(px - (ax + dx * t), py - (ay + dy * t)) <= BRIDGE_HALF) land[y * WORLD_W + x] = 1
+        }
+    }
 }
 
 /**
@@ -430,15 +494,92 @@ export function snapToRoad(world: World, x: number, y: number, reach = 8): [numb
     return null
 }
 
+/**
+ * The nearest spot to (x, y) where a car stands on solid road: road for `room`
+ * pixels all round, and clear of every port by `portClear` so it does not sail
+ * off the moment it moves. Tried first on the landmass under (x, y), then with
+ * half the room, then on any landmass, and last of all the nearest road at all.
+ * What the Unstuck button and an old save that no longer sits on road use.
+ */
+export function safeSpotNear(world: World, x: number, y: number, room: number, portClear: number): [number, number] | null {
+    const index = (px: number, py: number) => Math.floor(py) * WORLD_W + Math.floor(px)
+    const inside = (px: number, py: number) => px >= 0 && py >= 0 && px < WORLD_W && py < WORLD_H
+    const home = inside(x, y) ? world.landmass[index(x, y)] : 0
+    const fits = (px: number, py: number, need: number, sameLand: boolean) => {
+        if (!isRoad(world, px, py)) return false
+        if (sameLand && home && world.landmass[index(px, py)] !== home) return false
+        for (const port of world.ports) if (Math.hypot(port.x - px, port.y - py) < portClear) return false
+        if (need <= 0) return true
+        for (let a = 0; a < 16; a++) {
+            const t = (a / 16) * Math.PI * 2
+            if (!isRoad(world, px + Math.cos(t) * need, py + Math.sin(t) * need)) return false
+        }
+        return true
+    }
+    const search = (reach: number, need: number, sameLand: boolean): [number, number] | null => {
+        for (let r = 0; r <= reach; r += 0.5) {
+            const steps = Math.max(1, Math.round(r * 8))
+            for (let k = 0; k < steps; k++) {
+                const px = x + Math.cos((k / steps) * Math.PI * 2) * r
+                const py = y + Math.sin((k / steps) * Math.PI * 2) * r
+                if (fits(px, py, need, sameLand)) return [Math.floor(px) + 0.5, Math.floor(py) + 0.5]
+            }
+        }
+        return null
+    }
+    if (home) {
+        const spot = search(60, room, true) ?? search(60, room / 2, true)
+        if (spot) return spot
+    }
+    return search(200, room, false) ?? search(400, 0, false)
+}
+
+/**
+ * Everything wrong with the ports, as sentences: a port off the road, both ends
+ * of a crossing on one landmass (it sails nowhere), or two ports so close that
+ * landing at one boards the other. Logged in dev by buildWorld.
+ */
+export function checkPorts(world: World): string[] {
+    const problems: string[] = []
+    const at = (p: Port) => Math.floor(p.y) * WORLD_W + Math.floor(p.x)
+    const byId = new Map(world.ports.map(p => [p.id, p]))
+    for (const port of world.ports) {
+        if (!world.road[at(port)]) problems.push(`${port.id} is not on the road`)
+        const partner = byId.get(port.to)
+        if (!partner) { problems.push(`${port.id} sails to a missing port ${port.to}`); continue }
+        if (port.id < partner.id && world.landmass[at(port)] === world.landmass[at(partner)]) {
+            problems.push(`${port.id} and ${partner.id} are on the same landmass`)
+        }
+    }
+    for (let i = 0; i < world.ports.length; i++) {
+        for (let j = i + 1; j < world.ports.length; j++) {
+            const a = world.ports[i], b = world.ports[j]
+            if (a.to === b.id || world.landmass[at(a)] !== world.landmass[at(b)]) continue
+            const d = Math.hypot(a.x - b.x, a.y - b.y)
+            // Under this a landing at one is inside the other's boarding circle.
+            if (d < 7) problems.push(`${a.id} and ${b.id} are ${d.toFixed(1)} px apart`)
+        }
+    }
+    return problems
+}
+
 /** How far a dock may sit from the coast point it was made for, and the room it needs around it, in world pixels. */
 const DOCK_REACH = 7
 const DOCK_ROOM = 2
 
-/** The nearest road point to (x, y) with road all round it for DOCK_ROOM - somewhere a car fits. */
-function dockNear(road: Uint8Array, x: number, y: number): [number, number] | null {
+/**
+ * The nearest road point to (x, y) with road all round it for DOCK_ROOM - somewhere a car fits -
+ * on the same landmass as (x, y). Without that a port on an islet a pixel off the coast moved
+ * onto the mainland, both ends of its ferry sat side by side, and the islet had no way back.
+ */
+function dockNear(
+    road: Uint8Array, landmass: Uint16Array, x: number, y: number, others: [number, number][],
+): [number, number] | null {
+    const home = landmass[Math.floor(y) * WORLD_W + Math.floor(x)]
     const on = (px: number, py: number) => {
         if (px < 0 || py < 0 || px >= WORLD_W || py >= WORLD_H) return false
-        return road[Math.floor(py) * WORLD_W + Math.floor(px)] === 1
+        const i = Math.floor(py) * WORLD_W + Math.floor(px)
+        return road[i] === 1 && landmass[i] === home
     }
     for (let r = 0; r <= DOCK_REACH; r += 0.5) {
         const steps = Math.max(1, Math.round(r * 8))
@@ -446,6 +587,8 @@ function dockNear(road: Uint8Array, x: number, y: number): [number, number] | nu
             const px = x + Math.cos((k / steps) * Math.PI * 2) * r
             const py = y + Math.sin((k / steps) * Math.PI * 2) * r
             if (!on(px, py)) continue
+            // Nor beside another port: two docks drawn together undo PORT_SPACING.
+            if (others.some(([ox, oy]) => Math.hypot(ox - px, oy - py) < PORT_SPACING * 0.8)) continue
             let roomy = true
             for (let a = 0; a < 12 && roomy; a++) {
                 const t = (a / 12) * Math.PI * 2
@@ -461,28 +604,53 @@ function dockNear(road: Uint8Array, x: number, y: number): [number, number] | nu
 let probe: CanvasRenderingContext2D | null = null
 
 /**
- * Whether the car may be at (x, y) - the collision test. Road on the raster
- * is land; off it, within a couple of pixels of road, the country shapes
- * themselves are asked. The raster alone made the shore a staircase of 10 km
- * steps, nine screen pixels high at the drive camera, and dropped every cape
- * thinner than a pixel - land you could see and not drive on, and ports on
- * the tip of a cape the car could not reach.
+ * Whether the car may be at (x, y) - the collision test. Inside the road the
+ * raster answers; at its edge the country shapes do. The raster alone made the
+ * shore a staircase of 10 km steps, nine screen pixels high at the drive camera,
+ * and dropped every cape thinner than a pixel - land you could see and not
+ * drive on, and ports on the tip of a cape the car could not reach.
  *
- * The shapes only ever add land, never take road away. A strait narrower than
- * a pixel (Messina, the Great Belt) is joined on the raster; letting the shapes
- * close it would strand Sicily while its road still counted, and Italy could
- * never be finished.
+ * Off the road, within a couple of pixels of it, a point inside a shape is land
+ * (the capes). On a road pixel at the edge of the road the shape decides too:
+ * such a pixel is road because its centre is inside a country, but its corners
+ * hang up to 0.7 px out over the sea. On a small island, where the car shrinks
+ * to little more than a pixel, that let it ride the coastline half over the
+ * water and grind along the staircase.
+ *
+ * The shapes may never close a strait the raster joined (Messina, the Great
+ * Belt) - that would strand Sicily while its road still counted, and Italy
+ * could never be finished. So an edge point outside every shape is still land
+ * when shapes lie on both sides of it within a pixel: a sliver of water, not
+ * the open sea. Bridges are land wherever they are drawn.
  */
 export function onLand(world: World, x: number, y: number): boolean {
     if (x < 2 || y < 2 || x >= WORLD_W - 2 || y >= WORLD_H - 2) return false
     const px = Math.floor(x), py = Math.floor(y)
-    if (world.road[py * WORLD_W + px]) return true
+    const i = py * WORLD_W + px
+    const road = world.road
+    if (road[i]) {
+        const interior = road[i - 1] && road[i + 1] && road[i - WORLD_W] && road[i + WORLD_W]
+            && road[i - WORLD_W - 1] && road[i - WORLD_W + 1] && road[i + WORLD_W - 1] && road[i + WORLD_W + 1]
+        if (interior) return true
+        if (inShape(world, x, y) || onBridge(world, x, y)) return true
+        for (const [dx, dy] of STRAIT_PROBES) {
+            if (inShape(world, x + dx, y + dy) && inShape(world, x - dx, y - dy)) return true
+        }
+        return false
+    }
     let near = false
     for (let dy = -2; dy <= 2 && !near; dy++) {
         const row = (py + dy) * WORLD_W + px
-        for (let dx = -2; dx <= 2; dx++) if (world.road[row + dx]) { near = true; break }
+        for (let dx = -2; dx <= 2; dx++) if (road[row + dx]) { near = true; break }
     }
-    if (!near) return false
+    return near && inShape(world, x, y)
+}
+
+/** Directions to look both ways along for land, ~0.9 px out: a point between two is in a strait. */
+const STRAIT_PROBES: [number, number][] = [[0.9, 0], [0, 0.9], [0.64, 0.64], [0.64, -0.64]]
+
+/** Inside a drivable country and not in a lake. */
+function inShape(world: World, x: number, y: number): boolean {
     probe ??= document.createElement("canvas").getContext("2d")
     let inside = false
     for (const part of world.parts) {
@@ -495,6 +663,16 @@ export function onLand(world: World, x: number, y: number): boolean {
         if (probe!.isPointInPath(lake.path, x, y)) return false
     }
     return true
+}
+
+/** On one of the bridges, as wide as it is drawn. */
+function onBridge(world: World, x: number, y: number): boolean {
+    for (const [ax, ay, bx, by] of world.bridges) {
+        const dx = bx - ax, dy = by - ay
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)))
+        if (Math.hypot(x - (ax + dx * t), y - (ay + dy * t)) <= BRIDGE_HALF) return true
+    }
+    return false
 }
 
 export function isRoad(world: World, x: number, y: number): boolean {
@@ -643,14 +821,23 @@ export function buildWorld(topo: any, lakes: [number, number][][] = []): World {
         floodRoad(land, road, b[0], b[1])
     }
 
-    const { landmass, landmassArea } = labelLandmasses(land)
-    ports.push(...islandFerries(countries, pixelCountry, land, road, landmass, landmassArea))
+    const islands = labelLandmasses(land)
+    const { ferries, bridges } = islandFerries(
+        countries, pixelCountry, land, road, islands.landmass, islands.landmassArea, ports.map(p => [p.x, p.y]),
+    )
+    ports.push(...ferries)
+    // Bridges joined some landmasses; label them again so a bridged islet is one with its coast.
+    const { landmass, landmassArea } = bridges.length ? labelLandmasses(land) : islands
 
     // Every port moves off the last pixel of coast to the nearest spot with room around it.
     // On the tip of a narrow cape (Italy's ferry to Corsica) the car's body could not get
     // close enough to board, and an arriving car was put down half over the water.
     for (const port of ports) {
-        const dock = dockNear(road, port.x, port.y)
+        const at = landmass[Math.floor(port.y) * WORLD_W + Math.floor(port.x)]
+        const others = ports
+            .filter(o => o !== port && landmass[Math.floor(o.y) * WORLD_W + Math.floor(o.x)] === at)
+            .map(o => [o.x, o.y] as [number, number])
+        const dock = dockNear(road, landmass, port.x, port.y, others)
         if (dock) [port.x, port.y] = dock
     }
     const portById = new Map(ports.map(p => [p.id, p]))
@@ -691,7 +878,7 @@ export function buildWorld(topo: any, lakes: [number, number][][] = []): World {
     }
 
     // A part is drivable when most of its outline sits on road.
-    const world: World = { countries, parts, borders, road, landmass, landmassArea, roadCells, cellCountry, roadCellCount, ports, lakes: lakeShapes }
+    const world: World = { countries, parts, borders, road, landmass, landmassArea, roadCells, cellCountry, roadCellCount, ports, bridges, lakes: lakeShapes }
     parts.forEach((part, i) => {
         const ring = outlines[i]
         let hits = 0
@@ -701,6 +888,10 @@ export function buildWorld(topo: any, lakes: [number, number][][] = []): World {
         part.drivable = hits >= ring.length / 2
     })
 
+    if (import.meta.env.DEV) {
+        const problems = checkPorts(world)
+        if (problems.length) console.warn(`[road trip] ${problems.length} port problems:\n${problems.join("\n")}`)
+    }
     return world
 }
 
@@ -918,12 +1109,19 @@ export function loadTrip(world: World, key: string = SAVE_KEY): Trip | null {
     try {
         const raw = JSON.parse(localStorage.getItem(key) ?? "null")
         // A save made against a different world size would uncover the wrong places.
-        if (!raw || raw.w !== GRID_W || raw.h !== GRID_H || !isRoad(world, raw.x, raw.y)) return null
+        if (!raw || raw.w !== GRID_W || raw.h !== GRID_H) return null
         // Saves from before `q` was written stored half pixels.
         const trail = decodeTrail(String(raw.trail ?? ""), Number(raw.q) || 2)
         const seen = new Uint8Array(GRID_W * GRID_H)
         uncoverTrail(world, seen, trail)
-        return { seen, x: raw.x, y: raw.y, heading: Number(raw.heading) || 0, trail }
+        // A car parked where the road no longer runs (the ferries or bridges changed) is moved
+        // to the nearest road. Throwing the save away for it cost players their whole trip.
+        let x = Number(raw.x), y = Number(raw.y)
+        if (!isRoad(world, x, y)) {
+            const spot = Number.isFinite(x) && Number.isFinite(y) ? safeSpotNear(world, x, y, 2, PORT_SPACING) : null
+            ;[x, y] = spot ?? (() => { const s = randomStart(world); return [s.x, s.y] })()
+        }
+        return { seen, x, y, heading: Number(raw.heading) || 0, trail }
     } catch {
         return null
     }

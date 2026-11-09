@@ -50,6 +50,9 @@ SHEETS = {
     "badges_ranks.png": (4, 2, [f"rank-{i}" for i in range(8)]),
     "badges_fx.png": (3, 2, ["lock", "unlock", "ribbon", "sparkle", "burst", "confetti"]),
     "icons_3.png": (3, 2, ["capital-map", None, None, None, None, None]),
+    # Full-colour art for the profile's Titles cards (the variant picked from Sheet 4).
+    "icons_4.png": (3, 1, [None, None, "title-map-speedrun"]),
+    "icons_5.png": (3, 2, [None, None, None, "title-highscore", "title-capital-speedrun", "title-conqueror"]),
 }
 
 

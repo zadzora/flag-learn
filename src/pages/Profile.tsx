@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight, Check, Crown, PencilLine } from "lucide-react"
-import { CapitalSpeedrunIcon, HighscoreIcon, MapLocatorIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
+import { CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
 import { formatRunTime } from "../utils/mapSpeedrun"
 import { installProfileTest, RECORD_GAMES, useRecordsHeld, type HeldRecord, type RecordGame } from "../utils/recordsHeld"
 import TopBar from "../components/TopBar"
@@ -341,12 +341,20 @@ export default function Profile() {
     )
 }
 
-// Map Speedrun shares the learning map's icon until it has its own (sheet 4 in graphic/icons-prompts.md).
 const RECORD_ICONS: Record<RecordGame, ModeIcon> = {
     highscore: HighscoreIcon,
-    map: MapLocatorIcon,
+    map: MapSpeedrunIcon,
     capital: CapitalSpeedrunIcon,
 }
+
+// Full-colour art for the cards (graphic/icons_4.png and icons_5.png, cut by
+// scripts/gen-badge-sprites.py). A game without art keeps its line icon on a dark tile.
+const RECORD_ART: Partial<Record<RecordGame, string>> = {
+    highscore: "/badges/title-highscore.webp",
+    map: "/badges/title-map-speedrun.webp",
+    capital: "/badges/title-capital-speedrun.webp",
+}
+const CONQUEROR_ART: string | undefined = "/badges/title-conqueror.webp"
 
 /**
  * First places on the global boards and World Conqueror seasons won. Read live
@@ -389,8 +397,8 @@ function Titles() {
                                 to="/world-conqueror?hall=1"
                                 className={`${panel} flex h-full items-center gap-4 !border-amber-400/70 bg-gradient-to-br from-amber-50 to-white p-4 hover:!border-amber-500 dark:!border-amber-500/40 dark:from-amber-500/10 dark:to-[#0F1424]`}
                             >
-                                <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm dark:bg-amber-400 dark:text-[#0A0E1A]">
-                                    <WorldConquerorIcon size={30} aria-hidden />
+                                <span className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${CONQUEROR_ART ? "bg-amber-100 dark:bg-amber-500/15" : "bg-amber-500 text-white shadow-sm dark:bg-amber-400 dark:text-[#0A0E1A]"}`}>
+                                    {CONQUEROR_ART ? <img src={CONQUEROR_ART} alt="" className="h-12 w-12" /> : <WorldConquerorIcon size={30} aria-hidden />}
                                     <Crown size={18} className="absolute -right-2 -top-2.5 rotate-12 fill-amber-300 text-amber-600 dark:fill-amber-200 dark:text-amber-500" aria-hidden />
                                 </span>
                                 <span className="min-w-0 flex-1">
@@ -423,10 +431,11 @@ function Titles() {
 function RecordCard({ record }: { record: HeldRecord }) {
     const game = RECORD_GAMES[record.game]
     const Icon = RECORD_ICONS[record.game]
+    const art = RECORD_ART[record.game]
     return (
         <Link to={game.to} className={`${panel} flex h-full items-center gap-4 p-4 hover:border-slate-400 dark:hover:border-[#3A4670]`}>
-            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]">
-                <Icon size={28} aria-hidden />
+            <span className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${art ? "bg-slate-100 dark:bg-[#1C2338]" : "bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]"}`}>
+                {art ? <img src={art} alt="" className="h-12 w-12" /> : <Icon size={28} aria-hidden />}
                 <span className="absolute -bottom-1.5 -right-1.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-1 text-[11px] font-extrabold text-white dark:border-[#0F1424]">1</span>
             </span>
             <span className="min-w-0 flex-1">

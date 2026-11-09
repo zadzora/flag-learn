@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight } from "lucide-react"
+import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight, MousePointerClick } from "lucide-react"
 import { BarButton } from "../components/TopBar"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
 import { MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion } from "../utils/mapSpeedrun"
@@ -125,6 +125,21 @@ function requeue(queue: Flag[], target: Flag): Flag[] {
     return next
 }
 
+// Double-click zoom in the speedrun is opt-in: racing players click fast, and two quick clicks on
+// neighbouring countries read as a double click that throws the camera. Remembered per browser.
+const DBLCLICK_ZOOM_KEY = "map-speedrun-dblclick-zoom"
+
+function readDblClickZoom(): boolean {
+    try { return localStorage.getItem(DBLCLICK_ZOOM_KEY) === "1" } catch { return false }
+}
+
+// react-simple-maps' own filter (no ctrl, primary button) minus the double click. The library hands
+// the d3 event to this callback; @types/react-simple-maps mislabels the argument as an SVGElement.
+// A double tap reaches the same handler as its `touchend` (d3-zoom only asks the filter about a touchend
+// for that), so refusing it stops double-tap zoom on phones without touching pinch or pan.
+// Module-level so its identity is stable - a new function re-attaches d3-zoom on every render.
+const noDblClickZoom = ((e: MouseEvent) => e.type !== "dblclick" && e.type !== "touchend" && !e.ctrlKey && !e.button) as unknown as (el: SVGElement) => boolean
+
 function secondsSince(startedAt: number): number {
     return (Date.now() - startedAt) / 1000
 }
@@ -166,6 +181,14 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
     const [runResult, setRunResult] = useState<MapRunResult<MapRegion> | null>(null)
     const [runElapsed, setRunElapsed] = useState(0)
     const [penaltyFxKey, setPenaltyFxKey] = useState(0)
+    const [dblClickZoom, setDblClickZoom] = useState(readDblClickZoom)
+    const blockDblClickZoom = isSpeedrunMode && !dblClickZoom
+
+    function toggleDblClickZoom() {
+        const next = !dblClickZoom
+        setDblClickZoom(next)
+        try { localStorage.setItem(DBLCLICK_ZOOM_KEY, next ? "1" : "0") } catch { /* private mode: lasts the visit */ }
+    }
     // Bumped on every start and exit, so a pending next-country timeout from an abandoned run does nothing.
     const runToken = useRef(0)
     // The header lies over the map; region framing fits the region into what it leaves free.
@@ -454,9 +477,31 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
         setPosition(pos => ({ ...pos, zoom: pos.zoom / 1.5 }))
     }
 
+    // A speedrun (and its setup) resets to the region it is framed on, not the whole world.
+    const resetRegion = run ? run.region : showSpeedrunSetup ? speedrunRegion : null
+
     function handleResetZoom() {
-        setPosition({ coordinates: [0, 0], zoom: 1 })
+        if (resetRegion) frameRegion(resetRegion)
+        else setPosition({ coordinates: [0, 0], zoom: 1 })
     }
+
+    // Space resets the camera, except while typing or while a dialog is over the map.
+    const overlayOpen = showGallery || showCheatConfirm || !!runResult || (showSpeedrunSetup && !run)
+    useEffect(() => {
+        if (overlayOpen) return
+        function onKey(e: KeyboardEvent) {
+            if (e.code !== "Space" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return
+            const t = e.target as HTMLElement | null
+            if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+            e.preventDefault() // no page scroll
+            // A focused button (say Zoom in, just clicked) would otherwise click again on keyup.
+            if (t instanceof HTMLButtonElement) t.blur()
+            if (resetRegion) setPosition(regionCamera(resetRegion, window.innerWidth, window.innerHeight, headerRef.current?.offsetHeight ?? 0))
+            else setPosition({ coordinates: [0, 0], zoom: 1 })
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [overlayOpen, resetRegion])
 
     function handleCountryClick(geo: any) {
         if (status !== 'idle' || !current) return
@@ -623,6 +668,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                     zoom={position.zoom}
                     center={position.coordinates}
                     onMoveEnd={setPosition}
+                    filterZoomEvent={blockDblClickZoom ? noDblClickZoom : undefined}
                     maxZoom={30}
                     translateExtent={[[-100, -100], [900, 700]]}
                 >
@@ -729,7 +775,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                 </ZoomableGroup>
             </ComposableMap>
         )
-    }, [theme, position, current, clickedGeo, guessedPracticeFlags, status, hardMode, isFirstTime, isPracticeMode, isReview, activeData, run, playCodes])
+    }, [theme, position, current, clickedGeo, guessedPracticeFlags, status, hardMode, isFirstTime, isPracticeMode, isReview, activeData, run, playCodes, blockDblClickZoom])
 
 
     if (!isLoaded) return <div className="flex h-screen items-center justify-center text-slate-500 dark:text-slate-400"><Loader2 className="animate-spin" /></div>
@@ -1018,8 +1064,34 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                 {renderMap}
 
                 <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
+                    {isSpeedrunMode && (
+                        <div className="group relative mb-2">
+                            <button
+                                type="button"
+                                onClick={toggleDblClickZoom}
+                                aria-pressed={dblClickZoom}
+                                aria-label="Double-click to zoom"
+                                aria-describedby="dblclick-zoom-tip"
+                                className={`flex h-10 min-h-0 w-10 items-center justify-center rounded-lg border p-0 ${dblClickZoom
+                                    ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-[#0A0E1A]"
+                                    : "border-slate-200 bg-white text-slate-400 hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:border-[#3A4670] dark:hover:text-slate-200"}`}
+                            >
+                                <MousePointerClick size={18} aria-hidden />
+                            </button>
+                            <div
+                                id="dblclick-zoom-tip"
+                                role="tooltip"
+                                className="pointer-events-none absolute right-12 top-1/2 w-56 -translate-y-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                <strong className="block text-slate-900 dark:text-white">Double-click to zoom: {dblClickZoom ? "on" : "off"}</strong>
+                                {dblClickZoom
+                                    ? "Double-clicking the map zooms in. Turn it off so two quick clicks never move the camera."
+                                    : "Off so two quick clicks never move the camera. Turn it on to zoom in by double-clicking the map."}
+                            </div>
+                        </div>
+                    )}
                     <BarButton onClick={handleZoomIn} label="Zoom in"><ZoomIn size={19} aria-hidden /></BarButton>
-                    <BarButton onClick={handleResetZoom} label="Reset zoom"><Maximize size={18} aria-hidden /></BarButton>
+                    <BarButton onClick={handleResetZoom} label="Reset zoom (Space)"><Maximize size={18} aria-hidden /></BarButton>
                     <BarButton onClick={handleZoomOut} label="Zoom out"><ZoomOut size={19} aria-hidden /></BarButton>
                 </div>
             </div>

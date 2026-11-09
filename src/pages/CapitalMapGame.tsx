@@ -479,6 +479,23 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
     const headerH = () => headerRef.current?.offsetHeight ?? HEADER_GUESS
     const frame = (r: CapitalRegion) => setPosition(fitCamera(capitalRegion(r).bounds, screen.w, screen.h, headerH()))
 
+    // Space resets the camera like the Reset zoom button, except while typing or while a panel covers the map.
+    const overlayOpen = showCollection || (isSpeedrunMode && (showSetup || !!runResult)) || (!isSpeedrunMode && !ask && !hideDone)
+    useEffect(() => {
+        if (overlayOpen) return
+        function onKey(e: KeyboardEvent) {
+            if (e.code !== "Space" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return
+            const t = e.target as HTMLElement | null
+            if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+            e.preventDefault() // no page scroll
+            // A focused button (say Zoom in, just clicked) would otherwise click again on keyup.
+            if (t instanceof HTMLButtonElement) t.blur()
+            setPosition(fitCamera(capitalRegion(viewRegion).bounds, screen.w, screen.h, headerRef.current?.offsetHeight ?? HEADER_GUESS))
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [overlayOpen, viewRegion, screen.w, screen.h])
+
     /** A miss whose capital is off screen pulls the camera back until both are in view. */
     function showMiss(at: [number, number], capital: Capital) {
         if (!isInView(capital.at, position, rotate, screen, headerH())) {
@@ -894,7 +911,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                         </button>
                     )}
                     <BarButton onClick={() => setPosition(p => ({ ...p, zoom: Math.min(40, p.zoom * 1.5) }))} label="Zoom in"><ZoomIn size={19} aria-hidden /></BarButton>
-                    <BarButton onClick={() => frame(viewRegion)} label="Reset zoom"><Maximize size={18} aria-hidden /></BarButton>
+                    <BarButton onClick={() => frame(viewRegion)} label="Reset zoom (Space)"><Maximize size={18} aria-hidden /></BarButton>
                     <BarButton onClick={() => setPosition(p => ({ ...p, zoom: Math.max(1, p.zoom / 1.5) }))} label="Zoom out"><ZoomOut size={19} aria-hidden /></BarButton>
                 </div>
             </div>

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
-import { ArrowRight, Check, PencilLine } from "lucide-react"
+import { ArrowRight, Check, Crown, PencilLine } from "lucide-react"
+import { CapitalSpeedrunIcon, HighscoreIcon, MapLocatorIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
+import { formatRunTime } from "../utils/mapSpeedrun"
+import { installProfileTest, RECORD_GAMES, useRecordsHeld, type HeldRecord, type RecordGame } from "../utils/recordsHeld"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import Overlay from "../components/Overlay"
@@ -262,6 +265,9 @@ export default function Profile() {
                     })}
                 </div>
 
+                {/* --- Titles held against everybody else --- */}
+                <Titles />
+
                 {/* --- Badges --- */}
                 <SectionHead title="Badges" aside="Tap one to see every tier" />
                 <div className="flex flex-col gap-8">
@@ -332,6 +338,106 @@ export default function Profile() {
                 />
             )}
         </div>
+    )
+}
+
+// Map Speedrun shares the learning map's icon until it has its own (sheet 4 in graphic/icons-prompts.md).
+const RECORD_ICONS: Record<RecordGame, ModeIcon> = {
+    highscore: HighscoreIcon,
+    map: MapLocatorIcon,
+    capital: CapitalSpeedrunIcon,
+}
+
+/**
+ * First places on the global boards and World Conqueror seasons won. Read live
+ * from the boards each visit (utils/recordsHeld.ts) - somebody else can take a
+ * record at any moment, so a stored copy would brag about one already lost.
+ */
+function Titles() {
+    const held = useRecordsHeld()
+    useEffect(() => installProfileTest(), []) // TEMPORARY - see recordsHeld.ts
+    const { records, wins } = held
+    const count = records.length + (wins.length > 0 ? 1 : 0)
+    const aside = held.status === "loading" ? "Checking the leaderboards…" : held.status === "offline" ? "Leaderboards unavailable" : `${records.length} ${records.length === 1 ? "record" : "records"} held${wins.length ? ` · ${wins.length} ${wins.length === 1 ? "season" : "seasons"} won` : ""}`
+
+    return (
+        <>
+            <SectionHead
+                title="Titles"
+                aside={held.test ? <span className="font-bold text-rose-500">Test data · profileTest.clear()</span> : aside}
+            />
+            {held.status === "ready" && count === 0 ? (
+                <div className={`${panel} flex flex-col gap-4 p-5 sm:flex-row sm:items-center`}>
+                    <p className={`flex-1 text-sm ${muted}`}>
+                        Set the fastest time on a global leaderboard, or hold the most land when a World Conqueror season ends, and the title shows here - for as long as nobody takes it.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {[...(Object.keys(RECORD_GAMES) as RecordGame[]).map(g => ({ to: RECORD_GAMES[g].to, title: RECORD_GAMES[g].title, Icon: RECORD_ICONS[g] })), { to: "/world-conqueror", title: "World Conqueror", Icon: WorldConquerorIcon }].map(({ to, title, Icon }) => (
+                            <Link key={to} to={to} className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold hover:border-slate-400 dark:border-[#1C2338] dark:hover:border-[#3A4670]">
+                                <Icon size={15} aria-hidden /> {title}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            ) : held.status !== "ready" ? (
+                <div className={`${panel} h-[104px] ${held.status === "loading" ? "animate-pulse" : ""}`} />
+            ) : (
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {wins.length > 0 && (
+                        <li className="sm:col-span-2 lg:col-span-1">
+                            <Link
+                                to="/world-conqueror?hall=1"
+                                className={`${panel} flex h-full items-center gap-4 !border-amber-400/70 bg-gradient-to-br from-amber-50 to-white p-4 hover:!border-amber-500 dark:!border-amber-500/40 dark:from-amber-500/10 dark:to-[#0F1424]`}
+                            >
+                                <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm dark:bg-amber-400 dark:text-[#0A0E1A]">
+                                    <WorldConquerorIcon size={30} aria-hidden />
+                                    <Crown size={18} className="absolute -right-2 -top-2.5 rotate-12 fill-amber-300 text-amber-600 dark:fill-amber-200 dark:text-amber-500" aria-hidden />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-[11px] font-bold uppercase tracking-[0.08em] text-amber-700 dark:text-amber-300">World Conqueror</span>
+                                    <span className="block text-lg font-extrabold leading-tight">
+                                        Season champion
+                                    </span>
+                                    <span className={`block truncate text-xs ${muted}`}>
+                                        {wins.length === 1 ? "Season" : "Seasons"} {wins.map(w => w.number).sort((a, b) => a - b).join(", ")}
+                                    </span>
+                                    <span className={`block truncate text-xs ${muted}`}>
+                                        Best: {Math.max(...wins.map(w => w.territories))} territories
+                                    </span>
+                                </span>
+                                <span className="text-3xl font-extrabold tabular-nums text-amber-600 dark:text-amber-300">×{wins.length}</span>
+                            </Link>
+                        </li>
+                    )}
+                    {records.map(r => (
+                        <li key={r.board}>
+                            <RecordCard record={r} />
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </>
+    )
+}
+
+function RecordCard({ record }: { record: HeldRecord }) {
+    const game = RECORD_GAMES[record.game]
+    const Icon = RECORD_ICONS[record.game]
+    return (
+        <Link to={game.to} className={`${panel} flex h-full items-center gap-4 p-4 hover:border-slate-400 dark:hover:border-[#3A4670]`}>
+            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]">
+                <Icon size={28} aria-hidden />
+                <span className="absolute -bottom-1.5 -right-1.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-1 text-[11px] font-extrabold text-white dark:border-[#0F1424]">1</span>
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className={`block text-[11px] font-bold uppercase tracking-[0.08em] ${muted}`}>{game.title}</span>
+                <span className="block truncate text-lg font-extrabold leading-tight">{record.label}</span>
+                <span className={`block text-xs ${muted}`}>
+                    {record.field > 1 ? `1st of ${record.field}` : "Only entry"} · {record.mistakes} {record.mistakes === 1 ? "mistake" : "mistakes"}
+                </span>
+            </span>
+            <span className="font-mono text-xl font-bold tabular-nums">{formatRunTime(record.seconds, game.tenths)}</span>
+        </Link>
     )
 }
 

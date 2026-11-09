@@ -805,6 +805,17 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                             <button onClick={exitSpeedrun} className={`${quiet} flex h-10 min-h-0 shrink-0 items-center gap-1.5 px-3 py-0 text-sm hover:text-red-600 dark:hover:text-red-400`}>
                                 <LogOut size={16} className="shrink-0" aria-hidden /> <span className="hidden sm:inline">Exit</span>
                             </button>
+                            {/* No confirm, unlike Exit: a racer restarts the moment the run goes wrong, and lands back on the same region. */}
+                            <button
+                                onClick={e => {
+                                    e.currentTarget.blur() // or Space, which resets the camera, would click it again
+                                    startSpeedrun(run.region)
+                                }}
+                                title="Restart this region from zero"
+                                className={`${quiet} flex h-10 min-h-0 shrink-0 items-center gap-1.5 px-3 py-0 text-sm`}
+                            >
+                                <RotateCcw size={16} className="shrink-0" aria-hidden /> <span className="hidden sm:inline">Restart</span>
+                            </button>
 
                             <div className="order-last flex w-full min-w-0 flex-col gap-1 md:order-none md:mx-2 md:w-auto md:flex-1">
                                 <span className={`text-[11px] font-bold uppercase tracking-wider ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}>

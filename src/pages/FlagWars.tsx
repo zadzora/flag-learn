@@ -17,7 +17,7 @@ import {
     ALL_SEA_ROUTES, DAILY_ATTACKS, MAX_SCORE, SIEGE_HOURS, attacksLeft, attackableCodes, buildRound,
     canAttack, codeForGeoName, colorForPlayer, empireLabels, msUntilRefill, nameKey, nameTaken,
     pickColorIndex,
-    defenceHeld, finishedSeasons, hallOfFameEntry, hallOfFameSeasons, resultFor, scoreForTime,
+    defenceHeld, hallOfFameEntry, resultFor, scoreForTime,
     seaRoutesOf, seasonForDate,
     siegeState, siegeTimeLeft, siegesAgainst, siegesBy,
     standingsFrom, territoriesOf,
@@ -25,6 +25,7 @@ import {
     type Standing, type TerritoryMap, type WarPlayer, type WarRound,
 } from "../utils/flagWars"
 import { bumpCounter } from "../utils/profileStore"
+import { loadHallOfFame } from "../utils/recordsHeld"
 
 const geoUrl = "/world-map.json"
 
@@ -342,29 +343,9 @@ export default function FlagWars() {
         setLoadingHall(true)
         try {
             // The record alone, which stays small however many weeks have been
-            // played, and is all that is needed once every season has one.
-            const snapshot = await get(ref(db, "flagWars/hallOfFame"))
-            const recorded = hallOfFameSeasons(snapshot.val() as Record<string, HallOfFameEntry>)
-
-            // A season only gets its record when somebody who played it opens the
-            // game afterwards. Until that happens - or for seasons finished before
-            // there was a record at all - fill the gaps from the season data, which
-            // is still there. This is the expensive read, so it only runs when
-            // something is actually missing.
-            if (recorded.length < season.number - 1) {
-                const known = new Set(recorded.map(entry => entry.number))
-                const archives = await get(ref(db, "flagWars"))
-                const computed = finishedSeasons(
-                    (archives.val() as Record<string, SeasonArchive>) || {},
-                    season.number,
-                )
-                for (const result of computed) {
-                    const entry = hallOfFameEntry(result)
-                    if (entry && !known.has(entry.number)) recorded.push({ ...entry, endedAt: 0 })
-                }
-                recorded.sort((a, b) => b.number - a.number)
-            }
-            setHallOfFame(recorded)
+            // played, with any gap filled from the season data (the profile reads
+            // the same list to count a player's wins).
+            setHallOfFame(await loadHallOfFame(season.number))
         } catch {
             setHallOfFame([])
         } finally {

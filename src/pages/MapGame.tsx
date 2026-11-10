@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight, MousePointerClick } from "lucide-react"
+import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight, MousePointerClick, Flag as FlagIcon } from "lucide-react"
 import { BarButton } from "../components/TopBar"
+import CursorTarget from "../components/CursorTarget"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
 import { MAP_GAME_UNSUPPORTED_CODES, MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, openRunTracker, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion, type RunTracker } from "../utils/mapSpeedrun"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
@@ -130,6 +131,18 @@ function readDblClickZoom(): boolean {
     try { return localStorage.getItem(DBLCLICK_ZOOM_KEY) === "1" } catch { return false }
 }
 
+// The flag of the country being asked rides along next to the mouse pointer, so the eyes never leave
+// the map. On by default, F or the flag button toggles it; remembered per browser.
+const CURSOR_TARGET_KEY = "map-speedrun-cursor-target"
+
+function readCursorTarget(): boolean {
+    try { return localStorage.getItem(CURSOR_TARGET_KEY) !== "0" } catch { return true }
+}
+
+function saveCursorTarget(on: boolean) {
+    try { localStorage.setItem(CURSOR_TARGET_KEY, on ? "1" : "0") } catch { /* private mode: lasts the visit */ }
+}
+
 // react-simple-maps' own filter (no ctrl, primary button) plus panning with the middle button held.
 // The library hands the d3 event to this callback; @types/react-simple-maps mislabels the argument as
 // an SVGElement. Module-level so its identity is stable - a new function re-attaches d3-zoom on every render.
@@ -188,6 +201,28 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
         setDblClickZoom(next)
         try { localStorage.setItem(DBLCLICK_ZOOM_KEY, next ? "1" : "0") } catch { /* private mode: lasts the visit */ }
     }
+
+    const [cursorTarget, setCursorTarget] = useState(readCursorTarget)
+
+    function toggleCursorTarget() {
+        setCursorTarget(!cursorTarget)
+        saveCursorTarget(!cursorTarget)
+    }
+
+    // F toggles the flag by the pointer, mid-run included - except while typing.
+    useEffect(() => {
+        if (!isSpeedrunMode) return
+        function onKey(e: KeyboardEvent) {
+            if (e.code !== "KeyF" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
+            const t = e.target as HTMLElement | null
+            if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+            e.preventDefault()
+            setCursorTarget(!cursorTarget)
+            saveCursorTarget(!cursorTarget)
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [isSpeedrunMode, cursorTarget])
     // Bumped on every start and exit, so a pending next-country timeout from an abandoned run does nothing.
     const runToken = useRef(0)
     // The run's copy on the server, which the leaderboard trusts instead of this page's clock.
@@ -1089,8 +1124,43 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
             <div ref={steadyClicks} className="relative h-full w-full cursor-grab outline-none active:cursor-grabbing">
                 {renderMap}
 
+                {/* Mounted for the whole run, so it keeps its place under the pointer from one country to the next. */}
+                {run && cursorTarget && current && (
+                    <CursorTarget image={current.image} tone={status === 'error' ? 'error' : status === 'correct' ? 'correct' : 'idle'} />
+                )}
+
                 <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
                     <MapTips className="mb-2" speedrun={isSpeedrunMode} />
+                    {isSpeedrunMode && (
+                        <div className="group relative">
+                            <button
+                                type="button"
+                                onClick={toggleCursorTarget}
+                                aria-pressed={cursorTarget}
+                                aria-label="Flag next to the pointer (F)"
+                                aria-keyshortcuts="F"
+                                aria-describedby="cursor-target-tip"
+                                className={`flex h-10 min-h-0 w-10 items-center justify-center rounded-lg border p-0 ${cursorTarget
+                                    ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-[#0A0E1A]"
+                                    : "border-slate-200 bg-white text-slate-400 hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:border-[#3A4670] dark:hover:text-slate-200"}`}
+                            >
+                                <FlagIcon size={18} aria-hidden />
+                            </button>
+                            <div
+                                id="cursor-target-tip"
+                                role="tooltip"
+                                className="pointer-events-none absolute right-12 top-1/2 w-56 -translate-y-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                <strong className="flex items-center justify-between gap-2 text-slate-900 dark:text-white">
+                                    Flag by the pointer: {cursorTarget ? "on" : "off"}
+                                    <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-px font-sans text-[11px] font-semibold text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">F</kbd>
+                                </strong>
+                                {cursorTarget
+                                    ? "The flag to find follows the mouse, so your eyes never leave the map."
+                                    : "Turn it on to carry the flag to find next to the mouse pointer."}
+                            </div>
+                        </div>
+                    )}
                     {isSpeedrunMode && (
                         <div className="group relative mb-2">
                             <button

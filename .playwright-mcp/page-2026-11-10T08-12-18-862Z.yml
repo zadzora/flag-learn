@@ -1,0 +1,28 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Flag Learn" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e10]:
+        - generic [ref=e11]: New capital! Click the glowing spot
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Ankara" [level=2] [ref=e14]
+            - generic [ref=e15]: Turkey
+          - generic "How close a click has to be" [ref=e16]: ±150 km
+      - generic [ref=e19]:
+        - button "World 0 / 196" [ref=e20]:
+          - generic [ref=e21]: World
+          - generic [ref=e22]: 0 / 196
+        - button "Dark theme" [ref=e25]
+  - generic [ref=e28]:
+    - img [ref=e29]:
+      - generic [ref=e30]: Ankara
+    - generic [ref=e35]:
+      - button "Latitude and longitude lines" [ref=e36]
+      - button "Show learned capitals" [pressed] [ref=e39]
+      - button "Zoom in" [ref=e44]
+      - button "Reset zoom (Space)" [ref=e48]
+      - button "Zoom out" [ref=e54]

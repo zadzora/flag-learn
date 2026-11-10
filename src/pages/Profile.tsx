@@ -363,7 +363,7 @@ const CONQUEROR_ART: string | undefined = "/badges/title-conqueror.webp"
  */
 function Titles() {
     const held = useRecordsHeld()
-    useEffect(() => installProfileTest(), []) // TEMPORARY - see recordsHeld.ts
+    useEffect(() => installProfileTest(), []) // dev server only - see recordsHeld.ts
     const { records, wins } = held
     const count = records.length + (wins.length > 0 ? 1 : 0)
     const aside = held.status === "loading" ? "Checking the leaderboards…" : held.status === "offline" ? "Leaderboards unavailable" : `${records.length} ${records.length === 1 ? "record" : "records"} held${wins.length ? ` · ${wins.length} ${wins.length === 1 ? "season" : "seasons"} won` : ""}`

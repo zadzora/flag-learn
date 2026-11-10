@@ -5,13 +5,15 @@ import { ArrowLeft, Check, ChevronRight, Crosshair, Flame, Grid3x3, MapPinCheck,
 import { ComposableMap, Geographies, Geography, ZoomableGroup, useMapContext, useZoomPanContext } from "react-simple-maps"
 import { BarButton } from "../components/TopBar"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
-import { PENALTY_SECONDS, fitCamera, formatRunTime, roundRunTime } from "../utils/mapSpeedrun"
+import { PENALTY_SECONDS, fitCamera, formatRunTime, openRunTracker, roundRunTime, type RunTracker } from "../utils/mapSpeedrun"
 import {
     CAPITALS, CAPITAL_REGIONS, PROGRESS_KEY, REGION_CAPITAL_COUNTS, cameraOnBoth, capitalBoard, capitalRegion, distanceKm, formatKm,
     isHit, isInView, judge, loadRegion, regionCapitals, saveRegion, toleranceUnits, type Capital, type CapitalRegion, type Verdict,
 } from "../utils/capitalMap"
 import { TARGET_STREAK, isMastered, mergeProgress, pickNext, recordAnswer, srStats, type SrOutcome, type SrProgressMap } from "../utils/spacedRepetition"
 import { bumpCounter, recordBest } from "../utils/profileStore"
+import { panButton, steadyClicks } from "../utils/steadyClicks"
+import MapTips from "../components/MapTips"
 
 const geoUrl = "/world-map.json"
 const THEME_KEY = "flag-master-theme"
@@ -133,6 +135,15 @@ function KmCounter({ km, delayMs }: { km: number; delayMs: number }) {
     const v = useCountUp(km, delayMs)
     return <>{formatKm(v < 1 && km >= 1 ? 1 : v)}</>
 }
+
+/**
+ * The map's zoom filter: primary or middle button, no Ctrl, and no
+ * double-click zoom - the first click of one would already be an answer.
+ * Module-level so its identity is stable; a new function re-attaches d3-zoom
+ * on every render. The library hands it the d3 event, which
+ * @types/react-simple-maps mislabels as an SVGElement.
+ */
+const capitalZoomFilter =((e: MouseEvent) => e.type !== "dblclick" && panButton(e)) as unknown as (element: SVGElement) => boolean
 
 /**
  * Turns a click anywhere on the map - land or sea - into a longitude and
@@ -441,6 +452,8 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
     const [penaltyFxKey, setPenaltyFxKey] = useState(0)
     // Bumped on every start and exit, so a pending next-capital timeout from an abandoned run does nothing.
     const runToken = useRef(0)
+    // The run's copy on the server, which the leaderboard trusts instead of this page's clock.
+    const runTracker = useRef<RunTracker | null>(null)
 
     const dark = theme === "dark"
     const viewRegion = isSpeedrunMode ? (run?.region ?? runResult?.region ?? setupRegion) : region
@@ -569,8 +582,13 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
         frame(r)
     }
 
-    function startRun(r: CapitalRegion) {
+    async function startRun(r: CapitalRegion) {
         const token = ++runToken.current
+        runTracker.current = null
+        // Signs in on the first run, so the server sees the run start when the player does.
+        const tracker = await openRunTracker(capitalBoard(r), regionCapitals(r).length)
+        if (token !== runToken.current) return
+        runTracker.current = tracker
         setSetupRegion(r)
         setShowSetup(false)
         setRunResult(null)
@@ -584,8 +602,14 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
         setGuess(null)
         if (r.queue.length === 0) {
             const avgKm = r.hitKm.length ? r.hitKm.reduce((a, b) => a + b, 0) / r.hitKm.length : 0
-            setRunResult({ region: r.region, seconds: roundRunTime(secondsSince(r.startedAt) + r.penalty), mistakes: r.mistakes, count: r.total, avgKm })
+            const seconds = roundRunTime(secondsSince(r.startedAt) + r.penalty)
+            setRunResult({ region: r.region, seconds, mistakes: r.mistakes, count: r.total, avgKm, check: "pending" })
             bumpCounter("highscore")
+            const tracker = runTracker.current
+            runTracker.current = null
+            void (tracker ? tracker.finish(seconds) : Promise.resolve({ ok: false } as const)).then(check => {
+                if (token === runToken.current) setRunResult(prev => prev && { ...prev, seconds: check.ok ? check.seconds : prev.seconds, check })
+            })
             setRun(null)
             setRunTarget(null)
             return
@@ -605,6 +629,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
         countRun(isHit(verdict))
 
         if (isHit(verdict)) {
+            runTracker.current?.found()
             const next = { ...run, found: [...run.found, c], hitKm: [...run.hitKm, km] }
             setRun(next)
             schedule(() => nextRunCapital(next, token), 650)
@@ -612,6 +637,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
         }
 
         // Missed: the penalty lands now, and the capital is asked again later in the run.
+        runTracker.current?.missed()
         const next = { ...run, queue: requeue(run.queue, c), mistakes: run.mistakes + 1, penalty: run.penalty + PENALTY_SECONDS }
         setRun(next)
         setRunElapsed(secondsSince(run.startedAt) + next.penalty)
@@ -623,6 +649,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
     function exitRun() {
         if (run && !confirm("Quit the speedrun? This run will be lost.")) return
         runToken.current++
+        runTracker.current = null
         if (pending.current) clearTimeout(pending.current)
         setRun(null)
         setRunTarget(null)
@@ -859,7 +886,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
             </AnimatePresence>
 
             {/* --- MAP --- */}
-            <div className={`relative h-full w-full outline-none ${target && !guess ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}>
+            <div ref={steadyClicks} className={`relative h-full w-full outline-none ${target && !guess ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}>
                 <ComposableMap projection="geoMercator" projectionConfig={{ scale: 140, rotate: [-rotate, 0, 0] }} width={800} height={600} style={{ width: "100%", height: "100%", outline: "none" }}>
                     <ZoomableGroup
                         zoom={position.zoom}
@@ -867,8 +894,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                         onMoveEnd={setPosition}
                         maxZoom={40}
                         translateExtent={[[-100, -100], [900, 700]]}
-                        // No double-click zoom: the first click of it would already be an answer.
-                        filterZoomEvent={((e: { type?: string; ctrlKey?: boolean; button?: number }) => e.type !== "dblclick" && !e.ctrlKey && !e.button) as unknown as (element: SVGElement) => boolean}
+                        filterZoomEvent={capitalZoomFilter}
                     >
                         <ClickLayer onPick={handlePick}>{geographies}</ClickLayer>
                         <AnimatePresence>
@@ -888,6 +914,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                 </ComposableMap>
 
                 <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
+                    <MapTips className="mb-2" speedrun={isSpeedrunMode} />
                     <button
                         type="button"
                         onClick={() => { setShowGrid(!showGrid); storeGrid(!showGrid) }}

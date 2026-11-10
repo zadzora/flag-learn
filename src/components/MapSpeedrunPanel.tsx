@@ -5,11 +5,15 @@ import { BarButton } from "./TopBar"
 import YouTag from "./YouTag"
 import {
     formatRunTime, loadPlayerName, normalizePlayerName,
-    saveRun, subscribeLeaderboard, useIsMyRow, type MapLeaderboardRecord, type SaveOutcome,
+    saveRun, subscribeLeaderboard, useIsMyRow, type MapLeaderboardRecord, type RunCheck, type SaveOutcome,
 } from "../utils/mapSpeedrun"
 
-/** `avgKm` is only reported by runs that measure distance (the capitals). */
-export type MapRunResult<R extends string = string> = { region: R; seconds: number; mistakes: number; count: number; avgKm?: number }
+/**
+ * `avgKm` is only reported by runs that measure distance (the capitals).
+ * `check` is the server's verdict on the run (`openRunTracker`): only a run it
+ * vouches for can be saved, and `seconds` is then the time it vouches for.
+ */
+export type MapRunResult<R extends string = string> = { region: R; seconds: number; mistakes: number; count: number; avgKm?: number; check: RunCheck | "pending" }
 
 /**
  * The setup, result and leaderboard of a map speedrun. Shared by the country
@@ -62,10 +66,11 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
 
     async function handleSave() {
         const cleaned = normalizePlayerName(name)
-        if (!result || !cleaned || !entries || saving) return
+        const check = result?.check
+        if (!result || !cleaned || !entries || saving || !check || check === "pending" || !check.ok) return
         setSaving(true)
         try {
-            const outcome = await saveRun(boardFor(result.region), entries, cleaned, result.seconds, result.mistakes)
+            const outcome = await saveRun(boardFor(result.region), entries, cleaned, check.seconds, check.mistakes, check.serverMs)
             setNotice(outcome)
             setSaved(outcome !== "not-better")
         } catch {
@@ -76,6 +81,7 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
     }
 
     const regionLabel = regions.find(r => r.id === boardRegion)?.label ?? "World"
+    const verified = !!result && result.check !== "pending" && result.check.ok
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
@@ -122,8 +128,17 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                                         aria-label="Your name"
                                         className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-4 py-2 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
                                     />
-                                    <button type="button" onClick={handleSave} disabled={!normalizePlayerName(name) || !entries || saving} className={`${primary} shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50`}>Save</button>
+                                    <button type="button" onClick={handleSave} disabled={!normalizePlayerName(name) || !entries || saving || !verified} className={`${primary} shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50`}>Save</button>
                                 </div>
+                            )}
+                            {!saved && result.check === "pending" && (
+                                <p className="-mt-2 text-sm text-slate-500 dark:text-slate-400">Checking the run with the server...</p>
+                            )}
+                            {result.check !== "pending" && !result.check.ok && (
+                                <p className="-mt-2 text-sm font-bold text-red-600 dark:text-red-400">This run could not be verified with the server (connection lost?), so it cannot go on the leaderboard.</p>
+                            )}
+                            {!saved && result.check !== "pending" && result.check.ok && result.check.lagged && (
+                                <p className="-mt-2 text-sm text-amber-600 dark:text-amber-400">The connection lagged during the run, so this is the time the server counted.</p>
                             )}
                             {notice && (
                                 <p className={`-mt-2 text-sm font-bold ${notice === "first" || notice === "improved" ? "text-emerald-600 dark:text-emerald-400" : notice === "failed" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}>

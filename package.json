@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test tests/cloudMerge.test.mjs",
+    "test": "node --test tests/cloudMerge.test.mjs tests/speedrunTotals.test.mjs",
     "emulators": "npx -y firebase-tools@15.34.2 emulators:start --only auth,database --project demo-flaglearn",
     "test:rules": "npx -y firebase-tools@15.34.2 emulators:exec --only database --project demo-flaglearn \"node --test tests/rules.test.mjs\""
   },

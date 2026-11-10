@@ -4,9 +4,11 @@ import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight, MousePointerClick } from "lucide-react"
 import { BarButton } from "../components/TopBar"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
-import { MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion } from "../utils/mapSpeedrun"
+import { MAP_GAME_UNSUPPORTED_CODES, MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, openRunTracker, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion, type RunTracker } from "../utils/mapSpeedrun"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import { bumpCounter } from "../utils/profileStore"
+import { panButton, steadyClicks } from "../utils/steadyClicks"
+import MapTips from "../components/MapTips"
 import worldData from "../../data/flags.json"
 
 const geoUrl = "/world-map.json"
@@ -15,11 +17,6 @@ const TARGET_STREAK = 3
 const BATCH_SIZE = 16
 const THEME_KEY = "flag-master-theme" // Zdieľaný kľúč pre tému naprieč celou aplikáciou
 
-const UNSUPPORTED_MAP_CODES = [
-    "ad", "mc", "sm", "va", "li", "sg", "mt", "bh", "mv", "nr", "tv",
-    "mh", "pw", "fm", "ws", "to", "ki", "st", "sc", "km", "bb", "vc",
-    "gd", "ag", "kn", "lc", "dm", "hk", "mo", "pr", "aq","cv","mu","fo","gb-sct","gb-wls","gb-nir","gb-eng"
-]
 
 const OCEAN_LABELS = [
     { name: "North Atlantic Ocean", coordinates: [-40, 35] as [number, number], size: 5, rotate: 0 },
@@ -95,7 +92,7 @@ function checkCountryMatch(geo: any, target: Flag | null) {
     });
 }
 
-const MAP_FLAGS = (worldData as unknown as Flag[]).filter(f => !UNSUPPORTED_MAP_CODES.includes(f.code))
+const MAP_FLAGS = (worldData as unknown as Flag[]).filter(f => !MAP_GAME_UNSUPPORTED_CODES.includes(f.code))
 
 // Each map feature resolves to its flag once; the speedrun asks on every render which country a shape is.
 type MapFeature = { rsmKey: string; properties?: { name?: string; NAME?: string } }
@@ -133,12 +130,14 @@ function readDblClickZoom(): boolean {
     try { return localStorage.getItem(DBLCLICK_ZOOM_KEY) === "1" } catch { return false }
 }
 
-// react-simple-maps' own filter (no ctrl, primary button) minus the double click. The library hands
-// the d3 event to this callback; @types/react-simple-maps mislabels the argument as an SVGElement.
-// A double tap reaches the same handler as its `touchend` (d3-zoom only asks the filter about a touchend
-// for that), so refusing it stops double-tap zoom on phones without touching pinch or pan.
-// Module-level so its identity is stable - a new function re-attaches d3-zoom on every render.
-const noDblClickZoom = ((e: MouseEvent) => e.type !== "dblclick" && e.type !== "touchend" && !e.ctrlKey && !e.button) as unknown as (el: SVGElement) => boolean
+// react-simple-maps' own filter (no ctrl, primary button) plus panning with the middle button held.
+// The library hands the d3 event to this callback; @types/react-simple-maps mislabels the argument as
+// an SVGElement. Module-level so its identity is stable - a new function re-attaches d3-zoom on every render.
+const panZoom = ((e: MouseEvent) => panButton(e)) as unknown as (el: SVGElement) => boolean
+// The same minus the double click. A double tap reaches the same handler as its `touchend` (d3-zoom only
+// asks the filter about a touchend for that), so refusing it stops double-tap zoom on phones without
+// touching pinch or pan.
+const noDblClickZoom = ((e: MouseEvent) => e.type !== "dblclick" && e.type !== "touchend" && panButton(e)) as unknown as (el: SVGElement) => boolean
 
 function secondsSince(startedAt: number): number {
     return (Date.now() - startedAt) / 1000
@@ -191,6 +190,8 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
     }
     // Bumped on every start and exit, so a pending next-country timeout from an abandoned run does nothing.
     const runToken = useRef(0)
+    // The run's copy on the server, which the leaderboard trusts instead of this page's clock.
+    const runTracker = useRef<RunTracker | null>(null)
     // The header lies over the map; region framing fits the region into what it leaves free.
     const headerRef = useRef<HTMLElement>(null)
 
@@ -402,10 +403,15 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
         frameRegion(region)
     }
 
-    function startSpeedrun(region: MapRegion) {
+    async function startSpeedrun(region: MapRegion) {
         const pool = regionPool(activeData, region)
         if (pool.length === 0) return
         const token = ++runToken.current
+        runTracker.current = null
+        // Signs in on the first run, so the server sees the run start when the player does.
+        const tracker = await openRunTracker(mapBoard(region), pool.length)
+        if (token !== runToken.current) return
+        runTracker.current = tracker
         setSpeedrunRegion(region)
         setShowSpeedrunSetup(false)
         setRunResult(null)
@@ -421,8 +427,14 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
         setStatus('idle')
         setClickedGeo(null)
         if (r.queue.length === 0) {
-            setRunResult({ region: r.region, seconds: roundRunTime(secondsSince(r.startedAt) + r.penalty), mistakes: r.mistakes, count: r.total })
+            const seconds = roundRunTime(secondsSince(r.startedAt) + r.penalty)
+            setRunResult({ region: r.region, seconds, mistakes: r.mistakes, count: r.total, check: "pending" })
             bumpCounter("highscore")
+            const tracker = runTracker.current
+            runTracker.current = null
+            void (tracker ? tracker.finish(seconds) : Promise.resolve({ ok: false } as const)).then(check => {
+                if (token === runToken.current) setRunResult(prev => prev && { ...prev, seconds: check.ok ? check.seconds : prev.seconds, check })
+            })
             setRun(null)
             setCurrent(null)
             return
@@ -440,6 +452,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
         setClickedGeo(geo.rsmKey)
         if (checkCountryMatch(geo, target)) {
             setStatus('correct')
+            runTracker.current?.found()
             const next = { ...r, found: [...r.found, target.code] }
             setRun(next)
             setTimeout(() => nextSpeedrunCountry(next, token), 250)
@@ -448,6 +461,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
 
         // Missed: the penalty lands now, and the country is asked again later in the run.
         setStatus('error')
+        runTracker.current?.missed()
         const next = { ...r, queue: requeue(r.queue, target), mistakes: r.mistakes + 1, penalty: r.penalty + PENALTY_SECONDS }
         setRun(next)
         setRunElapsed(secondsSince(r.startedAt) + next.penalty)
@@ -459,6 +473,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
     function exitSpeedrun() {
         if (run && !confirm("Quit the speedrun? This run will be lost.")) return
         runToken.current++
+        runTracker.current = null
         setRun(null)
         setRunResult(null)
         setShowSpeedrunSetup(true)
@@ -668,7 +683,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                     zoom={position.zoom}
                     center={position.coordinates}
                     onMoveEnd={setPosition}
-                    filterZoomEvent={blockDblClickZoom ? noDblClickZoom : undefined}
+                    filterZoomEvent={blockDblClickZoom ? noDblClickZoom : panZoom}
                     maxZoom={30}
                     translateExtent={[[-100, -100], [900, 700]]}
                 >
@@ -1071,10 +1086,11 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
             </AnimatePresence>
 
             {/* --- MAP CONTAINER --- */}
-            <div className="relative h-full w-full cursor-grab outline-none active:cursor-grabbing">
+            <div ref={steadyClicks} className="relative h-full w-full cursor-grab outline-none active:cursor-grabbing">
                 {renderMap}
 
                 <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 sm:bottom-8 sm:right-6">
+                    <MapTips className="mb-2" speedrun={isSpeedrunMode} />
                     {isSpeedrunMode && (
                         <div className="group relative mb-2">
                             <button

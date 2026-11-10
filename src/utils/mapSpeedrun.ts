@@ -6,13 +6,26 @@
  * `map-<region>` modes - the rules in `firebase-realtime.rules.json` list them.
  */
 import { useCallback, useEffect, useState } from "react"
-import { onValue, ref, set } from "firebase/database"
+import { get, onValue, ref, serverTimestamp, set, update } from "firebase/database"
 import countryStatsData from "../../data/countryStats.json"
 import { db, ensureSignedIn, observeSession } from "../../lib/firebase"
+import { RUN_TOTALS } from "./speedrunTotals"
 
 export type MapRegion = "world" | "europe" | "africa" | "asia" | "americas"
 
+/** Mirrored in the `highscores` rules as `mistakes * 10000` (ms). */
 export const PENALTY_SECONDS = 10
+
+/**
+ * Countries the Map Locator and its speedrun leave out - no shape on the map,
+ * or too small to click. Lives here rather than in the page so the tests can
+ * size the speedrun pools (`speedrunTotals.ts`) from the same list the game uses.
+ */
+export const MAP_GAME_UNSUPPORTED_CODES = [
+    "ad", "mc", "sm", "va", "li", "sg", "mt", "bh", "mv", "nr", "tv",
+    "mh", "pw", "fm", "ws", "to", "ki", "st", "sc", "km", "bb", "vc",
+    "gd", "ag", "kn", "lc", "dm", "hk", "mo", "pr", "aq","cv","mu","fo","gb-sct","gb-wls","gb-nir","gb-eng"
+]
 
 /** `bounds` is the box the camera opens on: [west, south, east, north] in degrees. */
 export const MAP_REGIONS: { id: MapRegion; label: string; statRegion: string | null; bounds: [number, number, number, number] | null }[] = [
@@ -176,15 +189,100 @@ export function subscribeLeaderboard(board: string, onChange: (entries: MapLeade
 
 export type SaveOutcome = "first" | "improved" | "not-better"
 
-/** Writes a run if it beats the player's own record. The rules refuse anything
- *  slower too; checking first only spares the round trip and explains why. */
-export async function saveRun(boardKey: string, board: MapLeaderboardRecord[], name: string, seconds: number, mistakes: number): Promise<SaveOutcome> {
+/**
+ * Writes a run if it beats the player's own record. The rules refuse anything
+ * slower too; checking first only spares the round trip and explains why.
+ * `serverMs` is the run's length by the database's clock (`RunCheck`); the
+ * rules only take a time at least that long, plus its penalties.
+ */
+export async function saveRun(boardKey: string, board: MapLeaderboardRecord[], name: string, seconds: number, mistakes: number, serverMs: number): Promise<SaveOutcome> {
     const { uid } = await ensureSignedIn()
     const playerId = playerIdFor(uid, board)
-    const record: MapLeaderboardRecord = { name, bestTimeSeconds: roundRunTime(seconds), mistakes: Math.min(10000, mistakes), playerId, uid }
+    const record: MapLeaderboardRecord & { serverMs: number } = { name, bestTimeSeconds: roundRunTime(seconds), mistakes: Math.min(10000, mistakes), playerId, uid, serverMs }
     const existing = board.find(r => r.playerId === playerId)
     if (existing && byTimeThenMistakes(record, existing) >= 0) return "not-better"
     await set(ref(db, `${boardPath(boardKey)}/${playerId}`), record)
     try { localStorage.setItem(PLAYER_NAME_KEY, name) } catch { /* the name is a convenience */ }
     return existing ? "improved" : "first"
+}
+
+// --- the verified run ---------------------------------------------------------
+//
+// The run's clock is the database's, not the browser's. The page writes
+// `speedrunRuns/<uid>` when a run starts and again at every find or miss, each
+// write stamped by the server (`serverTimestamp()`), and the rules accept only
+// one step at a time. A leaderboard time is then taken only if it is at least
+// as long as the server saw the run last (plus its penalties) and the run found
+// every item of its board (`RUN_TOTALS`). Slowing `Date.now`, editing the time
+// in a debugger or writing a made-up record from the console all fail that.
+//
+// What this does not stop is a script that writes the steps itself, at a pace
+// of its choosing. Nothing without a server of our own can - and even a server
+// only makes such a script harder to write, since the page has to tell the
+// player which country to find.
+
+export type RunCheck =
+    /** The server's numbers agree with the run: `seconds` is what may be saved. */
+    | { ok: true; seconds: number; serverMs: number; mistakes: number; lagged: boolean }
+    /** Unverifiable - offline, signed out, or a step the rules refused. Cannot be saved. */
+    | { ok: false }
+
+export type RunTracker = {
+    found(): void
+    missed(): void
+    /** Waits for the writes to land, then reads the run back. `clientSeconds` is the page's own time, penalties included. */
+    finish(clientSeconds: number): Promise<RunCheck>
+}
+
+const runPath = (uid: string) => `speedrunRuns/${uid}`
+const FINISH_TIMEOUT_MS = 8000
+
+/** Up to the next tenth: a time rounded down by even a few ms would fall below the server's and be refused. */
+const ceilTenth = (seconds: number) => Math.ceil(seconds * 10 - 1e-6) / 10
+
+/**
+ * Signs in (the first run of a session is the only one that waits for it) and
+ * opens a run on the server. Never throws: a run that could not be opened is
+ * still played, it just cannot be saved.
+ */
+export async function openRunTracker(board: string, poolSize: number): Promise<RunTracker> {
+    if (import.meta.env.DEV && RUN_TOTALS[board] !== poolSize) {
+        console.error(`[speedrun] ${board} asks ${poolSize} items but RUN_TOTALS (and the database rules) say ${RUN_TOTALS[board]}: every save on this board will be refused. Update speedrunTotals.ts and firebase-realtime.rules.json.`)
+    }
+    let uid: string | null = null
+    try { uid = (await ensureSignedIn()).uid } catch { /* played unverified */ }
+
+    let failed = uid === null
+    let n = 0
+    let mistakes = 0
+    const writes: Promise<unknown>[] = []
+    const write = (data: Record<string, unknown>, fresh = false) => {
+        if (failed || !uid) return
+        const target = ref(db, runPath(uid))
+        // Sent in order over one connection, so the rules see each step against the one before it.
+        writes.push((fresh ? set(target, data) : update(target, data)).catch(() => { failed = true }))
+    }
+    write({ board, n: 0, mistakes: 0, startedAt: serverTimestamp(), lastAt: serverTimestamp() }, true)
+
+    return {
+        found() { n++; write({ n, lastAt: serverTimestamp() }) },
+        missed() { mistakes++; write({ mistakes }) },
+        async finish(clientSeconds) {
+            if (failed || !uid) return { ok: false }
+            const settle = (async () => {
+                await Promise.all(writes)
+                if (failed) return null
+                return (await get(ref(db, runPath(uid)))).val() as { board: string; n: number; mistakes: number; startedAt: number; lastAt: number } | null
+            })()
+            const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), FINISH_TIMEOUT_MS))
+            const stored = await Promise.race([settle, timeout]).catch(() => null)
+            if (!stored || stored.board !== board || stored.n !== n || stored.mistakes !== mistakes) return { ok: false }
+            const serverMs = stored.lastAt - stored.startedAt
+            const serverSeconds = ceilTenth(serverMs / 1000 + mistakes * PENALTY_SECONDS)
+            const own = roundRunTime(clientSeconds)
+            // The page's time ends after the last find's animation, so it is normally the longer one.
+            // When the server's is longer, the connection held the steps back; the server's counts.
+            return { ok: true, seconds: Math.max(own, serverSeconds), serverMs, mistakes, lagged: serverSeconds - own >= 0.5 }
+        },
+    }
 }

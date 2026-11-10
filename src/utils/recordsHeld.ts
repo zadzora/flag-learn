@@ -145,17 +145,18 @@ export function useRecordsHeld(): RecordsHeld {
     return fake ?? held
 }
 
-// --- TEMPORARY: console test data -------------------------------------------
+// --- Dev only: console test data --------------------------------------------
 // `window.profileTest` fakes held records and World Conqueror wins so the
 // profile section can be seen without topping a real leaderboard. The fake
-// lives in localStorage (not a synced key) and is labelled on the page.
-// Delete this block, the `fake` state above and `installProfileTest` in
-// Profile.tsx once the section is signed off.
+// lives in localStorage (not a synced key) and is labelled on the page. Only on
+// `npm run dev`: a production build neither installs it nor reads the fake back,
+// so a leftover key cannot dress anybody up in titles they do not hold.
 
 const TEST_KEY = "flag-master-test-records"
 const TEST_EVENT = "flag-master-test-records"
 
 function readTestRecords(): RecordsHeld | null {
+    if (!import.meta.env.DEV) return null
     try {
         const raw = localStorage.getItem(TEST_KEY)
         if (!raw) return null
@@ -208,6 +209,7 @@ function fakeWins(n: number): ConquerorWin[] {
 
 /** Installs `window.profileTest`; returns the uninstaller. */
 export function installProfileTest(): () => void {
+    if (!import.meta.env.DEV) return () => {}
     const current = () => readTestRecords() ?? { records: [], wins: [] }
     window.profileTest = {
         demo: () => writeTestRecords({ records: SAMPLE, wins: fakeWins(3) }),

@@ -17,7 +17,7 @@
  * `cloudMerge.ts`) - and never touches localStorage, or the next save of a
  * mounted page would write its old state straight back over it.
  */
-import { get, onValue, ref, remove, runTransaction, serverTimestamp, set } from "firebase/database"
+import { get, onValue, ref, runTransaction, serverTimestamp, set, update } from "firebase/database"
 import type { User } from "firebase/auth"
 import { auth, db, deleteAccount, isGoogleUser, reauthenticate, signInWithGoogle, signOutUser } from "../../lib/firebase"
 import { CLOUD_KEYS, cloudLimit, fingerprint, mergeSave, type CloudKey } from "./cloudMerge"
@@ -371,7 +371,8 @@ export async function deleteCloudAccount(): Promise<void> {
         unwatch()
         write(ACCOUNT_KEY, null)
         write(BASE_KEY, null)
-        await withTimeout(remove(ref(db, `users/${user.uid}`)), NETWORK_WAIT_MS)
+        // The speedrun timing record goes too: it is the account's, not part of anybody's result.
+        await withTimeout(update(ref(db), { [`users/${user.uid}`]: null, [`speedrunRuns/${user.uid}`]: null }), NETWORK_WAIT_MS)
         await deleteAccount(user)
         setStatus({ state: "off", tooBig: [] })
     })

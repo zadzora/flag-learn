@@ -102,7 +102,8 @@ type GameStatus = 'loading' | 'painting' | 'complete' | 'given-up' | 'unsupporte
 export default function PaintGame() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const debugCode = searchParams.get('code')
+  // ?code= opens any flag with a picker - a dev tool, ignored in a production build.
+  const debugCode = import.meta.env.DEV ? searchParams.get('code') : null
 
 
   const [queue, setQueue] = useState<string[]>([])

@@ -381,8 +381,8 @@ export default function BlurGame() {
                 )}
             </main>
 
-            {/* TEMP CHEAT BUTTON (Bottom Left) */}
-            {!showIntro && !isGameOver && (
+            {/* Dev-only shortcut to the end screen; never in a production build. */}
+            {import.meta.env.DEV && !showIntro && !isGameOver && (
                 <button
                     onClick={cheatWin}
                     className="fixed bottom-4 left-4 z-50 flex h-9 min-h-0 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-400 opacity-50 transition-opacity hover:text-red-500 hover:opacity-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-red-400"

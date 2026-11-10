@@ -18,7 +18,6 @@ const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-connections-save"
 /** Test runs are saved apart so they never overwrite a real day in progress. */
 const TEST_STORAGE_KEY = "flag-master-connections-test-save"
-const TEST_FLAG_KEY = "flag-master-test"
 const DAILY_GAME_KEY = "connections"
 const MAX_MISTAKES = 4
 
@@ -73,17 +72,11 @@ const COLOR_CLASSES: Record<ConnectionsColor, string> = {
  * `connectionsTest` console helpers, and keeps the run out of Firebase, out of
  * the streak, and out of the real saved game.
  *
- * On during `npm run dev`; switch it on anywhere else (a preview deploy, a
- * phone) with `localStorage.setItem("flag-master-test", "1")`. Never on for
- * normal visitors, so future puzzles stay unspoiled.
+ * Only on `npm run dev`. A production build has no switch for it - it would
+ * hand anybody every future puzzle with its answers.
  */
 function isTestModeEnabled(): boolean {
-    if (import.meta.env.DEV) return true
-    try {
-        return localStorage.getItem(TEST_FLAG_KEY) === "1"
-    } catch {
-        return false
-    }
+    return import.meta.env.DEV
 }
 
 function readSave(storageKey: string, date: string): SavedGame | null {

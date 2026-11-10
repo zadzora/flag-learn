@@ -261,12 +261,9 @@ write fail.
 ## 🧪 Testing the daily puzzles
 
 Daily Connections derives its puzzle from the date, so a normal run only ever
-shows today. Test mode lets you step through any day. It is on automatically
-with `npm run dev`; switch it on elsewhere (preview deploy, phone) with:
-
-```js
-localStorage.setItem("flag-master-test", "1")
-```
+shows today. Test mode lets you step through any day. It exists only on
+`npm run dev` - a production build (the live site and preview deploys alike) has
+no way to switch it on, since it hands out every future puzzle with its answers.
 
 It adds no UI. What it unlocks:
 
@@ -281,6 +278,19 @@ It adds no UI. What it unlocks:
 
 Test runs never write to Firebase, never touch the streak, and save under their
 own `localStorage` key, so a real game in progress is left untouched.
+
+The other dev-only tools work the same way - present on `npm run dev`, gone from a
+production build:
+
+| Tool | What it does |
+|---|---|
+| `profileTest.demo()` / `.records(n)` / `.wins(n)` / `.none()` / `.clear()` | fake titles on `/profile` |
+| the skull button, bottom left of `/blur` | ends the game at once |
+| `/paint?code=sk` | opens any flag in the paint game, with a picker |
+
+The **Cheat Progress** buttons (Play, Map, Constellations) are not dev tools: they
+are there on purpose, so somebody who already knows the flags need not learn them
+again.
 
 ## ☕ Support
 If you like this project, you can buy me a coffee!

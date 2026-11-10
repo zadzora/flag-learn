@@ -1,5 +1,6 @@
 // The database rules, against the emulator: `npm run test:rules` (needs Java).
 import { readFileSync } from "node:fs"
+import assert from "node:assert/strict"
 import { after, before, beforeEach, describe, test } from "node:test"
 import { assertFails, assertSucceeds, initializeTestEnvironment } from "@firebase/rules-unit-testing"
 import { CLOUD_KEYS, ROAD_TRIP_LIMIT, VALUE_LIMIT } from "../src/utils/cloudMerge.ts"
@@ -11,8 +12,8 @@ before(async () => {
     env = await initializeTestEnvironment({
         projectId: "demo-flaglearn",
         // Spelled out: discovery through the emulator hub picks `localhost`, which Node may resolve to IPv6.
-        hub: { host: "127.0.0.1", port: 4400 },
-        database: { host: "127.0.0.1", port: 9000, rules: readFileSync(new URL("../firebase-realtime.rules.json", import.meta.url), "utf8") },
+        hub: { host: "127.0.0.1", port: Number(process.env.RULES_HUB_PORT ?? 4400) },
+        database: { host: "127.0.0.1", port: Number(process.env.RULES_DB_PORT ?? 9000), rules: readFileSync(new URL("../firebase-realtime.rules.json", import.meta.url), "utf8") },
     })
 })
 beforeEach(() => env.clearDatabase())
@@ -77,7 +78,8 @@ describe("users: the cloud save", () => {
 
     test("the owner can delete everything at once", async () => {
         await seed("users/alice", { save: { "flag-master-v1": { v: "{}", at: 1 } } })
-        await assertSucceeds(google("alice").ref("users/alice").remove())
+        await seed("speedrunRuns/alice", { board: "map-europe", n: 3, mistakes: 0, startedAt: 1, lastAt: 2 })
+        await assertSucceeds(google("alice").ref().update({ "users/alice": null, "speedrunRuns/alice": null }))
     })
 })
 
@@ -161,8 +163,110 @@ describe("highscores", () => {
     test("nobody deletes rows; the boards are a fixed list", async () => {
         await seed("highscores/world/p1", row("p1", "ann"))
         await assertFails(anon("ann").ref("highscores/world/p1").remove())
-        await assertSucceeds(anon("ann").ref("highscores/capmap-oceania/p1").set(row("p1", "ann")))
+        await assertSucceeds(anon("ann").ref("highscores/capitals/p1").set(row("p1", "ann")))
+        await assertFails(anon("ann").ref("highscores/made-up/p1").set(row("p1", "ann")))
         await assertFails(anon("ann").ref("highscores/map-oceania/p1").set(row("p1", "ann")))
+    })
+})
+
+describe("speedruns: the server's clock", () => {
+    const RUN = "speedrunRuns/ann"
+    const fresh = board => ({ board, n: 0, mistakes: 0, startedAt: TIMESTAMP, lastAt: TIMESTAMP })
+    const found = n => ({ n, lastAt: TIMESTAMP })
+    /** A whole run the honest way: open, `total` finds, `misses` misses. */
+    async function play(db, board, total, misses = 0) {
+        await assertSucceeds(db.ref(RUN).set(fresh(board)))
+        for (let i = 1; i <= misses; i++) await assertSucceeds(db.ref(RUN).update({ mistakes: i }))
+        for (let n = 1; n <= total; n++) await assertSucceeds(db.ref(RUN).update(found(n)))
+        const run = (await db.ref(RUN).once("value")).val()
+        return { ...run, serverMs: run.lastAt - run.startedAt }
+    }
+    const record = (run, seconds, extra = {}) => ({ name: "Ann", bestTimeSeconds: seconds, mistakes: run.mistakes, playerId: "p1", uid: "ann", serverMs: run.serverMs, ...extra })
+    const honest = run => Math.ceil(run.serverMs / 100) / 10 + run.mistakes * 10
+
+    test("an honest run goes on the board", async () => {
+        const db = anon("ann")
+        const run = await play(db, "capmap-oceania", 13, 1)
+        await assertSucceeds(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run))))
+    })
+
+    test("a time shorter than the server saw is refused - a slowed clock or an edited number", async () => {
+        const db = anon("ann")
+        await assertSucceeds(db.ref(RUN).set(fresh("capmap-oceania")))
+        await assertSucceeds(db.ref(RUN).update({ mistakes: 1 }))
+        await new Promise(r => setTimeout(r, 1200))
+        for (let n = 1; n <= 13; n++) await assertSucceeds(db.ref(RUN).update(found(n)))
+        const stored = (await db.ref(RUN).once("value")).val()
+        const run = { ...stored, serverMs: stored.lastAt - stored.startedAt }
+        assert.ok(run.serverMs >= 1200)
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(run, 0.5)))
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run) - 0.2)))
+        // Penalties count: a run with a miss cannot report the time of one without.
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run) - 10, { mistakes: 0 })))
+        await assertSucceeds(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run))))
+    })
+
+    test("a record with no run behind it is refused", async () => {
+        const db = anon("ann")
+        await assertFails(db.ref("highscores/map-europe/p1").set({ name: "Ann", bestTimeSeconds: 30, mistakes: 0, playerId: "p1", uid: "ann", serverMs: 1 }))
+        await assertFails(db.ref("highscores/map-europe/p1").set({ name: "Ann", bestTimeSeconds: 30, mistakes: 0, playerId: "p1", uid: "ann" }))
+    })
+
+    test("the run must be complete, on the same board, with the server's own numbers", async () => {
+        const db = anon("ann")
+        const short = await play(db, "capmap-oceania", 12)
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(short, honest(short) + 60)))
+        const run = await play(db, "capmap-oceania", 13)
+        await assertFails(db.ref("highscores/capmap-europe/p1").set(record(run, honest(run) + 60)))
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run), { serverMs: 1 })))
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set(record(run, 0.1, { serverMs: 1 })))
+    })
+
+    test("steps go one at a time, stamped by the server", async () => {
+        const db = anon("ann")
+        await assertSucceeds(db.ref(RUN).set(fresh("map-europe")))
+        await assertFails(db.ref(RUN).update({ n: 40, lastAt: TIMESTAMP }))
+        await assertFails(db.ref(RUN).update({ n: 1, lastAt: Date.now() + 60_000 }))
+        await assertFails(db.ref(RUN).update({ n: 1 }))
+        await assertSucceeds(db.ref(RUN).update(found(1)))
+        await assertFails(db.ref(RUN).update(found(1)))
+        await assertFails(db.ref(RUN).update({ startedAt: Date.now() + 60_000 }))
+        await assertFails(db.ref(RUN).update({ board: "capmap-oceania" }))
+        await assertFails(db.ref(RUN).update({ n: 2, mistakes: 1, lastAt: TIMESTAMP }))
+        await assertSucceeds(db.ref(RUN).update({ mistakes: 1 }))
+        await assertFails(db.ref(RUN).update({ mistakes: 0 }))
+        await assertFails(db.ref(RUN).update({ extra: 1 }))
+    })
+
+    test("a run opens only at zero, now, and on a real board", async () => {
+        const db = anon("ann")
+        await assertFails(db.ref(RUN).set({ ...fresh("capmap-oceania"), n: 13 }))
+        await assertFails(db.ref(RUN).set({ ...fresh("capmap-oceania"), startedAt: Date.now() - 60_000 }))
+        await assertFails(db.ref(RUN).set(fresh("map-oceania")))
+        await assertFails(db.ref(RUN).set(fresh("world")))
+    })
+
+    test("a run is its player's alone", async () => {
+        await assertFails(anon("bob").ref(RUN).set(fresh("map-europe")))
+        await assertFails(guest().ref(RUN).set(fresh("map-europe")))
+        await assertSucceeds(anon("ann").ref(RUN).set(fresh("map-europe")))
+        await assertFails(anon("bob").ref(RUN).once("value"))
+        await assertFails(anon("bob").ref(RUN).update(found(1)))
+        await assertFails(anon("bob").ref(RUN).remove())
+        await assertSucceeds(anon("ann").ref(RUN).remove())
+    })
+
+    test("records from before the check stay, and are improved through it", async () => {
+        const db = anon("ann")
+        await seed("highscores/capmap-oceania/p1", { name: "Ann", bestTimeSeconds: 500, mistakes: 0, playerId: "p1", uid: "ann" })
+        const { uid, ...legacy } = { name: "Old", bestTimeSeconds: 500, mistakes: 0, playerId: "p2", uid: "x" }
+        void uid
+        await seed("highscores/capmap-oceania/p2", legacy)
+        assert.equal((await guest().ref("highscores/capmap-oceania").once("value")).val().p2.bestTimeSeconds, 500)
+        await assertFails(db.ref("highscores/capmap-oceania/p1").set({ name: "Ann", bestTimeSeconds: 400, mistakes: 0, playerId: "p1", uid: "ann" }))
+        const run = await play(db, "capmap-oceania", 13)
+        await assertSucceeds(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run))))
+        await assertSucceeds(db.ref("highscores/capmap-oceania/p2").set(record(run, honest(run), { playerId: "p2" })))
     })
 })
 

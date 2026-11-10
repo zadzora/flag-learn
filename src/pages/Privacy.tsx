@@ -91,8 +91,11 @@ export default function Privacy() {
                         <Item title="Online modes">
                             PvP battles, leaderboards, World Conqueror and Border Chain need to know who wrote what, so the first time you use one the game
                             creates an anonymous account for your browser - a random ID with no name or email attached. What you post there (nickname,
-                            scores, times, territories, answers) is visible to all players together with that ID. Daily puzzles only count how many players
-                            got each result, without saying who. Legal basis: Art. 6(1)(b) GDPR.
+                            scores, times, territories, answers) is visible to all players together with that ID. While you play a map speedrun, the game
+                            also keeps a short timing record under that ID - which board, how many places you have found and missed, and when the database
+                            saw the run start and the last find - so a leaderboard time can be checked against the database's own clock. Only your account
+                            can read it, the next run replaces it, and a leaderboard entry shows the length the database measured. Daily puzzles only count
+                            how many players got each result, without saying who. Legal basis: Art. 6(1)(b) GDPR.
                         </Item>
                         <Item title="Visit statistics">
                             Vercel Web Analytics counts page views without cookies and without identifying you, so I can see which modes are played. Legal
@@ -129,7 +132,7 @@ export default function Privacy() {
                         <li>Progress in your browser: until you clear your browser data. Signing out removes it from that browser unless you choose to keep it.</li>
                         <li>
                             Your account and saved progress: until you delete the account in <Link to="/profile#account" className={link}>Profile → Your progress → Delete account</Link>.
-                            That removes the saved progress, its backup copy and the sign-in account straight away.
+                            That removes the saved progress, its backup copy, the speedrun timing record and the sign-in account straight away.
                         </li>
                         <li>
                             Public entries - leaderboard records, World Conqueror territories and Hall of Fame, Border Chain moves, PvP games - stay after

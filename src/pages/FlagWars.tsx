@@ -26,8 +26,9 @@ import {
 } from "../utils/flagWars"
 import { bumpCounter } from "../utils/profileStore"
 import { loadHallOfFame } from "../utils/recordsHeld"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 
 /** The map's own coordinate space, before it is scaled to fit the page. */
 const MAP_WIDTH = 800

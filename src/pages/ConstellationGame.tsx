@@ -6,6 +6,7 @@ import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import constData from "../../data/constellations.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
+import { asset } from "../utils/asset"
 
 // --- TYPES ---
 type Constellation = {
@@ -523,7 +524,7 @@ export default function ConstellationGame() {
                             <ConstellationRenderer
                                 stars={current.stars}
                                 lines={current.lines}
-                                artUrl={(status === 'mastered' || showHint) ? `/constellations/${current.code}.svg` : undefined}
+                                artUrl={(status === 'mastered' || showHint) ? asset(`/constellations/${current.code}.svg`) : undefined}
                             />
                         </div>
 
@@ -673,7 +674,7 @@ export default function ConstellationGame() {
                                                             stars={item.stars}
                                                             lines={item.lines}
                                                             isThumb={true}
-                                                            artUrl={isMastered ? `/constellations/${item.code}.svg` : undefined}
+                                                            artUrl={isMastered ? asset(`/constellations/${item.code}.svg`) : undefined}
                                                         />
                                                         <div className="absolute left-1.5 top-1.5 z-10 rounded-[5px] bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white">{item.code.toUpperCase()}</div>
                                                         {isSelected && <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-500/20"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"><Check size={18} strokeWidth={4} aria-hidden /></div></div>}

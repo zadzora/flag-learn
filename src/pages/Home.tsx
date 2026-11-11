@@ -9,12 +9,14 @@ import {
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+import wallData from "../../data/flagWall.json"
 import SiteFooter from "../components/SiteFooter"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
 import { DAILY_MODES, isDailyFinished } from "../utils/dailyModes"
 import { BadgeMedal, RankShield } from "../components/BadgeArt"
 import { RANKS, TIER_NAMES, TRACKS, nextGoal, pointsOf, rankOf, unitFor } from "../utils/achievements"
 import { PROFILE_EVENT, readStore } from "../utils/profileStore"
+import { asset } from "../utils/asset"
 
 const LAST_MODE_KEY = "flag-master-last-mode"
 const TARGET_STREAK = 3
@@ -23,8 +25,14 @@ type FlagRow = { code: string; image: string; difficulty?: number; capital?: (st
 const WORLD = worldData as FlagRow[]
 const US = usData as unknown as FlagRow[]
 
-/** Well-known flags only: the wall should read as "flags" at a glance, not as a quiz. */
-const WALL_POOL = WORLD.filter(f => f.difficulty === 0 && !f.code.includes("-") && f.code !== "aq").map(f => f.image)
+/**
+ * The flag wall is one sprite (public/flag-wall.webp, from scripts/gen-flag-wall.mjs),
+ * not an <img> per flag: ~36 separate flags cost every new visitor ~36 CDN requests.
+ * Tiles are indices into that sprite; the daily shuffle still works on them.
+ */
+const WALL = wallData as { tileW: number; tileH: number; gap: number; cols: number; rows: number; codes: string[] }
+const WALL_POOL = WALL.codes.map((_, i) => i)
+const WALL_SRC = asset("/flag-wall.webp")
 
 type DeckMode = "world" | "us" | "capitals"
 type Deck = { mode: DeckMode; label: string; storageKey: string; items: FlagRow[] }
@@ -253,7 +261,7 @@ export default function Home() {
 
     const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"))
 
-    // The flag wall only moves while it is on screen: a hundred-odd images sliding
+    // The flag wall only moves while it is on screen: seventy tiles sliding
     // under the rest of the page cost the GPU for nothing once you scroll past them.
     const heroRef = useRef<HTMLElement>(null)
     useEffect(() => {
@@ -307,8 +315,16 @@ export default function Home() {
                 >
                     {rows.map((row, r) => (
                         <div key={r} className="fl-wall-row flex w-max gap-2.5">
-                            {row.map((src, i) => (
-                                <img key={i} src={src} alt="" className="h-[84px] w-[126px] rounded-[4px] object-cover" />
+                            {row.map((tile, i) => (
+                                <div
+                                    key={i}
+                                    className="h-[84px] w-[126px] shrink-0 rounded-[4px] bg-no-repeat"
+                                    style={{
+                                        backgroundImage: `url(${WALL_SRC})`,
+                                        backgroundSize: `${WALL.cols * (WALL.tileW + WALL.gap)}px ${WALL.rows * (WALL.tileH + WALL.gap)}px`,
+                                        backgroundPosition: `-${(tile % WALL.cols) * (WALL.tileW + WALL.gap)}px -${Math.floor(tile / WALL.cols) * (WALL.tileH + WALL.gap)}px`,
+                                    }}
+                                />
                             ))}
                         </div>
                     ))}
@@ -316,7 +332,7 @@ export default function Home() {
 
                 <nav className="relative z-10 mx-auto flex max-w-[1120px] items-center justify-between px-5 pt-4 sm:px-6">
                     <Link to="/" className="flex items-center gap-2.5 font-bold tracking-[0.01em]">
-                        <img src="/logo2.png" alt="" className="h-11 w-11" />
+                        <img src={asset("/logo2.png")} alt="" className="h-11 w-11" />
                         Flag Learn
                     </Link>
                     <div className="flex items-center gap-1 rounded-xl bg-[#F4F6FB]/85 p-1.5 text-sm text-slate-600 dark:bg-[#0A0E1A]/80 dark:text-[#A6B0C8]">

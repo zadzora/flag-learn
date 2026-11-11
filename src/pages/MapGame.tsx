@@ -12,8 +12,9 @@ import { panButton, steadyClicks } from "../utils/steadyClicks"
 import MapTips from "../components/MapTips"
 import worldData from "../../data/flags.json"
 import { OCEAN_LABELS, checkCountryMatch } from "../utils/mapCountryMatch"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 const STORAGE_KEY_MAP = "flag-master-map-v1"
 const TARGET_STREAK = 3
 const BATCH_SIZE = 16
@@ -858,7 +859,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                                 <ArrowLeft size={19} aria-hidden />
                             </Link>
                             <Link to="/" className="hidden shrink-0 items-center gap-2 font-bold lg:flex">
-                                <img src="/logo2.png" alt="" className="h-8 w-8" />
+                                <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
                                 Flag Learn
                             </Link>
 

@@ -20,8 +20,9 @@
 import { feature as topoFeature } from "topojson-client"
 import { codeForGeoName } from "./flagWars"
 import worldFlags from "../../data/flags.json"
+import { asset } from "./asset"
 
-export const GEO_URL = "/world-map.json"
+export const GEO_URL = asset("/world-map.json")
 
 /** Width of the world in world pixels. One pixel is roughly 10 km at the equator. */
 export const WORLD_W = 4000

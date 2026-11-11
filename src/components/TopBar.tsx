@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Moon, Sun } from "lucide-react"
 import { readStore } from "../utils/profileStore"
+import { asset } from "../utils/asset"
 
 type Props = {
     /** Page name, shown after the wordmark. */
@@ -39,7 +40,7 @@ function ProfileLink() {
             title="Your profile"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
         >
-            <img src={`/badges/rank-${rank}.webp`} alt="" className="h-7 w-7" />
+            <img src={asset(`/badges/rank-${rank}.webp`)} alt="" className="h-7 w-7" />
         </Link>
     )
 }
@@ -64,7 +65,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                     </Link>
                 )}
                 <Link to="/" className="hidden items-center gap-2 font-bold sm:flex">
-                    <img src="/logo2.png" alt="" className="h-8 w-8" />
+                    <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
                     Flag Learn
                 </Link>
                 {title && (

@@ -36,8 +36,9 @@ import {
     type ChainRecord, type Leg, type MoveMap, type PresenceMap,
 } from "../utils/borderChain"
 import { bumpCounter } from "../utils/profileStore"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 const MAP_WIDTH = 800
 const MAP_HEIGHT = 600
 const THEME_KEY = "flag-master-theme"

@@ -17,8 +17,9 @@ import {
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { bumpCounter } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
 
 // Shared with the Map Speedrun: one preference for both races.

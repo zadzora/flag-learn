@@ -14,8 +14,9 @@ import { TARGET_STREAK, isMastered, mergeProgress, pickNext, recordAnswer, srSta
 import { bumpCounter, recordBest } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
 import MapTips from "../components/MapTips"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
 const GRID_KEY = "capital-map-grid"
 const KNOWN_KEY = "capital-map-known"
@@ -796,7 +797,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                         <>
                             <Link to="/" aria-label="Back" className={backClass}><ArrowLeft size={19} aria-hidden /></Link>
                             <Link to="/" className="hidden shrink-0 items-center gap-2 font-bold lg:flex">
-                                <img src="/logo2.png" alt="" className="h-8 w-8" />
+                                <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
                                 Flag Learn
                             </Link>
                             {promptCard || (

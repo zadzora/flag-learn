@@ -12,6 +12,7 @@
  * like the sea. A lake hidden under the cover would be an invisible wall.
  */
 import { project } from "./roadTrip"
+import { asset } from "./asset"
 
 type LonLat = [number, number]
 export type LandmarkData = {
@@ -39,7 +40,7 @@ export type Landmarks = {
 
 export type LandmarkKind = "river" | "lake" | "range" | "peak"
 
-export async function loadLandmarkData(url = "/landmarks.json"): Promise<LandmarkData> {
+export async function loadLandmarkData(url = asset("/landmarks.json")): Promise<LandmarkData> {
     const r = await fetch(url)
     if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`)
     return r.json()

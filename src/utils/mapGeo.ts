@@ -4,8 +4,9 @@
  * working out where to point the camera so that country fills the frame.
  */
 import { feature as topoFeature } from "topojson-client"
+import { asset } from "./asset"
 
-export const GEO_URL = "/world-map.json"
+export const GEO_URL = asset("/world-map.json")
 
 /** Too small or not present as their own feature on the world map. */
 export const UNSUPPORTED_MAP_CODES = [

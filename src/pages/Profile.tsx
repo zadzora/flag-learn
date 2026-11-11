@@ -17,6 +17,7 @@ import { CONTINENTS } from "../utils/roadTripGoals"
 import { loadLog } from "../utils/roadTripLog"
 import { readStreak, STREAK_KEYS } from "../utils/dailyStreak"
 import { PROFILE_EVENT, readStore, setAvatar, todayUtc, type ProfileStore } from "../utils/profileStore"
+import { asset } from "../utils/asset"
 
 /**
  * The player's own page: rank, the flags they hold continent by continent, every
@@ -144,7 +145,7 @@ export default function Profile() {
                                 {avatar ? (
                                     <img src={avatar.image} alt="" className="h-full w-full object-contain" />
                                 ) : (
-                                    <img src="/badges/flags.webp" alt="" className="mx-auto h-14 w-14" />
+                                    <img src={asset("/badges/flags.webp")} alt="" className="mx-auto h-14 w-14" />
                                 )}
                                 <span className="absolute inset-x-0 bottom-0 bg-slate-900/70 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white opacity-0 transition-opacity group-hover:opacity-100">Change</span>
                             </button>
@@ -351,12 +352,12 @@ const RECORD_ICONS: Record<RecordGame, ModeIcon> = {
 // Full-colour art for the cards (graphic/icons_4.png, icons_5.png and icons_7.png, cut by
 // scripts/gen-badge-sprites.py). A game without art keeps its line icon on a dark tile.
 const RECORD_ART: Partial<Record<RecordGame, string>> = {
-    highscore: "/badges/title-highscore.webp",
-    map: "/badges/title-map-speedrun.webp",
-    capital: "/badges/title-capital-speedrun.webp",
-    ultimate: "/badges/title-ultimate-speedrun.webp",
+    highscore: asset("/badges/title-highscore.webp"),
+    map: asset("/badges/title-map-speedrun.webp"),
+    capital: asset("/badges/title-capital-speedrun.webp"),
+    ultimate: asset("/badges/title-ultimate-speedrun.webp"),
 }
-const CONQUEROR_ART: string | undefined = "/badges/title-conqueror.webp"
+const CONQUEROR_ART: string | undefined = asset("/badges/title-conqueror.webp")
 
 /**
  * First places on the global boards and World Conqueror seasons won. Read live

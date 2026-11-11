@@ -1,4 +1,5 @@
 import { RANKS, TIER_FRAMES } from "../utils/achievements"
+import { asset } from "../utils/asset"
 
 /*
  * Geometry of the sprites cut by scripts/gen-badge-sprites.py: every frame is a
@@ -27,14 +28,14 @@ export function BadgeMedal({ id, tier, size, className = "" }: MedalProps) {
     return (
         <span className={`relative inline-block shrink-0 ${className}`} style={{ width: size, height: size }} aria-hidden>
             <img
-                src={`/badges/${frame}.webp`}
+                src={asset(`/badges/${frame}.webp`)}
                 alt=""
                 draggable={false}
                 className="pointer-events-none absolute max-w-none select-none"
                 style={{ width: frameSize, height: frameSize, left: (size - frameSize) / 2, top: (size - frameSize) / 2 }}
             />
             <img
-                src={`/badges/${id}.webp`}
+                src={asset(`/badges/${id}.webp`)}
                 alt=""
                 draggable={false}
                 className={`pointer-events-none absolute max-w-none select-none ${tier === 0 ? "opacity-40 grayscale" : ""}`}
@@ -49,7 +50,7 @@ export function RankShield({ rank, size, className = "" }: { rank: number; size:
     const r = Math.max(0, Math.min(RANKS.length - 1, rank))
     return (
         <img
-            src={`/badges/rank-${r}.webp`}
+            src={asset(`/badges/rank-${r}.webp`)}
             alt={RANKS[r].name}
             draggable={false}
             className={`shrink-0 select-none ${className}`}

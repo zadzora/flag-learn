@@ -7,8 +7,9 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "re
 import worldData from "../../data/flags.json"
 import { checkCountryMatch } from "../utils/mapCountryMatch"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
+import { asset } from "../utils/asset"
 
-const geoUrl = "/world-map.json"
+const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
 
 const UNSUPPORTED_MAP_CODES = [

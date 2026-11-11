@@ -6,6 +6,7 @@ import { BadgeMedal, RankShield } from "./BadgeArt"
 import { ATLAS, RANKS, TIER_NAMES, checkProgress, trackById, type Unlock } from "../utils/achievements"
 import { PROGRESS_EVENT } from "../utils/profileStore"
 import { takeNudge } from "../utils/cloudSave"
+import { asset } from "../utils/asset"
 
 /**
  * Watches every save on the site and announces what it earns, on whatever page
@@ -129,7 +130,7 @@ const KICKER_TONE = ["text-slate-500", "text-[#B06A34] dark:text-[#D9955E]", "te
 function Burst({ size }: { size: number }) {
     return (
         <img
-            src="/badges/burst.webp"
+            src={asset("/badges/burst.webp")}
             alt=""
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 opacity-80 motion-safe:animate-[spin_14s_linear_infinite]"

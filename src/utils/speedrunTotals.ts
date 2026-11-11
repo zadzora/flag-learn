@@ -22,4 +22,9 @@ export const RUN_TOTALS: Record<string, number> = {
     "capmap-asia": 48,
     "capmap-americas": 35,
     "capmap-oceania": 13,
+    "ultimate-world": 169,
+    "ultimate-europe": 40,
+    "ultimate-africa": 49,
+    "ultimate-asia": 45,
+    "ultimate-americas": 29,
 }

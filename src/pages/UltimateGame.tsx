@@ -5,6 +5,7 @@ import { ZoomIn, ZoomOut, Maximize, Trophy, X, Timer, Repeat, MapPin, Flag as Fl
 import TopBar, { BarButton } from "../components/TopBar"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import worldData from "../../data/flags.json"
+import { checkCountryMatch } from "../utils/mapCountryMatch"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 
 const geoUrl = "/world-map.json"
@@ -33,40 +34,6 @@ const OCEAN_LABELS = [
 type Flag = { code: string; name: string | string[]; capital?: (string | null)[] | null; image: string }
 type GameStep = 'map' | 'country' | 'capital'
 
-function checkCountryMatch(geo: any, target: Flag | null) {
-    if (!target || !geo.properties) return false;
-
-    const geoName = (geo.properties.name || geo.properties.NAME || "").toLowerCase().replace(/[^a-z]/g, "");
-    const flagNames = Array.isArray(target.name) ? target.name : [target.name];
-
-    return flagNames.some(n => {
-        const fName = n.toLowerCase().replace(/[^a-z]/g, "");
-        if (geoName === fName) return true;
-        if (geoName === "unitedstatesofamerica" && fName === "unitedstates") return true;
-        if (geoName === "unitedrepublicoftanzania" && fName === "tanzania") return true;
-        if (geoName === "demrepcongo" && fName === "drcongo") return true;
-        if (geoName === "congo" && fName === "republicofthecongo") return true;
-        if (geoName === "czechia" && fName === "czechrepublic") return true;
-        if (geoName === "republicofserbia" && fName === "serbia") return true;
-        if (geoName === "republicofkorea" && fName === "southkorea") return true;
-        if (geoName === "dempeoplesrepofkorea" && fName === "northkorea") return true;
-        if (geoName === "eswatini" && fName === "swaziland") return true;
-        if (geoName === "northmacedonia" && fName === "macedonia") return true;
-        if (geoName === "republicofmoldova" && fName === "moldova") return true;
-        if (geoName === "thebahamas" && fName === "bahamas") return true;
-        if (geoName === "myanmar" && fName === "myanmarburma") return true;
-        if (geoName === "vatican" && fName === "vaticancity") return true;
-        if (geoName === "palestine" && fName === "stateofpalestine") return true;
-        if (geoName === "bosniaandherz" && fName === "bosnia") return true;
-        if (geoName === "centralafricanrep" && fName === "car") return true;
-        if (geoName === "eqguinea" && fName === "equatorialguinea") return true;
-        if (geoName === "dominicanrep" && fName === "dominicana") return true;
-        if (geoName === "ctedivoire" && fName === "ivorycoast") return true;
-        if (geoName === "solomonis" && fName === "solomonislands") return true;
-        if (geoName === "ssudan" && fName === "southsudan") return true;
-        return false;
-    });
-}
 
 function getPrimaryName(flag: Flag) {
     return Array.isArray(flag.name) ? flag.name[0] : flag.name;

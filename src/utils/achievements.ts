@@ -218,7 +218,7 @@ export const TRACKS: Track[] = [
     { id: "conqueror", title: "Conqueror", area: "multiplayer", unit: ["territory", "territories"], tiers: [1, 5, 20, 50], detail: "Territories taken in World Conqueror", to: "/world-conqueror" },
     { id: "pvp", title: "Duelist", area: "multiplayer", unit: ["win", "wins"], tiers: [1, 5, 20, 50], detail: "PvP battles won", to: "/pvp/create" },
     // A run is a whole deck or region against the clock, so the tiers stay low. Any mode counts on its own.
-    { id: "highscore", title: "Speedrunner", area: "multiplayer", unit: ["run", "runs"], tiers: [1, 3, 10, 25], detail: "Speedruns finished, in Highscore, Map Speedrun or Capital Speedrun", to: "/highscore" },
+    { id: "highscore", title: "Speedrunner", area: "multiplayer", unit: ["run", "runs"], tiers: [1, 3, 10, 25], detail: "Speedruns finished, in Highscore, Map Speedrun, Capital Speedrun or Ultimate Speedrun", to: "/highscore" },
 
     { id: "scholar", title: "Scholar", area: "milestones", unit: ["thing learned", "things learned"], tiers: [25, 150, 400, 800], detail: "Everything mastered, across every topic" },
     { id: "streak", title: "On fire", area: "milestones", unit: ["day", "days"], tiers: [3, 7, 14, 30], detail: "Longest run of days in a row with progress" },

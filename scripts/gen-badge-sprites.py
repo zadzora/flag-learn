@@ -53,6 +53,7 @@ SHEETS = {
     # Full-colour art for the profile's Titles cards (the variant picked from Sheet 4).
     "icons_4.png": (3, 1, [None, None, "title-map-speedrun"]),
     "icons_5.png": (3, 2, [None, None, None, "title-highscore", "title-capital-speedrun", "title-conqueror"]),
+    "icons_7.png": (3, 1, [None, "title-ultimate-speedrun", None]),
 }
 
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight, Check, Crown, PencilLine } from "lucide-react"
-import { CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
+import { CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, UltimateSpeedrunIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
 import { formatRunTime } from "../utils/mapSpeedrun"
 import { installProfileTest, RECORD_GAMES, useRecordsHeld, type HeldRecord, type RecordGame } from "../utils/recordsHeld"
 import TopBar from "../components/TopBar"
@@ -345,14 +345,16 @@ const RECORD_ICONS: Record<RecordGame, ModeIcon> = {
     highscore: HighscoreIcon,
     map: MapSpeedrunIcon,
     capital: CapitalSpeedrunIcon,
+    ultimate: UltimateSpeedrunIcon,
 }
 
-// Full-colour art for the cards (graphic/icons_4.png and icons_5.png, cut by
+// Full-colour art for the cards (graphic/icons_4.png, icons_5.png and icons_7.png, cut by
 // scripts/gen-badge-sprites.py). A game without art keeps its line icon on a dark tile.
 const RECORD_ART: Partial<Record<RecordGame, string>> = {
     highscore: "/badges/title-highscore.webp",
     map: "/badges/title-map-speedrun.webp",
     capital: "/badges/title-capital-speedrun.webp",
+    ultimate: "/badges/title-ultimate-speedrun.webp",
 }
 const CONQUEROR_ART: string | undefined = "/badges/title-conqueror.webp"
 

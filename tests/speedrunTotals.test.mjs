@@ -22,6 +22,8 @@ test("every board's total is the size of the pool its speedrun asks", async () =
     const actual = {}
     for (const r of map.MAP_REGIONS) actual[map.mapBoard(r.id)] = map.regionPool(mapPool, r.id).length
     for (const r of capitals.CAPITAL_REGIONS) actual[capitals.capitalBoard(r.id)] = capitals.regionCapitals(r.id).length
+    const ultimate = await vite.ssrLoadModule("/src/utils/ultimateSpeedrun.ts")
+    for (const r of ultimate.ULTIMATE_REGIONS) actual[ultimate.ultimateBoard(r.id)] = ultimate.ultimatePool(r.id).length
     assert.deepEqual(actual, RUN_TOTALS)
 })
 

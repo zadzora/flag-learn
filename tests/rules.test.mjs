@@ -190,6 +190,17 @@ describe("speedruns: the server's clock", () => {
         await assertSucceeds(db.ref("highscores/capmap-oceania/p1").set(record(run, honest(run))))
     })
 
+    test("the Ultimate Speedrun boards are verified the same way", async () => {
+        const db = anon("ann")
+        const short = await play(db, "ultimate-americas", 28)
+        await assertFails(db.ref("highscores/ultimate-americas/p1").set(record(short, honest(short) + 60)))
+        const run = await play(db, "ultimate-americas", 29, 2)
+        await assertFails(db.ref("highscores/map-americas/p1").set(record(run, honest(run))))
+        await assertFails(db.ref("highscores/ultimate-americas/p1").set(record(run, honest(run) - 10)))
+        await assertSucceeds(db.ref("highscores/ultimate-americas/p1").set(record(run, honest(run))))
+        await assertFails(db.ref(RUN).set(fresh("ultimate-oceania")))
+    })
+
     test("a time shorter than the server saw is refused - a slowed clock or an edited number", async () => {
         const db = anon("ann")
         await assertSucceeds(db.ref(RUN).set(fresh("capmap-oceania")))

@@ -5,7 +5,7 @@ import {
 } from "lucide-react"
 import {
     AtomIcon, BlurModeIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
-    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, UltimateIcon, WorldConquerorIcon, type ModeIcon,
+    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, type ModeIcon,
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -44,6 +44,7 @@ const MULTIPLAYER: Entry[] = [
     { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
     { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon, badge: "New" },
     { to: "/capital-speedrun", label: "Capital Speedrun", detail: "Pin a region's capitals on the map against the clock", icon: CapitalSpeedrunIcon, badge: "New" },
+    { to: "/ultimate-speedrun", label: "Ultimate Speedrun", detail: "Flag, map, country, capital - a whole region against the clock", icon: UltimateSpeedrunIcon, badge: "New" },
 ]
 
 const MORE_MODES: Entry[] = [
@@ -473,7 +474,7 @@ export default function Home() {
                 about={
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
-                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Capital Pinpoint</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong>, <strong>Map Speedrun</strong> and <strong>Capital Speedrun</strong> races.
+                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Capital Pinpoint</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong>, <strong>Map Speedrun</strong>, <strong>Capital Speedrun</strong> and <strong>Ultimate Speedrun</strong> races.
                         The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>

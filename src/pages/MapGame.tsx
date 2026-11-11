@@ -11,6 +11,7 @@ import { bumpCounter } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
 import MapTips from "../components/MapTips"
 import worldData from "../../data/flags.json"
+import { OCEAN_LABELS, checkCountryMatch } from "../utils/mapCountryMatch"
 
 const geoUrl = "/world-map.json"
 const STORAGE_KEY_MAP = "flag-master-map-v1"
@@ -19,79 +20,10 @@ const BATCH_SIZE = 16
 const THEME_KEY = "flag-master-theme" // Zdieľaný kľúč pre tému naprieč celou aplikáciou
 
 
-const OCEAN_LABELS = [
-    { name: "North Atlantic Ocean", coordinates: [-40, 35] as [number, number], size: 5, rotate: 0 },
-    { name: "South Atlantic Ocean", coordinates: [-20, -25] as [number, number], size: 5, rotate: 0 },
-    { name: "North Pacific Ocean", coordinates: [-150, 25] as [number, number], size: 5, rotate: 0 },
-    { name: "South Pacific Ocean", coordinates: [-130, -25] as [number, number], size: 5, rotate: 0 },
-    { name: "Indian Ocean", coordinates: [80, -20] as [number, number], size: 5, rotate: 0 },
-    { name: "Arctic Ocean", coordinates: [0, 80] as [number, number], size: 5 },
-    { name: "Southern Ocean", coordinates: [0, -60] as [number, number], size: 5 },
-
-    { name: "Mediterranean Sea", coordinates: [24, 33.5] as [number, number], size: 3 },
-    { name: "Caribbean Sea", coordinates: [-75, 15] as [number, number], size: 2.5, rotate: 10 },
-    { name: "Arabian Sea", coordinates: [65, 15] as [number, number], size: 2.5 },
-    { name: "South China Sea", coordinates: [115, 15] as [number, number], size: 2.5, rotate: -30 },
-    { name: "Bay of Bengal", coordinates: [90, 15] as [number, number], size: 2.5 },
-    { name: "Bering Sea", coordinates: [177, 60] as [number, number], size: 3 },
-    { name: "Tasman Sea", coordinates: [160, -40] as [number, number], size: 3, rotate: -45 },
-    { name: "Coral Sea", coordinates: [155, -15] as [number, number], size: 3, rotate: -15 },
-    { name: "Philippine Sea", coordinates: [135, 20] as [number, number], size: 3 },
-    { name: "Hudson Bay", coordinates: [-85, 60] as [number, number], size: 2.5 },
-    { name: "Gulf of Mexico", coordinates: [-90, 25] as [number, number], size: 2.5 },
-    { name: "Gulf of Guinea", coordinates: [0, 0] as [number, number], size: 2.5 },
-    { name: "Barents Sea", coordinates: [40, 75] as [number, number], size: 2.5 },
-    { name: "Weddell Sea", coordinates: [-45, -72] as [number, number], size: 2.5 },
-
-    { name: "Sea of Japan", coordinates: [135, 40] as [number, number], size: 1.8, rotate: -45 },
-    { name: "Sea of Okhotsk", coordinates: [150, 55] as [number, number], size: 2.5, rotate: -30 },
-    { name: "Black Sea", coordinates: [35, 43] as [number, number], size: 2 },
-    { name: "Caspian Sea", coordinates: [51.5, 39.5] as [number, number], size: 1.5, rotate: -70 },
-    { name: "Red Sea", coordinates: [38.2, 20] as [number, number], size: 2, rotate: 65 },
-    { name: "North Sea", coordinates: [3, 56] as [number, number], size: 2.5 },
-    { name: "Baltic Sea", coordinates: [20, 58] as [number, number], size: 2.5, rotate: -60 },
-]
 
 type Flag = { code: string; name: string | string[]; image: string }
 type FlagProgress = { streak: number; seen: number }
 
-function checkCountryMatch(geo: any, target: Flag | null) {
-    if (!target || !geo.properties) return false;
-
-    const geoName = (geo.properties.name || geo.properties.NAME || "").toLowerCase().replace(/[^a-z]/g, "");
-    const flagNames = Array.isArray(target.name) ? target.name : [target.name];
-
-    return flagNames.some(n => {
-        const fName = n.toLowerCase().replace(/[^a-z]/g, "");
-
-        if (geoName === fName) return true;
-
-        if (geoName === "unitedstatesofamerica" && fName === "unitedstates") return true;
-        if (geoName === "unitedrepublicoftanzania" && fName === "tanzania") return true;
-        if (geoName === "demrepcongo" && fName === "drcongo") return true;
-        if (geoName === "congo" && fName === "republicofthecongo") return true;
-        if (geoName === "czechia" && fName === "czechrepublic") return true;
-        if (geoName === "republicofserbia" && fName === "serbia") return true;
-        if (geoName === "republicofkorea" && fName === "southkorea") return true;
-        if (geoName === "dempeoplesrepofkorea" && fName === "northkorea") return true;
-        if (geoName === "eswatini" && fName === "swaziland") return true;
-        if (geoName === "northmacedonia" && fName === "macedonia") return true;
-        if (geoName === "republicofmoldova" && fName === "moldova") return true;
-        if (geoName === "thebahamas" && fName === "bahamas") return true;
-        if (geoName === "myanmar" && fName === "myanmarburma") return true;
-        if (geoName === "vatican" && fName === "vaticancity") return true;
-        if (geoName === "palestine" && fName === "stateofpalestine") return true;
-        if (geoName === "bosniaandherz" && fName === "bosnia") return true;
-        if (geoName === "centralafricanrep" && fName === "car") return true;
-        if (geoName === "eqguinea" && fName === "equatorialguinea") return true;
-        if (geoName === "dominicanrep" && fName === "dominicana") return true;
-        if (geoName === "ctedivoire" && fName === "ivorycoast") return true;
-        if (geoName === "solomonis" && fName === "solomonislands") return true;
-        if (geoName === "ssudan" && fName === "southsudan") return true;
-
-        return false;
-    });
-}
 
 const MAP_FLAGS = (worldData as unknown as Flag[]).filter(f => !MAP_GAME_UNSUPPORTED_CODES.includes(f.code))
 

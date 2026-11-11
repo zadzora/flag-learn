@@ -1,6 +1,6 @@
 /**
  * The titles a player holds against everybody else: first place on a global
- * leaderboard (Highscore, Map Speedrun, Capital Speedrun) and World Conqueror
+ * leaderboard (Highscore, Map/Capital/Ultimate Speedrun) and World Conqueror
  * seasons won. The profile shows them.
  *
  * Nothing here is stored locally - a record can be taken away by somebody else
@@ -14,12 +14,13 @@ import { get, ref } from "firebase/database"
 import { db, observeSession } from "../../lib/firebase"
 import { MAP_REGIONS, mapBoard, isMyRow } from "./mapSpeedrun"
 import { CAPITAL_REGIONS, capitalBoard } from "./capitalMap"
+import { ULTIMATE_REGIONS, ultimateBoard } from "./ultimateSpeedrun"
 import {
     finishedSeasons, hallOfFameEntry, hallOfFameSeasons, seasonForDate,
     type HallOfFameEntry, type SeasonArchive,
 } from "./flagWars"
 
-export type RecordGame = "highscore" | "map" | "capital"
+export type RecordGame = "highscore" | "map" | "capital" | "ultimate"
 
 export type HeldRecord = {
     game: RecordGame
@@ -47,6 +48,7 @@ export const RECORD_GAMES: Record<RecordGame, { title: string; to: string; tenth
     highscore: { title: "Highscore", to: "/highscore", tenths: false },
     map: { title: "Map Speedrun", to: "/map-speedrun", tenths: true },
     capital: { title: "Capital Speedrun", to: "/capital-speedrun", tenths: true },
+    ultimate: { title: "Ultimate Speedrun", to: "/ultimate-speedrun", tenths: true },
 }
 
 /** Every board a record can be held on, in the order the profile lists them. */
@@ -56,6 +58,7 @@ const BOARDS: { game: RecordGame; board: string; label: string }[] = [
     { game: "highscore", board: "us", label: "USA States" },
     ...MAP_REGIONS.map(r => ({ game: "map" as const, board: mapBoard(r.id), label: r.label })),
     ...CAPITAL_REGIONS.map(r => ({ game: "capital" as const, board: capitalBoard(r.id), label: r.label })),
+    ...ULTIMATE_REGIONS.map(r => ({ game: "ultimate" as const, board: ultimateBoard(r.id), label: r.label })),
 ]
 
 type Row = { playerId?: string; uid?: string; bestTimeSeconds?: unknown; mistakes?: unknown }
@@ -182,6 +185,7 @@ const SAMPLE: HeldRecord[] = [
     { game: "map", board: "map-world", label: "World", seconds: 1021.8, mistakes: 12, field: 9 },
     { game: "capital", board: "capmap-africa", label: "Africa", seconds: 187.6, mistakes: 4, field: 6 },
     { game: "capital", board: "capmap-oceania", label: "Oceania", seconds: 61.2, mistakes: 0, field: 1 },
+    { game: "ultimate", board: "ultimate-europe", label: "Europe", seconds: 312.4, mistakes: 2, field: 5 },
 ]
 
 type ProfileTestApi = {

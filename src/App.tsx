@@ -14,6 +14,7 @@ import CapitalMapGame from "./pages/CapitalMapGame"
 import ConstellationGame from "./pages/ConstellationGame"
 import ConstellationBuilder from "./pages/ConstellationBuilder"
 import UltimateGame from "./pages/UltimateGame"
+import UltimateSpeedrun from "./pages/UltimateSpeedrun"
 import Highscore from "./pages/Highscore"
 import WordWheelGame from "./pages/WordWheelGame"
 import HigherLowerGame from "./pages/HigherLowerGame"
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/constellations" element={<ConstellationGame />} />
                 <Route path="/builder" element={<ConstellationBuilder />} />
                 <Route path="/ultimate" element={<UltimateGame />} />
+                <Route path="/ultimate-speedrun" element={<UltimateSpeedrun />} />
                 <Route path="/highscore" element={<Highscore />} />
                 <Route path="/word-wheel" element={<WordWheelGame />} />
                 <Route path="/higher-lower" element={<HigherLowerGame />} />

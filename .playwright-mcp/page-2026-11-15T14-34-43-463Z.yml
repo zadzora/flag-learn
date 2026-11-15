@@ -1,0 +1,84 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - button "Back" [ref=f1e6]
+      - link "Flag Learn" [ref=f1e9] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f1e10]: World Trivia
+      - generic [ref=f1e11]:
+        - button "Sound off" [ref=f1e12]
+        - link "Your profile" [ref=f1e17] [cursor=pointer]:
+          - /url: /profile
+        - button "Dark theme" [ref=f1e18]
+  - main [ref=f1e21]:
+    - generic [ref=f1e24]:
+      - generic [ref=f1e29]:
+        - heading "World Trivia" [level=1] [ref=f1e30]
+        - paragraph [ref=f1e31]:
+          - text: "Fun facts about every country, in twelve kinds of questions. Answer fast: a question is worth its full value at once and 60% when time runs out. Any question can turn out to be worth"
+          - strong [ref=f1e32]: double
+          - text: .
+      - generic [ref=f1e33]:
+        - generic [ref=f1e34]:
+          - term [ref=f1e35]: questions
+          - definition [ref=f1e36]: "20"
+          - definition [ref=f1e37]: questions
+        - generic [ref=f1e38]:
+          - term [ref=f1e39]: kinds of question
+          - definition [ref=f1e40]: "12"
+          - definition [ref=f1e41]: kinds of question
+        - generic [ref=f1e42]:
+          - term [ref=f1e43]: facts in the bank
+          - definition [ref=f1e44]: 2,313
+          - definition [ref=f1e45]: facts in the bank
+      - generic [ref=f1e46]:
+        - generic [ref=f1e47]: Pick one
+        - generic [ref=f1e48]: Select all that apply
+        - generic [ref=f1e49]: Put in order
+        - generic [ref=f1e50]: Type a number
+        - generic [ref=f1e51]: Type the answer
+        - generic [ref=f1e52]: Spell it
+        - generic [ref=f1e53]: Match the pairs
+        - generic [ref=f1e54]: Find it on the map
+        - generic [ref=f1e55]: Spot the real flag
+        - generic [ref=f1e56]: Fix the flag
+        - generic [ref=f1e57]: Which way?
+        - generic [ref=f1e58]: Who am I?
+      - generic [ref=f1e59]:
+        - generic [ref=f1e60]: Questions from every corner of the world
+        - button "Start quiz" [ref=f1e61]
+    - generic [ref=f1e64]:
+      - 'link "Daily Trivia #76 - six questions, the same for everyone today. One go." [ref=f1e65] [cursor=pointer]':
+        - /url: /daily-trivia
+        - generic [ref=f1e90]:
+          - generic [ref=f1e91]: Daily Trivia
+          - generic [ref=f1e92]: "#76 - six questions, the same for everyone today. One go."
+      - 'link "Trivia Rooms Play with friends: a live battle, or a quiz night run on one big screen while everyone answers on their phone." [ref=f1e95] [cursor=pointer]':
+        - /url: /trivia/rooms
+        - generic [ref=f1e99]:
+          - generic [ref=f1e100]: Trivia Rooms
+          - generic [ref=f1e101]: "Play with friends: a live battle, or a quiz night run on one big screen while everyone answers on their phone."
+  - contentinfo [ref=f1e104]:
+    - generic [ref=f1e105]:
+      - generic [ref=f1e106]:
+        - generic [ref=f1e107]: Made with for learning
+        - link "Discord" [ref=f1e110] [cursor=pointer]:
+          - /url: https://discord.gg/qcwW5evMU9
+        - link "Buy me a coffee" [ref=f1e114] [cursor=pointer]:
+          - /url: https://buymeacoffee.com/davidzadzora
+        - link "Flags provided by Flagpedia.net" [ref=f1e117] [cursor=pointer]:
+          - /url: https://flagpedia.net
+        - link "Privacy" [ref=f1e122] [cursor=pointer]:
+          - /url: /privacy
+      - paragraph [ref=f1e123]:
+        - generic [ref=f1e124]:
+          - text: Country data from
+          - link "mledoze/countries" [ref=f1e125] [cursor=pointer]:
+            - /url: https://github.com/mledoze/countries
+          - text: (
+          - link "ODbL" [ref=f1e126] [cursor=pointer]:
+            - /url: https://opendatacommons.org/licenses/odbl/1.0/
+          - text: ) &
+          - link "World Bank" [ref=f1e127] [cursor=pointer]:
+            - /url: https://data.worldbank.org/indicator/SP.POP.TOTL
+          - text: — population 2024, updated June 2026.

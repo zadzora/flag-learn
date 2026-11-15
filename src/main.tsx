@@ -17,6 +17,23 @@ function applySavedTheme() {
 }
 applySavedTheme()
 
+// A tab opened before a deploy still asks for the old build's hashed chunks,
+// which the new deployment no longer has. Loading the page again fetches the
+// new index.html and its chunk names. Once only: if the fresh page fails too,
+// the error is real and the page shows it instead of reloading forever.
+const RELOADED_KEY = 'flag-master-stale-build-reload'
+window.addEventListener('vite:preloadError', event => {
+  try {
+    const last = Number(sessionStorage.getItem(RELOADED_KEY)) || 0
+    if (Date.now() - last < 30_000) return
+    sessionStorage.setItem(RELOADED_KEY, String(Date.now()))
+  } catch {
+    return
+  }
+  event.preventDefault()
+  window.location.reload()
+})
+
 // A signed-in player's progress is joined in before any page mounts: every page
 // reads its save once on mount, so anything written into localStorage later
 // would be overwritten by the page's old state. A guest starts at once.

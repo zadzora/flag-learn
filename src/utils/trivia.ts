@@ -147,6 +147,9 @@ export function loadBank(): Promise<Loaded[]> {
         const written = modules.flatMap(m => (m.default as unknown as Record<string, unknown>[]).map(prepare))
         return [...written, ...flagQuestions(written), ...compassQuestions()]
     })
+    // A failed load is not kept: one bad moment on the network would otherwise
+    // break every trivia page in the tab until a full reload.
+    bankPromise.catch(() => { bankPromise = null })
     return bankPromise
 }
 

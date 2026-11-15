@@ -57,4 +57,18 @@ function assetVersions(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), assetVersions()],
+  build: {
+    rollupOptions: {
+      output: {
+        // The lazily loaded chunks (World Trivia's question packs) live under
+        // their own prefix. Before `/assets/` was left out of the SPA rewrite,
+        // a missing chunk came back as index.html cached `immutable` for a
+        // year, and some browsers kept that page under the packs' real URLs -
+        // where a hard reload does not reach, since the import happens after
+        // load. New URLs are the only cure for a cache like that. If it ever
+        // happens again, bump the prefix.
+        chunkFileNames: 'assets/q2-[name]-[hash].js',
+      },
+    },
+  },
 })

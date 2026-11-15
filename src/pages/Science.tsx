@@ -57,7 +57,6 @@ function buildTopics(): Topic[] {
             detail: "Force, pressure, voltage... - their symbols and SI units",
             icon: GaugeIcon,
             accent: "text-violet-600 dark:text-violet-400",
-            badge: "New",
             breakdown: QUANTITY_MODES.map(mode => ({
                 label: mode.short,
                 mastered: srStats(QUANTITIES, readQuantityProgress(mode.key)).mastered,
@@ -70,7 +69,6 @@ function buildTopics(): Topic[] {
             detail: "Basic physics and maths formulas - write them from memory",
             icon: FormulaIcon,
             accent: "text-amber-600 dark:text-amber-400",
-            badge: "New",
             breakdown: FORMULA_MODES.map(mode => ({
                 label: mode.short,
                 mastered: srStats(formulasFor(mode.key), readFormulaProgress(mode.key)).mastered,

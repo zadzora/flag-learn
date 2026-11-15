@@ -2,7 +2,7 @@
  * The "Paint the Flag" SVG engine: turns a flag SVG into a set of grayed-out,
  * individually paintable regions plus the palette of colors they should end up.
  *
- * Extracted from the Paint mode so the Daily Gauntlet can run the exact same
+ * Extracted from the Paint mode so another mode can run the exact same
  * mechanic without a second copy of this (rather fiddly) DOM surgery.
  */
 

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useState, type MouseEvent, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Moon, Sun } from "lucide-react"
 import { readStore } from "../utils/profileStore"
@@ -13,6 +13,19 @@ type Props = {
     onToggleTheme?: () => void
     /** Page controls, placed before the theme toggle. */
     children?: ReactNode
+    /**
+     * For a page with a run in progress: called instead of following the
+     * wordmark or the profile link, with where it would have gone, so the page
+     * can ask first (see LeaveDialog). The back arrow takes its own function.
+     */
+    onLeave?: (to: string) => void
+}
+
+/** Lets a page step in before a link in the bar is followed. */
+const guard = (onLeave: ((to: string) => void) | undefined, to: string) => (e: MouseEvent) => {
+    if (!onLeave || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    onLeave(to)
 }
 
 /** Square outlined control - the one button shape the bar uses. */
@@ -31,11 +44,12 @@ export function BarButton({ onClick, label, children }: { onClick: () => void; l
 }
 
 /** The way to the profile from any page, wearing the player's current rank. */
-function ProfileLink() {
+function ProfileLink({ onLeave }: { onLeave?: (to: string) => void }) {
     const [rank] = useState(() => readStore()?.rank ?? 0)
     return (
         <Link
             to="/profile"
+            onClick={guard(onLeave, "/profile")}
             aria-label="Your profile"
             title="Your profile"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
@@ -49,7 +63,7 @@ function ProfileLink() {
  * The bar every page opens with: back, the wordmark, the page's name, its own
  * controls and the theme toggle. Flat and quiet, so the flags stay the colour.
  */
-export default function TopBar({ title, back = "/", theme, onToggleTheme, children }: Props) {
+export default function TopBar({ title, back = "/", theme, onToggleTheme, children, onLeave }: Props) {
     const backClass =
         "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
     return (
@@ -64,7 +78,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                         <ArrowLeft size={19} aria-hidden />
                     </Link>
                 )}
-                <Link to="/" className="hidden items-center gap-2 font-bold sm:flex">
+                <Link to="/" onClick={guard(onLeave, "/")} className="hidden items-center gap-2 font-bold sm:flex">
                     <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
                     Flag Learn
                 </Link>
@@ -75,7 +89,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                 )}
                 <div className="ml-auto flex items-center gap-2">
                     {children}
-                    <ProfileLink />
+                    <ProfileLink onLeave={onLeave} />
                     {theme && onToggleTheme && (
                         <BarButton onClick={onToggleTheme} label={theme === "light" ? "Dark theme" : "Light theme"}>
                             {theme === "light" ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}

@@ -284,7 +284,7 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-profile-v1", profile),
     json("flag-master-daily-streak", atRoot(dailyStreak)),
     json("flag-master-connections-streak", atRoot(dailyStreak)),
-    json("flag-master-gauntlet-streak", atRoot(dailyStreak)),
+    json("flag-master-trivia-streak", atRoot(dailyStreak)),
     json("flag-master-deduction-streak", atRoot(dailyStreak)),
     json("flag-master-wars-streak", atRoot(dailyStreak)),
     json("flag-master-rally-streak", atRoot(dailyStreak)),
@@ -293,7 +293,7 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-daily-save", atRoot(dailyRun)),
     json("flag-master-connections-save", atRoot(dailyRun)),
     json("flag-master-deduction-save", atRoot(dailyRun)),
-    json("flag-master-gauntlet-save", atRoot(dailyRun)),
+    json("flag-master-trivia-daily-save", atRoot(dailyRun)),
     json("road-trip-rally-save", atRoot(dailyRun)),
 
     // Road Trip. The trip is the one big value: pushed every few minutes, not every half minute.

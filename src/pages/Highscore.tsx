@@ -75,7 +75,7 @@ export default function Highscore() {
     const [penaltyFxKey, setPenaltyFxKey] = useState(0)
     const [timerPulseKey, setTimerPulseKey] = useState(0)
     const [showExitConfirm, setShowExitConfirm] = useState(false)
-    const [exitConfirmTarget, setExitConfirmTarget] = useState<"home" | GameMode | null>(null)
+    const [exitConfirmTarget, setExitConfirmTarget] = useState<"home" | "profile" | GameMode | null>(null)
     const [mistakes, setMistakes] = useState(0)
     const [finishedTime, setFinishedTime] = useState<number | null>(null)
     const [finishedMistakes, setFinishedMistakes] = useState(0)
@@ -339,6 +339,8 @@ export default function Highscore() {
     const confirmExitOrModeSwitch = () => {
         if (exitConfirmTarget === "home") {
             navigate("/")
+        } else if (exitConfirmTarget === "profile") {
+            navigate("/profile")
         } else if (exitConfirmTarget !== null) {
             handleModeChange(exitConfirmTarget)
         }
@@ -376,6 +378,11 @@ export default function Highscore() {
                         return
                     }
                     navigate("/")
+                }}
+                onLeave={to => {
+                    if (!isRunActive) return navigate(to)
+                    setExitConfirmTarget(to === "/profile" ? "profile" : "home")
+                    setShowExitConfirm(true)
                 }}
                 theme={theme}
                 onToggleTheme={() => setTheme((p) => (p === "light" ? "dark" : "light"))}

@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 import {
-    GoogleAuthProvider, connectAuthEmulator, deleteUser, getAuth, linkWithPopup, onAuthStateChanged, reauthenticateWithPopup,
+    GoogleAuthProvider, browserSessionPersistence, connectAuthEmulator, deleteUser, setPersistence, getAuth, linkWithPopup, onAuthStateChanged, reauthenticateWithPopup,
     signInAnonymously, signInWithCredential, signInWithPopup, signOut, type User,
 } from "firebase/auth";
 
@@ -51,10 +51,18 @@ export const auth = getAuth(app);
  * emulators`) instead of the live project, so signing in, the cloud save and
  * the rules can be tried without touching real players' data. The auth
  * emulator stands in for Google with a page of made-up accounts.
+ *
+ * The emulators are reached on the host the page came from, so a phone on the
+ * same network (`npm run dev:emu` serves with --host) plays against them too.
+ * The session is kept per tab rather than per browser: every new tab is a new
+ * anonymous player, which is how a trivia room or PvP game gets five seats from
+ * one machine. A duplicated tab copies its session, so open new ones fresh.
  */
 if (import.meta.env.VITE_FIREBASE_EMULATORS === "1") {
-    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-    connectDatabaseEmulator(db, "127.0.0.1", 9000);
+    const host = typeof location !== "undefined" ? location.hostname : "127.0.0.1";
+    connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+    connectDatabaseEmulator(db, host, 9000);
+    void setPersistence(auth, browserSessionPersistence);
 }
 
 /**

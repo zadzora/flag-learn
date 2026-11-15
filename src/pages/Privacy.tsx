@@ -89,13 +89,21 @@ export default function Privacy() {
                             your account can read it. It contains no email address. Legal basis: Art. 6(1)(b) GDPR.
                         </Item>
                         <Item title="Online modes">
-                            PvP battles, leaderboards, World Conqueror and Border Chain need to know who wrote what, so the first time you use one the game
+                            PvP battles, Trivia Rooms, leaderboards, World Conqueror and Border Chain need to know who wrote what, so the first time you use one the game
                             creates an anonymous account for your browser - a random ID with no name or email attached. What you post there (nickname,
                             scores, times, territories, answers) is visible to all players together with that ID. While you play a map speedrun, the game
                             also keeps a short timing record under that ID - which board, how many places you have found and missed, and when the database
                             saw the run start and the last find - so a leaderboard time can be checked against the database's own clock. Only your account
                             can read it, the next run replaces it, and a leaderboard entry shows the length the database measured. Daily puzzles only count
                             how many players got each result, without saying who. Legal basis: Art. 6(1)(b) GDPR.
+                        </Item>
+                        <Item title="Trivia Rooms">
+                            A trivia room is listed for everybody while it exists: its name, the host's nickname, the players' nicknames and the points each
+                            player scored on each question. A private room's password is stored so the database can check it, and nobody can read it back -
+                            not even the host. When you join one, the password you typed is stored under your anonymous ID for the same check. A room is
+                            deleted when its host closes it, and anyone may remove one left for more than six hours. If you report a problem with a
+                            question, the report holds the question, the reason, your note and your anonymous ID, and only I can read it. Legal basis:
+                            Art. 6(1)(b) GDPR.
                         </Item>
                         <Item title="Visit statistics">
                             Vercel Web Analytics counts page views without cookies and without identifying you, so I can see which modes are played. Legal

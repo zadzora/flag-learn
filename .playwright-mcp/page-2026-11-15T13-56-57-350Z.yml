@@ -1,0 +1,119 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /trivia
+      - link "Flag Learn" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e10]: Trivia Rooms
+      - generic [ref=e11]:
+        - link "Your profile" [ref=e12] [cursor=pointer]:
+          - /url: /profile
+        - button "Light theme" [ref=e13]
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - heading "Trivia with friends" [level=1] [ref=e22]
+      - paragraph [ref=e23]:
+        - text: Open a room and share its code. Play a live
+        - strong [ref=e24]: battle
+        - text: ", or host a"
+        - strong [ref=e25]: quiz night
+        - text: with the questions on one big screen and everyone answering on their phone.
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - textbox "Room code" [ref=e28]
+          - button "Join" [disabled] [ref=e29]
+        - button "Create a room" [active] [ref=e32]
+    - generic [ref=e72]:
+      - heading "New room" [level=2] [ref=e73]
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]: Your name
+          - textbox "Your name" [ref=e77]:
+            - /placeholder: Nickname
+            - text: Hosta
+        - generic [ref=e78]:
+          - generic [ref=e79]: Room name (optional)
+          - textbox "Room name (optional)" [ref=e80]:
+            - /placeholder: Hosta's room
+      - group "How you play" [ref=e81]:
+        - generic [ref=e83]:
+          - button "Battle Everyone plays, you too. Same questions at the same time, a leaderboard after each one." [pressed] [ref=e84]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: Battle
+              - generic [ref=e96]: Everyone plays, you too. Same questions at the same time, a leaderboard after each one.
+          - button "Quiz night Your screen is the big screen - put it on a TV. Everyone else answers on their phone." [ref=e97]:
+            - generic [ref=e101]:
+              - generic [ref=e102]: Quiz night
+              - generic [ref=e103]: Your screen is the big screen - put it on a TV. Everyone else answers on their phone.
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - text: Questions
+          - generic [ref=e106]: "20"
+        - slider "Questions 20 5 100" [ref=e107]: "20"
+        - generic [ref=e108]:
+          - generic [ref=e109]: "5"
+          - generic [ref=e110]: "100"
+      - group "Questions about" [ref=e111]:
+        - generic [ref=e113]:
+          - button "World" [pressed] [ref=e114]
+          - button "Europe" [ref=e115]
+          - button "Asia" [ref=e116]
+          - button "Africa" [ref=e117]
+          - button "Americas" [ref=e118]
+          - button "Oceania" [ref=e119]
+      - group "Kinds of question" [ref=e120]:
+        - generic [ref=e122]:
+          - button "Pick one" [pressed] [ref=e123]
+          - button "Select all that apply" [pressed] [ref=e126]
+          - button "Put in order" [pressed] [ref=e129]
+          - button "Type a number" [pressed] [ref=e132]
+          - button "Type the answer" [pressed] [ref=e135]
+          - button "Spell it" [pressed] [ref=e138]
+          - button "Match the pairs" [pressed] [ref=e141]
+          - button "Find it on the map" [pressed] [ref=e144]
+          - button "Spot the real flag" [pressed] [ref=e147]
+          - button "Fix the flag" [pressed] [ref=e150]
+          - button "Which way?" [pressed] [ref=e153]
+          - button "Who am I?" [pressed] [ref=e156]
+      - generic [ref=e159] [cursor=pointer]:
+        - checkbox "Start the next question by itself After the leaderboard the next question comes on its own." [checked] [ref=e160]
+        - generic [ref=e161]:
+          - generic [ref=e162]: Start the next question by itself
+          - generic [ref=e163]: After the leaderboard the next question comes on its own.
+      - group "Who can join" [ref=e164]:
+        - generic [ref=e166]:
+          - button "Public - anyone" [pressed] [ref=e167]
+          - button "Private - with a password" [ref=e173]
+        - paragraph [ref=e177]: Every room is listed for everybody to see. A private one can only be joined with its password.
+      - generic [ref=e178]:
+        - button "Cancel" [ref=e179]
+        - button "Open the room" [ref=e180]
+    - generic [ref=e34]:
+      - heading "Rooms" [level=2] [ref=e35]
+      - paragraph [ref=e68]: No rooms open right now. Create one and share the code.
+      - list
+  - contentinfo [ref=e44]:
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: Made with for learning
+        - link "Discord" [ref=e50] [cursor=pointer]:
+          - /url: https://discord.gg/qcwW5evMU9
+        - link "Buy me a coffee" [ref=e54] [cursor=pointer]:
+          - /url: https://buymeacoffee.com/davidzadzora
+        - link "Flags provided by Flagpedia.net" [ref=e57] [cursor=pointer]:
+          - /url: https://flagpedia.net
+        - link "Privacy" [ref=e62] [cursor=pointer]:
+          - /url: /privacy
+      - paragraph [ref=e63]:
+        - generic [ref=e64]:
+          - text: Country data from
+          - link "mledoze/countries" [ref=e181] [cursor=pointer]:
+            - /url: https://github.com/mledoze/countries
+          - text: (
+          - link "ODbL" [ref=e182] [cursor=pointer]:
+            - /url: https://opendatacommons.org/licenses/odbl/1.0/
+          - text: ) &
+          - link "World Bank" [ref=e183] [cursor=pointer]:
+            - /url: https://data.worldbank.org/indicator/SP.POP.TOTL
+          - text: — population 2024, updated June 2026.

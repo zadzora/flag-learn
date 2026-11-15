@@ -37,8 +37,8 @@
     </url>
 
     <url>
-        <loc>https://flaglearn.eu/daily-gauntlet</loc>
-        <lastmod>2026-09-01</lastmod>
+        <loc>https://flaglearn.eu/daily-trivia</loc>
+        <lastmod>2026-11-14</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
@@ -111,5 +111,18 @@
         <lastmod>2026-04-29</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.75</priority>
+    </url>
+
+    <url>
+        <loc>https://flaglearn.eu/trivia</loc>
+        <lastmod>2026-11-14</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/trivia/rooms</loc>
+        <lastmod>2026-11-14</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.85</priority>
     </url>
 </urlset>

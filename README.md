@@ -17,7 +17,8 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 ## ✨ Game Modes
 
 - **📖 Single Player:** Learn World Flags, US State Flags, and World Capitals in batches of 10. Prioritizes spaced repetition.
-- **⚔️ Daily Gauntlet:** Four rounds in one sitting, 25 points each, for a single comparable score out of 100. **Blur** — name the flag while it is still a smudge for the full 25, or wait for it to sharpen and settle for 6. **Paint** — fill a greyed-out flag from its own palette; 25 first try, 15 on the second. **Border** — name the country the map has zoomed to; 25 / 16 / 8 across three attempts. **Higher or Lower** — five population-or-area comparisons at 5 points apiece.
+- **💡 Daily Trivia:** Six World Trivia questions dealt from the date, the same six for everyone, one go at each - leaving or reloading during a question counts it as unanswered. The score lands in the shared "Today's Standing" panel as a share of the points on offer, the result copies out as a row of squares, and it keeps its own streak.
+- **👥 Trivia Rooms:** World Trivia for a group. Open a room, share its five-letter code (or the invite link) and pick how to play: a **battle**, where everybody - the host too - answers the same question at the same time, or a **quiz night**, where the host's screen is the big screen on the TV (the question, the countdown, how many have answered) and everyone answers on their phone, with each option in the same colour and place on every screen. After every question a leaderboard shows the answer, its fact and the points landing. The host picks 5-100 questions on a slider, the region and which kinds of question are dealt, whether the next question starts on its own after the leaderboard or waits for them, and can make the room **private** (a room seats up to 100): every room is listed for everyone, but a private one is only joined with its password, which the database checks and nobody can read back.
 - **📅 Daily Flagle:** A new mystery flag to guess every single day.
 - **🧭 Daily Deduction:** Name the mystery country in six guesses. Every guess comes back answered on five fronts: **continent** and **region** (green for a match, amber when you have the right continent but the wrong corner of it), **population** and **area** with an arrow pointing toward the answer's, and a **compass bearing** with a closeness percentage — so even a wild opening guess tells you which way to walk. All 197 countries in the pool are legal guesses, the answer is drawn from 150 well-known ones, and the result copies out as a spoiler-free emoji grid.
 - **🧩 Daily Connections:** Sixteen countries, four hidden groups of four. Sort them all with at most four mistakes — a brand new grid every day, built from regions, capitals, currencies, country names, size, and flag design.
@@ -27,6 +28,7 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 - **⚔️ PvP Battle:** Challenge your friends in real-time multiplayer flag battles.
 - **🗡️ World Conqueror:** A world map fought over one country at a time, asynchronously — nobody has to be online at once, but there is a real opponent behind every conquest. Claim a homeland, then push only at the border of your own empire. Empty land falls to whoever answers its three questions in time; land somebody already holds has to be **besieged** — you play for a score, its owner gets 24 hours to answer the *same* questions and beat it, and it changes hands if they fall short or never show up. The questions come from the target's own continent, so the fight stays where it is happening on the map. Defending is free and never spends an attack. Ten attacks a day, a one-week season, then the map wipes, the final table goes out to everyone, and the champion is written into a permanent Hall of Fame. The **Enabling the Firebase modes** section below covers the one-off setup and the design notes.
 - **🔗 Border Chain:** *(needs the one-off Firebase setup below)* One global table that is already running when you arrive. A country sits on the board; anyone at the table can take the next link by naming a country that borders it and has not been used yet, and the fastest correct answer takes it. Nobody may take two links in a row, an obscure link is worth more than an obvious one, and the chain runs until every neighbour of the country it is standing on has already been used — a dead end, usually somewhere around twenty countries in. It is **not turn-based**: ten seats taking ten-second turns would leave ninety seconds between your goes. Empty seats are held by bots named after people who had to work the borders out for real, and they stand further back the more humans are at the table.
+- **💡 World Trivia:** A classic quiz of 20 questions from all over the world, built on a hand-written bank of fun facts about every country (`data/trivia/`). Twelve kinds of question are mixed together: pick one of four, select all that apply, put in order (the game picks the direction), type a number (closer guesses score more), type the answer (typos forgiven), spell it from scrambled letters, match the pairs, drop a pin on the map (scored by distance), spot the real flag among three doctored copies, put a flag cut into six pieces back together, turn a compass needle towards one capital from another (generated from the capitals, scored by the angle), and name the country from three "Who am I?" clues that appear one by one (the fewer clues, the more points) - plus country names written in their own scripts (Georgian, Thai, Amharic and more) - some with a flag, a country outline or a world map as the picture. A question is worth 100/150/200 by difficulty, falls to 60% by the time limit, and any question can turn out to be worth double. Each one opens with its own card, where a small globe turns to the place it is about; the last three seconds count down out loud, and every answer ends on a "Did you know?" fact. The end screen draws the quiz as a trip - every country lit up and joined by a flight path, with the distance flown - and saves it as a picture; a new best rains down the quiz's flags. Sounds are synthesised in the browser (no files) and switch off from the top bar.
 - **🏆 Ultimate Mode:** The ultimate test! Locate the country on the map, then type its name, and finally type its capital in a "sudden death" format.
 - **🌫️ Blur Mode:** Can you recognize flags when they are highly blurred?
 - **🏅 Highscore:** Timed speedruns for world flags, world capitals, or US state flags—track mistakes, accept a time penalty on errors, and post your best time to shared leaderboards (no login).
@@ -45,7 +47,8 @@ An interactive educational quiz game built with React, TypeScript, and Tailwind 
 -->
 - **Unambiguous daily puzzles:** Daily Connections picks its four categories from data with *complete* membership (`data/flags.json` + `data/countryStats.json`), then drops any country that would also fit another category that day — so every tile has exactly one correct group. Days are generated in blocks with a per-category cooldown, so the same grouping does not come back a few days later.
 - **Feedback you can reason from:** Daily Deduction answers a guess only with facts known for *every* country in the pool — region, subregion, population, area, and the bearing between two centroids (`data/countryCentroids.json`, derived from the world map). Flag traits are deliberately left out: they are hand-coded for part of the world only, and a column that goes blank halfway through a game is worse than no column at all. Answers are dealt like a shuffled deck, so all 150 come up before any repeats.
-- **One score per day:** The Gauntlet seeds all four rounds from the date, so everyone plays the same run. Mid-round state is persisted, so a refresh resumes where you were instead of handing back a free retry, and the total lands in the shared anonymous daily distribution as a score band.
+- **One score per day:** Daily Trivia deals its six questions from the date, so everyone plays the same quiz. A question counts as seen the moment it is shown, so a refresh resumes after it instead of handing back a free retry, and the total lands in the shared anonymous daily distribution as a score band.
+- **A quiz night without a server:** Trivia Rooms run on the database alone. The host's browser is the clock: it moves every screen from question to leaderboard, each step stamped with the database's time, so phones agree on how long is left whatever their own clocks say. The rules let a player answer only the open question, once, under their own anonymous ID, and keep a private room's password out of reach of everyone - the host included.
 - **A board derived from the map, not hand-drawn:** World Conqueror's 168 territories and their borders come out of `public/world-map.json` in three passes (`scripts/gen-neighbours.mjs`): land borders from shared TopoJSON arcs — a shared arc *is* a shared border — then sea crossings between coastlines within 400 km **whose shortest line does not cross a third country**, then a top-up so no island falls below three neighbours. Without that middle test Britain ends up bordering landlocked Luxembourg; without the pass at all the Old World reaches the Americas only through French Guiana, and Russia does not touch Alaska. The generator refuses to write a graph that is not fully connected, so no homeland can ever be boxed in.
 - **Questions that survive being on a map:** World Conqueror asks about other countries, never the one being taken — that one is on screen, so its continent, its neighbours and its flag are all free information. What the territory sets is where the questions come from: its **own continent**, narrowed to a band around its `difficulty` rating in `flags.json`. Taking ground in Africa means answering about Africa, and about countries as obscure as the one being taken, so a push into the Pacific is a harder push than one across Europe. The three are drawn when the attack starts, never derived from the territory: a fixed set could be looked up once and pasted back in half a second, which scored ~968 and shrank the next attacker's clock to nothing.
 - **Multiplayer that holds together without a server:** Border Chain runs one live table with no backend of its own. Its chain is stored as a comma-delimited string rather than a list, because that is the only shape the database rules can actually police — `newChain === oldChain + code + ','` proves a write only ever appends, and a `contains` check proves the country is new; neither is expressible over a list, whose indices the rules cannot address. The bots that hold the empty seats are a pure function of the chain's state, so every browser at the table derives the same move and whichever one writes it, they agree — no host, no election, and the rules turn every loser of that race into a no-op.
@@ -192,12 +195,28 @@ npm run test:rules       # the database rules against the emulator (needs Java)
 npm run emulators        # auth + database emulators for manual testing
 ```
 
-To click through sign-in without touching real players, run `npm run emulators`
-and start the dev server with
-`VITE_FIREBASE_EMULATORS=1 VITE_FIREBASE_PROJECT_ID=demo-flaglearn VITE_FIREBASE_DATABASE_URL=https://demo-flaglearn-default-rtdb.firebaseio.com npm run dev`.
-The auth emulator stands in for Google with a page of made-up accounts. Load
-the rules into it first:
-`curl -X PUT -H "Authorization: Bearer owner" --data-binary @firebase-realtime.rules.json "http://127.0.0.1:9000/.settings/rules.json?ns=demo-flaglearn-default-rtdb"`.
+To try the multiplayer modes, sign-in or new rules without touching real
+players, use two terminals:
+
+```bash
+npm run emulators   # 1: auth + database emulators (needs Java)
+npm run dev:emu     # 2: loads the rules into the emulator, then the dev server against it
+```
+
+`dev:emu` is `vite --mode emulators --host`, which reads `.env.emulators` over
+`.env`. In that mode:
+
+- **Every browser tab is its own anonymous player** (the session is kept per
+  tab), so one machine can fill a trivia room or a PvP game. Open each tab fresh
+  from the address bar or the invite link - a *duplicated* tab copies its
+  session and is the same player.
+- **Phones on the same Wi-Fi** can join through the Network address Vite
+  prints; the app reaches the emulators on the same host. Windows may ask to
+  let Java through the firewall the first time.
+- The rules are loaded when `dev:emu` starts. Restarting the emulators clears
+  them (and all data), so restart `dev:emu` after it, or run
+  `node scripts/load-emulator-rules.mjs` after editing the rules.
+- The auth emulator stands in for Google with a page of made-up accounts.
 
 ### World Conqueror notes
 
@@ -365,6 +384,33 @@ The same switch works on every Science page and is shared between them -
 quantities, formulas and symbols beside the English ones, and on the quantities
 page a Slovak unit name (`sekunda`, `ampér`, `mól`) is accepted while it is on.
 `scienceLang.list()` prints the translations of whichever page is open.
+
+[`data/trivia/`](data/trivia) is World Trivia's question bank, written by hand
+and fact-checked: one pack per continent plus a world pack of pick-one
+questions, and one pack per newer question type (`multi`, `order`, `number`,
+`typed`, `letters`, `match`, `pin`, `clues`, and `script` for names in their own scripts). One question per line; the format of every type
+is documented at the top of `scripts/check-trivia.mjs`. Adding a question is
+adding a line - then run:
+
+```bash
+npm run check:trivia
+```
+
+It refuses what the game could not ask safely: unknown country codes, a
+question that contains its own answer, order values that are not increasing or
+too close to call, letters answers that are not one plain word, duplicate
+questions across packs, and so on. Never renumber an `id`: the game remembers
+which questions a player has already seen by it.
+
+The two flag puzzles are not written but generated from the flags themselves: every well-known flag can be shown beside copies with swapped or repainted colours or mirrored (each copy is compared pixel by pixel, so none can look like the real flag), and the flags listed in `data/flagPuzzles.json` are cut into a 3x2 jigsaw. That list keeps only flags whose pieces mostly differ - a tricolour would solve itself - and is rebuilt with `node scripts/gen-flag-puzzles.mjs` (needs `sharp`, like the flag wall). Their "Did you know?" comes from [`data/flagFacts.json`](data/flagFacts.json), one fact about every national flag.
+
+Players can flag a question with **Report a problem** under every answer. A
+report lands in the Realtime Database under `triviaReports/` - the question's
+`id`, a reason (`wrong-answer`, `also-right`, `unclear`, `outdated`, `typo`,
+`other`), an optional note and the time - and nobody can read it from the site.
+Check them in the Firebase console (Realtime Database → Data → `triviaReports`),
+find the question by its `id` in `data/trivia/`, and delete the report once it
+is dealt with. Needs the rules deploy described above.
 
 [`data/capitals.json`](data/capitals.json) holds each country's capital and its
 coordinates, used by Road Trip for capital stamps and by the Daily Rally to

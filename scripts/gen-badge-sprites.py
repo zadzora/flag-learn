@@ -42,11 +42,14 @@ SHEETS = {
         "scholar", "dedication", "all-rounder", "rally",
     ]),
     "badges_emblems_2.png": (4, 4, [
-        "streak", "full-day", "gauntlet", "deduction",
+        # The third cell was the Daily Gauntlet's emblem; the mode is gone.
+        "streak", "full-day", None, "deduction",
         "connections", "flagle", "road-trip", "continents",
         "stamps", "landmarks", "border-chain", "conqueror",
         "pvp", "highscore", "ferries", "drift",
     ]),
+    # The trivia badges: two designs each (rows), the picked one named.
+    "badges_emblems_3.png": (3, 2, ["trivia-daily", "trivia", None, None, None, "trivia-battle"]),
     "badges_ranks.png": (4, 2, [f"rank-{i}" for i in range(8)]),
     "badges_fx.png": (3, 2, ["lock", "unlock", "ribbon", "sparkle", "burst", "confetti"]),
     "icons_3.png": (3, 2, ["capital-map", None, None, None, None, None]),

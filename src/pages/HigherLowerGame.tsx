@@ -146,7 +146,7 @@ export default function HigherLowerGame() {
         return "light"
     })
 
-    const [leaveConfirm, setLeaveConfirm] = useState<"menu" | "reset" | null>(null)
+    const [leaveConfirm, setLeaveConfirm] = useState<"menu" | "reset" | "profile" | null>(null)
 
     const [setupOpen, setSetupOpen] = useState(true)
     const [metric, setMetric] = useState<Metric | null>(null)
@@ -348,8 +348,15 @@ export default function HigherLowerGame() {
         else resetGame()
     }
 
+    /** The wordmark and the profile button in the bar ask too, not only the back arrow. */
+    function handleBarLink(to: string) {
+        if (!shouldWarnProgressLoss) navigate(to)
+        else setLeaveConfirm(to === "/profile" ? "profile" : "menu")
+    }
+
     function confirmLeave() {
         if (leaveConfirm === "menu") navigate("/")
+        else if (leaveConfirm === "profile") navigate("/profile")
         else if (leaveConfirm === "reset") resetGame()
         setLeaveConfirm(null)
     }
@@ -365,6 +372,7 @@ export default function HigherLowerGame() {
             <TopBar
                 title="Higher or Lower"
                 back={handleMenuClick}
+                onLeave={handleBarLink}
                 theme={theme}
                 onToggleTheme={() => setTheme(t => (t === "light" ? "dark" : "light"))}
             >
@@ -605,10 +613,10 @@ export default function HigherLowerGame() {
                                 </span>
                                 <div>
                                     <h2 className="text-2xl font-bold">
-                                        {leaveConfirm === "menu" ? "Quit Higher or Lower?" : "Reset game?"}
+                                        {leaveConfirm !== "reset" ? "Quit Higher or Lower?" : "Reset game?"}
                                     </h2>
                                     <p className="mt-1 text-slate-500 dark:text-slate-400">
-                                        {leaveConfirm === "menu"
+                                        {leaveConfirm !== "reset"
                                             ? "If you leave now, your current run progress will be lost."
                                             : "If you reset now, your current run progress will be lost."}
                                     </p>
@@ -620,7 +628,7 @@ export default function HigherLowerGame() {
                                     onClick={confirmLeave}
                                     className="w-full rounded-lg bg-red-600 py-3.5 font-bold text-white hover:bg-red-700"
                                 >
-                                    {leaveConfirm === "menu" ? "Yes, Quit" : "Yes, Reset"}
+                                    {leaveConfirm !== "reset" ? "Yes, Quit" : "Yes, Reset"}
                                 </button>
                                 <button
                                     type="button"

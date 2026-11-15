@@ -1,5 +1,5 @@
 /**
- * World-map geometry helpers shared by Border Guess and the Daily Gauntlet:
+ * World-map geometry helpers used by Border Guess:
  * matching a country in `flags.json` to its feature in `/world-map.json`, and
  * working out where to point the camera so that country fills the frame.
  */

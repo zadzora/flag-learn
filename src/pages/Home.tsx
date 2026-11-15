@@ -5,7 +5,7 @@ import {
 } from "lucide-react"
 import {
     AtomIcon, BlurModeIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
-    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, type ModeIcon,
+    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, TriviaRoomsIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, WorldTriviaIcon, type ModeIcon,
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -46,16 +46,18 @@ const DECKS: Deck[] = [
 type Entry = { to: string; label: string; detail: string; icon: ModeIcon; badge?: string; streakKey?: string; action?: { to: string; label: string } }
 
 const MULTIPLAYER: Entry[] = [
+    { to: "/trivia/rooms", label: "Trivia Rooms", detail: "Quiz night with friends - battle together or run it on a big screen", icon: TriviaRoomsIcon, badge: "New" },
     { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: WorldConquerorIcon, badge: "New", streakKey: STREAK_KEYS.wars, action: { to: "/world-conqueror?hall=1", label: "Hall of Fame" } },
-    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon, badge: "New" },
+    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon },
     { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon },
     { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
-    { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon, badge: "New" },
+    { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon },
     { to: "/capital-speedrun", label: "Capital Speedrun", detail: "Pin a region's capitals on the map against the clock", icon: CapitalSpeedrunIcon, badge: "New" },
     { to: "/ultimate-speedrun", label: "Ultimate Speedrun", detail: "Flag, map, country, capital - a whole region against the clock", icon: UltimateSpeedrunIcon, badge: "New" },
 ]
 
 const MORE_MODES: Entry[] = [
+    { to: "/trivia", label: "World Trivia", detail: "Fun facts about every country, in twelve kinds of questions", icon: WorldTriviaIcon, badge: "New" },
     { to: "/road-trip", label: "Road Trip", detail: "Drive around the world map and uncover the flags beneath it", icon: Car, badge: "New" },
     { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: PaintFlagIcon },
     { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border", icon: BorderGuessIcon },
@@ -479,7 +481,7 @@ export default function Home() {
                         <AtomIcon size={30} aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2 text-base font-bold">Science <Badge>New</Badge></span>
+                        <span className="flex items-center gap-2 text-base font-bold">Science</span>
                         <span className="mt-1 block text-[13px] text-slate-500 dark:text-[#8C97B3]">The periodic table, physical quantities and formulas, learned the same way as flags</span>
                     </span>
                     <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-[#556080]" />
@@ -490,7 +492,9 @@ export default function Home() {
                 about={
                     <p>
                         Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn world flags</strong>, capitals, and US state flags effectively.
-                        Includes <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Gauntlet</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Capital Pinpoint</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong>, <strong>Map Speedrun</strong>, <strong>Capital Speedrun</strong> and <strong>Ultimate Speedrun</strong> races.
+                        Includes <strong>World Trivia</strong> - a geography <strong>trivia quiz</strong> with fun facts about every country, a <strong>daily trivia</strong> of six questions,
+                        and multiplayer <strong>quiz rooms</strong> for a <strong>pub quiz</strong> or <strong>quiz night</strong> with friends on one big screen -
+                        plus <strong>Daily Connections</strong>, <strong>Daily Flagle</strong>, <strong>Daily Deduction</strong>, <strong>Daily Rally</strong>, <strong>Paint the Flag</strong>, <strong>Border Guess</strong>, <strong>Map Locator</strong>, <strong>Capital Pinpoint</strong>, <strong>Higher or Lower</strong>, <strong>Ultimate</strong>, <strong>Blur</strong>, <strong>Constellations</strong>, <strong>PvP</strong>, <strong>Highscore</strong>, <strong>Map Speedrun</strong>, <strong>Capital Speedrun</strong> and <strong>Ultimate Speedrun</strong> races.
                         The <strong>Science</strong> wing applies the same spaced repetition to the <strong>periodic table</strong> - all 118 element symbols, names, families and positions.
                         Perfect for students, travelers, and geography enthusiasts.
                     </p>

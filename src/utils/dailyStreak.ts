@@ -17,7 +17,7 @@ export type StreakState = {
 export const STREAK_KEYS = {
     flagle: "flag-master-daily-streak",
     connections: "flag-master-connections-streak",
-    gauntlet: "flag-master-gauntlet-streak",
+    trivia: "flag-master-trivia-streak",
     deduction: "flag-master-deduction-streak",
     wars: "flag-master-wars-streak",
     rally: "flag-master-rally-streak",

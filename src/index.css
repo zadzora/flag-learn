@@ -214,6 +214,12 @@
         border-radius: 0.5rem !important;
     }
 
+    /* The padding above would inset a slider's track, so its thumb never reached either end. */
+    input[type="range"] {
+        min-height: 0;
+        padding: 0;
+    }
+
     .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-2) !important; }
     .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-3) !important; }
     .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: var(--space-4) !important; }
@@ -303,10 +309,6 @@
     0%, 100% { transform: scale(1) rotate(0); }
     50% { transform: scale(1.45) rotate(90deg); }
 }
-@keyframes di-goal {
-    0%, 100% { fill: #fff; }
-    40%, 70% { fill: #fde68a; }
-}
 @keyframes di-car {
     0%, 100% { transform: translate(0, 0) rotate(0); }
     30% { transform: translate(2px, -0.8px) rotate(-4deg); }
@@ -344,7 +346,6 @@
         & .di-cloth { animation: di-cloth 700ms ease-in-out both; }
         & .di-focus { animation: di-focus 520ms ease-in-out both; }
         & .di-twinkle { animation: di-twinkle 600ms ease-in-out 120ms both; }
-        & .di-goal { animation: di-goal 700ms ease-in-out 300ms both; }
         & .di-car { animation: di-car 560ms ease-out both; }
         & .di-spin { animation: di-spin 560ms ease-out both; }
         & .di-road { animation: di-road 560ms linear both; }

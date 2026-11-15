@@ -1,4 +1,4 @@
-import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyGauntletIcon, DailyRallyIcon } from "../components/DailyModeIcons"
+import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyRallyIcon, DailyTriviaIcon } from "../components/DailyModeIcons"
 import type { ModeIcon } from "../components/ModeIcons"
 import { STREAK_KEYS } from "./dailyStreak"
 
@@ -15,7 +15,7 @@ import { STREAK_KEYS } from "./dailyStreak"
  * instead of dead-ending on "come back tomorrow".
  */
 
-export type DailyModeKey = "connections" | "deduction" | "flagle" | "gauntlet" | "rally"
+export type DailyModeKey = "connections" | "deduction" | "flagle" | "trivia" | "rally"
 
 export type DailyMode = {
     key: DailyModeKey
@@ -59,6 +59,20 @@ export const DAILY_MODES: DailyMode[] = [
         isFinished: save => save.status === "won" || save.status === "lost",
     },
     {
+        key: "trivia",
+        to: "/daily-trivia",
+        label: "Daily Trivia",
+        tagline: "Six questions about the world, the same for everyone",
+        icon: DailyTriviaIcon,
+        detail: "Six trivia questions about the world - the same six for everyone today",
+        accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400",
+        hover: "hover:border-amber-400 dark:hover:border-amber-500",
+        badge: "NEW",
+        streakKey: STREAK_KEYS.trivia,
+        saveKeys: ["flag-master-trivia-daily-save"],
+        isFinished: save => save.phase === "done",
+    },
+    {
         key: "rally",
         to: "/daily-rally",
         label: "Daily Rally",
@@ -98,20 +112,6 @@ export const DAILY_MODES: DailyMode[] = [
         streakKey: STREAK_KEYS.flagle,
         saveKeys: ["flag-master-daily-save"],
         isFinished: save => save.status === "won" || save.status === "lost",
-    },
-    {
-        key: "gauntlet",
-        to: "/daily-gauntlet",
-        label: "Daily Gauntlet",
-        tagline: "Four rounds, one score out of 100",
-        icon: DailyGauntletIcon,
-        detail: "Four rounds, one from each mode - a single score out of 100",
-        accent: "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400",
-        hover: "hover:border-amber-400 dark:hover:border-amber-500",
-        badge: "NEW",
-        streakKey: STREAK_KEYS.gauntlet,
-        saveKeys: ["flag-master-gauntlet-save"],
-        isFinished: save => save.phase === "done",
     },
 ]
 

@@ -321,17 +321,22 @@ export default function WordWheelGame() {
 
     const progressWouldBeLost = level > 1 || solvedKeys.size > 0
 
-    const requestNavigateHome = () => {
+    /** Where "quit" goes: home from the back arrow, or the wordmark's or the profile button's target. */
+    const [exitTo, setExitTo] = useState("/")
+
+    const requestNavigate = (to: string) => {
         if (progressWouldBeLost) {
+            setExitTo(to)
             setShowExitConfirm(true)
             return
         }
-        navigate("/")
+        navigate(to)
     }
+    const requestNavigateHome = () => requestNavigate("/")
 
     const confirmQuitHome = () => {
         setShowExitConfirm(false)
-        navigate("/")
+        navigate(exitTo)
     }
 
     const cancelQuitHome = () => setShowExitConfirm(false)
@@ -409,7 +414,7 @@ export default function WordWheelGame() {
 
     return (
         <div className={page}>
-            <TopBar title="Country Wheel" back={requestNavigateHome} theme={theme} onToggleTheme={toggleTheme}>
+            <TopBar title="Country Wheel" back={requestNavigateHome} onLeave={requestNavigate} theme={theme} onToggleTheme={toggleTheme}>
                 <span
                     className={`flex items-center gap-1.5 font-mono text-sm font-bold tabular-nums ${timeLeftSec <= 20 ? "text-red-600 dark:text-red-400" : ""}`}
                     title="Time remaining for this level"

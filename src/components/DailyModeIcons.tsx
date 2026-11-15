@@ -179,35 +179,47 @@ export const DailyFlagleIcon = dailyIcon("DailyFlagleIcon", (fine, uid) => (
 
 /* ------------------------------------------------------------------ */
 
-const GAUNTLET_INK = "#3a1f0a"
+const TRIVIA_INK = "#2b1a10"
+const TRIVIA_NAVY = "#14213d"
+const BULB = "M24 10.4 C17.4 10.4 12.8 15.4 12.8 21.6 C12.8 25.6 14.7 28.4 17.1 30.4 C18.2 31.3 18.7 32.3 18.7 33.5 V34.6 H29.3 V33.5 C29.3 32.3 29.8 31.3 30.9 30.4 C33.3 28.4 35.2 25.6 35.2 21.6 C35.2 15.4 30.6 10.4 24 10.4 Z"
+/** The five rays over the bulb, each with the way it springs out on hover. */
+const RAYS = [
+    { d: "M24 3 V6.4", dx: 0, dy: -1.4 },
+    { d: "M14.6 6.6 L16.8 9.2", dx: -1.1, dy: -1.1 },
+    { d: "M33.4 6.6 L31.2 9.2", dx: 1.1, dy: -1.1 },
+    { d: "M7.8 14.4 L11 15.8", dx: -1.4, dy: -0.5 },
+    { d: "M40.2 14.4 L37 15.8", dx: 1.4, dy: -0.5 },
+]
 
-export const DailyGauntletIcon = dailyIcon("DailyGauntletIcon", fine => {
-    const dots = [6.4, 16.2, 26]
-    return (
-        <>
-            <Tube d="M6.4 30.2 H35.8" color="#fbbf24" ink={GAUNTLET_INK} width={1.6} />
-            <Tube d="M35.8 26.6 V16.4" color="#fbbf24" ink={GAUNTLET_INK} width={1.6} />
-            <g className="di-cloth" style={origin(37.4, 18.8)}>
-                <path d="M37.4 15.6 L44.8 18.8 L37.4 22 Z" fill="#f59e0b" />
-                <path d="M37.4 15.6 L39.3 16.5 C39.1 18.6 39.7 20 40.8 20.5 L37.4 22 Z" fill="#fde68a" />
-                <path d="M37.4 15.6 L44.8 18.8 L37.4 22 Z" fill="none" stroke={GAUNTLET_INK} strokeWidth={1.8} strokeLinejoin="round" />
+/** graphic/daily_trivia.png [1,1]: a lit bulb with a question in it. The rays spring out and the question hops on hover. */
+export const DailyTriviaIcon = dailyIcon("DailyTriviaIcon", (fine, uid) => (
+    <>
+        <defs>
+            <clipPath id={`${uid}bulb`}>
+                <path d={BULB} />
+            </clipPath>
+        </defs>
+        {RAYS.map(({ d, dx, dy }) => (
+            <g key={d} className="di-focus" style={{ "--dx": `${dx}px`, "--dy": `${dy}px` } as CSSProperties}>
+                <Tube d={d} color="#f29a1f" ink={TRIVIA_INK} width={2.4} />
             </g>
-            <circle cx={35.8} cy={15} r={2} fill="#f59e0b" stroke={GAUNTLET_INK} strokeWidth={1.6} />
-            {dots.map((x, i) => (
-                <g key={x} className="di-hop" style={{ animationDelay: `${i * 90}ms` }}>
-                    <circle cx={x} cy={30.2} r={4.2} fill="#cf6d04" />
-                    <circle cx={x - 0.45} cy={29.75} r={3.65} fill="#f28c0f" />
-                    <circle cx={x} cy={30.2} r={4.2} fill="none" stroke={GAUNTLET_INK} strokeWidth={1.9} />
-                    {fine && <Glint d={`M${x - 2} ${30.6} A2 2 0 0 1 ${x - 0.6} ${28.4}`} width={0.9} />}
-                </g>
-            ))}
-            <g className="di-hop" style={{ animationDelay: "270ms" }}>
-                <circle cx={35.8} cy={30.2} r={4.2} fill="#f59e0b" stroke={GAUNTLET_INK} strokeWidth={1.9} />
-                <circle className="di-goal" cx={35.8} cy={30.2} r={2.1} fill="#fff" />
-            </g>
-        </>
-    )
-})
+        ))}
+        <path d={BULB} fill="#ffc21a" />
+        <g clipPath={`url(#${uid}bulb)`}>
+            <path d="M28.6 8 C34.6 11.4 37 17 36.2 22.6 C35.6 26.6 33.2 29.6 30.6 31.8 V36 H40 V8 Z" fill="#f29a1f" />
+        </g>
+        <path d={BULB} fill="none" stroke={TRIVIA_INK} strokeWidth={2} strokeLinejoin="round" />
+        {fine && <Glint d="M16.2 19.4 C16.6 16.4 18.4 14.4 20.8 13.6" width={1.3} />}
+        <g className="di-hop">
+            <path d="M20.3 19.2 C20.3 16.8 22 15.2 24.1 15.2 C26.2 15.2 27.8 16.7 27.8 18.7 C27.8 21.6 24.1 22 24.1 25.2" fill="none" stroke={TRIVIA_NAVY} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={24.1} cy={29.2} r={1.8} fill={TRIVIA_NAVY} />
+        </g>
+        <rect x={18.4} y={34.6} width={11.2} height={3} rx={1.5} fill="#cbd5e1" stroke={TRIVIA_INK} strokeWidth={1.6} />
+        <rect x={19.2} y={37.6} width={9.6} height={2.8} rx={1.4} fill="#94a3b8" stroke={TRIVIA_INK} strokeWidth={1.6} />
+        {fine && <Glint d="M20.4 35.8 H22.6" width={0.9} />}
+        <path d="M21.8 40.4 Q24 43.4 26.2 40.4" fill="#64748b" stroke={TRIVIA_INK} strokeWidth={1.5} strokeLinejoin="round" />
+    </>
+))
 
 /* ------------------------------------------------------------------ */
 

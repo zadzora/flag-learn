@@ -69,6 +69,8 @@ export default function UltimateGame() {
     const [elapsedTime, setElapsedTime] = useState(0)
     const [gameFinished, setGameFinished] = useState(false)
     const [showExitConfirm, setShowExitConfirm] = useState(false) // Nový stav pre exit modal
+    /** Where "Yes, Quit" goes: home from the back arrow, or the wordmark's or the profile button's target. */
+    const [exitTo, setExitTo] = useState("/")
     const [position, setPosition] = useState({ coordinates: [0, 0] as [number, number], zoom: 1 })
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -318,7 +320,13 @@ export default function UltimateGame() {
     return (
         <div className="relative flex h-screen w-full select-none flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
 
-            <TopBar title="Ultimate Mode" back={() => setShowExitConfirm(true)} theme={theme} onToggleTheme={toggleTheme}>
+            <TopBar
+                title="Ultimate Mode"
+                back={() => { setExitTo("/"); setShowExitConfirm(true) }}
+                onLeave={to => { setExitTo(to); setShowExitConfirm(true) }}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+            >
                 <span className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={16} aria-hidden />{formatTime(elapsedTime)}</span>
                 <span className={`flex items-center gap-1 text-sm font-bold ${streak > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`} title="Streak"><Flame size={15} aria-hidden /> {streak}</span>
                 <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">Rem: {pool.length}</span>
@@ -415,7 +423,7 @@ export default function UltimateGame() {
                                 </div>
                             </div>
                             <div className="flex w-full flex-col gap-3">
-                                <button onClick={() => navigate('/')} className="w-full rounded-lg bg-red-600 py-3.5 font-bold text-white hover:bg-red-700">Yes, Quit</button>
+                                <button onClick={() => navigate(exitTo)} className="w-full rounded-lg bg-red-600 py-3.5 font-bold text-white hover:bg-red-700">Yes, Quit</button>
                                 <button onClick={() => setShowExitConfirm(false)} className={`${quiet} w-full py-3.5 font-bold`}>Cancel</button>
                             </div>
                         </div>

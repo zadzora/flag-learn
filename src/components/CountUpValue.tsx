@@ -20,8 +20,8 @@ function startValue(target: number): number {
 
 /**
  * Counts up to `target` fast and then eases in, so a revealed stat lands with a
- * bit of drama instead of just appearing. Shared by Higher or Lower and the
- * Daily Gauntlet's Higher/Lower round.
+ * bit of drama instead of just appearing. Shared by Higher or Lower and World
+ * Trivia.
  */
 export default function CountUpValue({ target, format, durationMs = 1500, className = "tabular-nums" }: Props) {
     // Seeded from the target so the first painted frame is already mid-count,

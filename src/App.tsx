@@ -7,7 +7,6 @@ import PvPGame from "./pages/PvPGame"
 import { Analytics } from "@vercel/analytics/react"
 import DailyFlagle from "./pages/DailyFlagle"
 import DailyConnections from "./pages/DailyConnections"
-import DailyGauntlet from "./pages/DailyGauntlet"
 import DailyDeduction from "./pages/DailyDeduction"
 import MapGame from "./pages/MapGame"
 import CapitalMapGame from "./pages/CapitalMapGame"
@@ -27,6 +26,9 @@ import PeriodicTableGame from "./pages/PeriodicTableGame"
 import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
 import FormulasGame from "./pages/FormulasGame"
 import RoadTrip from "./pages/RoadTrip"
+import TriviaGame from "./pages/TriviaGame"
+import TriviaRooms from "./pages/TriviaRooms"
+import TriviaRoom from "./pages/TriviaRoom"
 import Profile from "./pages/Profile"
 import Privacy from "./pages/Privacy"
 import AchievementToasts from "./components/AchievementToasts"
@@ -46,7 +48,6 @@ export default function App() {
                  <Route path="/pvp/:gameId" element={<PvPGame />} />
                 <Route path="/daily" element={<DailyFlagle />} />
                 <Route path="/daily-connections" element={<DailyConnections />} />
-                <Route path="/daily-gauntlet" element={<DailyGauntlet />} />
                 <Route path="/daily-deduction" element={<DailyDeduction />} />
                 <Route path="/map" element={<MapGame key="learn" />} />
                 <Route path="/map-speedrun" element={<MapGame key="speedrun" mode="speedrun" />} />
@@ -58,6 +59,10 @@ export default function App() {
                 <Route path="/ultimate-speedrun" element={<UltimateSpeedrun />} />
                 <Route path="/highscore" element={<Highscore />} />
                 <Route path="/word-wheel" element={<WordWheelGame />} />
+                <Route path="/trivia" element={<TriviaGame key="solo" />} />
+                <Route path="/daily-trivia" element={<TriviaGame key="daily" mode="daily" />} />
+                <Route path="/trivia/rooms" element={<TriviaRooms />} />
+                <Route path="/trivia/room/:code" element={<TriviaRoom />} />
                 <Route path="/higher-lower" element={<HigherLowerGame />} />
                 <Route path="/paint" element={<PaintGame />} />
                 <Route path="/border-guess" element={<BorderGuessGame />} />

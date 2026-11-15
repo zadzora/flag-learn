@@ -285,6 +285,150 @@ describe("dailyStats", () => {
     test("only the daily games that exist", async () => {
         await assertSucceeds(guest().ref("dailyStats/flagle/2026-11-03/g1").set(1))
         await assertSucceeds(guest().ref("dailyStats/road-trip-rally/2026-11-03/best").set(60_000))
+        await assertSucceeds(guest().ref("dailyStats/trivia/2026-11-03/g3").set(1))
         await assertFails(guest().ref("dailyStats/made-up/2026-11-03/g1").set(1))
+        // The Daily Gauntlet is gone.
+        await assertFails(guest().ref("dailyStats/gauntlet/2026-11-03/g1").set(1))
+    })
+})
+
+describe("triviaRooms: multiplayer trivia", () => {
+    const room = (host, extra = {}) => ({
+        host, hostName: "Host", name: "Friday quiz", private: false, style: "battle",
+        settings: { length: 10, region: "", maxPlayers: 8 }, createdAt: TIMESTAMP, status: "lobby", round: 1, ...extra,
+    })
+    const seat = name => ({ name, joinedAt: 1, left: false })
+    const seeded = (extra = {}) => ({ ...room("host"), createdAt: Date.now(), players: { host: seat("Host") }, ...extra })
+    const playing = (extra = {}) => seeded({
+        status: "playing",
+        questions: [{ id: "eu-001", double: false }, { id: "cp-fr-de", double: true }],
+        step: { index: 0, phase: "question", at: Date.now() },
+        players: { host: seat("Host"), bob: seat("Bob") },
+        ...extra,
+    })
+
+    test("a host creates a room under their own uid; everyone can list rooms", async () => {
+        await assertSucceeds(anon("host").ref("triviaRooms/ABC23").set({ ...room("host"), players: { host: { name: "Host", joinedAt: TIMESTAMP, left: false } } }))
+        await assertSucceeds(guest().ref("triviaRooms").orderByChild("createdAt").limitToLast(10).once("value"))
+        await assertFails(anon("mallory").ref("triviaRooms/XYZ23").set(room("host")))
+        await assertFails(anon("host").ref("triviaRooms/abc23").set(room("host")))
+        await assertFails(anon("host").ref("triviaRooms/ABC23").set(room("host")))
+        await assertFails(anon("host").ref("triviaRooms/QQQ22").set(room("host", { status: "playing" })))
+        await assertFails(anon("host").ref("triviaRooms/QQQ23").set(room("host", { extra: 1 })))
+        await assertFails(anon("host").ref("triviaRooms/QQQ24").set(room("host", { style: "chaos" })))
+    })
+
+    test("up to 100 questions and 100 seats, chosen kinds of question, a manual start", async () => {
+        const settings = extra => ({ length: 100, region: "europe", maxPlayers: 100, ...extra })
+        await assertSucceeds(anon("host").ref("triviaRooms/SET23").set(room("host", { settings: settings({ types: "choice,pin,clues", auto: false }) })))
+        await assertSucceeds(anon("host").ref("triviaRooms/SET24").set(room("host", { settings: settings({ auto: true }) })))
+        await assertFails(anon("host").ref("triviaRooms/SET25").set(room("host", { settings: settings({ length: 101 }) })))
+        await assertFails(anon("host").ref("triviaRooms/SET26").set(room("host", { settings: settings({ maxPlayers: 101 }) })))
+        await assertFails(anon("host").ref("triviaRooms/SET27").set(room("host", { settings: settings({ types: "choice,hacking" }) })))
+        await assertFails(anon("host").ref("triviaRooms/SET28").set(room("host", { settings: settings({ types: "" }) })))
+        await seed("triviaRooms/RUN99", playing())
+        await assertSucceeds(anon("host").ref("triviaRooms/RUN99/step").set({ index: 99, phase: "intro", at: TIMESTAMP }))
+        await assertFails(anon("host").ref("triviaRooms/RUN99/step").set({ index: 100, phase: "intro", at: TIMESTAMP }))
+    })
+
+    test("a private room's password is written with it, and nobody reads it back", async () => {
+        await assertSucceeds(anon("host").ref().update({ "triviaRooms/PRV23": room("host", { private: true }), "triviaRoomSecrets/PRV23": "hunter2" }))
+        await assertFails(anon("host").ref("triviaRoomSecrets/PRV23").once("value"))
+        await assertFails(anon("bob").ref("triviaRoomSecrets/PRV23").once("value"))
+        // Nobody sets the password of somebody else's room.
+        await seed("triviaRooms/OTH23", seeded({ private: true }))
+        await assertFails(anon("mallory").ref("triviaRoomSecrets/OTH23").set("mine"))
+    })
+
+    test("players join an open lobby; a private one only with the right password", async () => {
+        await seed("triviaRooms/PUB23", seeded())
+        await assertSucceeds(anon("bob").ref("triviaRooms/PUB23/players/bob").set(seat("Bob")))
+        await assertFails(anon("bob").ref("triviaRooms/PUB23/players/carol").set(seat("Carol")))
+
+        await seed("triviaRooms/PRV23", seeded({ private: true }))
+        await seed("triviaRoomSecrets/PRV23", "hunter2")
+        await assertFails(anon("bob").ref("triviaRooms/PRV23/players/bob").set(seat("Bob")))
+        await assertFails(anon("bob").ref("triviaRoomPass/PRV23/bob").set("guess"))
+        await assertSucceeds(anon("bob").ref("triviaRoomPass/PRV23/bob").set("hunter2"))
+        await assertSucceeds(anon("bob").ref("triviaRooms/PRV23/players/bob").set(seat("Bob")))
+    })
+
+    test("nobody new sits down once the game runs; the seated come and go", async () => {
+        await seed("triviaRooms/RUN23", playing())
+        await assertFails(anon("carol").ref("triviaRooms/RUN23/players/carol").set(seat("Carol")))
+        await assertSucceeds(anon("bob").ref("triviaRooms/RUN23/players/bob/left").set(true))
+        await assertSucceeds(anon("bob").ref("triviaRooms/RUN23/players/bob/left").set(false))
+    })
+
+    test("only the host moves the game on", async () => {
+        await seed("triviaRooms/RUN23", playing())
+        await assertSucceeds(anon("host").ref("triviaRooms/RUN23/step").set({ index: 0, phase: "board", at: TIMESTAMP }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/step").set({ index: 1, phase: "intro", at: TIMESTAMP }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/status").set("done"))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/questions/0").set({ id: "eu-002", double: true }))
+        await assertFails(anon("host").ref("triviaRooms/RUN23/step").set({ index: 1, phase: "intro", at: 5 }))
+        await assertSucceeds(anon("host").ref("triviaRooms/RUN23/status").set("done"))
+    })
+
+    test("a seated player answers the open question once, for at most 400 points", async () => {
+        await seed("triviaRooms/RUN23", playing())
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers/0/bob").set({ points: 401, share: 1, ms: 900 }))
+        await assertSucceeds(anon("bob").ref("triviaRooms/RUN23/answers/0/bob").set({ points: 140, share: 1, ms: 900 }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers/0/bob").set({ points: 150, share: 1, ms: 800 }))
+        // Not for somebody else, not for a question that is not open, not from the audience.
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers/0/host").set({ points: 10, share: 1, ms: 900 }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers/1/bob").set({ points: 10, share: 1, ms: 900 }))
+        await assertFails(anon("carol").ref("triviaRooms/RUN23/answers/0/carol").set({ points: 10, share: 1, ms: 900 }))
+    })
+
+    test("no answers once the question has closed", async () => {
+        await seed("triviaRooms/RUN23", playing({ step: { index: 0, phase: "board", at: Date.now() } }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers/0/bob").set({ points: 100, share: 1, ms: 900 }))
+    })
+
+    test("the host clears the answers for a new game; players cannot", async () => {
+        await seed("triviaRooms/RUN23", playing({ answers: { 0: { bob: { points: 100, share: 1, ms: 1 } } } }))
+        await assertFails(anon("bob").ref("triviaRooms/RUN23/answers").remove())
+        await assertSucceeds(anon("host").ref("triviaRooms/RUN23").update({ status: "lobby", answers: null, questions: null, step: null, round: 2 }))
+    })
+
+    test("the host closes the room; anyone may sweep one left for six hours", async () => {
+        await seed("triviaRooms/OLD23", seeded({ createdAt: Date.now() - 7 * 3600_000 }))
+        await seed("triviaRooms/NEW23", seeded())
+        await assertSucceeds(anon("passer-by").ref("triviaRooms/OLD23").remove())
+        await assertFails(anon("passer-by").ref("triviaRooms/NEW23").remove())
+        await assertSucceeds(anon("host").ref("triviaRooms/NEW23").remove())
+    })
+})
+
+describe("triviaReports: a player flags a question", () => {
+    const report = (uid, extra = {}) => ({ q: "eu-001", reason: "wrong-answer", note: "The answer looks wrong.", uid, at: TIMESTAMP, ...extra })
+
+    test("a signed-in player files a report under their own uid", async () => {
+        await assertSucceeds(anon("alice").ref("triviaReports").push(report("alice")))
+        // The note is optional.
+        await assertSucceeds(anon("alice").ref("triviaReports").push({ q: "ty-012", reason: "typo", uid: "alice", at: TIMESTAMP }))
+        // Generated flag questions are reported by country: rf-de, jg-gb.
+        await assertSucceeds(anon("alice").ref("triviaReports").push({ q: "rf-de", reason: "other", uid: "alice", at: TIMESTAMP }))
+    })
+
+    test("nobody reads them back from the site - they are checked in the console", async () => {
+        await seed("triviaReports/r1", { q: "eu-001", reason: "typo", uid: "alice", at: 1 })
+        await assertFails(anon("alice").ref("triviaReports").once("value"))
+        await assertFails(anon("alice").ref("triviaReports/r1").once("value"))
+        await assertFails(guest().ref("triviaReports").once("value"))
+    })
+
+    test("a report cannot be edited, deleted, forged or padded", async () => {
+        await seed("triviaReports/r1", { q: "eu-001", reason: "typo", uid: "alice", at: 1 })
+        await assertFails(anon("alice").ref("triviaReports/r1").set(report("alice")))
+        await assertFails(anon("alice").ref("triviaReports/r1").remove())
+        await assertFails(anon("bob").ref("triviaReports").push(report("alice")))
+        await assertFails(guest().ref("triviaReports").push(report("alice")))
+        await assertFails(anon("alice").ref("triviaReports").push(report("alice", { reason: "spam" })))
+        await assertFails(anon("alice").ref("triviaReports").push(report("alice", { q: "not an id" })))
+        await assertFails(anon("alice").ref("triviaReports").push(report("alice", { note: "x".repeat(501) })))
+        await assertFails(anon("alice").ref("triviaReports").push(report("alice", { at: 1 })))
+        await assertFails(anon("alice").ref("triviaReports").push(report("alice", { extra: true })))
     })
 })

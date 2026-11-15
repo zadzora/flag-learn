@@ -134,7 +134,9 @@ export function readSnapshot(store: ProfileStore | null): Snapshot {
         // A daily streak is a run of active days too, so it counts towards the habit from before the profile existed.
         streak: Math.max(longestRun(activeDays), bestDailyStreak),
         "full-day": fullDays,
-        gauntlet: dailyBest(STREAK_KEYS.gauntlet),
+        "trivia-daily": dailyBest(STREAK_KEYS.trivia),
+        trivia: records.trivia ?? 0,
+        "trivia-battle": counters["trivia-battle"] ?? 0,
         deduction: dailyBest(STREAK_KEYS.deduction),
         connections: dailyBest(STREAK_KEYS.connections),
         flagle: dailyBest(STREAK_KEYS.flagle),
@@ -195,6 +197,8 @@ export const TRACKS: Track[] = [
     { id: "paint", title: "Painter", area: "learn", unit: ["flag", "flags"], tiers: [5, 25, 75, 150], detail: "Flags painted in Paint the Flag", to: "/paint" },
     { id: "word-wheel", title: "Wordsmith", area: "learn", unit: ["level", "levels"], tiers: [5, 15, 30, 60], detail: "Country Wheel levels solved", to: "/word-wheel" },
     { id: "higher-lower", title: "Sense of scale", area: "learn", unit: ["in a row", "in a row"], tiers: [5, 10, 20, 35], detail: "Best Higher or Lower run", to: "/higher-lower" },
+    // A solo quiz is twenty questions worth 100-200 each, any of them possibly double: ~3,000 is a near-perfect run.
+    { id: "trivia", title: "Know-it-all", area: "learn", unit: ["points", "points"], tiers: [1000, 1800, 2400, 3000], detail: "Best World Trivia score", to: "/trivia" },
     { id: "constellations", title: "Stargazer", area: "learn", unit: ["constellation", "constellations"], tiers: [10, 30, 60, CONSTELLATION_TOTAL], detail: "Constellations mastered", to: "/constellations" },
 
     { id: "elements", title: "Alchemist", area: "science", unit: ["element", "elements"], tiers: [10, 36, 86, ELEMENTS.length], detail: "Elements known by name and symbol", to: "/science/elements" },
@@ -204,7 +208,7 @@ export const TRACKS: Track[] = [
     { id: "flagle", title: "Daily Flagle", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Flagle streak", to: "/daily" },
     { id: "connections", title: "Connector", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Connections streak", to: "/daily-connections" },
     { id: "deduction", title: "Detective", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Deduction streak", to: "/daily-deduction" },
-    { id: "gauntlet", title: "Gauntlet runner", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Gauntlet streak", to: "/daily-gauntlet" },
+    { id: "trivia-daily", title: "Daily quizzer", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Daily Trivia streak", to: "/daily-trivia" },
     { id: "rally", title: "Rally driver", area: "daily", unit: ["day", "days"], tiers: [1, 5, 14, 30], detail: "Best Daily Rally streak", to: "/daily-rally" },
     { id: "full-day", title: "Full house", area: "daily", unit: ["day", "days"], tiers: [1, 5, 20, 50], detail: "Days with every daily challenge finished" },
 
@@ -217,6 +221,7 @@ export const TRACKS: Track[] = [
     { id: "border-chain", title: "Chain link", area: "multiplayer", unit: ["link", "links"], tiers: [1, 10, 50, 200], detail: "Links taken in Border Chain", to: "/border-chain" },
     { id: "conqueror", title: "Conqueror", area: "multiplayer", unit: ["territory", "territories"], tiers: [1, 5, 20, 50], detail: "Territories taken in World Conqueror", to: "/world-conqueror" },
     { id: "pvp", title: "Duelist", area: "multiplayer", unit: ["win", "wins"], tiers: [1, 5, 20, 50], detail: "PvP battles won", to: "/pvp/create" },
+    { id: "trivia-battle", title: "Quiz champion", area: "multiplayer", unit: ["win", "wins"], tiers: [1, 5, 20, 50], detail: "Multiplayer trivia rooms won", to: "/trivia/rooms" },
     // A run is a whole deck or region against the clock, so the tiers stay low. Any mode counts on its own.
     { id: "highscore", title: "Speedrunner", area: "multiplayer", unit: ["run", "runs"], tiers: [1, 3, 10, 25], detail: "Speedruns finished, in Highscore, Map Speedrun, Capital Speedrun or Ultimate Speedrun", to: "/highscore" },
 

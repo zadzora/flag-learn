@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { Medal, Repeat, Timer, X } from "lucide-react"
 import { BarButton } from "./TopBar"
 import YouTag from "./YouTag"
+import SupporterName from "./SupporterName"
 import {
     formatRunTime, loadPlayerName, normalizePlayerName,
     saveRun, subscribeLeaderboard, useIsMyRow, type MapLeaderboardRecord, type RunCheck, type SaveOutcome,
@@ -195,7 +196,7 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                                             <span className={`flex w-8 shrink-0 items-center gap-0.5 text-xs font-bold tabular-nums ${idx < 3 ? rankColor[idx] : "text-slate-400 dark:text-slate-500"}`}>
                                                 {idx < 3 ? <Medal size={14} aria-hidden /> : "#"}{idx + 1}
                                             </span>
-                                            <span className="truncate font-semibold">{entry.name}</span>
+                                            <SupporterName uid={entry.uid} name={entry.name} className="font-semibold" />
                                             {isMine(entry) && <YouTag />}
                                         </div>
                                         <div className="flex shrink-0 items-center gap-3">

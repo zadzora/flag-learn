@@ -39,6 +39,7 @@ import TriviaRooms from "./pages/TriviaRooms"
 import TriviaRoom from "./pages/TriviaRoom"
 import Profile from "./pages/Profile"
 import Privacy from "./pages/Privacy"
+import Support from "./pages/Support"
 import AchievementToasts from "./components/AchievementToasts"
 import ScrollMemory from "./components/ScrollMemory"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
@@ -51,6 +52,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/support" element={<Support />} />
 
                 <Route path="/play" element={<Game />} />
                 <Route path="/blur" element={<BlurGame />} />

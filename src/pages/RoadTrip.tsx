@@ -30,9 +30,11 @@ import {
     maskFromGrid, pointOnRoute, randomStart, routeLength, safeSpotNear, saveTrip, trailWriter, uncover, uncoverCountry,
     type FlagBitmap, type FlagRaster, type Port, type Trip, type World,
 } from "../utils/roadTrip"
-import { CAR_UNITS, PALETTES, drawBoat, drawCar, drawFlames, drawPort, wavePattern } from "../utils/roadTripDraw"
+import { CAR_UNITS, PALETTES, drawBoat, drawCar, drawFlames, drawPet, drawPort, wavePattern } from "../utils/roadTripDraw"
+import { useMyUid, useSupporter } from "../utils/supporters"
+import { petById } from "../utils/supporterLook"
 import {
-    ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, achievementById, allowedLook, continentOf, unlocksOf,
+    ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, SUPPORTER_UNLOCK, achievementById, allowedLook, continentOf, unlocksOf,
     type CarLook, type Continent, type Progress,
 } from "../utils/roadTripGoals"
 import { CountryCard, DriftMeter, Garage, Joystick, NitroMeter, Passport, QuizCard, RallyPanel, RallyRecord, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
@@ -254,6 +256,20 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     /** Hands a garage pick to the loop, and reads the garage off it. */
     const garageRef = useRef<(look: CarLook) => void>(() => {})
     const garageViewRef = useRef<() => GarageView | null>(() => null)
+    /**
+     * A supporter's paints and animal. The supporter table arrives after the
+     * world may already be built, so the loop reads it through a ref and is
+     * told when it changes (`supporterChangedRef`) to re-check the car's paint.
+     */
+    const supporterRef = useRef<{ on: boolean; pet: string | null }>({ on: false, pet: null })
+    const supporterChangedRef = useRef<() => void>(() => {})
+    const supporter = useSupporter(useMyUid())
+    const isSupporter = !!supporter
+    const petEmoji = supporter ? petById(supporter.look.pet)?.emoji ?? null : null
+    useEffect(() => {
+        supporterRef.current = { on: isSupporter, pet: petEmoji }
+        supporterChangedRef.current()
+    }, [isSupporter, petEmoji])
     const audioRef = useRef<TripAudio | null>(null)
     const mutedRef = useRef(muted)
 
@@ -404,7 +420,8 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
         let checkGoals: (announce?: boolean) => void = () => {}
         /** The car as picked in the garage - kept even in a rally, which otherwise saves nothing. */
         const savedLog = loadLog()
-        let look = allowedLook(savedLog.car, savedLog.achievements)
+        const withSupporter = (earned: string[]) => (supporterRef.current.on ? [...earned, SUPPORTER_UNLOCK] : earned)
+        let look = allowedLook(savedLog.car, withSupporter(savedLog.achievements))
 
         const completeCountry = (index: number, celebrate: boolean, correct: boolean | null = null) => {
             completed.add(index)
@@ -697,8 +714,12 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
 
         garageRef.current = picked => {
             log.car = picked
-            look = allowedLook(picked, log.achievements)
+            look = allowedLook(picked, withSupporter(log.achievements))
             keepLog(log)
+        }
+        supporterChangedRef.current = () => {
+            const source = rallyMode ? savedLog : log
+            look = allowedLook(source.car, withSupporter(source.achievements))
         }
 
         /** How many of each landmark there are to find; a range in several pieces counts once. */
@@ -752,11 +773,17 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             }
         }
 
-        garageViewRef.current = () => ({
-            selected: look,
-            models: MODELS.map(m => ({ id: m.id, label: m.label, unlocked: !m.unlock || log.achievements.includes(m.unlock), requirement: m.unlock ? achievementById(m.unlock)?.detail : undefined })),
-            paints: PAINTS.map(p => ({ id: p.id, label: p.label, colour: p.colours.top, unlocked: !p.unlock || log.achievements.includes(p.unlock), requirement: p.unlock ? achievementById(p.unlock)?.detail : undefined })),
-        })
+        const requirementOf = (unlock: string | undefined) =>
+            !unlock ? undefined : unlock === SUPPORTER_UNLOCK ? "Flag Learn supporters" : achievementById(unlock)?.detail
+        garageViewRef.current = () => {
+            const earned = withSupporter(log.achievements)
+            return {
+                selected: look,
+                pet: supporterRef.current.pet,
+                models: MODELS.map(m => ({ id: m.id, label: m.label, unlocked: !m.unlock || earned.includes(m.unlock), requirement: requirementOf(m.unlock) })),
+                paints: PAINTS.map(p => ({ id: p.id, label: p.label, colour: p.colours.top, unlocked: !p.unlock || earned.includes(p.unlock), requirement: requirementOf(p.unlock), supporter: p.unlock === SUPPORTER_UNLOCK })),
+            }
+        }
 
         const portsById = new Map(world.ports.map(p => [p.id, p]))
         const onDryLine = (ax: number, ay: number, bx: number, by: number) => {
@@ -1759,11 +1786,14 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             if (sail) drawBoat(ctx, cx, cy, unit, car.heading)
             else {
                 drawFlames(ctx, cx, cy, unit, car.heading, car.boost, time, look.model)
+                const moving = car.vx !== 0 || car.vy !== 0
                 drawCar(ctx, cx, cy, unit, car.heading, {
                     steer: car.steer,
                     braking: car.braking,
-                    moving: car.vx !== 0 || car.vy !== 0,
+                    moving,
                 }, look)
+                const pet = supporterRef.current.pet
+                if (pet) drawPet(ctx, cx, cy, unit, car.heading, look.model, pet, time, moving)
             }
         }
 

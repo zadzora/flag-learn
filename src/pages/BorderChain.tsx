@@ -18,6 +18,7 @@
  *    the answer sheet. It shows where the chain has been, and nothing else.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import SupporterName from "../components/SupporterName"
 import { motion, AnimatePresence } from "framer-motion"
 import { ComposableMap, Geographies, Geography, Line, ZoomableGroup } from "react-simple-maps"
 import {
@@ -671,9 +672,9 @@ export default function BorderChain() {
                                         className="h-2.5 w-2.5 shrink-0 rounded-full"
                                         style={{ background: row.color }}
                                     />
-                                    <span className={`min-w-0 flex-1 truncate ${row.idle ? "text-slate-400 dark:text-slate-500" : "font-semibold"}`}>
-                                        {row.name}
-                                        {row.id === uid && <span className="ml-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">you</span>}
+                                    <span className={`flex min-w-0 flex-1 items-center ${row.idle ? "text-slate-400 dark:text-slate-500" : "font-semibold"}`}>
+                                        <SupporterName uid={row.bot ? null : row.id} name={row.name} live />
+                                        {row.id === uid && <span className="ml-1.5 shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400">you</span>}
                                     </span>
                                     {row.bot && <BotIcon size={13} aria-label="Bot" className="shrink-0 text-slate-400 dark:text-slate-500" />}
                                     <span className="w-8 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">

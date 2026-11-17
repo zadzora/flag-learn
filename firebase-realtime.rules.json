@@ -368,6 +368,30 @@
         }
       }
     },
+    "supporters": {
+      ".read": true,
+      "$uid": {
+        "look": {
+          ".write": "auth != null && auth.uid === $uid && root.child('supporters').child($uid).child('since').exists()",
+          ".validate": "newData.hasChildren(['color','pet','badge'])",
+          "color": {
+            ".validate": "newData.isString() && newData.val().matches(/^(gold|sunset|aurora|ocean|rainbow|ruby|tangerine|emerald|teal|sky|violet|pink|plain)$/)"
+          },
+          "pet": {
+            ".validate": "newData.isString() && newData.val().matches(/^(none|panda|koala|kangaroo|penguin|llama|sloth|fox|polarbear|elephant|tiger|camel|beaver|flamingo|hedgehog|turtle|orangutan|otter|owl)$/)"
+          },
+          "badge": {
+            ".validate": "newData.isBoolean()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "supportFund": {
+      ".read": true
+    },
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid && (auth.token.firebase.sign_in_provider === 'google.com' || auth.token.email_verified === true)",

@@ -371,7 +371,7 @@ function DeleteDialog({ onClose, onDeleted }: { onClose: () => void; onDeleted: 
 }
 
 /** Google's sign-in button, drawn to its branding rules: white, the four-colour G, "Sign in with Google". */
-function GoogleButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+export function GoogleButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
     return (
         <button
             type="button"

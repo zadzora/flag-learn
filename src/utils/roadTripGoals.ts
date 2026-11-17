@@ -87,7 +87,14 @@ export function achievementById(id: string): Achievement | undefined {
 // --- The garage --------------------------------------------------------------------
 
 export type CarModel = "coupe" | "beetle" | "jeep" | "van" | "racer"
-export type Paint = "red" | "blue" | "yellow" | "green" | "orange" | "white" | "black" | "gold"
+export type Paint = "red" | "blue" | "yellow" | "green" | "orange" | "white" | "black" | "gold" | "rosegold" | "midnight" | "mint"
+
+/**
+ * Not a badge: the unlock of the supporter paints. The page adds it to the
+ * earned list for a Flag Learn supporter (`utils/supporters.ts`), so the
+ * garage, `allowedLook` and the lock labels need nothing of their own.
+ */
+export const SUPPORTER_UNLOCK = "supporter"
 export type CarLook = { model: CarModel; paint: Paint }
 export const DEFAULT_LOOK: CarLook = { model: "coupe", paint: "red" }
 
@@ -111,6 +118,9 @@ export const PAINTS: { id: Paint; label: string; unlock?: string; colours: Paint
     { id: "white", label: "White", unlock: "sharp-eye", colours: { top: "#F8FAFC", side: "#CBD5E1", low: "#94A3B8", roof: "#FFFFFF", stripe: "rgba(220,38,38,0.85)" } },
     { id: "black", label: "Black", unlock: "mountaineer", colours: { top: "#475569", side: "#1E293B", low: "#0F172A", roof: "#64748B", stripe: "rgba(250,204,21,0.9)" } },
     { id: "gold", label: "Gold", unlock: "continental", colours: { top: "#FCD34D", side: "#D4A017", low: "#8A6A0A", roof: "#FDE68A", stripe: "rgba(255,255,255,0.7)" } },
+    { id: "rosegold", label: "Rose gold", unlock: SUPPORTER_UNLOCK, colours: { top: "#F4B6A6", side: "#D98A7A", low: "#9E5A4E", roof: "#FBD5CB", stripe: "rgba(255,255,255,0.85)" } },
+    { id: "midnight", label: "Midnight", unlock: SUPPORTER_UNLOCK, colours: { top: "#312E81", side: "#1E1B4B", low: "#0B0A26", roof: "#4338CA", stripe: "rgba(250,204,21,0.95)" } },
+    { id: "mint", label: "Mint", unlock: SUPPORTER_UNLOCK, colours: { top: "#6EE7B7", side: "#34D399", low: "#047857", roof: "#A7F3D0", stripe: "rgba(255,255,255,0.9)" } },
 ]
 
 export function paintColours(paint: Paint): PaintColours {

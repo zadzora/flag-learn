@@ -366,3 +366,30 @@
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
 }
+
+/*
+ * Supporter names (components/SupporterName.tsx). A gradient name is clipped
+ * to its letters; now and then a sheen runs across it and the heart beats once.
+ * "Now and then" is the point - it catches the eye on a leaderboard without
+ * flashing at anybody who is trying to read it.
+ */
+.supporter-gradient {
+    background-size: 200% auto;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+@keyframes supporter-sheen {
+    0%, 82% { background-position: 0% 50%; }
+    100% { background-position: -200% 50%; }
+}
+@keyframes supporter-beat {
+    0%, 90%, 100% { transform: scale(1); }
+    93% { transform: scale(1.3); }
+    96% { transform: scale(0.95); }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .supporter-gradient { animation: supporter-sheen 9s ease-in-out infinite; }
+    .supporter-heart { animation: supporter-beat 7s ease-in-out infinite; }
+}

@@ -144,6 +144,48 @@ offline screen and every other mode keeps working untouched. Leave **auto clean-
 anonymous provider: it deletes accounts after 30 days, and since the account
 is what owns a territory, that would quietly wipe a player's empire.
 
+### Supporters (Stripe)
+
+`/support` sells one thing: a one-time €3 (or more, the player picks) that makes
+an account a supporter for good - a coloured name with an animal and a heart on
+every leaderboard, supporter paints and the animal on the car in the Road Trip.
+Cosmetic only. A payment reaches the game through `api/stripe-webhook.ts`, a
+Vercel Function; it is the only thing that writes `supporters/<uid>/since`.
+
+One-off setup:
+
+1. **Stripe → Product catalogue → Add product** "Flag Learn supporter", price
+   **Customer chooses price**, currency EUR, minimum and suggested **3.00**.
+2. **Payment Links → New** for that price. Under *After payment* choose
+   *Don't show confirmation page* and redirect to
+   `https://flaglearn.eu/support?thanks=1`. Copy the link (`https://buy.stripe.com/...`).
+3. **Developers → Webhooks → Add endpoint** `https://flaglearn.eu/api/stripe-webhook`
+   with the events `checkout.session.completed` and
+   `checkout.session.async_payment_succeeded`. Copy its signing secret.
+4. **Firebase → Project settings → Service accounts → Generate new private key.**
+   Keep the file out of the repo.
+5. **Vercel → Project → Settings → Environment Variables** (Production):
+   - `VITE_STRIPE_PAYMENT_LINK` - the link from step 2 (the page shows
+     "Payments open soon" without it)
+   - `STRIPE_SECRET_KEY` - `sk_live_...`
+   - `STRIPE_WEBHOOK_SECRET` - `whsec_...` from step 3
+   - `FIREBASE_SERVICE_ACCOUNT` - the whole JSON from step 4, on one line
+   - `FIREBASE_DATABASE_URL` - same value as `VITE_FIREBASE_DATABASE_URL`
+6. Publish the rules (the `supporters` and `supportFund` blocks) and redeploy.
+
+Test mode first: the same steps with Stripe's test keys and a test Payment Link
+on a preview deployment, paying with card `4242 4242 4242 4242`. Stripe
+→ Webhooks shows every delivery and the function's reply.
+
+A payment without an account on it, a refund or a gift is handled by hand:
+`node scripts/grant-supporter.mjs <uid> --key service-account.json` (add
+`--revoke` to take it back, or `--emulator` instead of `--key` to try it
+locally). The player's uid is shown on their `/support` page.
+
+On `npm run dev`, `supporterTest.me()` in the console makes you a supporter on
+this browser and `supporterTest.everyone()` gives every name a look, without
+paying; `supporterTest.off()` ends it.
+
 ### Accounts and the cloud save
 
 Signing in is optional. A guest plays exactly as before, on `localStorage`; the

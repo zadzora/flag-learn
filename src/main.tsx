@@ -5,6 +5,7 @@ import '@fontsource-variable/sora/index.css'
 import './index.css'
 import App from './App.tsx'
 import { restoreCloudSave, startCloudSync } from './utils/cloudSave'
+import { installSupporterTest } from './utils/supporters'
 
 // Apply the saved theme before the first render. Pages toggle it themselves later,
 // but several never read it on load, so a fresh visit to them came up light.
@@ -16,6 +17,7 @@ function applySavedTheme() {
   }
 }
 applySavedTheme()
+installSupporterTest()
 
 // A tab opened before a deploy still asks for the old build's hashed chunks,
 // which the new deployment no longer has. Loading the page again fetches the

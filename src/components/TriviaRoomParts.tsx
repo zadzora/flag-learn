@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import SupporterName from "./SupporterName"
 import { motion } from "framer-motion"
 import { Crown, Lightbulb, Smartphone, Star, WifiOff } from "lucide-react"
 import TriviaPicture from "./TriviaPicture"
@@ -132,8 +133,8 @@ export function Leaderboard({ rows, me, reduce, limit = 8 }: { rows: Standing[];
                         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${place === 1 ? "bg-amber-400 text-amber-950" : place === 2 ? "bg-slate-300 text-slate-800" : place === 3 ? "bg-orange-300 text-orange-950" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>
                             {place}
                         </span>
-                        <span className="min-w-0 flex-1 truncate font-semibold">
-                            {r.name}{isMe && <span className="ml-1.5 text-xs font-bold uppercase text-blue-600 dark:text-blue-300">you</span>}
+                        <span className="flex min-w-0 flex-1 items-center font-semibold">
+                            <SupporterName uid={r.uid} name={r.name} live />{isMe && <span className="ml-1.5 shrink-0 text-xs font-bold uppercase text-blue-600 dark:text-blue-300">you</span>}
                             {r.left && <WifiOff size={13} aria-label="Away" className="ml-1.5 inline text-slate-400" />}
                         </span>
                         <motion.span
@@ -200,7 +201,7 @@ export function Podium({ rows, me, reduce, elapsed }: { rows: Standing[]; me: st
                                     className="flex max-w-full flex-col items-center"
                                     aria-hidden={!open}
                                 >
-                                    <span className={`max-w-full truncate font-bold ${winner ? "text-lg" : ""} ${r.uid === me ? "text-blue-600 dark:text-blue-300" : ""}`}>{r.name}</span>
+                                    <span className="inline-flex max-w-full"><SupporterName uid={r.uid} name={r.name} live className={`font-bold ${winner ? "text-lg" : ""} ${r.uid === me ? "text-blue-600 dark:text-blue-300" : ""}`} /></span>
                                     <RunningTotal value={open ? r.total : 0} durationMs={reduce ? 1 : winner ? 1400 : 900} className="text-sm font-extrabold tabular-nums text-slate-500 dark:text-slate-400" />
                                 </motion.div>
                             </div>
@@ -230,7 +231,7 @@ export function Podium({ rows, me, reduce, elapsed }: { rows: Standing[]; me: st
                                 className={`flex items-center gap-3 rounded-lg border px-3.5 py-2 ${r.uid === me ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-500/15" : "border-slate-200 dark:border-slate-700"}`}
                             >
                                 <span className="w-6 text-center font-bold text-slate-500">{r.rank}</span>
-                                <span className="min-w-0 flex-1 truncate font-semibold">{r.name}</span>
+                                <span className="flex min-w-0 flex-1"><SupporterName uid={r.uid} name={r.name} live className="font-semibold" /></span>
                                 <span className="font-extrabold tabular-nums">{fmt(r.total)}</span>
                             </motion.li>
                         )

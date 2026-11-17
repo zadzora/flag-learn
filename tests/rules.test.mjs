@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import { after, before, beforeEach, describe, test } from "node:test"
 import { assertFails, assertSucceeds, initializeTestEnvironment } from "@firebase/rules-unit-testing"
 import { CLOUD_KEYS, ROAD_TRIP_LIMIT, VALUE_LIMIT } from "../src/utils/cloudMerge.ts"
+import { NAME_COLOURS, PETS } from "../src/utils/supporterLook.ts"
 
 let env
 const TIMESTAMP = { ".sv": "timestamp" }
@@ -430,5 +431,50 @@ describe("triviaReports: a player flags a question", () => {
         await assertFails(anon("alice").ref("triviaReports").push(report("alice", { note: "x".repeat(501) })))
         await assertFails(anon("alice").ref("triviaReports").push(report("alice", { at: 1 })))
         await assertFails(anon("alice").ref("triviaReports").push(report("alice", { extra: true })))
+    })
+})
+
+describe("supporters: the cosmetics a payment unlocks", () => {
+    const look = (extra = {}) => ({ color: "gold", pet: "panda", badge: true, ...extra })
+
+    test("nobody makes themselves a supporter - only the webhook (admin) writes the row", async () => {
+        await assertFails(google("alice").ref("supporters/alice").set({ since: TIMESTAMP }))
+        await assertFails(google("alice").ref("supporters/alice/since").set(1))
+        await assertFails(google("alice").ref("supporters/alice/look").set(look()))
+        await assertFails(google("alice").ref("supportFund/2026-11").set(300))
+        await assertFails(google("alice").ref("supporterLedger/alice/cs_1").set({ amount: 300 }))
+    })
+
+    test("a supporter picks their own look, from the lists the page offers", async () => {
+        await seed("supporters/alice", { since: 1 })
+        const db = google("alice")
+        for (const c of NAME_COLOURS) await assertSucceeds(db.ref("supporters/alice/look").set(look({ color: c.id })))
+        for (const p of [{ id: "none" }, ...PETS]) await assertSucceeds(db.ref("supporters/alice/look").set(look({ pet: p.id })))
+        await assertSucceeds(db.ref("supporters/alice/look").set(look({ badge: false })))
+    })
+
+    test("nothing outside the lists, nothing extra, and only their own", async () => {
+        await seed("supporters/alice", { since: 1 })
+        await seed("supporters/bob", { since: 1 })
+        const db = google("alice")
+        await assertFails(db.ref("supporters/alice/look").set(look({ color: "#ff0000" })))
+        await assertFails(db.ref("supporters/alice/look").set(look({ pet: "dragon" })))
+        await assertFails(db.ref("supporters/alice/look").set(look({ badge: "yes" })))
+        await assertFails(db.ref("supporters/alice/look").set(look({ extra: 1 })))
+        await assertFails(db.ref("supporters/alice/look").set({ color: "gold" }))
+        await assertFails(db.ref("supporters/alice/since").set(2))
+        await assertFails(db.ref("supporters/alice").remove())
+        await assertFails(db.ref("supporters/bob/look").set(look()))
+        await assertFails(guest().ref("supporters/alice/look").set(look()))
+    })
+
+    test("everyone reads who supports and this month's total; the ledger stays private", async () => {
+        await seed("supporters/alice", { since: 1, look: look() })
+        await seed("supportFund/2026-11", 300)
+        await seed("supporterLedger/alice/cs_1", { amount: 300 })
+        await assertSucceeds(guest().ref("supporters").once("value"))
+        await assertSucceeds(guest().ref("supportFund/2026-11").once("value"))
+        await assertFails(google("alice").ref("supporterLedger/alice").once("value"))
+        await assertFails(guest().ref("supporterLedger").once("value"))
     })
 })

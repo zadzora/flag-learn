@@ -11,6 +11,7 @@ import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { bestPerAccount, loadPlayerName, playerIdFor, rememberPlayerName, useIsMyRow } from "../utils/mapSpeedrun"
 import YouTag from "../components/YouTag"
+import SupporterName from "../components/SupporterName"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 import { bumpCounter } from "../utils/profileStore"
 
@@ -590,7 +591,7 @@ export default function Highscore() {
                                         <span className={`flex w-8 shrink-0 items-center gap-0.5 text-xs font-bold tabular-nums ${idx < 3 ? rankColor[idx] : "text-slate-400 dark:text-slate-500"}`}>
                                             {idx < 3 ? <Medal size={14} aria-hidden /> : "#"}{idx + 1}
                                         </span>
-                                        <span className="truncate font-semibold">{entry.name}</span>
+                                        <SupporterName uid={entry.uid} name={entry.name} className="font-semibold" />
                                         {isMine(entry) && <YouTag />}
                                     </div>
                                     <div className="flex shrink-0 items-center gap-3">

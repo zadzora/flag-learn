@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react"
+import SupporterName from "../components/SupporterName"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { ref, onValue, update, onDisconnect, get, set } from "firebase/database"
@@ -559,8 +560,8 @@ export default function PvPGame() {
                                 <li key={p.id} className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${p.id === myId ? 'border-slate-400 dark:border-[#4A5680]' : 'border-slate-200 dark:border-slate-700'}`}>
                                     <div className="flex min-w-0 items-center gap-2">
                                         <span className={`h-2 w-2 shrink-0 rounded-full ${p.left ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
-                                        <span className="truncate font-bold">
-                                            {p.name} {p.id === myId && <span className="font-normal text-slate-500 dark:text-slate-400">(You)</span>}
+                                        <span className="flex min-w-0 items-center gap-1 font-bold">
+                                            <SupporterName uid={p.id} name={p.name} live /> {p.id === myId && <span className="shrink-0 font-normal text-slate-500 dark:text-slate-400">(You)</span>}
                                         </span>
                                         {p.id === gameData.hostId && <span className={`${tag} bg-amber-500/15 text-amber-700 dark:text-amber-300`}>HOST</span>}
                                     </div>
@@ -624,8 +625,8 @@ export default function PvPGame() {
                                             <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${index === 0 ? 'bg-amber-500 text-white' : 'border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400'}`}>
                                                 {index + 1}
                                             </span>
-                                            <span className={`truncate font-bold ${p.left ? 'text-slate-400 line-through dark:text-slate-500' : ''}`}>
-                                                {p.name} {p.left && "(Left)"}
+                                            <span className={`flex min-w-0 items-center gap-1 font-bold ${p.left ? 'text-slate-400 line-through dark:text-slate-500' : ''}`}>
+                                                <SupporterName uid={p.id} name={p.name} /> {p.left && "(Left)"}
                                                 {p.id === myId && !p.left && <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">(You)</span>}
                                             </span>
                                         </div>

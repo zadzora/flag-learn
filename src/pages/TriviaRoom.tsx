@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
+import SupporterName from "../components/SupporterName"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ArrowRight, Check, Copy, Crown, Hourglass, Loader2, Lock, LogOut, MonitorPlay, Play, RotateCcw, SkipForward, Swords, Volume2, VolumeX, X } from "lucide-react"
@@ -402,7 +403,7 @@ function Lobby({ room, uid, isHost, canStart, onStart, onLeave }: { room: Room; 
                                 className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-semibold ${p.uid === uid ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-500/15" : "border-slate-200 dark:border-slate-700"}`}
                             >
                                 {p.uid === room.host && <Crown size={14} className="text-amber-500" aria-label="Host" />}
-                                {p.name}
+                                <SupporterName uid={p.uid} name={p.name} live />
                                 {isHost && p.uid !== uid && (
                                     <button type="button" onClick={() => removePlayer(room.code, p.uid).catch(() => {})} aria-label={`Remove ${p.name}`} className="-mr-1 ml-0.5 flex h-5 min-h-0 w-5 items-center justify-center rounded-full p-0 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white">
                                         <X size={13} aria-hidden />

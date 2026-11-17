@@ -5,12 +5,12 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
-import { Award, Check, Flame, Globe2, Lock, Mountain, Share2, Stamp, Trophy, X } from "lucide-react"
+import { Award, Check, Flame, Globe2, Heart, Lock, Mountain, Share2, Stamp, Trophy, X } from "lucide-react"
 import type { Choice } from "../utils/roadTripLog"
 import type { LandmarkKind } from "../utils/roadTripLandmarks"
 import { formatRallyTime } from "../utils/roadTripRally"
 import NextDailyLink from "./NextDailyLink"
-import { drawCar } from "../utils/roadTripDraw"
+import { drawCar, drawPet } from "../utils/roadTripDraw"
 import type { CarLook, CarModel, Paint } from "../utils/roadTripGoals"
 
 /** `correct` is whether the player named it from its flag; null when there was nothing to ask (no flag). */
@@ -50,7 +50,9 @@ export type PassportView = {
 export type GarageView = {
     selected: CarLook
     models: { id: CarModel; label: string; unlocked: boolean; requirement?: string }[]
-    paints: { id: Paint; label: string; colour: string; unlocked: boolean; requirement?: string }[]
+    paints: { id: Paint; label: string; colour: string; unlocked: boolean; requirement?: string; supporter?: boolean }[]
+    /** A supporter's animal, riding on the roof. */
+    pet?: string | null
 }
 
 const LANDMARK_GROUPS: { kind: LandmarkKind; title: string }[] = [
@@ -457,7 +459,7 @@ export function TripToast({ toast }: { toast: Toast }) {
 }
 
 /** A car drawn small, for the garage. */
-function CarPreview({ look, size = 72 }: { look: CarLook; size?: number }) {
+function CarPreview({ look, size = 72, pet }: { look: CarLook; size?: number; pet?: string | null }) {
     const ref = useRef<HTMLCanvasElement>(null)
     useEffect(() => {
         const canvas = ref.current
@@ -467,7 +469,8 @@ function CarPreview({ look, size = 72 }: { look: CarLook; size?: number }) {
         const ctx = canvas.getContext("2d")!
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCar(ctx, canvas.width / 2, canvas.height * 0.55, (size / 40) * dpr, -Math.PI / 5, { steer: 0, braking: false, moving: false }, look)
-    }, [look, size])
+        if (pet) drawPet(ctx, canvas.width / 2, canvas.height * 0.55, (size / 40) * dpr, -Math.PI / 5, look.model, pet, 0, false)
+    }, [look, size, pet])
     return <canvas ref={ref} style={{ width: size, height: size }} aria-hidden />
 }
 
@@ -704,7 +707,7 @@ export function Garage({ view, onClose, onPickLook }: { view: GarageView; onClos
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                     <div className="flex flex-col items-center">
-                        <CarPreview look={selected} size={150} />
+                        <CarPreview look={selected} size={150} pet={view.pet} />
                         <p className="text-sm font-semibold">{current}</p>
                     </div>
                     <h3 className="mt-4 !text-base font-bold">Cars</h3>
@@ -742,11 +745,20 @@ export function Garage({ view, onClose, onPickLook }: { view: GarageView; onClos
                                 >
                                     <span className="block h-7 w-7 rounded-full" style={{ backgroundColor: pt.colour }} />
                                     {!pt.unlocked && <Lock size={12} className="absolute text-slate-700" aria-hidden />}
+                                    {pt.supporter && <Heart size={11} className="absolute -right-1 -top-1 fill-rose-500 text-rose-500" aria-hidden />}
                                 </button>
                             </li>
                         ))}
                     </ul>
                     <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Cars and paints unlock with badges from the passport - hover a locked one to see which.</p>
+                    {paints.some(pt => pt.supporter) && (
+                        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                            <Heart size={11} className="shrink-0 fill-rose-500 text-rose-500" aria-hidden />
+                            {paints.some(pt => pt.supporter && pt.unlocked)
+                                ? "Supporter paints - thank you for keeping Flag Learn running."
+                                : <>Paints for <a href="/support" target="_blank" rel="noopener" className="font-semibold underline-offset-2 hover:underline">Flag Learn supporters</a>.</>}
+                        </p>
+                    )}
                 </div>
             </motion.div>
         </motion.div>

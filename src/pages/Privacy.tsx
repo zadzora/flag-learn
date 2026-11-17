@@ -11,7 +11,7 @@ import SiteFooter from "../components/SiteFooter"
 
 const THEME_KEY = "flag-master-theme"
 const CONTACT = "flaglearn@gmail.com"
-const UPDATED = "3 November 2026"
+const UPDATED = "17 November 2026"
 
 const muted = "text-slate-500 dark:text-[#8C97B3]"
 const link = "font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
@@ -105,6 +105,15 @@ export default function Privacy() {
                             question, the report holds the question, the reason, your note and your anonymous ID, and only I can read it. Legal basis:
                             Art. 6(1)(b) GDPR.
                         </Item>
+                        <Item title="Supporting Flag Learn (optional)">
+                            If you choose to <Link to="/support" className={link}>support the game</Link>, the payment is made on Stripe's page; your card details
+                            go to Stripe and never reach me. Stripe tells me the amount, the currency, the date, a payment reference and your account ID (which
+                            the game passes to Stripe so the payment finds your account), plus the name, email and country you entered at Stripe, which I keep
+                            only as the record tax law requires. Publicly, the database then shows that your account ID is a supporter, since when, and the
+                            look you picked (name colour, animal, heart), so it can appear next to your nickname. It shows no amount, no name and no email. The
+                            month's total of all payments is shown on the support page without saying who paid. Legal basis: Art. 6(1)(b) GDPR, and for the
+                            payment records Art. 6(1)(c) GDPR.
+                        </Item>
                         <Item title="Visit statistics">
                             Vercel Web Analytics counts page views without cookies and without identifying you, so I can see which modes are played. Legal
                             basis: legitimate interest (Art. 6(1)(f) GDPR).
@@ -123,6 +132,10 @@ export default function Privacy() {
                             <strong className="text-slate-900 dark:text-white">Google</strong> - Firebase Authentication, Firebase Realtime Database (stored
                             in Belgium, europe-west1) and reCAPTCHA. <External href="https://firebase.google.com/support/privacy">Firebase privacy</External>,{" "}
                             <External href="https://policies.google.com/privacy">Google privacy policy</External>.
+                        </li>
+                        <li>
+                            <strong className="text-slate-900 dark:text-white">Stripe</strong> - payments from supporters (only if you choose to pay).{" "}
+                            <External href="https://stripe.com/privacy">Stripe privacy policy</External>.
                         </li>
                         <li>
                             <strong className="text-slate-900 dark:text-white">Vercel</strong> - hosting and visit statistics.{" "}
@@ -147,6 +160,10 @@ export default function Privacy() {
                             you delete your account, because they are part of other players' results too. Email me and I will remove or anonymise yours.
                         </li>
                         <li>Anonymous accounts of the online modes are kept so your results stay yours. Email me to have one removed.</li>
+                        <li>
+                            Supporter status and look: as long as the account exists, and after it is deleted until you ask me to remove them. Payment records:
+                            as long as Slovak accounting and tax law requires (up to ten years); Stripe keeps its own under its policy.
+                        </li>
                     </ul>
                 </Section>
 

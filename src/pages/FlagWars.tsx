@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import SupporterName from "../components/SupporterName"
 import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ComposableMap, Geographies, Geography, Line, Marker, ZoomableGroup } from "react-simple-maps"
@@ -860,7 +861,7 @@ export default function FlagWars() {
                                 >
                                     <span className="w-4 font-bold tabular-nums text-slate-400 dark:text-slate-500">{index + 1}</span>
                                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colorForPlayer(row.color) }} />
-                                    <span className="truncate font-semibold flex-1">{row.name}</span>
+                                    <span className="flex min-w-0 flex-1"><SupporterName uid={row.uid} name={row.name} className="font-semibold" live /></span>
                                     {index === 0 && <Crown size={12} aria-hidden className="text-amber-500 shrink-0" />}
                                     <span className="font-bold tabular-nums">{row.territories}</span>
                                 </div>
@@ -1589,7 +1590,7 @@ function StandingsTable({ standings, uid }: { standings: Standing[]; uid: string
                     >
                         <span className="w-4 text-slate-400 dark:text-slate-500 font-bold tabular-nums">{index + 1}</span>
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colorForPlayer(row.color) }} />
-                        <span className="flex-1 truncate">{row.name}</span>
+                        <span className="flex min-w-0 flex-1"><SupporterName uid={row.uid} name={row.name} live /></span>
                         {index === 0 && <Crown size={12} aria-hidden className="text-amber-500 shrink-0" />}
                         <span className="w-10 text-right tabular-nums">{row.territories}</span>
                         <span className="w-14 text-right tabular-nums text-slate-500 dark:text-slate-400">{row.strength}</span>
@@ -1679,7 +1680,7 @@ function HallOfFame({ seasons, onClose }: { seasons: HallOfFameEntry[]; onClose:
                                     className="w-2.5 h-2.5 rounded-full shrink-0"
                                     style={{ background: colorForPlayer(entry.winnerColor) }}
                                 />
-                                <span className="flex-1 truncate font-bold text-sm">{entry.winnerName}</span>
+                                <span className="flex min-w-0 flex-1"><SupporterName uid={entry.winnerId} name={entry.winnerName} className="font-bold text-sm" live /></span>
                                 <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
                                     {entry.territories} land
                                 </span>

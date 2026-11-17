@@ -20,6 +20,7 @@ import {
     leaveSeat, markClosed, nameTaken, normalizeCode, readNickname, removePlayer, roomTypes, saveNickname, serverNow, setStep, standings, startGame, submitAnswer, watchRoom,
     type Room, type RoomStep,
 } from "../utils/triviaRooms"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
 const THEME_KEY = "flag-master-theme"
 const PRIMARY = "flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-6 py-3.5 font-bold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
@@ -435,10 +436,11 @@ function JoinPanel({ room, uid, error, onError }: { room: Room; uid: string; err
     const [busy, setBusy] = useState(false)
     const full = activePlayers(room).length >= room.settings.maxPlayers
     const taken = nameTaken(room, uid, name)
+    const refused = isNameOffensive(name)
 
     const submit = async (e: FormEvent) => {
         e.preventDefault()
-        if (!name.trim() || taken || busy) return
+        if (!name.trim() || taken || refused || busy) return
         setBusy(true)
         onError("")
         try {
@@ -464,7 +466,8 @@ function JoinPanel({ room, uid, error, onError }: { room: Room; uid: string; err
                 <>
                     <label className="flex flex-col gap-1.5">
                         <span className="text-sm font-bold">Your name</span>
-                        <input value={name} onChange={e => setName(e.target.value.slice(0, NAME_MAX))} className={FIELD} placeholder="Nickname" autoFocus aria-invalid={taken} />
+                        <input value={name} onChange={e => setName(e.target.value.slice(0, NAME_MAX))} className={FIELD} placeholder="Nickname" autoFocus aria-invalid={taken || refused} />
+                        {refused && <span className="text-sm font-semibold text-rose-600 dark:text-rose-400">{NAME_REFUSED}</span>}
                         {taken && <span className="text-sm font-semibold text-rose-600 dark:text-rose-400">{name.trim()} is already playing here - pick another name.</span>}
                     </label>
                     {room.private && (
@@ -474,7 +477,7 @@ function JoinPanel({ room, uid, error, onError }: { room: Room; uid: string; err
                         </label>
                     )}
                     {error && !taken && <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
-                    <button type="submit" disabled={!name.trim() || taken || busy || (room.private && !password.trim())} className={PRIMARY}>
+                    <button type="submit" disabled={!name.trim() || taken || refused || busy || (room.private && !password.trim())} className={PRIMARY}>
                         {busy ? <Loader2 size={18} className="animate-spin" aria-hidden /> : null} Join the room <ArrowRight size={18} aria-hidden />
                     </button>
                 </>

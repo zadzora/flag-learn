@@ -11,6 +11,7 @@ import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { playerIdFor, useIsMyRow } from "../utils/mapSpeedrun"
 import YouTag from "../components/YouTag"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 import { bumpCounter } from "../utils/profileStore"
 
 type GameMode = "world" | "capitals" | "us"
@@ -254,7 +255,7 @@ export default function Highscore() {
     const saveScore = async () => {
         if (finishedTime === null) return
         const cleanedName = normalizePlayerName(nameInput)
-        if (!cleanedName) return
+        if (!cleanedName || isNameOffensive(cleanedName)) return
         const safeFinishedTime = clampNumber(finishedTime, 0, 72000)
         const safeFinishedMistakes = clampNumber(finishedMistakes, 0, 10000)
 
@@ -540,8 +541,9 @@ export default function Highscore() {
                                     aria-label="Your name"
                                     className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-4 py-2 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
                                 />
-                                <button type="button" onClick={saveScore} className={`${primary} shrink-0 px-5`}>Save</button>
+                                <button type="button" onClick={saveScore} disabled={isNameOffensive(nameInput)} className={`${primary} shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50`}>Save</button>
                             </div>
+                            {isNameOffensive(nameInput) && <p className="mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
                             {saveNotice && (
                                 <p className={`mt-2 text-sm font-bold ${saveNotice.includes("Not saved") ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                                     {saveNotice}

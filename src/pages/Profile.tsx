@@ -18,6 +18,7 @@ import { loadLog } from "../utils/roadTripLog"
 import { readStreak, STREAK_KEYS } from "../utils/dailyStreak"
 import { PROFILE_EVENT, readStore, setAvatar, todayUtc, type ProfileStore } from "../utils/profileStore"
 import { asset } from "../utils/asset"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
 /**
  * The player's own page: rank, the flags they hold continent by continent, every
@@ -104,6 +105,8 @@ export default function Profile() {
 
     function saveName() {
         const clean = draftName.trim().slice(0, 24)
+        // The profile name seeds every leaderboard and room, so it goes through the same filter.
+        if (isNameOffensive(clean)) return
         if (clean) {
             localStorage.setItem(NAME_KEY, clean)
             setName(clean)
@@ -151,6 +154,7 @@ export default function Profile() {
                             </button>
                             <div className="min-w-0">
                                 {editingName ? (
+                                    <>
                                     <form
                                         className="flex items-center gap-2"
                                         onSubmit={e => {
@@ -169,6 +173,8 @@ export default function Profile() {
                                             <Check size={16} aria-hidden />
                                         </button>
                                     </form>
+                                    {isNameOffensive(draftName) && <p className="mt-1 text-sm font-semibold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
+                                    </>
                                 ) : (
                                     <button
                                         type="button"

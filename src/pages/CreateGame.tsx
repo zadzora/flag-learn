@@ -7,6 +7,7 @@ import { db, ensureSignedIn } from "../../lib/firebase"
 import { ref, set } from "firebase/database"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
 export default function CreateGame() {
     const navigate = useNavigate()
@@ -42,6 +43,7 @@ export default function CreateGame() {
             alert("Please enter your name")
             return
         }
+        if (isNameOffensive(nickname)) return
 
         localStorage.setItem("flag-master-nickname", nickname)
         setIsCreating(true)
@@ -141,6 +143,7 @@ export default function CreateGame() {
                             className="w-full border border-slate-200 bg-slate-50 px-4 py-3 font-bold outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
                             maxLength={15}
                         />
+                        {isNameOffensive(nickname) && <p className="mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
                     </div>
 
                     {/* Max Players */}
@@ -203,7 +206,7 @@ export default function CreateGame() {
                     <button
                         type="button"
                         onClick={handleCreateGame}
-                        disabled={isCreating}
+                        disabled={isCreating || isNameOffensive(nickname)}
                         className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-4 text-lg font-bold text-white hover:bg-slate-700 disabled:cursor-wait disabled:opacity-80 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
                     >
                         {isCreating ? <Loader2 size={20} className="animate-spin" aria-hidden /> : <Swords size={20} aria-hidden />}

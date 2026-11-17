@@ -7,6 +7,7 @@ import {
     formatRunTime, loadPlayerName, normalizePlayerName,
     saveRun, subscribeLeaderboard, useIsMyRow, type MapLeaderboardRecord, type RunCheck, type SaveOutcome,
 } from "../utils/mapSpeedrun"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
 /**
  * `avgKm` is only reported by runs that measure distance (the capitals).
@@ -72,11 +73,12 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
 
     // A board still showing the previous region would rank the run against the wrong table.
     const entries = board?.region === boardRegion ? board.entries : null
+    const refused = isNameOffensive(name)
 
     async function handleSave() {
         const cleaned = normalizePlayerName(name)
         const check = result?.check
-        if (!result || !cleaned || !entries || saving || !check || check === "pending" || !check.ok) return
+        if (!result || !cleaned || refused || !entries || saving || !check || check === "pending" || !check.ok) return
         setSaving(true)
         try {
             const outcome = await saveRun(boardFor(result.region), entries, cleaned, check.seconds, check.mistakes, check.serverMs)
@@ -137,8 +139,11 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                                         aria-label="Your name"
                                         className="min-w-0 flex-1 border border-slate-200 bg-slate-50 px-4 py-2 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
                                     />
-                                    <button type="button" onClick={handleSave} disabled={!normalizePlayerName(name) || !entries || saving || !verified} className={`${primary} shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50`}>Save</button>
+                                    <button type="button" onClick={handleSave} disabled={!normalizePlayerName(name) || refused || !entries || saving || !verified} className={`${primary} shrink-0 px-5 disabled:cursor-not-allowed disabled:opacity-50`}>Save</button>
                                 </div>
+                            )}
+                            {!saved && refused && (
+                                <p className="-mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>
                             )}
                             {!saved && result.check === "pending" && (
                                 <p className="-mt-2 text-sm text-slate-500 dark:text-slate-400">Checking the run with the server...</p>

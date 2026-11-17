@@ -9,6 +9,7 @@ import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { bumpCounterOnce } from "../utils/profileStore"
+import { isNameOffensive, NAME_REFUSED, shownName } from "../utils/nameFilter"
 
 type Flag = {
     code: string
@@ -51,7 +52,8 @@ export default function PvPGame() {
     /** The anonymous account's uid: the rules let each player write only their own row. */
     const [myId, setMyId] = useState<string | null>(null)
     const [myName, setMyName] = useState<string>(() => localStorage.getItem("flag-master-nickname") || "")
-    const [needsName, setNeedsName] = useState(!localStorage.getItem("flag-master-nickname"))
+    // A saved name the filter refuses (set before it existed) is asked for again.
+    const [needsName, setNeedsName] = useState(() => { const n = localStorage.getItem("flag-master-nickname"); return !n || isNameOffensive(n) })
 
     // THEME STATE
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -202,7 +204,7 @@ export default function PvPGame() {
     }
 
     const handleJoinWithName = () => {
-        if (!myName.trim()) return
+        if (!myName.trim() || isNameOffensive(myName)) return
         localStorage.setItem("flag-master-nickname", myName)
         setNeedsName(false)
     }
@@ -445,11 +447,12 @@ export default function PvPGame() {
                         <button
                             type="button"
                             onClick={handleJoinWithName}
-                            disabled={!myName.trim()}
-                            className={`w-full py-3.5 ${myName.trim() ? primary : disabledButton}`}
+                            disabled={!myName.trim() || isNameOffensive(myName)}
+                            className={`w-full py-3.5 ${myName.trim() && !isNameOffensive(myName) ? primary : disabledButton}`}
                         >
                             Join Lobby
                         </button>
+                        {isNameOffensive(myName) && <p className="mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
                     </section>
                 </main>
             </div>
@@ -715,7 +718,7 @@ export default function PvPGame() {
                     {otherPlayers.map(p => (
                         <div key={p.id} className="flex items-center gap-2 text-xs">
                             <span className={`w-20 truncate ${p.left ? 'text-red-500 line-through dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                                {p.name}
+                                {shownName(p.name)}
                             </span>
                             <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                                 <motion.div

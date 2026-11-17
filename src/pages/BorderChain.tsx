@@ -37,6 +37,7 @@ import {
 } from "../utils/borderChain"
 import { bumpCounter } from "../utils/profileStore"
 import { asset } from "../utils/asset"
+import { isNameOffensive, NAME_REFUSED, shownName } from "../utils/nameFilter"
 
 const geoUrl = asset("/world-map.json")
 const MAP_WIDTH = 800
@@ -173,7 +174,7 @@ export default function BorderChain() {
     function takeSeat(e: React.FormEvent) {
         e.preventDefault()
         const trimmed = nameDraft.trim().slice(0, 24)
-        if (!trimmed) return
+        if (!trimmed || isNameOffensive(trimmed)) return
         localStorage.setItem(NAME_KEY, trimmed)
         setName(trimmed)
         setSeated(true)
@@ -570,7 +571,7 @@ export default function BorderChain() {
 
                             {leg?.lastName && (
                                 <p className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">
-                                    Last link by <span className="font-semibold text-slate-700 dark:text-slate-200">{leg.lastName}</span>
+                                    Last link by <span className="font-semibold text-slate-700 dark:text-slate-200">{shownName(leg.lastName)}</span>
                                 </p>
                             )}
 
@@ -607,12 +608,13 @@ export default function BorderChain() {
                                     />
                                     <button
                                         type="submit"
-                                        disabled={!nameDraft.trim() || !uid}
+                                        disabled={!nameDraft.trim() || isNameOffensive(nameDraft) || !uid}
                                         className="rounded-lg bg-slate-900 px-5 py-2 font-bold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2] dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
                                     >
                                         Sit
                                     </button>
                                 </div>
+                                {isNameOffensive(nameDraft) && <p className="mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
                                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                                     You can watch without sitting - the chain keeps moving either way.
                                 </p>

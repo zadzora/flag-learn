@@ -11,6 +11,7 @@ import {
     LENGTH_DEFAULT, LENGTH_MAX, LENGTH_MIN, MAX_SEATS, NAME_MAX, PASSWORD_MAX, ROOM_NAME_MAX, STALE_MS, activePlayers, createRoom, normalizeCode,
     readNickname, roomTypes, saveNickname, serverNow, sweepStale, watchRooms, type Room, type RoomSettings, type RoomStyle,
 } from "../utils/triviaRooms"
+import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
 const THEME_KEY = "flag-master-theme"
 const PRIMARY = "flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 font-bold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
@@ -188,7 +189,8 @@ function CreateRoom({ onCancel, onCreated }: { onCancel: () => void; onCreated: 
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState("")
 
-    const ready = hostName.trim().length > 0 && (!isPrivate || password.trim().length > 0)
+    const refused = isNameOffensive(hostName) || isNameOffensive(name)
+    const ready = hostName.trim().length > 0 && !refused && (!isPrivate || password.trim().length > 0)
     const submit = async (e: FormEvent) => {
         e.preventDefault()
         if (!ready || busy) return
@@ -218,6 +220,7 @@ function CreateRoom({ onCancel, onCreated }: { onCancel: () => void; onCreated: 
                     <input value={name} onChange={e => setName(e.target.value.slice(0, ROOM_NAME_MAX))} className={FIELD} placeholder={hostName ? `${hostName}'s room` : "Friday quiz"} />
                 </Field>
             </div>
+            {refused && <p className="-mt-2 text-sm font-semibold text-rose-600 dark:text-rose-400" role="alert">{NAME_REFUSED}</p>}
 
             <fieldset>
                 <legend className="mb-1.5 text-sm font-bold">How you play</legend>

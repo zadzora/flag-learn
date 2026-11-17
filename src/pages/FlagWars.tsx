@@ -27,6 +27,7 @@ import {
 import { bumpCounter } from "../utils/profileStore"
 import { loadHallOfFame } from "../utils/recordsHeld"
 import { asset } from "../utils/asset"
+import { isNameOffensive, maskNames, NAME_REFUSED } from "../utils/nameFilter"
 
 const geoUrl = asset("/world-map.json")
 
@@ -227,20 +228,20 @@ export default function FlagWars() {
         const stopTerritories = onValue(
             ref(db, `flagWars/${season.id}/territories`),
             snapshot => {
-                setTerritories((snapshot.val() as TerritoryMap) || {})
+                setTerritories(maskNames(snapshot.val() as TerritoryMap, "ownerName"))
                 setLoading(false)
             },
             onReadFailure,
         )
         const stopSieges = onValue(
             ref(db, `flagWars/${season.id}/sieges`),
-            snapshot => setSieges((snapshot.val() as SiegeMap) || {}),
+            snapshot => setSieges(maskNames(snapshot.val() as SiegeMap, "attackerName")),
             onReadFailure,
         )
         const stopPlayers = onValue(
             ref(db, `flagWars/${season.id}/players`),
             snapshot => {
-                setPlayers((snapshot.val() as Record<string, WarPlayer>) || {})
+                setPlayers(maskNames(snapshot.val() as Record<string, WarPlayer>, "name"))
                 setPlayersLoaded(true)
             },
             onReadFailure,
@@ -360,6 +361,10 @@ export default function FlagWars() {
         const trimmed = nameDraft.trim().slice(0, 24)
         if (!trimmed || !uid) return
 
+        if (isNameOffensive(trimmed)) {
+            setNameError(NAME_REFUSED)
+            return
+        }
         if (nameTaken(trimmed, players, uid)) {
             setNameError("Somebody is already flying that name this season. Pick another.")
             return

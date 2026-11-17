@@ -23,6 +23,7 @@ import {
 } from "firebase/database"
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { TYPE_INFO, type QuestionType, type Region } from "./trivia"
+import { isNameOffensive, maskNames, NAME_REFUSED, shownName } from "./nameFilter"
 
 export type RoomStyle = "battle" | "night"
 export type RoomStatus = "lobby" | "playing" | "done" | "closed"
@@ -144,6 +145,7 @@ export async function createRoom(room: NewRoom): Promise<string> {
     const user = await ensureSignedIn()
     const hostName = room.hostName.trim().slice(0, NAME_MAX)
     const isPrivate = room.password.trim().length > 0
+    if (isNameOffensive(hostName) || isNameOffensive(room.name)) throw new Error(NAME_REFUSED)
     for (let attempt = 0; attempt < 5; attempt++) {
         const code = newCode()
         if ((await get(roomRef(code))).exists()) continue
@@ -168,10 +170,22 @@ export async function createRoom(room: NewRoom): Promise<string> {
     throw new Error("Could not find a free room code - try again.")
 }
 
+/** A room as the screens show it: a name the filter refuses (saved before it existed) never reaches the big screen. */
+function cleanRoom(raw: Omit<Room, "code">, code: string): Room {
+    const hostName = shownName(raw.hostName ?? "")
+    return {
+        ...raw,
+        code,
+        hostName,
+        name: isNameOffensive(raw.name ?? "") ? `${hostName}'s room` : raw.name,
+        ...(raw.players ? { players: maskNames(raw.players, "name") } : {}),
+    }
+}
+
 export function watchRoom(code: string, onData: (room: Room | null) => void, onError?: () => void): () => void {
     return onValue(
         roomRef(code),
-        snap => onData(snap.exists() ? { ...(snap.val() as Omit<Room, "code">), code } : null),
+        snap => onData(snap.exists() ? cleanRoom(snap.val() as Omit<Room, "code">, code) : null),
         () => onError?.(),
     )
 }
@@ -182,7 +196,7 @@ export function watchRooms(onData: (rooms: Room[]) => void, onError?: () => void
         query(ref(db, "triviaRooms"), orderByChild("createdAt"), limitToLast(60)),
         snap => {
             const rooms: Room[] = []
-            snap.forEach(child => { rooms.push({ ...(child.val() as Omit<Room, "code">), code: child.key ?? "" }) })
+            snap.forEach(child => { rooms.push(cleanRoom(child.val() as Omit<Room, "code">, child.key ?? "")) })
             onData(rooms.reverse())
         },
         () => onError?.(),
@@ -222,6 +236,7 @@ const TAKEN = "Somebody in this room already has that name - pick another."
 export async function joinRoom(room: Room, name: string, password: string): Promise<void> {
     const user = await ensureSignedIn()
     const mine = room.players?.[user.uid]
+    if (isNameOffensive(name)) throw new JoinError(NAME_REFUSED)
     if (nameTaken(room, user.uid, name)) throw new JoinError(TAKEN)
     if (!mine) {
         if (room.status !== "lobby") throw new JoinError("This game has already started.")

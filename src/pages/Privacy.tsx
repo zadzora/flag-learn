@@ -55,7 +55,8 @@ export default function Privacy() {
                 <p className={`mt-1 text-sm ${muted}`}>Last updated {UPDATED}</p>
                 <p className="mt-5 leading-relaxed">
                     Flag Learn (flaglearn.eu) is a free learning game run by David Zadzora. This page explains what personal data the game uses, why, and
-                    what you can do about it. Questions or requests: <Mail />.
+                    what you can do about it. Questions or requests: <Mail />. What the game and the supporter payment promise is in the{" "}
+                    <Link to="/terms" className={link}>terms</Link>.
                 </p>
 
                 <Section title="The short version">
@@ -106,10 +107,12 @@ export default function Privacy() {
                             Art. 6(1)(b) GDPR.
                         </Item>
                         <Item title="Supporting Flag Learn (optional)">
-                            If you choose to <Link to="/support" className={link}>support the game</Link>, the payment is made on Stripe's page; your card details
-                            go to Stripe and never reach me. Stripe tells me the amount, the currency, the date, a payment reference and your account ID (which
-                            the game passes to Stripe so the payment finds your account), plus the name, email and country you entered at Stripe, which I keep
-                            only as the record tax law requires. Publicly, the database then shows that your account ID is a supporter, since when, and the
+                            If you choose to <Link to="/support" className={link}>support the game</Link>, the payment is made on Stripe's page. Stripe sells
+                            the supporter perks as the merchant of record (Stripe Managed Payments): it is the seller on your receipt, charges and pays the VAT,
+                            handles refunds and disputes, and processes your payment details, name, billing address and email as its own controller under its
+                            privacy policy. Your card details never reach me. Stripe tells me the amount, the currency, the date, a payment reference and your
+                            account ID (which the game passes to Stripe so the payment finds your account); its dashboard also shows me the name, email and
+                            country you entered, which I use only to answer you about the payment. Publicly, the database then shows that your account ID is a supporter, since when, and the
                             look you picked (letter colour, tint, animal, heart), so it can appear next to your nickname. It shows no amount, no name and no
                             email. Legal basis: Art. 6(1)(b) GDPR, and for the
                             payment records Art. 6(1)(c) GDPR.
@@ -134,7 +137,7 @@ export default function Privacy() {
                             <External href="https://policies.google.com/privacy">Google privacy policy</External>.
                         </li>
                         <li>
-                            <strong className="text-slate-900 dark:text-white">Stripe</strong> - payments from supporters (only if you choose to pay).{" "}
+                            <strong className="text-slate-900 dark:text-white">Stripe</strong> - payments from supporters, as the seller of record (only if you choose to pay).{" "}
                             <External href="https://stripe.com/privacy">Stripe privacy policy</External>.
                         </li>
                         <li>

@@ -147,14 +147,21 @@ is what owns a territory, that would quietly wipe a player's empire.
 ### Supporters (Stripe)
 
 `/support` sells one thing: a one-time €3 (or more - the player types an
-amount or adds + €1 / + €2 / + €5 / + €10) that makes an account a supporter
-for good: their own letter colour and tint on every leaderboard, an animated
+amount or adds + €1 / + €2 / + €5 / + €10) that makes an account a supporter:
+their own letter colour and tint on every leaderboard, an animated
 animal beside the name, walking along their collection bars and riding their
 Road Trip car, and the Racer and supporter paints. Cosmetic only.
 
 `api/checkout.ts` makes a Stripe Checkout Session for exactly the amount picked
 (a Payment Link cannot be handed an amount), reading the player from their
-Firebase ID token. `api/stripe-webhook.ts` turns the paid session into
+Firebase ID token. The session uses **Stripe Managed Payments**: Stripe is the
+merchant of record - the seller on the receipt, it calculates and pays the VAT
+of the buyer's country, and handles receipts, refunds and disputes. The amount
+is tax-inclusive (the player pays exactly what they picked) and the product
+carries the tax code `txcd_10000000` (General - Electronically Supplied
+Services). A buyer may pay in their own currency (Adaptive Pricing is always on
+there); the webhook reads the euro value from the session's
+`currency_conversion` then. `api/stripe-webhook.ts` turns the paid session into
 `supporters/<uid>/since` - the only thing that writes it.
 
 The animals are drawn art from `graphic/support-animals.png`:
@@ -167,8 +174,11 @@ One-off setup:
 
 1. **Stripe → Developers → API keys**: copy the secret key. No product or
    Payment Link is needed - the session describes itself.
-2. **Stripe → Settings → Payment methods**: switch on what you want offered
-   (cards, Apple Pay and Google Pay are on by default; PayPal is a toggle there).
+2. **Stripe → Settings → Managed Payments** (dashboard.stripe.com/settings/managed-payments):
+   activate it and accept its terms. Stripe reviews the account first; until it
+   is on, every checkout fails - set `STRIPE_MANAGED_PAYMENTS=0` in the meantime
+   to sell through a plain Checkout Session instead (then no tax is handled).
+   Under Managed Payments Stripe picks the payment methods itself.
 3. **Developers → Webhooks → Add endpoint** `https://flaglearn.eu/api/stripe-webhook`
    with the events `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`. Copy its signing secret.
@@ -178,6 +188,7 @@ One-off setup:
    - `VITE_PAYMENTS` - `1` (without it the page says "Payments open soon")
    - `STRIPE_SECRET_KEY` - `sk_live_...`
    - `STRIPE_WEBHOOK_SECRET` - `whsec_...` from step 3
+   - `STRIPE_MANAGED_PAYMENTS` - leave unset; `0` only while Managed Payments is not active (step 2)
    - `FIREBASE_SERVICE_ACCOUNT` - the whole JSON from step 4, on one line
    - `FIREBASE_DATABASE_URL` - same value as `VITE_FIREBASE_DATABASE_URL`
 6. Publish the rules (the `supporters` block) and redeploy.

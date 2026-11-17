@@ -5,6 +5,7 @@ import { Heart } from "lucide-react"
 import { useMyUid, useSupporter } from "../utils/supporters"
 import { cssPaint, petById, resolveLook, type SupporterLook } from "../utils/supporterLook"
 import { useDarkMode } from "../utils/useDarkMode"
+import { shownName } from "../utils/nameFilter"
 import PetSprite from "./PetSprite"
 
 type Props = {
@@ -27,7 +28,9 @@ type Props = {
  *
  * Everyone else's name renders exactly as before, a plain truncating span.
  */
-export default function SupporterName({ uid, name, className = "", live = false }: Props) {
+export default function SupporterName({ uid, name: typed, className = "", live = false }: Props) {
+    // A name that got past the filter (saved before it, or written from the console) is never drawn as typed.
+    const name = shownName(typed)
     const supporter = useSupporter(uid)
     const [tip, setTip] = useState<{ x: number; y: number } | null>(null)
 
@@ -94,7 +97,7 @@ export function LookedName({ look, name, className = "", petSize = 28, animate =
     return (
         <>
             {/* Bleeds a little above and below, so a bigger animal does not make every row taller. */}
-            {petById(look.pet) && <PetSprite id={look.pet} size={petSize} animate={animate} className="-my-1.5" />}
+            {petById(look.pet) && <PetSprite id={look.pet} size={petSize} animate={animate} centred className="-my-1.5" />}
             {tint
                 ? <span className="inline-flex min-w-0 rounded-md px-1.5 py-px shadow-sm" style={{ background: cssPaint(tint) }}>{nameEl}</span>
                 : nameEl}
@@ -111,7 +114,7 @@ export function LookedName({ look, name, className = "", petSize = 28, animate =
  */
 export function SupporterCard({ name }: { name: string }) {
     const supporter = useSupporter(useMyUid())
-    const shownName = name || "You"
+    const ownName = name || "You"
     const box = "mt-4 flex flex-col gap-4 rounded-[10px] border p-5 sm:flex-row sm:items-center sm:p-6"
     const muted = "text-slate-500 dark:text-[#8C97B3]"
     const button = "inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold"
@@ -124,7 +127,7 @@ export function SupporterCard({ name }: { name: string }) {
                         <Heart size={13} className="fill-rose-500" aria-hidden /> Flag Learn supporter
                     </p>
                     <p className="mt-2 flex min-w-0 items-center gap-2 text-xl">
-                        <LookedName look={supporter.look} name={shownName} className="font-extrabold" petSize={44} animate />
+                        <LookedName look={supporter.look} name={ownName} className="font-extrabold" petSize={44} animate />
                     </p>
                     <p className={`mt-1 text-sm ${muted}`}>
                         Since {new Date(supporter.since).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })} - thank you for keeping it running.
@@ -145,11 +148,11 @@ export function SupporterCard({ name }: { name: string }) {
             <div className="min-w-0 flex-1">
                 <p className="font-bold">Support Flag Learn</p>
                 <p className={`mt-0.5 text-sm ${muted}`}>
-                    One payment, yours for good: your name in colour on every leaderboard, a companion animal, the Racer in the Road Trip. Only looks - never an advantage.
+                    A one-time payment: your name in colour on every leaderboard, a companion animal, the Racer in the Road Trip. Only looks - never an advantage.
                 </p>
                 <p className="mt-2 flex min-w-0 items-center gap-2 text-sm">
                     <span className={`shrink-0 text-xs ${muted}`}>Your name could look like</span>
-                    <span className="inline-flex min-w-0 items-center gap-1.5"><LookedName look={{ text: "gold", bg: "none", pet: "fox", badge: true }} name={shownName} className="font-bold" /></span>
+                    <span className="inline-flex min-w-0 items-center gap-1.5"><LookedName look={{ text: "gold", bg: "none", pet: "fox", badge: true }} name={ownName} className="font-bold" /></span>
                 </p>
             </div>
             <Link to="/support" className={`${button} bg-rose-500 text-white hover:bg-rose-600`}>

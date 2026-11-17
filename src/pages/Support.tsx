@@ -95,10 +95,10 @@ export default function Support() {
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                     <div className="max-w-[600px]">
                         <p className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-rose-500"><Heart size={14} className="fill-rose-500" aria-hidden /> Support Flag Learn</p>
-                        <h1 className="mt-2 !text-3xl font-extrabold tracking-[-0.02em] sm:!text-4xl">Keep it free, get a little sparkle</h1>
+                        <h1 className="mt-2 !text-3xl font-extrabold tracking-[-0.02em] sm:!text-4xl">Help keep it online, get a little sparkle</h1>
                         <p className={`mt-3 leading-relaxed ${muted}`}>
-                            Flag Learn has no ads and every mode is free - that does not change. If you would like to help keep it online,
-                            a one-time €{SUPPORT_PRICE_EUR} makes you a supporter for good, and you get a few things to show for it.
+                            Flag Learn has no ads and every mode is free to play. If you would like to help keep it online,
+                            a one-time €{SUPPORT_PRICE_EUR} makes you a supporter, and you get a few things to show for it.
                         </p>
                     </div>
                     <div className="flex items-end gap-1" aria-hidden>
@@ -152,7 +152,7 @@ export default function Support() {
                             </Perk>
 
                             <Perk icon={<Gift size={18} aria-hidden />} title="Everything that comes later">
-                                New colours, animals, animations and paints are added over time, and they are yours too. No second payment, ever.
+                                Every new content is yours too. One payment, no subscription.
                             </Perk>
                         </ul>
 
@@ -184,7 +184,7 @@ export default function Support() {
                         </div>
                         <div>
                             <dt className="font-bold">Can I give more than €{SUPPORT_PRICE_EUR}?</dt>
-                            <dd className={muted}>Yes - you choose the amount on the payment page. Everything above €{SUPPORT_PRICE_EUR} goes into hosting; the perks are the same.</dd>
+                            <dd className={muted}>Yes - you choose the amount on the payment page.</dd>
                         </div>
                         <div>
                             <dt className="font-bold">I paid, but nothing changed.</dt>
@@ -195,7 +195,7 @@ export default function Support() {
                         </div>
                         <div>
                             <dt className="font-bold">Who handles the payment?</dt>
-                            <dd className={muted}>Stripe. Flag Learn never sees your card. See the <Link to="/privacy" className="font-semibold underline-offset-2 hover:underline">privacy policy</Link>.</dd>
+                            <dd className={muted}>Stripe, as the seller: it sends the receipt, takes care of the VAT and handles any refund. Flag Learn never sees your card. See the <Link to="/privacy" className="font-semibold underline-offset-2 hover:underline">privacy policy</Link>.</dd>
                         </div>
                     </dl>
                 </section>
@@ -259,7 +259,7 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
     return (
         <div className={`${panel} p-6`}>
             <p className={`text-sm ${muted}`}>
-                <strong className="text-slate-900 dark:text-white">€{SUPPORT_PRICE_EUR}</strong> once, yours for good · pay more if you like
+                <strong className="text-slate-900 dark:text-white">€{SUPPORT_PRICE_EUR}</strong> one-time payment · pay more if you like
             </p>
 
             {returning && google ? (
@@ -316,7 +316,10 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
                     {error && <p className="mt-2 text-sm font-semibold text-red-600 dark:text-red-400" role="alert">{error}</p>}
                 </div>
             )}
-            <p className={`mt-4 text-xs ${muted}`}>Secure payment by Stripe: card, PayPal, Apple Pay, Google Pay.</p>
+            <p className={`mt-4 text-xs ${muted}`}>
+                Secure payment by Stripe: card, Apple Pay, Google Pay and what else Stripe offers in your country. VAT is included in the amount.
+                By paying you agree to the <Link to="/terms" className="font-semibold underline-offset-2 hover:underline">terms</Link>; the perks are unlocked straight away.
+            </p>
         </div>
     )
 }
@@ -335,8 +338,9 @@ function ThankYou({ since }: { since: number }) {
 
 /** One look, on a forced theme, the way a leaderboard row would show it. */
 function Preview({ look, name, dark }: { look: SupporterLook; name: string; dark: boolean }) {
+    // Hex, not bg-white: index.css repaints .bg-white with the theme's panel colour, which made the light preview dark.
     return (
-        <div className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-2.5 ${dark ? "border-[#232B45] bg-[#0A0E1A] text-[#E8ECF6]" : "border-slate-200 bg-white text-slate-900"}`}>
+        <div className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-2.5 ${dark ? "border-[#232B45] bg-[#0A0E1A] text-[#E8ECF6]" : "border-[#E2E8F0] bg-[#FFFFFF] text-[#0F172A]"}`}>
             <Trophy size={14} className="shrink-0 text-amber-500" aria-hidden />
             <span className="inline-flex min-w-0 items-center gap-1.5"><LookedName look={look} name={name} className="font-semibold" dark={dark} animate petSize={24} /></span>
             <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider ${dark ? "text-[#8C97B3]" : "text-slate-400"}`}>{dark ? "Dark" : "Light"}</span>

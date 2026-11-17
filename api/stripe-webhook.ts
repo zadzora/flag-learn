@@ -7,7 +7,7 @@
  *
  *   supporters/<uid>/since            - set once, never moved (the perks)
  *   supporterLedger/<uid>/<session>   - one row per payment, private
- *   supportFund/<YYYY-MM>             - euro cents per month, private (the console's overview)
+ *   supportFund/<YYYY-MM>             - euro cents per month, VAT included, private (the console's overview)
  *
  * Stripe retries a webhook until it gets a 2xx, so every step is safe to run
  * twice: `since` is only set when missing, and the ledger row - keyed by the
@@ -31,8 +31,21 @@ type Session = {
     client_reference_id: string | null
     amount_total: number | null
     currency: string | null
+    /** Set when the buyer paid in their own currency (Adaptive Pricing, always on under Managed Payments). */
+    currency_conversion?: { amount_total: number; source_currency: string } | null
     payment_status: string
     created: number
+}
+
+/**
+ * What the payment was worth in euro cents, VAT included. The session is priced
+ * in euros, but under Managed Payments a buyer may pay in their own currency;
+ * then `amount_total` is in theirs and the euros are in `currency_conversion`.
+ */
+function euroCents(session: Session): number | null {
+    if (session.currency === "eur") return session.amount_total
+    const conversion = session.currency_conversion
+    return conversion?.source_currency === "eur" ? conversion.amount_total : null
 }
 
 const UID = /^[A-Za-z0-9]{1,128}$/
@@ -85,15 +98,16 @@ export async function POST(request: Request): Promise<Response> {
     try {
         await db.ref(`supporters/${uid}/since`).transaction(current => current ?? at)
 
+        const eur = euroCents(session)
         const ledger = await db.ref(`supporterLedger/${uid}/${session.id}`).transaction(current =>
-            current ?? { amount: session.amount_total ?? 0, currency: session.currency ?? "", at },
+            current ?? { amount: session.amount_total ?? 0, currency: session.currency ?? "", ...(eur !== null ? { eur } : {}), at },
         )
         // `counted` is set in the same write as the month's total, so a retry never adds it twice.
         const counted = ledger.snapshot.child("counted").val() === true
-        if (!counted && session.currency === "eur" && session.amount_total) {
+        if (!counted && eur) {
             const month = new Date(at).toISOString().slice(0, 7)
             await db.ref().update({
-                [`supportFund/${month}`]: ServerValue.increment(session.amount_total),
+                [`supportFund/${month}`]: ServerValue.increment(eur),
                 [`supporterLedger/${uid}/${session.id}/counted`]: true,
             })
         }

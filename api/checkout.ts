@@ -8,10 +8,17 @@
  * Firebase ID token, not by a uid the page could make up, and the uid goes on
  * the session as `client_reference_id` for `api/stripe-webhook.ts`.
  *
- * Payment methods are whatever is switched on in the Stripe Dashboard (card,
- * Apple Pay, Google Pay, PayPal...) - none are listed here.
+ * The sale goes through Stripe Managed Payments: Stripe is the merchant of
+ * record, so it is the seller on the receipt, works out and pays the VAT of
+ * the buyer's country, and handles receipts, refunds and disputes. That needs
+ * an eligible product tax code on the line (`TAX_CODE`), and it decides the
+ * payment methods itself, so none are listed here. The price is tax-inclusive:
+ * the player pays exactly the amount they picked, VAT taken out of it. Setting
+ * STRIPE_MANAGED_PAYMENTS=0 falls back to a plain Checkout Session (no tax
+ * handled) - for an account Managed Payments has not been switched on for.
  *
- * Environment: STRIPE_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT, FIREBASE_DATABASE_URL.
+ * Environment: STRIPE_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT, FIREBASE_DATABASE_URL,
+ * optionally STRIPE_MANAGED_PAYMENTS.
  */
 import Stripe from "stripe"
 import { cert, getApps, initializeApp } from "firebase-admin/app"
@@ -22,6 +29,13 @@ const MIN_CENTS = 300
 /** A typo guard, not a policy: nobody means to give €5000 by accident. */
 const MAX_CENTS = 50000
 const SITE = "https://flaglearn.eu"
+/**
+ * "General - Electronically Supplied Services": a digital service delivered over
+ * the internet with minimal human involvement - cosmetic perks in a browser
+ * game. Must be one Managed Payments lists as eligible
+ * (docs.stripe.com/payments/managed-payments/eligibility#eligible-tax-codes).
+ */
+const TAX_CODE = "txcd_10000000"
 
 function auth() {
     if (!getApps().length) {
@@ -78,16 +92,23 @@ export async function POST(request: Request): Promise<Response> {
 
     const base = returnBase(request.headers.get("origin"))
     try {
+        const managed = process.env.STRIPE_MANAGED_PAYMENTS !== "0"
         const session = await new Stripe(key).checkout.sessions.create({
             mode: "payment",
             client_reference_id: uid,
             metadata: { uid },
+            ...(managed ? { managed_payments: { enabled: true } } : {}),
             line_items: [{
                 quantity: 1,
                 price_data: {
                     currency: "eur",
                     unit_amount: cents,
-                    product_data: { name: "Flag Learn supporter", description: "Supporter for good: colours, an animal, the Racer. Cosmetic only." },
+                    tax_behavior: "inclusive",
+                    product_data: {
+                        name: "Flag Learn supporter",
+                        description: "One-time payment: name colours, a companion animal, the Racer. Cosmetic only.",
+                        tax_code: TAX_CODE,
+                    },
                 },
             }],
             success_url: `${base}/support?thanks=1`,

@@ -26,7 +26,20 @@ type Props = {
     animate?: boolean
     className?: string
     title?: string
+    /**
+     * Lift the art so its middle sits on the middle of the box - for an animal
+     * beside a line of text. Off for animals standing on something (PetLane).
+     */
+    centred?: boolean
 }
+
+/**
+ * How far each animal's middle sits below its cell's middle, as a share of the
+ * cell: the art stands on the cell's floor (3-4% below it) with 11-23% empty
+ * above, measured off `public/pets-96.webp`. Re-measure if the sheet is re-cut.
+ */
+const SAG: Record<string, number> = { elephant: 0.085, camel: 0.095, beaver: 0.095, turtle: 0.08, otter: 0.05 }
+const DEFAULT_SAG = 0.04
 
 const animated = sprites.animated as Record<string, { frames: number; fps: number }>
 
@@ -35,7 +48,7 @@ function pick(sizes: number[], px: number): number {
     return sizes.find(s => s >= px * 0.95) ?? sizes[sizes.length - 1]
 }
 
-export default function PetSprite({ id, size, animate = false, className = "", title }: Props) {
+export default function PetSprite({ id, size, animate = false, className = "", title, centred = false }: Props) {
     const index = sprites.order.indexOf(id)
     if (index < 0) {
         const pet = petById(id)
@@ -62,8 +75,9 @@ export default function PetSprite({ id, size, animate = false, className = "", t
             role={title ? "img" : undefined}
             aria-label={title}
             aria-hidden={title ? undefined : true}
-            className={`inline-block shrink-0 bg-no-repeat ${animate ? "pet-breathe" : ""} ${strip ? "pet-strip" : ""} ${className}`}
-            style={{ width: size, height: size, ...style }}
+            className={`relative inline-block shrink-0 bg-no-repeat ${animate ? "pet-breathe" : ""} ${strip ? "pet-strip" : ""} ${className}`}
+            // `top`, not a transform: the breathing animation owns the transform.
+            style={{ width: size, height: size, top: centred ? -Math.round(size * (SAG[id] ?? DEFAULT_SAG)) : undefined, ...style }}
         />
     )
 }

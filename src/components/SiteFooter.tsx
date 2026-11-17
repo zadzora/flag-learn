@@ -23,6 +23,7 @@ export default function SiteFooter({ about }: { about?: ReactNode }) {
                         Flags provided by Flagpedia.net <ExternalLink size={12} aria-hidden />
                     </a>
                     <Link to="/privacy" className="hover:text-slate-900 dark:hover:text-white">Privacy</Link>
+                    <Link to="/terms" className="hover:text-slate-900 dark:hover:text-white">Terms</Link>
                 </div>
                 <p className="text-xs"><CountryDataCredit prefix="Country data from" /></p>
                 {about && <div className="mt-2 max-w-[90ch] text-xs leading-relaxed opacity-80">{about}</div>}

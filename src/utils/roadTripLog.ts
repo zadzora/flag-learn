@@ -9,7 +9,7 @@
 import countryStatsData from "../../data/countryStats.json"
 import capitalsData from "../../data/capitals.json"
 import { project } from "./roadTrip"
-import { DEFAULT_LOOK, type CarLook } from "./roadTripGoals"
+import { DEFAULT_LOOK, RACER_MIGRATED, migrateRacer, type CarLook } from "./roadTripGoals"
 
 const LOG_KEY = "road-trip-log-v1"
 
@@ -34,7 +34,8 @@ export type TripLog = {
 export function emptyLog(): TripLog {
     return {
         known: {}, stamps: [], landmarks: [], drift: { total: 0, best: 0 },
-        achievements: [], car: { ...DEFAULT_LOOK }, crossings: 0, boosts: 0, streak: { current: 0, best: 0 },
+        // A new log has nobody to grandfather: marked as checked from the start.
+        achievements: [RACER_MIGRATED], car: { ...DEFAULT_LOOK }, crossings: 0, boosts: 0, streak: { current: 0, best: 0 },
     }
 }
 
@@ -50,7 +51,7 @@ export function loadLog(): TripLog {
                 total: Number(raw.drift?.total) || 0,
                 best: Number(raw.drift?.best) || 0,
             },
-            achievements: Array.isArray(raw.achievements) ? raw.achievements.filter((s: unknown) => typeof s === "string") : [],
+            achievements: migrateRacer(Array.isArray(raw.achievements) ? raw.achievements.filter((s: unknown) => typeof s === "string") : []),
             car: raw.car && typeof raw.car.model === "string" && typeof raw.car.paint === "string" ? raw.car : { ...DEFAULT_LOOK },
             crossings: Number(raw.crossings) || 0,
             boosts: Number(raw.boosts) || 0,

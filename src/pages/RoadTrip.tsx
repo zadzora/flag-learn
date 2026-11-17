@@ -34,7 +34,7 @@ import { CAR_UNITS, PALETTES, drawBoat, drawCar, drawFlames, drawPet, drawPort, 
 import { useMyUid, useSupporter } from "../utils/supporters"
 import { petById } from "../utils/supporterLook"
 import {
-    ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, SUPPORTER_UNLOCK, achievementById, allowedLook, continentOf, unlocksOf,
+    ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, SUPPORTER_UNLOCK, achievementById, allowedLook, continentOf, isUnlocked, unlocksOf,
     type CarLook, type Continent, type Progress,
 } from "../utils/roadTripGoals"
 import { CountryCard, DriftMeter, Garage, Joystick, NitroMeter, Passport, QuizCard, RallyPanel, RallyRecord, RallyResult, TripToast, type Celebration, type DriftView, type GarageView, type NitroView, type RallyResultView, type RallyView, type PassportView, type Quiz, type Toast } from "../components/RoadTripUi"
@@ -780,8 +780,8 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
             return {
                 selected: look,
                 pet: supporterRef.current.pet,
-                models: MODELS.map(m => ({ id: m.id, label: m.label, unlocked: !m.unlock || earned.includes(m.unlock), requirement: requirementOf(m.unlock) })),
-                paints: PAINTS.map(p => ({ id: p.id, label: p.label, colour: p.colours.top, unlocked: !p.unlock || earned.includes(p.unlock), requirement: requirementOf(p.unlock), supporter: p.unlock === SUPPORTER_UNLOCK })),
+                models: MODELS.map(m => ({ id: m.id, label: m.label, unlocked: isUnlocked(m, earned), requirement: requirementOf(m.unlock), supporter: m.unlock === SUPPORTER_UNLOCK })),
+                paints: PAINTS.map(p => ({ id: p.id, label: p.label, colour: p.colours.top, unlocked: isUnlocked(p, earned), requirement: requirementOf(p.unlock), supporter: p.unlock === SUPPORTER_UNLOCK })),
             }
         }
 

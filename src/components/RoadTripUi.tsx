@@ -49,7 +49,7 @@ export type PassportView = {
 /** What the garage shows: the car picked, and every model and paint with whether it is unlocked. */
 export type GarageView = {
     selected: CarLook
-    models: { id: CarModel; label: string; unlocked: boolean; requirement?: string }[]
+    models: { id: CarModel; label: string; unlocked: boolean; requirement?: string; supporter?: boolean }[]
     paints: { id: Paint; label: string; colour: string; unlocked: boolean; requirement?: string; supporter?: boolean }[]
     /** A supporter's animal, riding on the roof. */
     pet?: string | null
@@ -724,6 +724,7 @@ export function Garage({ view, onClose, onPickLook }: { view: GarageView; onClos
                                     <span className="relative">
                                         <CarPreview look={{ model: m.id, paint: selected.paint }} size={56} />
                                         {!m.unlocked && <Lock size={14} className="absolute right-0 top-0 text-slate-500" aria-hidden />}
+                                        {m.supporter && <Heart size={12} className="absolute -left-0.5 top-0 fill-rose-500 text-rose-500" aria-hidden />}
                                     </span>
                                     <span className="text-xs font-semibold">{m.label}</span>
                                     {!m.unlocked && <span className="text-[10px] leading-tight text-slate-500 dark:text-slate-400">{m.requirement}</span>}
@@ -751,12 +752,12 @@ export function Garage({ view, onClose, onPickLook }: { view: GarageView; onClos
                         ))}
                     </ul>
                     <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Cars and paints unlock with badges from the passport - hover a locked one to see which.</p>
-                    {paints.some(pt => pt.supporter) && (
+                    {(paints.some(pt => pt.supporter) || models.some(m => m.supporter)) && (
                         <p className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                             <Heart size={11} className="shrink-0 fill-rose-500 text-rose-500" aria-hidden />
                             {paints.some(pt => pt.supporter && pt.unlocked)
-                                ? "Supporter paints - thank you for keeping Flag Learn running."
-                                : <>Paints for <a href="/support" target="_blank" rel="noopener" className="font-semibold underline-offset-2 hover:underline">Flag Learn supporters</a>.</>}
+                                ? "Supporter car and paints - thank you for keeping Flag Learn running."
+                                : <>The car and paints with a heart are for <a href="/support" target="_blank" rel="noopener" className="font-semibold underline-offset-2 hover:underline">Flag Learn supporters</a>.</>}
                         </p>
                     )}
                 </div>

@@ -39,8 +39,10 @@ const UID = /^[A-Za-z0-9]{1,128}$/
 
 function database() {
     if (!getApps().length) {
+        // Locally (`scripts/dev-webhook.mjs`) FIREBASE_DATABASE_EMULATOR_HOST points the admin SDK at the emulator, which needs no key.
+        const emulator = !!process.env.FIREBASE_DATABASE_EMULATOR_HOST
         initializeApp({
-            credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? "{}")),
+            ...(emulator ? { projectId: "demo-flaglearn" } : { credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? "{}")) }),
             databaseURL: process.env.FIREBASE_DATABASE_URL,
         })
     }

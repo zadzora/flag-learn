@@ -3,7 +3,8 @@
  *
  * One system on purpose. A car in the garage is unlocked by a badge, so every
  * badge is worth something and every car says what it took - the jeep is the
- * explorer's car, the racer the drifter's. The badges themselves read nothing
+ * explorer's car. The Racer and three paints are the supporters' instead
+ * (`SUPPORTER_UNLOCK`). The badges themselves read nothing
  * but a snapshot of progress, so they can be checked whenever anything moves.
  */
 import countryStatsData from "../../data/countryStats.json"
@@ -90,21 +91,39 @@ export type CarModel = "coupe" | "beetle" | "jeep" | "van" | "racer"
 export type Paint = "red" | "blue" | "yellow" | "green" | "orange" | "white" | "black" | "gold" | "rosegold" | "midnight" | "mint"
 
 /**
- * Not a badge: the unlock of the supporter paints. The page adds it to the
- * earned list for a Flag Learn supporter (`utils/supporters.ts`), so the
- * garage, `allowedLook` and the lock labels need nothing of their own.
+ * Not a badge: the unlock of the Racer and the supporter paints. The page adds
+ * it to the earned list for a Flag Learn supporter (`utils/supporters.ts`), so
+ * the garage, `allowedLook` and the lock labels need nothing of their own.
  */
 export const SUPPORTER_UNLOCK = "supporter"
+
+/**
+ * The Racer used to come with the Drift King badge. Whoever held that badge
+ * when it moved to the supporters keeps the car: `migrateRacer` marks them
+ * with `RACER_KEPT` once, and `RACER_MIGRATED` says the check has been done -
+ * without it a later Drift King would be mistaken for an earlier one. Both
+ * live in the log's `achievements`, which is synced; neither is a badge.
+ */
+export const RACER_KEPT = "racer-kept"
+export const RACER_MIGRATED = "racer-v2"
+
+export function migrateRacer(achievements: string[]): string[] {
+    if (achievements.includes(RACER_MIGRATED)) return achievements
+    return [...achievements, ...(achievements.includes("drift-king") ? [RACER_KEPT] : []), RACER_MIGRATED]
+}
 export type CarLook = { model: CarModel; paint: Paint }
 export const DEFAULT_LOOK: CarLook = { model: "coupe", paint: "red" }
 
-/** `unlock` is the badge that opens it; none means it is there from the start. */
-export const MODELS: { id: CarModel; label: string; unlock?: string }[] = [
+/**
+ * `unlock` is the badge that opens it; none means it is there from the start.
+ * `keptBy` is a second key that also opens it (the Racer's old owners).
+ */
+export const MODELS: { id: CarModel; label: string; unlock?: string; keptBy?: string }[] = [
     { id: "coupe", label: "Coupé" },
     { id: "beetle", label: "Beetle", unlock: "flag-spotter" },
     { id: "jeep", label: "Jeep", unlock: "explorer" },
     { id: "van", label: "Camper van", unlock: "sailor" },
-    { id: "racer", label: "Racer", unlock: "drift-king" },
+    { id: "racer", label: "Racer", unlock: SUPPORTER_UNLOCK, keptBy: RACER_KEPT },
 ]
 
 export type PaintColours = { top: string; side: string; low: string; roof: string; stripe: string }
@@ -127,13 +146,18 @@ export function paintColours(paint: Paint): PaintColours {
     return (PAINTS.find(p => p.id === paint) ?? PAINTS[0]).colours
 }
 
+/** Whether `earned` opens a car or a paint. */
+export function isUnlocked(item: { unlock?: string; keptBy?: string }, earned: string[]): boolean {
+    return !item.unlock || earned.includes(item.unlock) || (!!item.keptBy && earned.includes(item.keptBy))
+}
+
 /** A look the badges in `earned` allow; anything still locked falls back to the default. */
 export function allowedLook(look: CarLook, earned: string[]): CarLook {
     const model = MODELS.find(m => m.id === look.model)
     const paint = PAINTS.find(p => p.id === look.paint)
     return {
-        model: model && (!model.unlock || earned.includes(model.unlock)) ? model.id : DEFAULT_LOOK.model,
-        paint: paint && (!paint.unlock || earned.includes(paint.unlock)) ? paint.id : DEFAULT_LOOK.paint,
+        model: model && isUnlocked(model, earned) ? model.id : DEFAULT_LOOK.model,
+        paint: paint && isUnlocked(paint, earned) ? paint.id : DEFAULT_LOOK.paint,
     }
 }
 

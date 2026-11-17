@@ -182,9 +182,29 @@ A payment without an account on it, a refund or a gift is handled by hand:
 `--revoke` to take it back, or `--emulator` instead of `--key` to try it
 locally). The player's uid is shown on their `/support` page.
 
-On `npm run dev`, `supporterTest.me()` in the console makes you a supporter on
-this browser and `supporterTest.everyone()` gives every name a look, without
-paying; `supporterTest.off()` ends it.
+#### Testing it locally
+
+Three levels, from quickest to the whole payment:
+
+1. **Just the looks** - `npm run dev`, then in the browser console
+   `supporterTest.me()` (you are a supporter on this browser; sign in anywhere
+   first, e.g. open Border Chain), `supporterTest.everyone()` (every name on
+   every leaderboard gets a look) and `supporterTest.off()`. Nothing is written
+   anywhere; the look editor on `/support` works too.
+2. **The real database path** - `npm run emulators` and `npm run dev:emu`.
+   Sign in with Google on `/support` (the emulator offers made-up accounts),
+   copy the supporter ID from "I paid, but nothing changed", then
+   `node scripts/grant-supporter.mjs <uid> --emulator`. The page turns into the
+   thank-you within a second, and saving a look goes through the real rules.
+3. **A test payment, end to end** - on top of 2: put a *test-mode* Payment Link
+   (redirecting to `http://localhost:5173/support?thanks=1`) into
+   `.env.local` as `VITE_STRIPE_PAYMENT_LINK`, install the
+   [Stripe CLI](https://docs.stripe.com/stripe-cli), and run
+   `stripe listen --forward-to localhost:8787/api/stripe-webhook` and
+   `npm run webhook:dev` with `STRIPE_SECRET_KEY=sk_test_...` and the
+   `whsec_...` that `stripe listen` prints as `STRIPE_WEBHOOK_SECRET` (in the
+   environment or `.env.local`). Pay with `4242 4242 4242 4242`. The runner
+   writes to the emulator only and refuses a live key.
 
 ### Accounts and the cloud save
 

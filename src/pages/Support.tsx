@@ -116,8 +116,8 @@ export default function Support() {
                                 {PETS.length} animals from around the map. Yours sits beside your name and rides along on the roof of your Road Trip car.
                             </Perk>
 
-                            <Perk icon={<Car size={18} aria-hidden />} title="Supporter paints in the Road Trip garage">
-                                Rose gold, Midnight and Mint - three paints no badge unlocks.
+                            <Perk icon={<Car size={18} aria-hidden />} title="The Racer and supporter paints in the Road Trip">
+                                The Racer - the low striped car with the rear wing - plus Rose gold, Midnight and Mint, three paints no badge unlocks.
                             </Perk>
 
                             <Perk icon={<Heart size={18} aria-hidden />} title="The supporter heart" example={

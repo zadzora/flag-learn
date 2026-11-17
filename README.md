@@ -149,6 +149,12 @@ is what owns a territory, that would quietly wipe a player's empire.
 `/support` sells one thing: a one-time €3 (or more, the player picks) that makes
 an account a supporter for good - a coloured name with an animal and a heart on
 every leaderboard, supporter paints and the animal on the car in the Road Trip.
+The name has two separate choices - the colour of the letters and a tint
+behind it - and the editor warns when a pair is hard to read on either theme.
+The animals are drawn art from `graphic/support-animals.png`:
+`python scripts/gen-pet-sprites.py` cuts them into `public/pets.webp` (all of
+them, one image) and bakes the animated ones (`RIGS` in the script: soft
+bones, blinks) into strips in `public/pets/`; `--debug` draws the rigs.
 Cosmetic only. A payment reaches the game through `api/stripe-webhook.ts`, a
 Vercel Function; it is the only thing that writes `supporters/<uid>/since`.
 

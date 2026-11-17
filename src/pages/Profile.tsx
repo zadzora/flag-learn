@@ -8,7 +8,7 @@ import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import Overlay from "../components/Overlay"
 import AccountPanel, { AccountLine } from "../components/AccountPanel"
-import { SupporterLine } from "../components/SupporterName"
+import { SupporterCard } from "../components/SupporterName"
 import { BadgeMedal, RankShield } from "../components/BadgeArt"
 import {
     AREAS, ATLAS, LEARNED_POINTS, RANKS, TIER_NAMES, TIER_POINTS, TRACKS, WORLD,
@@ -200,8 +200,6 @@ export default function Profile() {
                                     <strong className="text-slate-900 dark:text-white">{earnedCount}</strong> of {TRACKS.length} badges · {tiersCount} of {TRACKS.length * 4} tiers
                                 </p>
                                 <AccountLine />
-                                <br />
-                                <SupporterLine />
                             </div>
                         </div>
 
@@ -245,6 +243,8 @@ export default function Profile() {
                         </div>
                     )}
                 </section>
+
+                <SupporterCard name={name} />
 
                 {/* --- The atlas: the flags you hold, continent by continent --- */}
                 <SectionHead

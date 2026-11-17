@@ -9,6 +9,7 @@
  * the caller scales that to the size the car should have on the map.
  */
 import { paintColours, type CarModel, type Paint, type PaintColours } from "./roadTripGoals"
+import type { PetFrame } from "./petImages"
 
 export type Palette = {
     ocean: string
@@ -299,13 +300,13 @@ export function drawCar(
 }
 
 /**
- * A supporter's animal riding on the roof (an emoji until the drawn set
- * exists). Drawn upright in screen space on top of the stack, so it reads as
+ * A supporter's animal riding on the roof (`utils/petImages.ts` gives the
+ * frame). Drawn upright in screen space on top of the stack, so it reads as
  * sitting on the car whichever way the car points, and hops while it moves.
  */
 export function drawPet(
     ctx: CanvasRenderingContext2D, x: number, y: number, scale: number, heading: number,
-    model: CarModel, emoji: string, time: number, moving: boolean,
+    model: CarModel, pet: PetFrame, time: number, moving: boolean,
 ) {
     const m = MODELS[model] ?? MODELS.coupe
     const noCabin = m.cabin.from === 99
@@ -313,11 +314,11 @@ export function drawPet(
     const z = (noCabin ? m.body[1] : m.cabin.to) + (moving ? Math.abs(Math.sin(time / 110)) * 1.2 : 0)
     const px = x + scale * along * Math.cos(heading)
     const py = y - z * TILT * scale + scale * along * Math.sin(heading)
+    const size = 15 * scale
     ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.font = `${Math.max(8, Math.round(10 * scale))}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`
-    ctx.textAlign = "center"
-    ctx.textBaseline = "alphabetic"
-    ctx.fillText(emoji, px, py + 2 * scale)
+    ctx.imageSmoothingQuality = "high"
+    // The sprite has room under the sticker; sink it a little so the animal sits on the roof, not above it.
+    ctx.drawImage(pet.img, pet.sx, pet.sy, pet.size, pet.size, px - size / 2, py - size * 0.92, size, size)
 }
 
 /**

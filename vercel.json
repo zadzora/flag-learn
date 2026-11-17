@@ -77,7 +77,7 @@
       ]
     },
     {
-      "source": "/(badges|constellations)/(.*)",
+      "source": "/(badges|constellations|pets)/(.*)",
       "has": [
         {
           "type": "query",
@@ -92,7 +92,7 @@
       ]
     },
     {
-      "source": "/(badges|constellations)/(.*)",
+      "source": "/(badges|constellations|pets)/(.*)",
       "missing": [
         {
           "type": "query",
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "source": "/(logo2.png|favicon.png|flag-wall.webp|world-map.json|landmarks.json)",
+      "source": "/(logo2.png|favicon.png|flag-wall.webp|pets.webp|world-map.json|landmarks.json)",
       "has": [
         {
           "type": "query",
@@ -122,7 +122,7 @@
       ]
     },
     {
-      "source": "/(logo2.png|favicon.png|flag-wall.webp|world-map.json|landmarks.json)",
+      "source": "/(logo2.png|favicon.png|flag-wall.webp|pets.webp|world-map.json|landmarks.json)",
       "missing": [
         {
           "type": "query",

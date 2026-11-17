@@ -373,9 +373,12 @@
       "$uid": {
         "look": {
           ".write": "auth != null && auth.uid === $uid && root.child('supporters').child($uid).child('since').exists()",
-          ".validate": "newData.hasChildren(['color','pet','badge'])",
-          "color": {
-            ".validate": "newData.isString() && newData.val().matches(/^(gold|sunset|aurora|ocean|rainbow|ruby|tangerine|emerald|teal|sky|violet|pink|plain)$/)"
+          ".validate": "newData.hasChildren(['text','bg','pet','badge'])",
+          "text": {
+            ".validate": "newData.isString() && newData.val().matches(/^(auto|gold|sunset|aurora|ocean|rainbow|ruby|tangerine|emerald|teal|sky|violet|pink|white|ink)$/)"
+          },
+          "bg": {
+            ".validate": "newData.isString() && newData.val().matches(/^(none|gold|rose|mint|sky|lavender|sunset|aurora|rainbow|night)$/)"
           },
           "pet": {
             ".validate": "newData.isString() && newData.val().matches(/^(none|panda|koala|kangaroo|penguin|llama|sloth|fox|polarbear|elephant|tiger|camel|beaver|flamingo|hedgehog|turtle|orangutan|otter|owl)$/)"
@@ -388,9 +391,6 @@
           }
         }
       }
-    },
-    "supportFund": {
-      ".read": true
     },
     "users": {
       "$uid": {

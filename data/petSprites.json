@@ -1,0 +1,47 @@
+{
+  "cell": 96,
+  "cols": 6,
+  "order": [
+    "panda",
+    "koala",
+    "kangaroo",
+    "penguin",
+    "llama",
+    "sloth",
+    "fox",
+    "polarbear",
+    "elephant",
+    "tiger",
+    "camel",
+    "beaver",
+    "flamingo",
+    "hedgehog",
+    "turtle",
+    "orangutan",
+    "otter",
+    "owl"
+  ],
+  "frame": 160,
+  "animated": {
+    "fox": {
+      "frames": 48,
+      "fps": 12
+    },
+    "penguin": {
+      "frames": 48,
+      "fps": 12
+    },
+    "elephant": {
+      "frames": 48,
+      "fps": 12
+    },
+    "owl": {
+      "frames": 48,
+      "fps": 12
+    },
+    "koala": {
+      "frames": 48,
+      "fps": 12
+    }
+  }
+}

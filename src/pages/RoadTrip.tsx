@@ -33,6 +33,7 @@ import {
 import { CAR_UNITS, PALETTES, drawBoat, drawCar, drawFlames, drawPet, drawPort, wavePattern } from "../utils/roadTripDraw"
 import { useMyUid, useSupporter } from "../utils/supporters"
 import { petById } from "../utils/supporterLook"
+import { petFrame } from "../utils/petImages"
 import {
     ACHIEVEMENTS, CONTINENTS, MODELS, PAINTS, SUPPORTER_UNLOCK, achievementById, allowedLook, continentOf, isUnlocked, unlocksOf,
     type CarLook, type Continent, type Progress,
@@ -265,11 +266,11 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const supporterChangedRef = useRef<() => void>(() => {})
     const supporter = useSupporter(useMyUid())
     const isSupporter = !!supporter
-    const petEmoji = supporter ? petById(supporter.look.pet)?.emoji ?? null : null
+    const petId = supporter && petById(supporter.look.pet) ? supporter.look.pet : null
     useEffect(() => {
-        supporterRef.current = { on: isSupporter, pet: petEmoji }
+        supporterRef.current = { on: isSupporter, pet: petId }
         supporterChangedRef.current()
-    }, [isSupporter, petEmoji])
+    }, [isSupporter, petId])
     const audioRef = useRef<TripAudio | null>(null)
     const mutedRef = useRef(muted)
 
@@ -1792,7 +1793,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
                     braking: car.braking,
                     moving,
                 }, look)
-                const pet = supporterRef.current.pet
+                const pet = supporterRef.current.pet ? petFrame(supporterRef.current.pet, time) : null
                 if (pet) drawPet(ctx, cx, cy, unit, car.heading, look.model, pet, time, moving)
             }
         }

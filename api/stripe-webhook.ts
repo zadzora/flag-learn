@@ -7,7 +7,7 @@
  *
  *   supporters/<uid>/since            - set once, never moved (the perks)
  *   supporterLedger/<uid>/<session>   - one row per payment, private
- *   supportFund/<YYYY-MM>             - euro cents this month, for the bar
+ *   supportFund/<YYYY-MM>             - euro cents per month, private (the console's overview)
  *
  * Stripe retries a webhook until it gets a 2xx, so every step is safe to run
  * twice: `since` is only set when missing, and the ledger row - keyed by the

@@ -368,17 +368,15 @@
 }
 
 /*
- * Supporter names (components/SupporterName.tsx). A gradient name is clipped
- * to its letters; now and then a sheen runs across it and the heart beats once.
+ * Supporter names (components/SupporterName.tsx). The colours are inline
+ * styles there; this only moves them - now and then a sheen runs across a
+ * gradient name and the heart beats once.
  * "Now and then" is the point - it catches the eye on a leaderboard without
  * flashing at anybody who is trying to read it.
  */
-.supporter-gradient {
+.supporter-sheen {
     background-size: 200% auto;
     background-position: 0% 50%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
 }
 @keyframes supporter-sheen {
     0%, 82% { background-position: 0% 50%; }
@@ -390,6 +388,25 @@
     96% { transform: scale(0.95); }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .supporter-gradient { animation: supporter-sheen 9s ease-in-out infinite; }
+    .supporter-sheen { animation: supporter-sheen 9s ease-in-out infinite; }
     .supporter-heart { animation: supporter-beat 7s ease-in-out infinite; }
+}
+
+/*
+ * Supporter animals (components/PetSprite.tsx). The strip steps through its
+ * baked frames; breathing is a slow squash from the feet, on its own period so
+ * the two never fall into the same rhythm.
+ */
+@keyframes pet-strip {
+    from { background-position: 0 0; }
+    to { background-position: var(--pet-end) 0; }
+}
+@keyframes pet-breathe {
+    0%, 100% { transform: scale(1, 1); }
+    50% { transform: scale(1.025, 0.97); }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .pet-breathe { transform-origin: 50% 100%; animation: pet-breathe 3.7s ease-in-out infinite; }
+    .pet-strip { animation: pet-strip var(--pet-dur) steps(var(--pet-steps)) infinite; }
+    .pet-strip.pet-breathe { animation: pet-strip var(--pet-dur) steps(var(--pet-steps)) infinite, pet-breathe 3.7s ease-in-out infinite; }
 }

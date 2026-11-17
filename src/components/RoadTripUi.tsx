@@ -11,6 +11,7 @@ import type { LandmarkKind } from "../utils/roadTripLandmarks"
 import { formatRallyTime } from "../utils/roadTripRally"
 import NextDailyLink from "./NextDailyLink"
 import { drawCar, drawPet } from "../utils/roadTripDraw"
+import { petFrame, whenPetReady } from "../utils/petImages"
 import type { CarLook, CarModel, Paint } from "../utils/roadTripGoals"
 
 /** `correct` is whether the player named it from its flag; null when there was nothing to ask (no flag). */
@@ -469,7 +470,13 @@ function CarPreview({ look, size = 72, pet }: { look: CarLook; size?: number; pe
         const ctx = canvas.getContext("2d")!
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCar(ctx, canvas.width / 2, canvas.height * 0.55, (size / 40) * dpr, -Math.PI / 5, { steer: 0, braking: false, moving: false }, look)
-        if (pet) drawPet(ctx, canvas.width / 2, canvas.height * 0.55, (size / 40) * dpr, -Math.PI / 5, look.model, pet, 0, false)
+        if (!pet) return
+        let live = true
+        void whenPetReady().then(() => {
+            const frame = petFrame(pet, 0)
+            if (live && frame) drawPet(ctx, canvas.width / 2, canvas.height * 0.55, (size / 40) * dpr, -Math.PI / 5, look.model, frame, 0, false)
+        })
+        return () => { live = false }
     }, [look, size, pet])
     return <canvas ref={ref} style={{ width: size, height: size }} aria-hidden />
 }

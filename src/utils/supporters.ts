@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { onValue, ref, set } from "firebase/database"
 import { db, observeSession } from "../../lib/firebase"
-import { DEFAULT_LOOK, NAME_COLOURS, PETS, fundMonth, readLook, type SupporterLook } from "./supporterLook"
+import { DEFAULT_LOOK, PETS, TEXT_COLOURS, TINTS, readLook, type SupporterLook } from "./supporterLook"
 
 /**
  * Who supports the site, read from `supporters/<uid>`. The row is written by
@@ -90,16 +90,6 @@ export function saveLook(uid: string, look: SupporterLook): Promise<void> {
     return set(ref(db, `supporters/${uid}/look`), look)
 }
 
-/** Hosting covered this month, in euro cents, from `supportFund/<YYYY-MM>`. */
-export function useMonthFund(): number | null {
-    const [cents, setCents] = useState<number | null>(null)
-    useEffect(
-        () => onValue(ref(db, `supportFund/${fundMonth(Date.now())}`), snap => setCents(typeof snap.val() === "number" ? snap.val() : 0), () => setCents(null)),
-        [],
-    )
-    return cents
-}
-
 /**
  * The Stripe Payment Link, with the account it pays for. `client_reference_id`
  * comes back in the webhook, which is how a payment finds its player.
@@ -149,7 +139,13 @@ function lookFor(uid: string): SupporterLook {
     let h = 0
     for (const ch of uid) h = (h * 31 + ch.charCodeAt(0)) | 0
     h = Math.abs(h)
-    return { color: NAME_COLOURS[h % (NAME_COLOURS.length - 1)].id, pet: PETS[(h >> 4) % PETS.length].id, badge: true }
+    const tinted = (h >> 9) % 3 === 0
+    return {
+        text: tinted ? "auto" : TEXT_COLOURS[1 + (h % (TEXT_COLOURS.length - 3))].id,
+        bg: tinted ? TINTS[1 + ((h >> 2) % (TINTS.length - 1))].id : "none",
+        pet: PETS[(h >> 4) % PETS.length].id,
+        badge: true,
+    }
 }
 
 declare global {

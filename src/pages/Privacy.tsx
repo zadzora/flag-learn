@@ -110,8 +110,8 @@ export default function Privacy() {
                             go to Stripe and never reach me. Stripe tells me the amount, the currency, the date, a payment reference and your account ID (which
                             the game passes to Stripe so the payment finds your account), plus the name, email and country you entered at Stripe, which I keep
                             only as the record tax law requires. Publicly, the database then shows that your account ID is a supporter, since when, and the
-                            look you picked (name colour, animal, heart), so it can appear next to your nickname. It shows no amount, no name and no email. The
-                            month's total of all payments is shown on the support page without saying who paid. Legal basis: Art. 6(1)(b) GDPR, and for the
+                            look you picked (letter colour, tint, animal, heart), so it can appear next to your nickname. It shows no amount, no name and no
+                            email. Legal basis: Art. 6(1)(b) GDPR, and for the
                             payment records Art. 6(1)(c) GDPR.
                         </Item>
                         <Item title="Visit statistics">

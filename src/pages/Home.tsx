@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type MouseEvent, type ReactNode } from "react"
+import { useState, useEffect, useRef, type MouseEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
     ArrowRight, Car, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
@@ -14,6 +14,7 @@ import SiteFooter from "../components/SiteFooter"
 import { activeStreak, readStreak, STREAK_KEYS } from "../utils/dailyStreak"
 import { DAILY_MODES, isDailyFinished } from "../utils/dailyModes"
 import { BadgeMedal, RankShield } from "../components/BadgeArt"
+import ModeTag, { type ModeTagKind } from "../components/ModeTag"
 import { RANKS, TIER_NAMES, TRACKS, nextGoal, pointsOf, rankOf, unitFor } from "../utils/achievements"
 import { PROFILE_EVENT, readStore } from "../utils/profileStore"
 import { asset } from "../utils/asset"
@@ -43,17 +44,27 @@ const DECKS: Deck[] = [
     { mode: "capitals", label: "World Capitals", storageKey: "flag-master-capitals-v1", items: WORLD.filter(f => f.capital && f.capital[0] !== null) },
 ]
 
-type Entry = { to: string; label: string; detail: string; icon: ModeIcon; badge?: string; streakKey?: string; action?: { to: string; label: string } }
+type Entry = {
+    to: string
+    label: string
+    detail: string
+    icon: ModeIcon
+    badge?: string
+    /** What kind of mode it is, shown beside the name in its own colour. */
+    tags?: Exclude<ModeTagKind, "new">[]
+    streakKey?: string
+    action?: { to: string; label: string }
+}
 
 const MULTIPLAYER: Entry[] = [
-    { to: "/trivia/rooms", label: "Trivia Rooms", detail: "Quiz night with friends - battle together or run it on a big screen", icon: TriviaRoomsIcon, badge: "New" },
-    { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: WorldConquerorIcon, badge: "New", streakKey: STREAK_KEYS.wars, action: { to: "/world-conqueror?hall=1", label: "Hall of Fame" } },
-    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon },
-    { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon },
-    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon },
-    { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon },
-    { to: "/capital-speedrun", label: "Capital Speedrun", detail: "Pin a region's capitals on the map against the clock", icon: CapitalSpeedrunIcon, badge: "New" },
-    { to: "/ultimate-speedrun", label: "Ultimate Speedrun", detail: "Flag, map, country, capital - a whole region against the clock", icon: UltimateSpeedrunIcon, badge: "New" },
+    { to: "/trivia/rooms", label: "Trivia Rooms", detail: "Quiz night with friends - battle together or run it on a big screen", icon: TriviaRoomsIcon, badge: "New", tags: ["live"] },
+    { to: "/world-conqueror", label: "World Conqueror", detail: "Conquer the world map - take countries off other players", icon: WorldConquerorIcon, badge: "New", tags: ["daily"], streakKey: STREAK_KEYS.wars, action: { to: "/world-conqueror?hall=1", label: "Hall of Fame" } },
+    { to: "/border-chain", label: "Border Chain", detail: "One live table, always running - name a country bordering the last", icon: BorderChainIcon, tags: ["live"] },
+    { to: "/pvp/create", label: "PvP Battle", detail: "Create or join a lobby - challenge friends in real time", icon: PvpBattleIcon, tags: ["live"] },
+    { to: "/highscore", label: "Highscore", detail: "Speedrun flags, capitals or states - global leaderboard", icon: HighscoreIcon, tags: ["speedrun"] },
+    { to: "/map-speedrun", label: "Map Speedrun", detail: "Find a region's countries on the map against the clock", icon: MapLocatorIcon, tags: ["speedrun"] },
+    { to: "/capital-speedrun", label: "Capital Speedrun", detail: "Pin a region's capitals on the map against the clock", icon: CapitalSpeedrunIcon, badge: "New", tags: ["speedrun"] },
+    { to: "/ultimate-speedrun", label: "Ultimate Speedrun", detail: "Flag, map, country, capital - a whole region against the clock", icon: UltimateSpeedrunIcon, badge: "New", tags: ["speedrun"] },
 ]
 
 const MORE_MODES: Entry[] = [
@@ -136,13 +147,6 @@ function readSnapshot() {
     return { streaks, dailies, decks, hero: heroDeck(decks), wall: seeded(WALL_POOL, `${today}-wall`) }
 }
 
-function Badge({ children }: { children: ReactNode }) {
-    return (
-        <span className="rounded-[5px] bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-            {children}
-        </span>
-    )
-}
 
 // The nav's section links glide down the page instead of jumping; Science is a
 // separate page, so it stays an ordinary route change.
@@ -214,14 +218,18 @@ function SectionHead({ id, title, aside }: { id: string; title: string; aside?: 
 function EntryList({ items, streaks }: { items: Entry[]; streaks: Record<string, number> }) {
     return (
         <ul className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8">
-            {items.map(({ to, label, detail, icon: Icon, badge, streakKey, action }) => (
+            {items.map(({ to, label, detail, icon: Icon, badge, tags, streakKey, action }) => (
                 <li key={to} className="flex items-stretch border-b border-slate-200 dark:border-[#1C2338]">
                     <Link to={to} className="group flex min-w-0 flex-1 items-center gap-4 py-3.5">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors group-hover:border-slate-400 group-hover:text-slate-900 dark:border-[#2A3350] dark:text-[#A6B0C8] dark:group-hover:border-[#4A5680] dark:group-hover:text-white">
                             <Icon size={19} aria-hidden />
                         </span>
                         <span className="min-w-0 flex-1">
-                            <span className="flex items-center gap-2 text-[15px] font-semibold">{label}{badge && <Badge>{badge}</Badge>}</span>
+                            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] font-semibold">
+                                {label}
+                                {tags?.map(tag => <ModeTag key={tag} kind={tag} />)}
+                                {badge && <ModeTag kind="new" />}
+                            </span>
                             <span className="block truncate text-[13px] text-slate-500 dark:text-[#8C97B3]">{detail}</span>
                         </span>
                         {streakKey && (streaks[streakKey] ?? 0) > 0 && (
@@ -445,7 +453,7 @@ export default function Home() {
                                 <div className="flex flex-1 flex-col px-4 pb-4 pt-3.5">
                                     <h3 className="flex items-center gap-2 !text-base font-bold">
                                         {mode.label}
-                                        {mode.badge && <Badge>{mode.badge}</Badge>}
+                                        {mode.badge && <ModeTag kind="new" />}
                                     </h3>
                                     <p className="mt-1 flex-1 text-[13px] text-slate-500 dark:text-[#8C97B3]">{mode.detail}</p>
                                     <div className="mt-3 flex items-center justify-between text-[13px]">

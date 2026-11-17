@@ -25,6 +25,14 @@ import Science from "./pages/Science"
 import PeriodicTableGame from "./pages/PeriodicTableGame"
 import PhysicsQuantitiesGame from "./pages/PhysicsQuantitiesGame"
 import FormulasGame from "./pages/FormulasGame"
+import ElementDetective from "./pages/ElementDetective"
+import AtomBuilder from "./pages/AtomBuilder"
+import Elementle from "./pages/Elementle"
+import ElementSpeedrun from "./pages/ElementSpeedrun"
+import CompoundsGame from "./pages/CompoundsGame"
+import SymbolSpeller from "./pages/SymbolSpeller"
+import ElementHigherLower from "./pages/ElementHigherLower"
+import ChemConnections from "./pages/ChemConnections"
 import RoadTrip from "./pages/RoadTrip"
 import TriviaGame from "./pages/TriviaGame"
 import TriviaRooms from "./pages/TriviaRooms"
@@ -32,11 +40,13 @@ import TriviaRoom from "./pages/TriviaRoom"
 import Profile from "./pages/Profile"
 import Privacy from "./pages/Privacy"
 import AchievementToasts from "./components/AchievementToasts"
+import ScrollMemory from "./components/ScrollMemory"
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
     return (
         <BrowserRouter>
+            <ScrollMemory />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/profile" element={<Profile />} />
@@ -77,6 +87,14 @@ export default function App() {
                 <Route path="/science/elements" element={<PeriodicTableGame />} />
                 <Route path="/science/quantities" element={<PhysicsQuantitiesGame />} />
                 <Route path="/science/formulas" element={<FormulasGame />} />
+                <Route path="/science/detective" element={<ElementDetective />} />
+                <Route path="/science/atom-builder" element={<AtomBuilder />} />
+                <Route path="/science/elementle" element={<Elementle />} />
+                <Route path="/science/speedrun" element={<ElementSpeedrun />} />
+                <Route path="/science/compounds" element={<CompoundsGame />} />
+                <Route path="/science/speller" element={<SymbolSpeller />} />
+                <Route path="/science/higher-lower" element={<ElementHigherLower />} />
+                <Route path="/science/connections" element={<ChemConnections />} />
 
                 {/* The mode was called Flag Wars before; keep the old link working. */}
                 <Route path="/flag-wars" element={<FlagWars />} />

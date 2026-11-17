@@ -1,3 +1,4 @@
+import { useRef, type MouseEvent, type PointerEvent } from "react"
 import {
     ELEMENTS, GRID_COLS, CATEGORY_META, CATEGORY_ORDER, MARK_STYLE,
     type CellMark, type ElementItem, type ElementKnowledge,
@@ -18,8 +19,13 @@ export type CellState = "mastered" | "learning" | "unseen"
 type Props = {
     /** How well each element is known. Everything is "unseen" without it. */
     stateOf?: (element: ElementItem) => CellState
-    /** Blank cells: the Locate round must not print the answer it is asking for. */
-    blank?: boolean
+    /**
+     * Blank cells: the Locate round must not print the answer it is asking for.
+     * A function blanks only some - the speedrun fills a cell in once it is found.
+     */
+    blank?: boolean | ((element: ElementItem) => boolean)
+    /** Faded and not clickable: cells outside what a round asks, e.g. a speedrun set. */
+    dimmed?: (element: ElementItem) => boolean
     onSelect?: (element: ElementItem) => void
     /** Cells to call out - the one just answered, when wrong the right one, and
      *  the cell being pointed at the first time an element comes up. */
@@ -34,7 +40,36 @@ type Props = {
     legend?: boolean
     /** Turns off hover/press affordances while an answer is being shown. */
     disabled?: boolean
+    /**
+     * "large" for a page where the table is the whole game (Element Detective):
+     * bigger type, and on a phone cells of a finger's width (~44px) that run off
+     * the screen and are dragged into view, rather than 30px cells that fit.
+     */
+    size?: "normal" | "large"
 }
+
+/** How far a mouse has to move with the button down before a press is a drag rather than a click. */
+const DRAG_SLOP_PX = 6
+
+const SIZE_STYLE = {
+    normal: {
+        minWidth: "min-w-[560px]",
+        axis: "text-[8px] sm:text-[9px]",
+        placeholder: "text-[6px] sm:text-[7px]",
+        number: "text-[5px] sm:text-[6px]",
+        symbol: "text-[8px] sm:text-[10px]",
+        // Shown wherever the table overflows: below `sm`.
+        scrollHint: "sm:hidden",
+    },
+    large: {
+        minWidth: "min-w-[840px]",
+        axis: "text-[10px] lg:text-[11px]",
+        placeholder: "text-[8px] lg:text-[9px]",
+        number: "text-[8px] lg:text-[10px]",
+        symbol: "text-[13px] lg:text-[17px]",
+        scrollHint: "lg:hidden",
+    },
+} as const
 
 const STATE_STYLE: Record<CellState, string> = {
     mastered: "font-black shadow-sm",
@@ -65,14 +100,58 @@ function markStyle(mark: CellMark): string {
 export default function PeriodicTableBoard({
     stateOf,
     blank = false,
+    dimmed,
     onSelect,
     marks,
     revealOf,
     selected,
     legend = false,
     disabled = false,
+    size = "normal",
 }: Props) {
     const interactive = !!onSelect && !disabled
+    const sizes = SIZE_STYLE[size]
+
+    // Drag to pan, for the mouse. A finger already pans an overflowing box
+    // natively, and the browser already tells a tap from a swipe - but a mouse
+    // pressed on a cell and dragged would otherwise select text and then click
+    // whatever cell it was let go over, answering a question by accident.
+    const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null)
+    /** Set when a drag ends, so the click the browser fires after it is swallowed. */
+    const swallowClick = useRef(false)
+
+    function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+        swallowClick.current = false
+        if (e.pointerType !== "mouse" || e.button !== 0) return
+        const el = e.currentTarget
+        if (el.scrollWidth <= el.clientWidth) return
+        drag.current = { x: e.clientX, left: el.scrollLeft, moved: false }
+    }
+
+    function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+        const d = drag.current
+        if (!d) return
+        const dx = e.clientX - d.x
+        if (!d.moved) {
+            // Inside the slop it is still a click - a hand is never perfectly still.
+            if (Math.abs(dx) < DRAG_SLOP_PX) return
+            d.moved = true
+            e.currentTarget.setPointerCapture(e.pointerId)
+        }
+        e.currentTarget.scrollLeft = d.left - dx
+    }
+
+    function onPointerEnd() {
+        if (drag.current?.moved) swallowClick.current = true
+        drag.current = null
+    }
+
+    function onClickCapture(e: MouseEvent<HTMLDivElement>) {
+        if (!swallowClick.current) return
+        swallowClick.current = false
+        e.stopPropagation()
+        e.preventDefault()
+    }
 
     return (
         <div className="w-full">
@@ -82,7 +161,16 @@ export default function PeriodicTableBoard({
                 ring rather than a scale because a transform counts towards the
                 scrollable area, so growing an edge cell summoned a scrollbar on a
                 table that was not actually too wide. */}
-            <div className="w-full overflow-x-auto pb-2">
+            <div
+                className="w-full select-none overflow-x-auto pb-2"
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerEnd}
+                onPointerCancel={onPointerEnd}
+                onClickCapture={onClickCapture}
+                // Dragging a <button> starts the browser's own drag of it otherwise.
+                onDragStart={e => e.preventDefault()}
+            >
                 <div
                     // `items-start` is load-bearing. Grid stretches its items by
                     // default, which hands each cell a definite height; combined
@@ -90,14 +178,14 @@ export default function PeriodicTableBoard({
                     // the cells grow past their own column and overlap the
                     // neighbour. Not stretching them makes the square follow the
                     // column width, which is the only dimension actually known.
-                    className="grid min-w-[560px] items-start gap-[2px] sm:gap-[3px]"
+                    className={`grid ${sizes.minWidth} items-start gap-[2px] sm:gap-[3px]`}
                     style={{ gridTemplateColumns: `1.1rem repeat(${GRID_COLS}, minmax(0, 1fr))` }}
                 >
                     {/* Group numbers across the top */}
                     {Array.from({ length: GRID_COLS }, (_, i) => (
                         <div
                             key={`g${i + 1}`}
-                            className="text-center text-[8px] font-bold text-slate-400 dark:text-slate-500 sm:text-[9px]"
+                            className={`text-center font-bold text-slate-400 dark:text-slate-500 ${sizes.axis}`}
                             style={{ gridColumn: i + 2, gridRow: 1 }}
                         >
                             {i + 1}
@@ -108,7 +196,7 @@ export default function PeriodicTableBoard({
                     {Array.from({ length: 7 }, (_, i) => (
                         <div
                             key={`p${i + 1}`}
-                            className="flex h-full items-center justify-center self-stretch text-[8px] font-bold text-slate-400 dark:text-slate-500 sm:text-[9px]"
+                            className={`flex h-full items-center justify-center self-stretch font-bold text-slate-400 dark:text-slate-500 ${sizes.axis}`}
                             style={{ gridColumn: 1, gridRow: i + 2 }}
                         >
                             {i + 1}
@@ -122,7 +210,7 @@ export default function PeriodicTableBoard({
                     ].map(({ row, label }) => (
                         <div
                             key={label}
-                            className="flex aspect-square items-center justify-center rounded-[3px] border border-dashed border-slate-300 text-[6px] font-bold text-slate-400 dark:border-slate-700 dark:text-slate-500 sm:text-[7px]"
+                            className={`flex aspect-square items-center justify-center rounded-[3px] border border-dashed border-slate-300 font-bold text-slate-400 dark:border-slate-700 dark:text-slate-500 ${sizes.placeholder}`}
                             style={{ gridColumn: 4, gridRow: row }}
                         >
                             {label}
@@ -133,6 +221,9 @@ export default function PeriodicTableBoard({
                     <div className="h-2" style={{ gridColumn: "1 / -1", gridRow: 9 }} />
 
                     {ELEMENTS.map(element => {
+                        const isBlank = typeof blank === "function" ? blank(element) : blank
+                        const isDimmed = dimmed?.(element) ?? false
+                        const cellInteractive = interactive && !isDimmed
                         const state = stateOf ? stateOf(element) : "unseen"
                         const mark = marks?.[element.symbol]
                         const known = revealOf?.(element)
@@ -142,7 +233,7 @@ export default function PeriodicTableBoard({
                         const showsNumber = !known || known.position
                         const showsFamily = !known || known.category
                         const category = CATEGORY_META[element.category]
-                        const base = blank
+                        const base = isBlank
                             ? "bg-slate-200/80 text-transparent dark:bg-slate-700"
                             : state === "unseen"
                                 ? STATE_STYLE.unseen
@@ -156,10 +247,10 @@ export default function PeriodicTableBoard({
                                 type="button"
                                 // Not the `disabled` attribute: a gallery cell with nothing
                                 // to open should still keep its tooltip and its focus ring.
-                                onClick={interactive ? () => onSelect?.(element) : undefined}
-                                aria-disabled={!interactive}
-                                aria-label={blank || !showsSymbol
-                                    ? `Period ${element.period}, ${element.group === null ? "f-block" : `group ${element.group}`}${blank ? "" : " - not learned yet"}`
+                                onClick={cellInteractive ? () => onSelect?.(element) : undefined}
+                                aria-disabled={!cellInteractive}
+                                aria-label={isBlank || !showsSymbol
+                                    ? `Period ${element.period}, ${element.group === null ? "f-block" : `group ${element.group}`}${isBlank ? "" : " - not learned yet"}`
                                     : `${element.name} (${element.symbol})`}
                                 // `min-h-0 p-0` undoes the global `button` rule in
                                 // index.css, which gives every button a 44px
@@ -169,28 +260,29 @@ export default function PeriodicTableBoard({
                                 // its neighbour.
                                 className={`relative flex aspect-square min-h-0 flex-col items-center justify-center overflow-hidden rounded-[3px] p-0 leading-none transition-all sm:rounded-[4px]
                                     ${base}
-                                    ${blank ? "" : STATE_STYLE[state]}
-                                    ${state === "learning" && !blank ? "ring-1 ring-inset ring-slate-400/60 dark:ring-slate-300/40" : ""}
-                                    ${interactive ? "cursor-pointer hover:z-20 hover:ring-2 hover:ring-slate-900 dark:hover:ring-white" : ""}
+                                    ${isBlank ? "" : STATE_STYLE[state]}
+                                    ${state === "learning" && !isBlank ? "ring-1 ring-inset ring-slate-400/60 dark:ring-slate-300/40" : ""}
+                                    ${isDimmed ? "opacity-25" : ""}
+                                    ${cellInteractive ? "cursor-pointer hover:z-20 hover:ring-2 hover:ring-slate-900 dark:hover:ring-white" : ""}
                                     ${mark ? markStyle(mark) : ""}
                                     ${selected === element.symbol ? "ring-2 ring-indigo-500 z-10" : ""}`}
                                 style={{ gridColumn: element.xpos + 1, gridRow: element.ypos + 1 }}
-                                title={blank ? undefined : showsSymbol ? `${showsNumber ? `${element.number} ` : ""}${element.name}` : "Yet to learn"}
+                                title={isBlank ? undefined : showsSymbol ? `${showsNumber ? `${element.number} ` : ""}${element.name}` : "Yet to learn"}
                             >
-                                {!blank && (
+                                {!isBlank && (
                                     // Each fact is its own lesson: the symbol can be
                                     // filled in while the number is still a question
                                     // mark and the cell still plain, because they are
                                     // learned apart.
                                     <>
-                                        <span className="text-[5px] opacity-70 sm:text-[6px]">{showsNumber ? element.number : "?"}</span>
-                                        <span className="text-[8px] sm:text-[10px]">{showsSymbol ? element.symbol : "?"}</span>
+                                        <span className={`opacity-70 ${sizes.number}`}>{showsNumber ? element.number : "?"}</span>
+                                        <span className={sizes.symbol}>{showsSymbol ? element.symbol : "?"}</span>
                                     </>
                                 )}
                                 {/* A wrong guess still has to show where the answer was,
                                     and a first sight has to point at it. */}
-                                {blank && mark && (
-                                    <span className={`text-[8px] font-black sm:text-[10px] ${MARK_TEXT[mark]}`}>
+                                {isBlank && mark && (
+                                    <span className={`font-black ${sizes.symbol} ${MARK_TEXT[mark]}`}>
                                         {element.symbol}
                                     </span>
                                 )}
@@ -202,7 +294,7 @@ export default function PeriodicTableBoard({
 
             {/* On a phone the table is wider than the screen. Saying so beats
                 leaving half the elements undiscovered behind an edge. */}
-            <p className="px-1 text-[11px] text-slate-500 sm:hidden dark:text-slate-400">Scroll the table sideways to reach groups 9-18.</p>
+            <p className={`px-1 text-[11px] text-slate-500 dark:text-slate-400 ${sizes.scrollHint}`}>Drag the table sideways to reach groups 9-18.</p>
 
             {legend && (
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">

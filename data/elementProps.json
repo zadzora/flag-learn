@@ -1,0 +1,1064 @@
+{
+ "H": {
+  "density": 0.00008988,
+  "melting": 13.81,
+  "electronegativity": 2.2,
+  "year": 1766,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "He": {
+  "density": 0.0001785,
+  "melting": 0.95,
+  "electronegativity": null,
+  "year": 1868,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Li": {
+  "density": 0.534,
+  "melting": 453.65,
+  "electronegativity": 0.98,
+  "year": 1817,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Be": {
+  "density": 1.85,
+  "melting": 1560,
+  "electronegativity": 1.57,
+  "year": 1798,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "B": {
+  "density": 2.37,
+  "melting": 2348,
+  "electronegativity": 2.04,
+  "year": 1808,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "C": {
+  "density": 2.267,
+  "melting": 3823,
+  "electronegativity": 2.55,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "N": {
+  "density": 0.0012506,
+  "melting": 63.15,
+  "electronegativity": 3.04,
+  "year": 1772,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "O": {
+  "density": 0.001429,
+  "melting": 54.36,
+  "electronegativity": 3.44,
+  "year": 1774,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "F": {
+  "density": 0.001696,
+  "melting": 53.53,
+  "electronegativity": 3.98,
+  "year": 1670,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Ne": {
+  "density": 0.0008999,
+  "melting": 24.56,
+  "electronegativity": null,
+  "year": 1898,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Na": {
+  "density": 0.97,
+  "melting": 370.95,
+  "electronegativity": 0.93,
+  "year": 1807,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Mg": {
+  "density": 1.74,
+  "melting": 923,
+  "electronegativity": 1.31,
+  "year": 1808,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Al": {
+  "density": 2.7,
+  "melting": 933.437,
+  "electronegativity": 1.61,
+  "year": 1825,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Si": {
+  "density": 2.3296,
+  "melting": 1687,
+  "electronegativity": 1.9,
+  "year": 1854,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "P": {
+  "density": 1.82,
+  "melting": 317.3,
+  "electronegativity": 2.19,
+  "year": 1669,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "S": {
+  "density": 2.067,
+  "melting": 388.36,
+  "electronegativity": 2.58,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cl": {
+  "density": 0.003214,
+  "melting": 171.65,
+  "electronegativity": 3.16,
+  "year": 1774,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Ar": {
+  "density": 0.0017837,
+  "melting": 83.8,
+  "electronegativity": null,
+  "year": 1894,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "K": {
+  "density": 0.89,
+  "melting": 336.53,
+  "electronegativity": 0.82,
+  "year": 1807,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ca": {
+  "density": 1.54,
+  "melting": 1115,
+  "electronegativity": 1,
+  "year": 1808,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sc": {
+  "density": 2.99,
+  "melting": 1814,
+  "electronegativity": 1.36,
+  "year": 1879,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ti": {
+  "density": 4.5,
+  "melting": 1941,
+  "electronegativity": 1.54,
+  "year": 1791,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "V": {
+  "density": 6,
+  "melting": 2183,
+  "electronegativity": 1.63,
+  "year": 1801,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cr": {
+  "density": 7.15,
+  "melting": 2180,
+  "electronegativity": 1.66,
+  "year": 1797,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Mn": {
+  "density": 7.3,
+  "melting": 1519,
+  "electronegativity": 1.55,
+  "year": 1774,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Fe": {
+  "density": 7.874,
+  "melting": 1811,
+  "electronegativity": 1.83,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Co": {
+  "density": 8.86,
+  "melting": 1768,
+  "electronegativity": 1.88,
+  "year": 1735,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ni": {
+  "density": 8.912,
+  "melting": 1728,
+  "electronegativity": 1.91,
+  "year": 1751,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cu": {
+  "density": 8.933,
+  "melting": 1357.77,
+  "electronegativity": 1.9,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Zn": {
+  "density": 7.134,
+  "melting": 692.68,
+  "electronegativity": 1.65,
+  "year": 1746,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ga": {
+  "density": 5.91,
+  "melting": 302.91,
+  "electronegativity": 1.81,
+  "year": 1875,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ge": {
+  "density": 5.323,
+  "melting": 1211.4,
+  "electronegativity": 2.01,
+  "year": 1886,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "As": {
+  "density": 5.776,
+  "melting": 1090,
+  "electronegativity": 2.18,
+  "year": 1250,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Se": {
+  "density": 4.809,
+  "melting": 493.65,
+  "electronegativity": 2.55,
+  "year": 1817,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Br": {
+  "density": 3.11,
+  "melting": 265.95,
+  "electronegativity": 2.96,
+  "year": 1826,
+  "ancient": false,
+  "state": "liquid",
+  "predictedState": false
+ },
+ "Kr": {
+  "density": 0.003733,
+  "melting": 115.79,
+  "electronegativity": 3,
+  "year": 1898,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Rb": {
+  "density": 1.53,
+  "melting": 312.46,
+  "electronegativity": 0.82,
+  "year": 1861,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sr": {
+  "density": 2.64,
+  "melting": 1050,
+  "electronegativity": 0.95,
+  "year": 1790,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Y": {
+  "density": 4.47,
+  "melting": 1795,
+  "electronegativity": 1.22,
+  "year": 1794,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Zr": {
+  "density": 6.52,
+  "melting": 2128,
+  "electronegativity": 1.33,
+  "year": 1789,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Nb": {
+  "density": 8.57,
+  "melting": 2750,
+  "electronegativity": 1.6,
+  "year": 1801,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Mo": {
+  "density": 10.2,
+  "melting": 2896,
+  "electronegativity": 2.16,
+  "year": 1778,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Tc": {
+  "density": 11,
+  "melting": 2430,
+  "electronegativity": 1.9,
+  "year": 1937,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ru": {
+  "density": 12.1,
+  "melting": 2607,
+  "electronegativity": 2.2,
+  "year": 1827,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Rh": {
+  "density": 12.4,
+  "melting": 2237,
+  "electronegativity": 2.28,
+  "year": 1803,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pd": {
+  "density": 12,
+  "melting": 1828.05,
+  "electronegativity": 2.2,
+  "year": 1803,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ag": {
+  "density": 10.501,
+  "melting": 1234.93,
+  "electronegativity": 1.93,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cd": {
+  "density": 8.69,
+  "melting": 594.22,
+  "electronegativity": 1.69,
+  "year": 1817,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "In": {
+  "density": 7.31,
+  "melting": 429.75,
+  "electronegativity": 1.78,
+  "year": 1863,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sn": {
+  "density": 7.287,
+  "melting": 505.08,
+  "electronegativity": 1.96,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sb": {
+  "density": 6.685,
+  "melting": 903.78,
+  "electronegativity": 2.05,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Te": {
+  "density": 6.232,
+  "melting": 722.66,
+  "electronegativity": 2.1,
+  "year": 1782,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "I": {
+  "density": 4.93,
+  "melting": 386.85,
+  "electronegativity": 2.66,
+  "year": 1811,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Xe": {
+  "density": 0.005887,
+  "melting": 161.36,
+  "electronegativity": 2.6,
+  "year": 1898,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Cs": {
+  "density": 1.93,
+  "melting": 301.59,
+  "electronegativity": 0.79,
+  "year": 1860,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ba": {
+  "density": 3.62,
+  "melting": 1000,
+  "electronegativity": 0.89,
+  "year": 1808,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "La": {
+  "density": 6.15,
+  "melting": 1191,
+  "electronegativity": 1.1,
+  "year": 1839,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ce": {
+  "density": 6.77,
+  "melting": 1071,
+  "electronegativity": 1.12,
+  "year": 1803,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pr": {
+  "density": 6.77,
+  "melting": 1204,
+  "electronegativity": 1.13,
+  "year": 1885,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Nd": {
+  "density": 7.01,
+  "melting": 1294,
+  "electronegativity": 1.14,
+  "year": 1885,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pm": {
+  "density": 7.26,
+  "melting": 1315,
+  "electronegativity": null,
+  "year": 1945,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sm": {
+  "density": 7.52,
+  "melting": 1347,
+  "electronegativity": 1.17,
+  "year": 1879,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Eu": {
+  "density": 5.24,
+  "melting": 1095,
+  "electronegativity": null,
+  "year": 1901,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Gd": {
+  "density": 7.9,
+  "melting": 1586,
+  "electronegativity": 1.2,
+  "year": 1880,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Tb": {
+  "density": 8.23,
+  "melting": 1629,
+  "electronegativity": null,
+  "year": 1843,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Dy": {
+  "density": 8.55,
+  "melting": 1685,
+  "electronegativity": 1.22,
+  "year": 1886,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ho": {
+  "density": 8.8,
+  "melting": 1747,
+  "electronegativity": 1.23,
+  "year": 1878,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Er": {
+  "density": 9.07,
+  "melting": 1802,
+  "electronegativity": 1.24,
+  "year": 1843,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Tm": {
+  "density": 9.32,
+  "melting": 1818,
+  "electronegativity": 1.25,
+  "year": 1879,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Yb": {
+  "density": 6.9,
+  "melting": 1092,
+  "electronegativity": null,
+  "year": 1878,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Lu": {
+  "density": 9.84,
+  "melting": 1936,
+  "electronegativity": 1.27,
+  "year": 1907,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Hf": {
+  "density": 13.3,
+  "melting": 2506,
+  "electronegativity": 1.3,
+  "year": 1923,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ta": {
+  "density": 16.4,
+  "melting": 3290,
+  "electronegativity": 1.5,
+  "year": 1802,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "W": {
+  "density": 19.3,
+  "melting": 3695,
+  "electronegativity": 2.36,
+  "year": 1783,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Re": {
+  "density": 20.8,
+  "melting": 3459,
+  "electronegativity": 1.9,
+  "year": 1925,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Os": {
+  "density": 22.57,
+  "melting": 3306,
+  "electronegativity": 2.2,
+  "year": 1803,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ir": {
+  "density": 22.42,
+  "melting": 2719,
+  "electronegativity": 2.2,
+  "year": 1803,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pt": {
+  "density": 21.46,
+  "melting": 2041.55,
+  "electronegativity": 2.28,
+  "year": 1735,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Au": {
+  "density": 19.282,
+  "melting": 1337.33,
+  "electronegativity": 2.54,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Hg": {
+  "density": 13.5336,
+  "melting": 234.32,
+  "electronegativity": 2,
+  "year": null,
+  "ancient": true,
+  "state": "liquid",
+  "predictedState": false
+ },
+ "Tl": {
+  "density": 11.8,
+  "melting": 577,
+  "electronegativity": 1.62,
+  "year": 1861,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pb": {
+  "density": 11.342,
+  "melting": 600.61,
+  "electronegativity": 2.33,
+  "year": null,
+  "ancient": true,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Bi": {
+  "density": 9.807,
+  "melting": 544.55,
+  "electronegativity": 2.02,
+  "year": 1753,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Po": {
+  "density": 9.32,
+  "melting": 527,
+  "electronegativity": 2,
+  "year": 1898,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "At": {
+  "density": 7,
+  "melting": 575,
+  "electronegativity": 2.2,
+  "year": 1940,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Rn": {
+  "density": 0.00973,
+  "melting": 202,
+  "electronegativity": null,
+  "year": 1900,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": false
+ },
+ "Fr": {
+  "density": null,
+  "melting": 300,
+  "electronegativity": 0.7,
+  "year": 1939,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ra": {
+  "density": 5,
+  "melting": 973,
+  "electronegativity": 0.9,
+  "year": 1898,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ac": {
+  "density": 10.07,
+  "melting": 1324,
+  "electronegativity": 1.1,
+  "year": 1899,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Th": {
+  "density": 11.72,
+  "melting": 2023,
+  "electronegativity": 1.3,
+  "year": 1828,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pa": {
+  "density": 15.37,
+  "melting": 1845,
+  "electronegativity": 1.5,
+  "year": 1913,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "U": {
+  "density": 18.95,
+  "melting": 1408,
+  "electronegativity": 1.38,
+  "year": 1789,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Np": {
+  "density": 20.25,
+  "melting": 917,
+  "electronegativity": 1.36,
+  "year": 1940,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Pu": {
+  "density": 19.84,
+  "melting": 913,
+  "electronegativity": 1.28,
+  "year": 1940,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Am": {
+  "density": 13.69,
+  "melting": 1449,
+  "electronegativity": 1.3,
+  "year": 1944,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cm": {
+  "density": 13.51,
+  "melting": 1618,
+  "electronegativity": 1.3,
+  "year": 1944,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Bk": {
+  "density": 14,
+  "melting": 1323,
+  "electronegativity": 1.3,
+  "year": 1949,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Cf": {
+  "density": null,
+  "melting": 1173,
+  "electronegativity": 1.3,
+  "year": 1950,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Es": {
+  "density": null,
+  "melting": 1133,
+  "electronegativity": 1.3,
+  "year": 1952,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Fm": {
+  "density": null,
+  "melting": 1800,
+  "electronegativity": 1.3,
+  "year": 1952,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Md": {
+  "density": null,
+  "melting": 1100,
+  "electronegativity": 1.3,
+  "year": 1955,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "No": {
+  "density": null,
+  "melting": 1100,
+  "electronegativity": 1.3,
+  "year": 1957,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Lr": {
+  "density": null,
+  "melting": 1900,
+  "electronegativity": 1.3,
+  "year": 1961,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Rf": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1964,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Db": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1967,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Sg": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1974,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Bh": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1976,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Hs": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1984,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Mt": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1982,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": false
+ },
+ "Ds": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1994,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Rg": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1994,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Cn": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1996,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Nh": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 2004,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Fl": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 1998,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Mc": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 2003,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Lv": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 2000,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Ts": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 2010,
+  "ancient": false,
+  "state": "solid",
+  "predictedState": true
+ },
+ "Og": {
+  "density": null,
+  "melting": null,
+  "electronegativity": null,
+  "year": 2006,
+  "ancient": false,
+  "state": "gas",
+  "predictedState": true
+ }
+}

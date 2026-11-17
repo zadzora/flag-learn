@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight, Check, Crown, PencilLine } from "lucide-react"
-import { CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, UltimateSpeedrunIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
+import { AtomIcon, CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, UltimateSpeedrunIcon, WorldConquerorIcon, type ModeIcon } from "../components/ModeIcons"
 import { formatRunTime } from "../utils/mapSpeedrun"
 import { installProfileTest, RECORD_GAMES, useRecordsHeld, type HeldRecord, type RecordGame } from "../utils/recordsHeld"
 import TopBar from "../components/TopBar"
@@ -347,6 +347,7 @@ const RECORD_ICONS: Record<RecordGame, ModeIcon> = {
     map: MapSpeedrunIcon,
     capital: CapitalSpeedrunIcon,
     ultimate: UltimateSpeedrunIcon,
+    elements: AtomIcon,
 }
 
 // Full-colour art for the cards (graphic/icons_4.png, icons_5.png and icons_7.png, cut by

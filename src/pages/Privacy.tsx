@@ -91,8 +91,8 @@ export default function Privacy() {
                         <Item title="Online modes">
                             PvP battles, Trivia Rooms, leaderboards, World Conqueror and Border Chain need to know who wrote what, so the first time you use one the game
                             creates an anonymous account for your browser - a random ID with no name or email attached. What you post there (nickname,
-                            scores, times, territories, answers) is visible to all players together with that ID. While you play a map speedrun, the game
-                            also keeps a short timing record under that ID - which board, how many places you have found and missed, and when the database
+                            scores, times, territories, answers) is visible to all players together with that ID. While you play a speedrun (on the map or the periodic table), the game
+                            also keeps a short timing record under that ID - which board, how many items you have found and missed, and when the database
                             saw the run start and the last find - so a leaderboard time can be checked against the database's own clock. Only your account
                             can read it, the next run replaces it, and a leaderboard entry shows the length the database measured. Daily puzzles only count
                             how many players got each result, without saying who. Legal basis: Art. 6(1)(b) GDPR.

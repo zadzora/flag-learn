@@ -279,6 +279,9 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("science-quantities-symbol-v1"),
     json("science-formulas-physics-v1"),
     json("science-formulas-math-v1"),
+    json("science-compounds-name-v1"),
+    json("science-compounds-formula-v1"),
+    json("science-compounds-ions-v1"),
 
     // Badges, records and streaks.
     json("flag-master-profile-v1", profile),
@@ -288,6 +291,8 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-deduction-streak", atRoot(dailyStreak)),
     json("flag-master-wars-streak", atRoot(dailyStreak)),
     json("flag-master-rally-streak", atRoot(dailyStreak)),
+    json("flag-master-elementle-streak", atRoot(dailyStreak)),
+    json("flag-master-chem-connections-streak", atRoot(dailyStreak)),
 
     // Today's dailies, so a finished one stays finished.
     json("flag-master-daily-save", atRoot(dailyRun)),
@@ -295,6 +300,8 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-deduction-save", atRoot(dailyRun)),
     json("flag-master-trivia-daily-save", atRoot(dailyRun)),
     json("road-trip-rally-save", atRoot(dailyRun)),
+    json("flag-master-elementle-save", atRoot(dailyRun)),
+    json("flag-master-chem-connections-save", atRoot(dailyRun)),
 
     // Road Trip. The trip is the one big value: pushed every few minutes, not every half minute.
     { key: "road-trip-v1", kind: "json", policy: atRoot(longerTrip), noBase: true, everyMs: 5 * 60_000 },

@@ -27,4 +27,7 @@ export const RUN_TOTALS: Record<string, number> = {
     "ultimate-africa": 49,
     "ultimate-asia": 45,
     "ultimate-americas": 29,
+    "elements-first36": 36,
+    "elements-main": 88,
+    "elements-all": 118,
 }

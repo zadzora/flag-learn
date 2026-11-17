@@ -36,21 +36,30 @@ type Props<R extends string> = {
     onRegionChange: (region: R) => void
     onStart: (region: R) => void
     onClose: () => void
+    /** What one choice is called - "region" on the maps, "set" for the elements. */
+    setWord?: string
+    /** The end of "You located all 40 countries of ...", from the choice's label. */
+    resultOf?: (label: string) => string
 }
 
-const NOTICE: Record<SaveOutcome | "failed", string> = {
-    first: "Saved! Your first record for this region is on the board.",
-    improved: "Saved! Your personal record was improved.",
-    "not-better": "Not saved. Your previous record is still better.",
-    failed: "Save failed. Check the connection and try again.",
+function notices(setWord: string): Record<SaveOutcome | "failed", string> {
+    return {
+        first: `Saved! Your first record for this ${setWord} is on the board.`,
+        improved: "Saved! Your personal record was improved.",
+        "not-better": "Not saved. Your previous record is still better.",
+        failed: "Save failed. Check the connection and try again.",
+    }
 }
+
+const worldOr = (label: string) => (label === "World" ? "the world" : label)
 
 const dialog = "rounded-[10px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800"
 const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
 const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
 const rankColor = ["text-amber-500", "text-slate-400", "text-orange-600 dark:text-orange-400"]
 
-export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, title, intro, noun, region, counts, result, onRegionChange, onStart, onClose }: Props<R>) {
+export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, title, intro, noun, region, counts, result, onRegionChange, onStart, onClose, setWord = "region", resultOf = worldOr }: Props<R>) {
+    const NOTICE = notices(setWord)
     const boardRegion = result ? result.region : region
     const [board, setBoard] = useState<{ region: R; entries: MapLeaderboardRecord[] } | null>(null)
     const isMine = useIsMyRow()
@@ -91,7 +100,7 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                         <h2 className="!text-2xl font-bold">{result ? "Run complete!" : title}</h2>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {result
-                                ? <>You located all <strong className="text-slate-900 dark:text-white">{result.count}</strong> {noun} of {regionLabel === "World" ? "the world" : regionLabel}.</>
+                                ? <>You located all <strong className="text-slate-900 dark:text-white">{result.count}</strong> {noun} of {resultOf(regionLabel)}.</>
                                 : intro}
                         </p>
                     </div>
@@ -147,7 +156,7 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                             )}
                         </>
                     ) : (
-                        <div className={`grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 p-1 dark:border-slate-700 ${regions.length > 5 ? "sm:grid-cols-6" : "sm:grid-cols-5"}`} role="tablist" aria-label="Region">
+                        <div className={`grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 p-1 dark:border-slate-700 ${regions.length > 5 ? "sm:grid-cols-6" : regions.length > 3 ? "sm:grid-cols-5" : ""}`} role="tablist" aria-label={setWord}>
                             {regions.map(r => {
                                 const selected = r.id === region
                                 return (
@@ -201,7 +210,7 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                     {result ? (
                         <>
                             <button type="button" onClick={() => onStart(result.region)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5`}><Repeat size={18} aria-hidden /> Run again</button>
-                            <button type="button" onClick={onClose} className={`${quiet} flex-1 py-3.5`}>Change region</button>
+                            <button type="button" onClick={onClose} className={`${quiet} flex-1 py-3.5`}>Change {setWord}</button>
                         </>
                     ) : (
                         <button type="button" onClick={() => onStart(region)} className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}><Timer size={18} aria-hidden /> Start {regionLabel}</button>

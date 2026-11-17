@@ -24,12 +24,14 @@ test("every board's total is the size of the pool its speedrun asks", async () =
     for (const r of capitals.CAPITAL_REGIONS) actual[capitals.capitalBoard(r.id)] = capitals.regionCapitals(r.id).length
     const ultimate = await vite.ssrLoadModule("/src/utils/ultimateSpeedrun.ts")
     for (const r of ultimate.ULTIMATE_REGIONS) actual[ultimate.ultimateBoard(r.id)] = ultimate.ultimatePool(r.id).length
+    const elements = await vite.ssrLoadModule("/src/utils/elementSpeedrun.ts")
+    for (const set of elements.ELEMENT_SETS) actual[elements.elementBoard(set.id)] = elements.setPool(set.id).length
     assert.deepEqual(actual, RUN_TOTALS)
 })
 
 test("the rules require exactly those totals", () => {
     const rules = JSON.parse(readFileSync(new URL("../firebase-realtime.rules.json", import.meta.url), "utf8"))
     const write = rules.rules.highscores.$mode.$playerId[".write"]
-    const found = Object.fromEntries([...write.matchAll(/\$mode === '([a-z-]+)' && root\.child\('speedrunRuns\/' \+ auth\.uid \+ '\/n'\)\.val\(\) === (\d+)/g)].map(m => [m[1], Number(m[2])]))
+    const found = Object.fromEntries([...write.matchAll(/\$mode === '([a-z0-9-]+)' && root\.child\('speedrunRuns\/' \+ auth\.uid \+ '\/n'\)\.val\(\) === (\d+)/g)].map(m => [m[1], Number(m[2])]))
     assert.deepEqual(found, RUN_TOTALS)
 })

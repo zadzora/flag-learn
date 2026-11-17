@@ -15,12 +15,13 @@ import { db, observeSession } from "../../lib/firebase"
 import { MAP_REGIONS, mapBoard, isMyRow } from "./mapSpeedrun"
 import { CAPITAL_REGIONS, capitalBoard } from "./capitalMap"
 import { ULTIMATE_REGIONS, ultimateBoard } from "./ultimateSpeedrun"
+import { ELEMENT_SETS, elementBoard } from "./elementSpeedrun"
 import {
     finishedSeasons, hallOfFameEntry, hallOfFameSeasons, seasonForDate,
     type HallOfFameEntry, type SeasonArchive,
 } from "./flagWars"
 
-export type RecordGame = "highscore" | "map" | "capital" | "ultimate"
+export type RecordGame = "highscore" | "map" | "capital" | "ultimate" | "elements"
 
 export type HeldRecord = {
     game: RecordGame
@@ -49,6 +50,7 @@ export const RECORD_GAMES: Record<RecordGame, { title: string; to: string; tenth
     map: { title: "Map Speedrun", to: "/map-speedrun", tenths: true },
     capital: { title: "Capital Speedrun", to: "/capital-speedrun", tenths: true },
     ultimate: { title: "Ultimate Speedrun", to: "/ultimate-speedrun", tenths: true },
+    elements: { title: "Element Speedrun", to: "/science/speedrun", tenths: true },
 }
 
 /** Every board a record can be held on, in the order the profile lists them. */
@@ -59,6 +61,7 @@ const BOARDS: { game: RecordGame; board: string; label: string }[] = [
     ...MAP_REGIONS.map(r => ({ game: "map" as const, board: mapBoard(r.id), label: r.label })),
     ...CAPITAL_REGIONS.map(r => ({ game: "capital" as const, board: capitalBoard(r.id), label: r.label })),
     ...ULTIMATE_REGIONS.map(r => ({ game: "ultimate" as const, board: ultimateBoard(r.id), label: r.label })),
+    ...ELEMENT_SETS.map(s => ({ game: "elements" as const, board: elementBoard(s.id), label: s.label })),
 ]
 
 type Row = { playerId?: string; uid?: string; bestTimeSeconds?: unknown; mistakes?: unknown }

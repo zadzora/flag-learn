@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Analytics } from "@vercel/analytics/react"
 import {
     LayoutGrid, Dumbbell, RotateCcw, LogOut, Timer,
     Flame, Trophy, CheckCircle2, Unlock, ChevronRight,
@@ -659,7 +658,6 @@ export default function PhysicsQuantitiesGame() {
                     )}
                 </AnimatePresence>
             </main>
-            <Analytics />
         </div>
     )
 }

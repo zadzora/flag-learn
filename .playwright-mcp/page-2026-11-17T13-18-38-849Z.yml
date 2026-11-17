@@ -1,0 +1,35 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Back" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - link "Flag Learn" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e10]: Road Trip
+      - generic [ref=e11]:
+        - button "Sound off" [ref=e12]
+        - button "Garage" [ref=e17]
+        - button "Passport" [ref=e21]
+        - button "New trip" [ref=e24]
+        - generic [ref=e28]:
+          - generic [aria-hidden] [ref=e29]: Unstuck
+          - 'button "Unstuck: move the car onto solid road nearby" [ref=e30]'
+        - link "Your profile" [ref=e38] [cursor=pointer]:
+          - /url: /profile
+        - button "Dark theme" [ref=e39]
+  - main [ref=e42]:
+    - generic "World map. W and S for throttle and brake, A and D to steer, Space to drift, M for the whole map. On touch, hold the map to drive towards that point." [ref=e43]
+    - img "Loading the map" [ref=e45]
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: "?"
+          - generic [ref=e53]:
+            - generic [ref=e54]: …
+            - progressbar "This country uncovered" [ref=e56]
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - generic [ref=e66]: World
+            - generic [ref=e67]: 0.00%
+          - progressbar "World uncovered" [ref=e68]
+      - button "Show the whole world" [ref=e69]

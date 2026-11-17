@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useMemo, type MouseEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Analytics } from "@vercel/analytics/react"
 import { Lock, X, Check, RotateCcw, Dumbbell, Trophy, Share2, CheckSquare, Square, Timer, Repeat, Unlock, Info, ChevronRight, Flame } from "lucide-react"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -1013,7 +1012,6 @@ export default function Game() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            <Analytics />
         </div>
     )
 }

@@ -1000,6 +1000,22 @@ export async function flagRaster(image: HTMLImageElement): Promise<FlagRaster> {
     }
 }
 
+let flagPack: Promise<Record<string, string>> | null = null
+
+/**
+ * Every flag's SVG text, in one request (the `flag-pack` plugin in
+ * vite.config.ts). Fetching them one file each cost ~200 CDN requests per
+ * visit; the Vercel plan counts requests. A failed load is not kept, so the
+ * next flag tries again.
+ */
+function loadFlagPack(): Promise<Record<string, string>> {
+    flagPack ??= import("virtual:flag-pack").then(m => m.default, error => {
+        flagPack = null
+        throw error
+    })
+    return flagPack
+}
+
 /**
  * Loads a flag as an image that canvas can draw. A few of the SVGs carry only
  * a viewBox, and Firefox will not draw an SVG without a size of its own, so
@@ -1007,7 +1023,8 @@ export async function flagRaster(image: HTMLImageElement): Promise<FlagRaster> {
  */
 export async function loadFlagImage(code: string): Promise<HTMLImageElement | null> {
     try {
-        let svg = await fetch(`/flags/${code}.svg`).then(r => (r.ok ? r.text() : Promise.reject()))
+        let svg = (await loadFlagPack())[code]
+        if (!svg) return null
         const open = svg.match(/<svg[^>]*>/)?.[0] ?? ""
         if (open && !/\swidth=/.test(open)) {
             const box = open.match(/viewBox="([^"]+)"/)?.[1]?.split(/[\s,]+/).map(Number)

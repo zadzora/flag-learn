@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Analytics } from "@vercel/analytics/react"
 import {
     Grid3x3, Dumbbell, RotateCcw, LogOut, Timer,
     Flame, Trophy, CheckCircle2, Unlock, ChevronRight, Check,
@@ -854,7 +853,6 @@ export default function PeriodicTableGame() {
                     )}
                 </AnimatePresence>
             </main>
-            <Analytics />
         </div>
     )
 }

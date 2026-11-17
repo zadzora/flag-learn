@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Analytics } from "@vercel/analytics/react"
 import { Lock, X, Check, RefreshCw, RotateCcw, ExternalLink, Dumbbell, CheckSquare, Square, Timer, Repeat, Unlock, Star, Lightbulb, Flame, ChevronRight, PencilLine, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
@@ -721,7 +720,6 @@ export default function ConstellationGame() {
                     </>
                 }
             />
-            <Analytics />
         </div>
     )
 }

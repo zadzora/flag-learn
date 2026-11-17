@@ -54,9 +54,40 @@ function assetVersions(): Plugin {
   }
 }
 
+/**
+ * Every flag SVG as one module: `{ ad: "<svg ...>", ... }`.
+ *
+ * Road Trip and the Daily Rally draw every country's flag, and fetched one file
+ * each that was ~200 CDN requests per visit (and again whenever the browser's
+ * copy went stale). Imported dynamically, this becomes one lazy chunk under
+ * /assets/ - one request, named by its content hash, cached for a year.
+ * Built from public/flags at build time, so it can never fall behind the files.
+ */
+function flagPack(): Plugin {
+  const id = 'virtual:flag-pack'
+  let dir = ''
+  return {
+    name: 'flag-pack',
+    configResolved(config) {
+      dir = path.join(config.publicDir, 'flags')
+    },
+    resolveId: source => (source === id ? '\0' + id : undefined),
+    load(source) {
+      if (source !== '\0' + id) return
+      const pack: Record<string, string> = {}
+      for (const name of readdirSync(dir)) {
+        if (!name.endsWith('.svg')) continue
+        this.addWatchFile(path.join(dir, name))
+        pack[name.slice(0, -4)] = readFileSync(path.join(dir, name), 'utf8')
+      }
+      return `export default ${JSON.stringify(pack)}`
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), assetVersions()],
+  plugins: [react(), assetVersions(), flagPack()],
   build: {
     rollupOptions: {
       output: {

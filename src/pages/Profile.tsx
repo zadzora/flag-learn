@@ -182,12 +182,16 @@ export default function Profile() {
                                             setDraftName(name)
                                             setEditingName(true)
                                         }}
+                                        title="Change your name"
                                         className="group flex min-h-0 items-center gap-2 p-0 text-left"
                                     >
                                         <span className="truncate text-[26px] font-extrabold tracking-[-0.02em]">{name || "Traveller"}</span>
-                                        <PencilLine size={16} className="shrink-0 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+                                        <PencilLine size={16} className="shrink-0 text-slate-400 opacity-60 transition-opacity group-hover:opacity-100" aria-hidden />
                                     </button>
                                 )}
+                                <p className={`mt-0.5 text-xs ${muted}`}>
+                                    {name ? "Click your name to change it." : "Click the name to set yours."}
+                                </p>
                                 <p className={`mt-1 text-sm ${muted}`}>
                                     Collecting since {shortDate(store.since)} · {Object.keys(store.days).length} active {Object.keys(store.days).length === 1 ? "day" : "days"}
                                 </p>

@@ -119,8 +119,15 @@ export function newPlayerId(): string {
 
 type BoardRow = { playerId?: string; uid?: string }
 
-/** The id to write under for `uid`, given the board as it stands. */
+/**
+ * The id to write under for `uid`, given the board as it stands (sorted best
+ * first). A row the account already holds wins over this browser's id: the
+ * same player signed in on another device, or on a browser whose id was reset,
+ * improves their line instead of adding a second one.
+ */
 export function playerIdFor(uid: string, board: BoardRow[]): string {
+    const owned = board.find(r => r.uid === uid && r.playerId)
+    if (owned?.playerId) return owned.playerId
     const id = getPlayerId()
     const mine = board.find(r => r.playerId === id)
     return mine?.uid && mine.uid !== uid ? newPlayerId() : id
@@ -146,8 +153,24 @@ export function useIsMyRow(): (row: BoardRow) => boolean {
     return useCallback((row: BoardRow) => isMyRow(row, uid), [uid])
 }
 
+/** The name set on the profile page; the rooms, Border Chain and World Conqueror read the same key. */
+const PROFILE_NAME_KEY = "flag-master-nickname"
+
+/**
+ * The name a leaderboard's field starts with: the profile's name when the
+ * player has set one, else the last name typed into a leaderboard. The field
+ * stays editable, and what is typed there never changes the profile.
+ */
 export function loadPlayerName(): string {
-    try { return localStorage.getItem(PLAYER_NAME_KEY) || "" } catch { return "" }
+    try {
+        const profile = normalizePlayerName(localStorage.getItem(PROFILE_NAME_KEY) || "")
+        return profile || localStorage.getItem(PLAYER_NAME_KEY) || ""
+    } catch { return "" }
+}
+
+/** The name last saved on a leaderboard, the fallback when the profile has none. */
+export function rememberPlayerName(name: string) {
+    try { localStorage.setItem(PLAYER_NAME_KEY, name) } catch { /* the name is a convenience */ }
 }
 
 export function normalizePlayerName(raw: string): string {
@@ -172,6 +195,22 @@ function byTimeThenMistakes(a: MapLeaderboardRecord, b: MapLeaderboardRecord) {
     return a.mistakes - b.mistakes
 }
 
+/**
+ * One line per account on a board sorted best first. The rules let nobody
+ * delete a row, so an account that ended up with two (two devices before the
+ * account's row was looked up by uid) keeps both in the database; only its
+ * best is shown. Rows without a uid (from before accounts) are all kept.
+ */
+export function bestPerAccount<T extends BoardRow>(sorted: T[]): T[] {
+    const seen = new Set<string>()
+    return sorted.filter(r => {
+        if (!r.uid) return true
+        if (seen.has(r.uid)) return false
+        seen.add(r.uid)
+        return true
+    })
+}
+
 export function subscribeLeaderboard(board: string, onChange: (entries: MapLeaderboardRecord[]) => void): () => void {
     return onValue(ref(db, boardPath(board)), snapshot => {
         const raw = snapshot.val() as Record<string, Partial<MapLeaderboardRecord>> | null
@@ -183,7 +222,7 @@ export function subscribeLeaderboard(board: string, onChange: (entries: MapLeade
             uid: typeof value?.uid === "string" ? value.uid : undefined,
         }))
         entries.sort(byTimeThenMistakes)
-        onChange(entries)
+        onChange(bestPerAccount(entries))
     }, () => onChange([]))
 }
 
@@ -202,7 +241,7 @@ export async function saveRun(boardKey: string, board: MapLeaderboardRecord[], n
     const existing = board.find(r => r.playerId === playerId)
     if (existing && byTimeThenMistakes(record, existing) >= 0) return "not-better"
     await set(ref(db, `${boardPath(boardKey)}/${playerId}`), record)
-    try { localStorage.setItem(PLAYER_NAME_KEY, name) } catch { /* the name is a convenience */ }
+    rememberPlayerName(name)
     return existing ? "improved" : "first"
 }
 

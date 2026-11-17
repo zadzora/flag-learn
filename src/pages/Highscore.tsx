@@ -9,7 +9,7 @@ import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db, ensureSignedIn } from "../../lib/firebase"
-import { playerIdFor, useIsMyRow } from "../utils/mapSpeedrun"
+import { bestPerAccount, loadPlayerName, playerIdFor, rememberPlayerName, useIsMyRow } from "../utils/mapSpeedrun"
 import YouTag from "../components/YouTag"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 import { bumpCounter } from "../utils/profileStore"
@@ -80,7 +80,7 @@ export default function Highscore() {
     const [mistakes, setMistakes] = useState(0)
     const [finishedTime, setFinishedTime] = useState<number | null>(null)
     const [finishedMistakes, setFinishedMistakes] = useState(0)
-    const [nameInput, setNameInput] = useState("")
+    const [nameInput, setNameInput] = useState(loadPlayerName)
     const [saveNotice, setSaveNotice] = useState<string | null>(null)
 
     const inputRef = useRef<HTMLInputElement>(null)
@@ -123,7 +123,7 @@ export default function Highscore() {
                     if (a.bestTimeSeconds !== b.bestTimeSeconds) return a.bestTimeSeconds - b.bestTimeSeconds
                     return a.mistakes - b.mistakes
                 })
-                setLeaderboards((prev) => ({ ...prev, [mode]: entries }))
+                setLeaderboards((prev) => ({ ...prev, [mode]: bestPerAccount(entries) }))
             })
         )
 
@@ -183,7 +183,7 @@ export default function Highscore() {
         const now = Date.now()
         setStarted(true)
         setFinishedTime(null)
-        setNameInput("")
+        setNameInput(loadPlayerName())
         setSaveNotice(null)
         setStartTime(now)
         setPenaltySeconds(0)
@@ -205,7 +205,7 @@ export default function Highscore() {
         setStatus("idle")
         setFeedback("")
         setFinishedTime(null)
-        setNameInput("")
+        setNameInput(loadPlayerName())
         setSaveNotice(null)
         setPenaltySeconds(0)
         setMistakes(0)
@@ -315,9 +315,10 @@ export default function Highscore() {
 
         set(ref(db, `highscores/${gameMode}/${playerId}`), recordToSave)
             .then(() => {
+                rememberPlayerName(cleanedName)
                 setSaveNotice(notice)
                 setFinishedTime(null)
-                setNameInput("")
+                setNameInput(loadPlayerName())
             })
             .catch(() => {
                 setSaveNotice("Save failed. Check Firebase connection/config.")

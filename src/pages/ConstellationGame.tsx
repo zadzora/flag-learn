@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react"
+import PetLane from "../components/PetLane"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, X, Check, RefreshCw, RotateCcw, ExternalLink, Dumbbell, CheckSquare, Square, Timer, Repeat, Unlock, Star, Lightbulb, Flame, ChevronRight, PencilLine, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
@@ -492,6 +493,7 @@ export default function ConstellationGame() {
                                 <span className="tabular-nums text-slate-500 dark:text-slate-400"><span className="font-bold text-slate-900 dark:text-white">{totalStats.mastered}</span> / {totalStats.total} · {totalStats.percent}%</span>
                             </span>
                         </span>
+                        <PetLane />
                         <span className="mt-2 block h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                             <motion.span className="block h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${totalStats.percent}%` }} transition={{ duration: 0.5 }} />
                         </span>

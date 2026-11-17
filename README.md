@@ -146,42 +146,46 @@ is what owns a territory, that would quietly wipe a player's empire.
 
 ### Supporters (Stripe)
 
-`/support` sells one thing: a one-time €3 (or more, the player picks) that makes
-an account a supporter for good - a coloured name with an animal and a heart on
-every leaderboard, supporter paints and the animal on the car in the Road Trip.
-The name has two separate choices - the colour of the letters and a tint
-behind it - and the editor warns when a pair is hard to read on either theme.
+`/support` sells one thing: a one-time €3 (or more - the player types an
+amount or adds + €1 / + €2 / + €5 / + €10) that makes an account a supporter
+for good: their own letter colour and tint on every leaderboard, an animated
+animal beside the name, walking along their collection bars and riding their
+Road Trip car, and the Racer and supporter paints. Cosmetic only.
+
+`api/checkout.ts` makes a Stripe Checkout Session for exactly the amount picked
+(a Payment Link cannot be handed an amount), reading the player from their
+Firebase ID token. `api/stripe-webhook.ts` turns the paid session into
+`supporters/<uid>/since` - the only thing that writes it.
+
 The animals are drawn art from `graphic/support-animals.png`:
-`python scripts/gen-pet-sprites.py` cuts them into `public/pets.webp` (all of
-them, one image) and bakes the animated ones (`RIGS` in the script: soft
-bones, blinks) into strips in `public/pets/`; `--debug` draws the rigs.
-Cosmetic only. A payment reaches the game through `api/stripe-webhook.ts`, a
-Vercel Function; it is the only thing that writes `supporters/<uid>/since`.
+`python scripts/gen-pet-sprites.py` cuts them into `public/pets-48.webp` and
+`public/pets-96.webp` (all of them, one image each) and bakes an animation
+strip per animal (`RIGS` in the script: soft bones, blinks) into
+`public/pets/<id>-64.webp` and `-160.webp`; `--debug` draws the rigs.
 
 One-off setup:
 
-1. **Stripe → Product catalogue → Add product** "Flag Learn supporter", price
-   **Customer chooses price**, currency EUR, minimum and suggested **3.00**.
-2. **Payment Links → New** for that price. Under *After payment* choose
-   *Don't show confirmation page* and redirect to
-   `https://flaglearn.eu/support?thanks=1`. Copy the link (`https://buy.stripe.com/...`).
+1. **Stripe → Developers → API keys**: copy the secret key. No product or
+   Payment Link is needed - the session describes itself.
+2. **Stripe → Settings → Payment methods**: switch on what you want offered
+   (cards, Apple Pay and Google Pay are on by default; PayPal is a toggle there).
 3. **Developers → Webhooks → Add endpoint** `https://flaglearn.eu/api/stripe-webhook`
    with the events `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`. Copy its signing secret.
 4. **Firebase → Project settings → Service accounts → Generate new private key.**
    Keep the file out of the repo.
 5. **Vercel → Project → Settings → Environment Variables** (Production):
-   - `VITE_STRIPE_PAYMENT_LINK` - the link from step 2 (the page shows
-     "Payments open soon" without it)
+   - `VITE_PAYMENTS` - `1` (without it the page says "Payments open soon")
    - `STRIPE_SECRET_KEY` - `sk_live_...`
    - `STRIPE_WEBHOOK_SECRET` - `whsec_...` from step 3
    - `FIREBASE_SERVICE_ACCOUNT` - the whole JSON from step 4, on one line
    - `FIREBASE_DATABASE_URL` - same value as `VITE_FIREBASE_DATABASE_URL`
-6. Publish the rules (the `supporters` and `supportFund` blocks) and redeploy.
+6. Publish the rules (the `supporters` block) and redeploy.
 
-Test mode first: the same steps with Stripe's test keys and a test Payment Link
-on a preview deployment, paying with card `4242 4242 4242 4242`. Stripe
-→ Webhooks shows every delivery and the function's reply.
+Test mode first: the same with Stripe's *test* keys on a preview deployment
+(`*.vercel.app` is accepted as a return address), paying with card
+`4242 4242 4242 4242`, any future date, any CVC. Stripe → Webhooks shows every
+delivery and the function's reply.
 
 A payment without an account on it, a refund or a gift is handled by hand:
 `node scripts/grant-supporter.mjs <uid> --key service-account.json` (add
@@ -202,15 +206,18 @@ Three levels, from quickest to the whole payment:
    copy the supporter ID from "I paid, but nothing changed", then
    `node scripts/grant-supporter.mjs <uid> --emulator`. The page turns into the
    thank-you within a second, and saving a look goes through the real rules.
-3. **A test payment, end to end** - on top of 2: put a *test-mode* Payment Link
-   (redirecting to `http://localhost:5173/support?thanks=1`) into
-   `.env.local` as `VITE_STRIPE_PAYMENT_LINK`, install the
-   [Stripe CLI](https://docs.stripe.com/stripe-cli), and run
-   `stripe listen --forward-to localhost:8787/api/stripe-webhook` and
-   `npm run webhook:dev` with `STRIPE_SECRET_KEY=sk_test_...` and the
-   `whsec_...` that `stripe listen` prints as `STRIPE_WEBHOOK_SECRET` (in the
-   environment or `.env.local`). Pay with `4242 4242 4242 4242`. The runner
-   writes to the emulator only and refuses a live key.
+3. **A test payment, end to end** - on top of 2:
+   - in `.env.local` (gitignored): `VITE_PAYMENTS=1`,
+     `STRIPE_SECRET_KEY=sk_test_...` and, once step b prints it,
+     `STRIPE_WEBHOOK_SECRET=whsec_...`
+   - install the [Stripe CLI](https://docs.stripe.com/stripe-cli), `stripe login`,
+     then `stripe listen --forward-to localhost:8787/api/stripe-webhook`
+   - `npm run webhook:dev` - serves `api/checkout` and `api/stripe-webhook` on
+     port 8787 against the emulators; `npm run dev:emu` passes `/api/*` to it
+   - restart `npm run dev:emu` (it reads `VITE_PAYMENTS` on start), sign in on
+     `/support`, pick an amount, pay with `4242 4242 4242 4242`. Stripe sends you
+     back to `/support?thanks=1` and the page turns into the thank-you.
+   The runner writes to the emulator only and refuses a live key.
 
 ### Accounts and the cloud save
 

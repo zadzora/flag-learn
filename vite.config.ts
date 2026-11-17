@@ -88,6 +88,8 @@ function flagPack(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), assetVersions(), flagPack()],
+  // The payment functions in api/ run on Vercel; locally `npm run webhook:dev` serves them on 8787.
+  server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
   build: {
     rollupOptions: {
       output: {

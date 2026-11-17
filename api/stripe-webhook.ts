@@ -1,8 +1,8 @@
 /**
  * Stripe -> Flag Learn: turns a finished payment into a supporter.
  *
- * The Payment Link carries the player's uid as `client_reference_id` (see
- * `checkoutUrl` in `src/utils/supporters.ts`). When Stripe reports the payment,
+ * The Checkout Session (`api/checkout.ts`) carries the player's uid as
+ * `client_reference_id`. When Stripe reports the payment,
  * this writes, with admin rights the database rules give no client:
  *
  *   supporters/<uid>/since            - set once, never moved (the perks)
@@ -39,7 +39,8 @@ const UID = /^[A-Za-z0-9]{1,128}$/
 
 function database() {
     if (!getApps().length) {
-        // Locally (`scripts/dev-webhook.mjs`) FIREBASE_DATABASE_EMULATOR_HOST points the admin SDK at the emulator, which needs no key.
+        // Locally (`scripts/dev-webhook.mjs`) the emulator hosts are set and the admin SDK needs no key.
+        // Kept in each function rather than shared: a cross-file import needs an extension in Node and none on Vercel.
         const emulator = !!process.env.FIREBASE_DATABASE_EMULATOR_HOST
         initializeApp({
             ...(emulator ? { projectId: "demo-flaglearn" } : { credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? "{}")) }),

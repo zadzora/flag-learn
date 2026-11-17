@@ -5,9 +5,14 @@ The supporters' companion animals, from graphic/support-animals.png.
     python scripts/gen-pet-sprites.py --debug    # also draws the rig over each animal (<temp>/pets-debug/)
 
 Writes
-  public/pets.webp        every animal, one cell each - the static form, used
-                          everywhere at once in a single request
-  public/pets/<id>.webp   a strip of frames for the animated ones (RIGS below)
+  public/pets-<cell>.webp   every animal, one cell each - the still form, used
+                            everywhere at once in a single request
+  public/pets/<id>-<frame>.webp   a strip of frames per animal (RIGS below)
+
+Each comes in two resolutions (CELLS, FRAME_SIZES) and the page picks the one
+nearest the size it draws at. A browser shrinking a background image by four
+or five times does not filter it - the animals came out jagged on the
+leaderboards - so the small sizes are resampled here, with Lanczos, instead.
   data/petSprites.json    the order of the cells and the strips' frame counts
 
 The sheet is a generated image, so nothing about it is exact: each animal is the
@@ -39,8 +44,8 @@ SHEET = ROOT / "graphic" / "support-animals.png"
 GRID = [["panda", "koala", "kangaroo", "penguin", "llama", "sloth"],
         ["fox", "polarbear", "elephant", "tiger", "camel", "beaver"],
         ["flamingo", "hedgehog", "turtle", "orangutan", "otter", "owl"]]
-CELL = 96            # static cell, px - shown at up to 48 CSS px
-FRAME = 160          # animated frame, px - shown at up to 80 CSS px
+CELLS = [48, 96]           # still cells, px: leaderboards (24-28 CSS px), and up to 48 CSS px
+FRAME_SIZES = [64, 160]    # animation frames, px: small names and lanes, and up to 80 CSS px
 PAD = 0.10           # room round the sticker for ears and wings to move into
 FRAMES = 48
 FPS = 12
@@ -415,12 +420,13 @@ def main():
     animals = cut_animals()
     order = [nm for row in GRID for nm in row]
 
-    atlas = Image.new("RGBA", (CELL * 6, CELL * 3), (0, 0, 0, 0))
-    for i, name in enumerate(order):
-        canvas, _, _ = square(animals[name])
-        atlas.paste(to_image(canvas, CELL), ((i % 6) * CELL, (i // 6) * CELL))
     (ROOT / "public").mkdir(exist_ok=True)
-    atlas.save(ROOT / "public" / "pets.webp", "WEBP", quality=90, method=6)
+    for cell in CELLS:
+        atlas = Image.new("RGBA", (cell * 6, cell * 3), (0, 0, 0, 0))
+        for i, name in enumerate(order):
+            canvas, _, _ = square(animals[name])
+            atlas.paste(to_image(canvas, cell), ((i % 6) * cell, (i // 6) * cell))
+        atlas.save(ROOT / "public" / f"pets-{cell}.webp", "WEBP", quality=90, method=6)
 
     (ROOT / "public" / "pets").mkdir(exist_ok=True)
     animated = {}
@@ -439,15 +445,17 @@ def main():
             m = np.zeros(canvas.shape[:2], np.float32)
             m[oy:oy + src.shape[0], ox:ox + src.shape[1]] = polygon_mask(src.shape[:2], b["poly"])
             bones.append({**b, "weight": np.clip(blur(m, 5), 0, 1)})
-        strip = Image.new("RGBA", (FRAME * FRAMES, FRAME), (0, 0, 0, 0))
+        strips = {size: Image.new("RGBA", (size * FRAMES, size), (0, 0, 0, 0)) for size in FRAME_SIZES}
         for f in range(FRAMES):
             t = f / FRAMES
             shut = blink_amount(t, rig["blink"], rig.get("blink_hold", 2))
             base = paint_blink(src, eyes, shut) if shut else src
             c, _, _ = square(base)
             frame = warp(c, bones, t, ox, oy)
-            strip.paste(to_image(frame, FRAME), (f * FRAME, 0))
-        strip.save(ROOT / "public" / "pets" / f"{name}.webp", "WEBP", quality=88, method=6)
+            for size, strip in strips.items():
+                strip.paste(to_image(frame, size), (f * size, 0))
+        for size, strip in strips.items():
+            strip.save(ROOT / "public" / "pets" / f"{name}-{size}.webp", "WEBP", quality=88, method=6)
         animated[name] = {"frames": FRAMES, "fps": FPS}
         print(f"  {name}: {FRAMES} frames, eyes {[(round(e['cx']), round(e['cy'])) for e in eyes]}")
 
@@ -464,9 +472,9 @@ def main():
                 d.rectangle([(e["cx"] - e["w"] / 2) * 2, (e["cy"] - e["h"] / 2) * 2, (e["cx"] + e["w"] / 2) * 2, (e["cy"] + e["h"] / 2) * 2], outline=(0, 255, 0))
             img.save(dbg_dir / f"{name}.png")
 
-    data = {"cell": CELL, "cols": 6, "order": order, "frame": FRAME, "animated": animated}
+    data = {"cells": CELLS, "cols": 6, "order": order, "frames": FRAME_SIZES, "animated": animated}
     (ROOT / "data" / "petSprites.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf8")
-    print(f"Wrote public/pets.webp ({len(order)} animals) and {len(animated)} strips.")
+    print(f"Wrote public/pets-*.webp ({len(order)} animals) and {len(animated)} strips.")
 
 if __name__ == "__main__":
     main()

@@ -63,7 +63,7 @@ export type Pet = { id: string; label: string; emoji: string; home: string }
 
 /**
  * Companion animals, each from somewhere on the map. Drawn art in
- * `public/pets.webp` and an animation strip each in `public/pets/` (both from
+ * `public/pets-<cell>.webp` and an animation strip each in `public/pets/` (both from
  * `scripts/gen-pet-sprites.py`, out of `graphic/support-animals.png`); the
  * emoji is only the fallback for an id the sprites do not know.
  */

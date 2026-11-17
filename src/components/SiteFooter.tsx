@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
-import { ExternalLink, Heart, MessagesSquare } from "lucide-react"
+import { Coffee, ExternalLink, Heart, MessagesSquare } from "lucide-react"
 import CountryDataCredit from "./CountryDataCredit"
 
 /** The page foot every screen shares: credits, community links and the plain-text description. */
@@ -16,6 +16,9 @@ export default function SiteFooter({ about }: { about?: ReactNode }) {
                     <Link to="/support" className="flex items-center gap-1.5 font-semibold text-rose-600 hover:underline dark:text-rose-400">
                         <Heart size={15} aria-hidden /> Support Flag Learn
                     </Link>
+                    <a href="https://buymeacoffee.com/davidzadzora" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 font-semibold text-amber-600 hover:underline dark:text-[#FFDD00]">
+                        <Coffee size={15} aria-hidden /> Buy me a coffee
+                    </a>
                     <a href="https://flagpedia.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white">
                         Flags provided by Flagpedia.net <ExternalLink size={12} aria-hidden />
                     </a>

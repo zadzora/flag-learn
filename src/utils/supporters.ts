@@ -91,15 +91,28 @@ export function saveLook(uid: string, look: SupporterLook): Promise<void> {
 }
 
 /**
- * The Stripe Payment Link, with the account it pays for. `client_reference_id`
- * comes back in the webhook, which is how a payment finds its player.
+ * Payments are switched on with VITE_PAYMENTS=1 once Stripe and the functions
+ * in api/ are set up; until then the page says payments open soon.
  */
-export function checkoutUrl(uid: string): string | null {
-    const link = import.meta.env.VITE_STRIPE_PAYMENT_LINK as string | undefined
-    if (!link) return null
-    const url = new URL(link)
-    url.searchParams.set("client_reference_id", uid)
-    return url.toString()
+export const paymentsOpen = import.meta.env.VITE_PAYMENTS === "1"
+
+/**
+ * Starts a payment of `cents` and returns Stripe's Checkout page to go to.
+ * `api/checkout.ts` makes the session for exactly that amount and reads the
+ * player from their ID token. Throws with the server's reason on refusal.
+ */
+export async function startCheckout(cents: number): Promise<string> {
+    const { auth } = await import("../../lib/firebase")
+    const user = auth.currentUser
+    if (!user) throw new Error("signed-out")
+    const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${await user.getIdToken()}` },
+        body: JSON.stringify({ cents }),
+    })
+    const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+    if (!res.ok || !body.url) throw new Error(body.error ?? `http-${res.status}`)
+    return body.url
 }
 
 // --- Dev-only test hook ----------------------------------------------------

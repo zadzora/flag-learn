@@ -1,10 +1,11 @@
-// Runs api/stripe-webhook.ts on this machine, against the database emulator,
-// so a test payment can be followed end to end without deploying:
+// Runs the payment functions in api/ (checkout.ts and stripe-webhook.ts) on this
+// machine, against the auth and database emulators, so a test payment can be
+// followed end to end without deploying:
 //
 //   npm run emulators                       # terminal 1
-//   npm run dev:emu                         # terminal 2 (the site, on the emulator)
+//   npm run dev:emu                         # terminal 2 (the site; Vite passes /api/* on to port 8787)
 //   stripe listen --forward-to localhost:8787/api/stripe-webhook     # terminal 3
-//   STRIPE_SECRET_KEY=sk_test_... STRIPE_WEBHOOK_SECRET=whsec_... node scripts/dev-webhook.mjs   # terminal 4
+//   npm run webhook:dev                     # terminal 4, with the keys below
 //
 // `stripe listen` prints the whsec_ to use. The keys can also go in
 // `.env.local` (gitignored) as STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET.
@@ -25,13 +26,18 @@ if (process.env.STRIPE_SECRET_KEY?.startsWith("sk_live")) {
 }
 
 process.env.FIREBASE_DATABASE_EMULATOR_HOST = "127.0.0.1:9000";
+process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
 process.env.FIREBASE_DATABASE_URL = "http://127.0.0.1:9000?ns=demo-flaglearn-default-rtdb";
 
-const { POST } = await import("../api/stripe-webhook.ts");
+const routes = {
+    "/api/stripe-webhook": (await import("../api/stripe-webhook.ts")).POST,
+    "/api/checkout": (await import("../api/checkout.ts")).POST,
+};
 const PORT = 8787;
 
 createServer(async (req, res) => {
-    if (req.method !== "POST" || req.url !== "/api/stripe-webhook") {
+    const POST = routes[req.url];
+    if (req.method !== "POST" || !POST) {
         res.writeHead(404).end();
         return;
     }
@@ -45,4 +51,4 @@ createServer(async (req, res) => {
     const text = await response.text();
     console.log(`${new Date().toLocaleTimeString()}  ${response.status} ${text}`);
     res.writeHead(response.status, { "content-type": "text/plain" }).end(text);
-}).listen(PORT, () => console.log(`Webhook on http://localhost:${PORT}/api/stripe-webhook (emulator database)`));
+}).listen(PORT, () => console.log(`Payment functions on http://localhost:${PORT}/api/* (emulator auth and database)`));

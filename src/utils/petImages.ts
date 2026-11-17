@@ -10,6 +10,11 @@ import { asset } from "./asset"
 
 export type PetFrame = { img: HTMLImageElement; sx: number; sy: number; size: number }
 
+// The car is drawn at any zoom, so the canvas always takes the largest images and lets drawImage filter them.
+const CELL = Math.max(...sprites.cells)
+const FRAME = Math.max(...sprites.frames)
+const ATLAS = `/pets-${CELL}.webp`
+
 const images = new Map<string, HTMLImageElement>()
 const animated = sprites.animated as Record<string, { frames: number; fps: number }>
 
@@ -32,19 +37,19 @@ const ready = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0
 export function petFrame(id: string, timeMs: number): PetFrame | null {
     const anim = animated[id]
     if (anim) {
-        const strip = image(`/pets/${id}.webp`)
-        if (ready(strip)) return { img: strip, sx: (Math.floor((timeMs / 1000) * anim.fps) % anim.frames) * sprites.frame, sy: 0, size: sprites.frame }
+        const strip = image(`/pets/${id}-${FRAME}.webp`)
+        if (ready(strip)) return { img: strip, sx: (Math.floor((timeMs / 1000) * anim.fps) % anim.frames) * FRAME, sy: 0, size: FRAME }
     }
     const index = sprites.order.indexOf(id)
     if (index < 0) return null
-    const atlas = image("/pets.webp")
+    const atlas = image(ATLAS)
     if (!ready(atlas)) return null
-    return { img: atlas, sx: (index % sprites.cols) * sprites.cell, sy: Math.floor(index / sprites.cols) * sprites.cell, size: sprites.cell }
+    return { img: atlas, sx: (index % sprites.cols) * CELL, sy: Math.floor(index / sprites.cols) * CELL, size: CELL }
 }
 
 /** Resolves once the still image is there, for a canvas that draws only once. */
 export function whenPetReady(): Promise<void> {
-    const atlas = image("/pets.webp")
+    const atlas = image(ATLAS)
     if (ready(atlas)) return Promise.resolve()
     return new Promise(resolve => {
         atlas.addEventListener("load", () => resolve(), { once: true })

@@ -1,5 +1,8 @@
 {
-  "cell": 96,
+  "cells": [
+    48,
+    96
+  ],
   "cols": 6,
   "order": [
     "panda",
@@ -21,7 +24,10 @@
     "otter",
     "owl"
   ],
-  "frame": 160,
+  "frames": [
+    64,
+    160
+  ],
   "animated": {
     "panda": {
       "frames": 48,

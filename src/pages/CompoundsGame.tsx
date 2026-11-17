@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+import PetLane from "../components/PetLane"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronRight, Flame, CheckCircle2, BookOpen, RotateCcw, Unlock } from "lucide-react"
 import TopBar from "../components/TopBar"
@@ -250,6 +251,7 @@ export default function CompoundsGame() {
                             <span className="font-bold text-slate-900 dark:text-white">{stats.mastered}</span> / {stats.total} mastered
                         </span>
                     </div>
+                    <PetLane />
                     <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                         <motion.div className="h-full bg-emerald-500" animate={{ width: `${stats.percent}%` }} transition={{ duration: 0.4 }} />
                     </div>

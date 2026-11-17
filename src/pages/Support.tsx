@@ -9,7 +9,7 @@ import { LookedName } from "../components/SupporterName"
 import PetSprite from "../components/PetSprite"
 import { isGoogleUser, observeSession } from "../../lib/firebase"
 import { connectGoogle } from "../utils/cloudSave"
-import { checkoutUrl, saveLook, useSupporter } from "../utils/supporters"
+import { paymentsOpen, saveLook, startCheckout, useSupporter } from "../utils/supporters"
 import { PETS, SUPPORT_PRICE_EUR, TEXT_COLOURS, TINTS, cssPaint, hardToRead, type SupporterLook } from "../utils/supporterLook"
 import { useDarkMode } from "../utils/useDarkMode"
 
@@ -206,11 +206,20 @@ export default function Support() {
     )
 }
 
+const EXTRAS = [1, 2, 5, 10]
+const MAX_EUR = 500
+const euro = (eur: number) => `€${eur.toFixed(2)}`
+
 function PayCard({ google, returning }: { google: User | null; returning: boolean }) {
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [slow, setSlow] = useState(false)
-    const link = google ? checkoutUrl(google.uid) : null
+    // What the field shows; the amount paid is read from it, never below the price.
+    const [typed, setTyped] = useState(SUPPORT_PRICE_EUR.toFixed(2))
+    const parsed = Number(typed.replace(",", "."))
+    const amount = Number.isFinite(parsed) ? Math.round(parsed * 100) / 100 : 0
+    const tooLow = amount < SUPPORT_PRICE_EUR
+    const tooHigh = amount > MAX_EUR
 
     // Back from Stripe: the webhook normally lands in seconds. If it does not, say so rather than spin forever.
     useEffect(() => {
@@ -235,31 +244,79 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
         }
     }
 
+    async function pay() {
+        if (tooLow || tooHigh) return
+        setBusy(true)
+        setError(null)
+        try {
+            window.location.assign(await startCheckout(Math.round(amount * 100)))
+        } catch {
+            setError("The payment page could not be opened. Please try again in a moment.")
+            setBusy(false)
+        }
+    }
+
     return (
         <div className={`${panel} p-6`}>
-            <p className="flex items-baseline gap-2">
-                <span className="text-5xl font-extrabold tracking-[-0.03em]">€{SUPPORT_PRICE_EUR}</span>
-                <span className={`text-sm font-semibold ${muted}`}>once · yours for good</span>
+            <p className={`text-sm ${muted}`}>
+                <strong className="text-slate-900 dark:text-white">€{SUPPORT_PRICE_EUR}</strong> once, yours for good · pay more if you like
             </p>
-            <p className={`mt-2 text-sm ${muted}`}>Or more, if you like - you pick the amount on the next page.</p>
 
             {returning && google ? (
-                <p className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
+                <p className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
                     <Loader2 size={16} className="shrink-0 animate-spin" aria-hidden />
                     {slow ? "This is taking longer than usual. It will appear on its own - if not within a few minutes, see the questions below." : "Thank you! Unlocking your perks…"}
                 </p>
             ) : google ? (
-                link
-                    ? <a href={link} className={`${primary} mt-5`}><Heart size={18} className="fill-current" aria-hidden /> Become a supporter</a>
-                    : <button type="button" disabled className={`${primary} mt-5`}>Payments open soon</button>
+                <>
+                    <label className="mt-4 flex items-center rounded-lg border-2 border-slate-200 bg-white px-3 focus-within:border-slate-500 dark:border-[#232B45] dark:bg-[#0A0E1A] dark:focus-within:border-[#4A5680]">
+                        <span className="text-2xl font-bold text-slate-400" aria-hidden>€</span>
+                        <input
+                            inputMode="decimal"
+                            value={typed}
+                            onChange={e => setTyped(e.target.value.replace(/[^0-9.,]/g, ""))}
+                            onBlur={() => setTyped(euro(Math.max(SUPPORT_PRICE_EUR, Math.min(MAX_EUR, amount || SUPPORT_PRICE_EUR))).slice(1))}
+                            aria-label="Amount in euros"
+                            className="min-h-14 w-full min-w-0 border-0 bg-transparent px-2 text-2xl font-extrabold tabular-nums outline-none"
+                        />
+                    </label>
+                    {tooLow && <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">The minimum is €{SUPPORT_PRICE_EUR}.</p>}
+                    {tooHigh && <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">That is very generous - the most is €{MAX_EUR}.</p>}
+
+                    <p className="mt-4 flex items-center gap-1.5 text-sm font-semibold">
+                        <Heart size={15} className="text-rose-500" aria-hidden /> Add a little extra
+                    </p>
+                    <div className="mt-2 grid grid-cols-4 gap-2">
+                        {EXTRAS.map(extra => (
+                            <button
+                                key={extra}
+                                type="button"
+                                onClick={() => setTyped(euro(Math.min(MAX_EUR, (tooLow ? SUPPORT_PRICE_EUR : amount) + extra)).slice(1))}
+                                className="min-h-9 rounded-md bg-emerald-500 px-1 text-sm font-bold text-white shadow-[inset_0_-2px_0_rgba(0,0,0,0.18)] hover:bg-emerald-600"
+                            >
+                                + €{extra}
+                            </button>
+                        ))}
+                    </div>
+
+                    {paymentsOpen ? (
+                        <button type="button" onClick={pay} disabled={busy || tooLow || tooHigh} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-5 text-base font-bold text-white hover:bg-rose-600 disabled:opacity-60">
+                            {busy ? <Loader2 size={18} className="animate-spin" aria-hidden /> : <Heart size={18} className="fill-current" aria-hidden />}
+                            Support with {euro(tooLow ? SUPPORT_PRICE_EUR : amount)}
+                        </button>
+                    ) : (
+                        <button type="button" disabled className={`${primary} mt-5`}>Payments open soon</button>
+                    )}
+                    {error && <p className="mt-2 text-sm font-semibold text-red-600 dark:text-red-400" role="alert">{error}</p>}
+                </>
             ) : (
-                <div className="mt-5">
+                <div className="mt-4">
                     <p className="mb-3 text-sm font-semibold">First, sign in so the perks have an account to live in:</p>
                     <GoogleButton busy={busy} onClick={signIn} />
                     {error && <p className="mt-2 text-sm font-semibold text-red-600 dark:text-red-400" role="alert">{error}</p>}
                 </div>
             )}
-            <p className={`mt-4 text-xs ${muted}`}>Secure payment by Stripe. Card, Apple Pay, Google Pay.</p>
+            <p className={`mt-4 text-xs ${muted}`}>Secure payment by Stripe: card, PayPal, Apple Pay, Google Pay.</p>
         </div>
     )
 }

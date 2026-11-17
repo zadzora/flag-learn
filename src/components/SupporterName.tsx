@@ -76,7 +76,7 @@ export default function SupporterName({ uid, name, className = "", live = false 
  * right here, so the name can never fall back to a coloured block with plain
  * letters on it.
  */
-export function LookedName({ look, name, className = "", petSize = 20, animate = false, dark }: {
+export function LookedName({ look, name, className = "", petSize = 28, animate = false, dark }: {
     look: SupporterLook
     name: string
     className?: string
@@ -93,7 +93,8 @@ export function LookedName({ look, name, className = "", petSize = 20, animate =
     const nameEl = <span className={`min-w-0 truncate ${className} ${gradient ? "supporter-sheen" : ""}`} style={letters}>{name}</span>
     return (
         <>
-            {petById(look.pet) && <PetSprite id={look.pet} size={petSize} animate={animate} />}
+            {/* Bleeds a little above and below, so a bigger animal does not make every row taller. */}
+            {petById(look.pet) && <PetSprite id={look.pet} size={petSize} animate={animate} className="-my-1.5" />}
             {tint
                 ? <span className="inline-flex min-w-0 rounded-md px-1.5 py-px shadow-sm" style={{ background: cssPaint(tint) }}>{nameEl}</span>
                 : nameEl}

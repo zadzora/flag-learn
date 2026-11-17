@@ -73,6 +73,110 @@ def twitch(at, amp, length=0.12):
     return keys((at, 0), (at + length * 0.25, amp), (at + length * 0.55, -amp * 0.3), (at + length, 0))
 
 RIGS = {
+    "panda": {
+        "bones": [
+            {"poly": [(0, 0), (72, 0), (74, 38), (54, 60), (22, 74), (0, 66)], "pivot": (52, 58), "rotate": keys((0.08, 0), (0.14, -12), (0.2, 4), (0.26, 0))},
+            {"poly": [(140, 0), (224, 0), (224, 66), (200, 62), (172, 46), (140, 30)], "pivot": (172, 48), "rotate": keys((0.18, 0), (0.24, 12), (0.3, -4), (0.36, 0))},
+            {"poly": [(0, 0), (224, 0), (224, 160), (0, 160)], "pivot": (112, 172), "rotate": keys((0.45, 0), (0.55, 6), (0.68, 6), (0.78, 0))},
+        ],
+        "eyes": [(98, 107, 14, 20), (173, 101, 13, 19)],
+        "blink": 0.86,
+    },
+    "kangaroo": {
+        "bones": [
+            {"shift": keys((0.1, 0), (0.16, 16), (0.22, 0), (0.26, 6), (0.3, 0))},
+            {"poly": [(20, 0), (110, 0), (112, 92), (90, 108), (40, 100), (20, 60)], "pivot": (95, 98), "rotate": keys((0.1, 0), (0.16, -10), (0.24, 5), (0.32, 0), (0.6, 0), (0.65, -12), (0.71, 0))},
+            {"poly": [(145, 0), (229, 0), (229, 80), (200, 92), (165, 90), (145, 60)], "pivot": (172, 88), "rotate": keys((0.1, 0), (0.16, 10), (0.24, -5), (0.32, 0))},
+            {"poly": [(0, 175), (70, 175), (84, 296), (0, 296)], "pivot": (70, 262), "rotate": keys((0.08, 0), (0.16, -10), (0.24, 4), (0.3, 0))},
+        ],
+        "blink": 0.5,
+    },
+    "llama": {
+        "bones": [
+            {"poly": [(40, 0), (110, 0), (108, 70), (95, 88), (60, 88), (40, 60)], "pivot": (88, 85), "rotate": twitch(0.15, -14)},
+            {"poly": [(140, 0), (200, 0), (200, 60), (185, 75), (160, 70), (140, 45)], "pivot": (165, 68), "rotate": twitch(0.5, 14)},
+        ],
+        "blink": 0.75,
+    },
+    "sloth": {
+        "bones": [
+            {"poly": [(0, 0), (222, 0), (222, 158), (0, 158)], "pivot": (112, 170), "rotate": keys((0.05, 0), (0.3, 7), (0.55, 7), (0.85, 0))},
+        ],
+        "eyes": [(91, 96, 13, 18), (169, 89, 13, 18)],
+        "blink": 0.36,
+        "blink_hold": 7,
+    },
+    "polarbear": {
+        "bones": [
+            {"poly": [(10, 0), (80, 0), (78, 45), (55, 62), (25, 70), (10, 50)], "pivot": (58, 58), "rotate": keys((0.1, 0), (0.16, -12), (0.22, 4), (0.28, -8), (0.36, 0))},
+            {"poly": [(150, 0), (224, 0), (224, 55), (200, 60), (170, 48), (150, 35)], "pivot": (172, 45), "rotate": keys((0.12, 0), (0.18, 12), (0.24, -4), (0.3, 8), (0.38, 0))},
+            {"poly": [(0, 0), (224, 0), (224, 140), (0, 140)], "pivot": (110, 152), "rotate": keys((0.5, 0), (0.6, -6), (0.72, -6), (0.82, 0))},
+        ],
+        "blink": 0.42,
+    },
+    "tiger": {
+        "bones": [
+            {"poly": [(20, 0), (95, 0), (92, 50), (70, 72), (40, 80), (20, 60)], "pivot": (70, 65), "rotate": twitch(0.2, -14)},
+            {"poly": [(155, 0), (243, 0), (243, 60), (215, 65), (180, 55), (155, 35)], "pivot": (182, 52), "rotate": twitch(0.55, 14)},
+            {"poly": [(0, 150), (62, 150), (66, 254), (0, 254)], "pivot": (62, 228), "rotate": wave(2, 9)},
+        ],
+        "blink": 0.78,
+    },
+    "camel": {
+        "bones": [
+            {"poly": [(130, 0), (278, 0), (278, 125), (200, 128), (150, 112), (125, 60)], "pivot": (160, 112), "rotate": keys((0.1, 0), (0.2, 6), (0.3, -3), (0.4, 5), (0.5, 0))},
+            {"poly": [(110, 0), (160, 0), (158, 48), (140, 58), (115, 50)], "pivot": (148, 50), "rotate": twitch(0.65, -14)},
+        ],
+        "eyes": [(181, 62, 15, 22)],
+        "blink": 0.82,
+    },
+    "beaver": {
+        "bones": [
+            {"poly": [(0, 100), (95, 100), (98, 210), (0, 210)], "pivot": (95, 175), "rotate": keys((0.1, 0), (0.16, 14), (0.2, -4), (0.26, 12), (0.3, -3), (0.36, 0))},
+            {"poly": [(70, 0), (130, 0), (128, 35), (110, 50), (80, 52), (70, 35)], "pivot": (105, 45), "rotate": twitch(0.55, -14)},
+            {"poly": [(190, 0), (264, 0), (264, 40), (232, 50), (205, 42), (190, 28)], "pivot": (210, 40), "rotate": twitch(0.6, 14)},
+        ],
+        "blink": 0.8,
+    },
+    "flamingo": {
+        "bones": [
+            {"poly": [(30, 0), (230, 0), (230, 135), (160, 150), (60, 128)], "pivot": (122, 168), "rotate": keys((0.05, 0), (0.18, -7), (0.32, 4), (0.45, 0))},
+            # The wing alone: reaching down to y 215 dragged the belly's outline up with it.
+            {"poly": [(8, 132), (125, 138), (132, 196), (8, 202)], "pivot": (136, 170), "rotate": keys((0.55, 0), (0.6, 7), (0.65, 0), (0.7, 7), (0.76, 0))},
+        ],
+        "eyes": [(121, 62, 14, 20)],
+        "blink": 0.88,
+    },
+    "hedgehog": {
+        "bones": [
+            {"poly": [(0, 0), (95, 0), (90, 255), (0, 255)], "pivot": (110, 150), "rotate": keys((0.15, 0), (0.18, 3), (0.21, -3), (0.24, 3), (0.27, -3), (0.3, 3), (0.33, 0))},
+            {"poly": [(90, 40), (248, 40), (248, 190), (90, 190)], "pivot": (165, 200), "rotate": keys((0.5, 0), (0.6, 6), (0.72, 6), (0.82, 0))},
+        ],
+        "blink": 0.4,
+    },
+    "turtle": {
+        "bones": [
+            {"poly": [(115, 0), (261, 0), (261, 140), (150, 140), (115, 100)], "pivot": (150, 138), "rotate": keys((0.45, 0), (0.55, -7), (0.62, 3), (0.7, -5), (0.8, 0))},
+            {"poly": [(85, 148), (145, 148), (145, 215), (85, 215)], "pivot": (122, 158), "rotate": wave(2, 10)},
+            {"poly": [(180, 148), (225, 148), (225, 215), (180, 215)], "pivot": (190, 158), "rotate": wave(2, -10)},
+            {"poly": [(10, 175), (80, 175), (80, 215), (10, 215)], "pivot": (72, 180), "rotate": wave(2, 8, 0.5)},
+        ],
+        "blink": 0.28,
+    },
+    "orangutan": {
+        "bones": [
+            {"poly": [(55, 15), (247, 15), (247, 192), (55, 192)], "pivot": (150, 205), "rotate": keys((0.1, 0), (0.22, 6), (0.36, 6), (0.48, 0))},
+            {"poly": [(150, 205), (247, 205), (247, 266), (150, 266)], "pivot": (172, 210), "rotate": keys((0.6, 0), (0.64, -8), (0.68, 0), (0.72, -8), (0.76, 0))},
+        ],
+        "blink": 0.55,
+    },
+    "otter": {
+        "bones": [
+            {"poly": [(0, 0), (248, 0), (248, 140), (0, 140)], "pivot": (125, 152), "rotate": keys((0.1, 0), (0.2, -7), (0.32, -7), (0.42, 0))},
+            {"poly": [(0, 140), (68, 140), (72, 215), (0, 215)], "pivot": (66, 196), "rotate": wave(2, 9)},
+        ],
+        "blink": 0.62,
+    },
     "fox": {
         "bones": [
             {"poly": [(0, 0), (108, 0), (112, 92), (92, 116), (40, 128), (0, 118)], "pivot": (86, 114), "rotate": twitch(0.12, -14)},
@@ -238,8 +342,11 @@ def paint_blink(rgba, eyes, amount):
         # Fur colour: the median of the ring just outside the eye.
         yy, xx = np.mgrid[0:arr.shape[0], 0:arr.shape[1]]
         r = ((xx - cx) / (w / 2 + 5)) ** 2 + ((yy - cy) / (h / 2 + 5)) ** 2
-        ring = (r > 1.0) & (r < 1.6) & (arr[..., 3] > 200) & (arr[..., :3].sum(axis=2) > 300)
+        # Anything but the outline navy: an eye inside a dark patch (panda, sloth) takes the patch's colour.
+        ring = (r > 1.0) & (r < 1.6) & (arr[..., 3] > 200) & (arr[..., :3].sum(axis=2) > 150)
         fur = tuple(int(v) for v in np.median(arr[ring][:, :3], axis=0)) if ring.any() else (240, 230, 210)
+        # A closed eye on a dark patch is drawn light, or it would vanish into it.
+        lash = NAVY if sum(fur) > 330 else (236, 239, 246)
         top = cy - h / 2 - 2
         lid = top + (h + 4) * amount
         d.rectangle([cx - w / 2 - 2, top, cx + w / 2 + 2, lid], fill=fur + (255,))
@@ -247,15 +354,15 @@ def paint_blink(rgba, eyes, amount):
             d.ellipse([cx - w / 2 - 2, cy - h / 2 - 2, cx + w / 2 + 2, cy + h / 2 + 2], fill=fur + (255,))
             # A closed eye: a soft downward arc, the kawaii sleeping eye.
             lw = max(3, round(w * 0.28))
-            d.arc([cx - w * 0.62, cy - h * 0.55, cx + w * 0.62, cy + h * 0.35], 20, 160, fill=NAVY + (255,), width=lw)
+            d.arc([cx - w * 0.62, cy - h * 0.55, cx + w * 0.62, cy + h * 0.35], 20, 160, fill=lash + (255,), width=lw)
         else:
-            d.line([cx - w / 2 - 1, lid, cx + w / 2 + 1, lid], fill=NAVY + (255,), width=max(2, round(w * 0.2)))
+            d.line([cx - w / 2 - 1, lid, cx + w / 2 + 1, lid], fill=lash + (255,), width=max(2, round(w * 0.2)))
     return np.array(img, np.float32)
 
-def blink_amount(t, at):
-    """Open, closing, shut, opening - about a fifth of a second each way."""
+def blink_amount(t, at, hold=2):
+    """Open, closing, shut for `hold` frames, opening. A sloth holds it longer."""
     d = 1 / FRAMES
-    steps = [(at, 0.5), (at + d, 1.0), (at + 2 * d, 1.0), (at + 3 * d, 0.5)]
+    steps = [(at, 0.5)] + [(at + (i + 1) * d, 1.0) for i in range(hold)] + [(at + (hold + 1) * d, 0.5)]
     for s, v in steps:
         if abs(t - s) < d / 2:
             return v
@@ -283,7 +390,9 @@ def warp(canvas, bones, t, ox, oy):
         w = b["weight"]
         px, py = b["pivot"][0] + ox, b["pivot"][1] + oy
         rx, ry = xs - px, ys - py
-        if "rotate" in b:
+        if "shift" in b:                        # the whole animal moves (a hop)
+            sx, sy = xs, ys + b["shift"](t)
+        elif "rotate" in b:
             a = math.radians(-b["rotate"](t))   # inverse map
             sx = px + rx * math.cos(a) - ry * math.sin(a)
             sy = py + rx * math.sin(a) + ry * math.cos(a)
@@ -317,19 +426,23 @@ def main():
     animated = {}
     for name, rig in RIGS.items():
         src = animals[name]
-        eyes = find_eyes(src)
+        # Eyes the finder cannot see (inside a dark patch, or only one in profile) are given by hand.
+        eyes = [{"cx": x, "cy": y, "w": w, "h": h} for x, y, w, h in rig["eyes"]] if "eyes" in rig else find_eyes(src)
         if not eyes:
             print(f"  {name}: no eyes found, no blink")
         canvas, ox, oy = square(src)
         bones = []
         for b in rig["bones"]:
+            if "shift" in b:
+                bones.append({**b, "pivot": (0, 0), "weight": np.ones(canvas.shape[:2], np.float32)})
+                continue
             m = np.zeros(canvas.shape[:2], np.float32)
             m[oy:oy + src.shape[0], ox:ox + src.shape[1]] = polygon_mask(src.shape[:2], b["poly"])
             bones.append({**b, "weight": np.clip(blur(m, 5), 0, 1)})
         strip = Image.new("RGBA", (FRAME * FRAMES, FRAME), (0, 0, 0, 0))
         for f in range(FRAMES):
             t = f / FRAMES
-            shut = blink_amount(t, rig["blink"])
+            shut = blink_amount(t, rig["blink"], rig.get("blink_hold", 2))
             base = paint_blink(src, eyes, shut) if shut else src
             c, _, _ = square(base)
             frame = warp(c, bones, t, ox, oy)
@@ -343,6 +456,8 @@ def main():
             img = Image.fromarray(np.clip(src, 0, 255).astype(np.uint8), "RGBA").convert("RGB").resize((src.shape[1] * 2, src.shape[0] * 2))
             d = ImageDraw.Draw(img)
             for b in rig["bones"]:
+                if "poly" not in b:
+                    continue
                 d.polygon([(x * 2, y * 2) for x, y in b["poly"]], outline=(255, 0, 80))
                 px, py = b["pivot"]; d.ellipse([px * 2 - 6, py * 2 - 6, px * 2 + 6, py * 2 + 6], fill=(0, 200, 255))
             for e in eyes:

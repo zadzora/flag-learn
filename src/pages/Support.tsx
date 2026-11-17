@@ -7,7 +7,6 @@ import SiteFooter from "../components/SiteFooter"
 import { GoogleButton } from "../components/AccountPanel"
 import { LookedName } from "../components/SupporterName"
 import PetSprite from "../components/PetSprite"
-import { isAnimatedPet } from "../utils/petImages"
 import { isGoogleUser, observeSession } from "../../lib/firebase"
 import { connectGoogle } from "../utils/cloudSave"
 import { checkoutUrl, saveLook, useSupporter } from "../utils/supporters"
@@ -35,8 +34,11 @@ const secondary = "inline-flex min-h-10 items-center justify-center gap-2 rounde
 const chip = (on: boolean) =>
     `flex min-h-0 items-center gap-2 rounded-full border-2 py-1 pl-1 pr-3 text-sm font-semibold ${on ? "border-slate-900 dark:border-white" : "border-slate-200 hover:border-slate-400 dark:border-[#232B45] dark:hover:border-[#4A5680]"}`
 
-/** The animals that move, first: they are the ones worth showing off. */
-const SHOWCASE = PETS.filter(p => isAnimatedPet(p.id))
+/**
+ * The few animals the page plays at once. Every animal moves, but each strip is
+ * a few hundred KB, so the rest wake only when hovered or picked.
+ */
+const SHOWCASE = ["fox", "penguin", "koala", "elephant", "owl"].map(id => PETS.find(p => p.id === id)!)
 
 function useSession(): User | null {
     const [user, setUser] = useState<User | null>(null)
@@ -131,13 +133,13 @@ export default function Support() {
                                         ))}
                                     </ul>
                                     <ul className="mt-3 flex flex-wrap gap-1">
-                                        {PETS.filter(p => !isAnimatedPet(p.id)).map(p => (
-                                            <li key={p.id}><PetSprite id={p.id} size={32} title={`${p.label} · ${p.home}`} /></li>
+                                        {PETS.filter(p => !SHOWCASE.includes(p)).map(p => (
+                                            <li key={p.id}><HoverPet id={p.id} label={`${p.label} · ${p.home}`} /></li>
                                         ))}
                                     </ul>
                                 </div>
                             }>
-                                {PETS.length} animals from around the map; the first {SHOWCASE.length} are animated, with more on the way. Yours sits beside your
+                                {PETS.length} animals from around the map, every one of them animated - hover the small ones. Yours sits beside your
                                 name, wakes up when someone hovers it, and rides on the roof of your Road Trip car.
                             </Perk>
 
@@ -351,7 +353,7 @@ function LookEditor({ uid, saved }: { uid: string; saved: SupporterLook }) {
 
             <h3 className={`mt-5 text-xs font-bold uppercase tracking-wider ${muted}`}>Animal</h3>
             <ul className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-2">
-                {[{ id: "none", label: "None", home: "" }, ...SHOWCASE, ...PETS.filter(p => !isAnimatedPet(p.id))].map(p => (
+                {[{ id: "none", label: "None", home: "" }, ...PETS].map(p => (
                     <li key={p.id}>
                         <PetChoice id={p.id} label={p.label} home={p.home} selected={look.pet === p.id} onPick={() => pick({ pet: p.id })} />
                     </li>
@@ -393,7 +395,16 @@ function PetChoice({ id, label, home, selected, onPick }: { id: string; label: s
                 : <PetSprite id={id} size={48} animate={hover || selected} />}
             <span className="text-xs font-semibold">{label}</span>
             {home && <span className={`text-[10px] ${muted}`}>{home}</span>}
-            {isAnimatedPet(id) && <Sparkles size={12} className="absolute right-1.5 top-1.5 text-amber-500" aria-label="Animated" />}
         </button>
+    )
+}
+
+/** A small still animal that plays its animation while the pointer is on it. */
+function HoverPet({ id, label }: { id: string; label: string }) {
+    const [hover, setHover] = useState(false)
+    return (
+        <span onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} className="block">
+            <PetSprite id={id} size={36} animate={hover} title={label} />
+        </span>
     )
 }

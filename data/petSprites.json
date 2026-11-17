@@ -23,6 +23,58 @@
   ],
   "frame": 160,
   "animated": {
+    "panda": {
+      "frames": 48,
+      "fps": 12
+    },
+    "kangaroo": {
+      "frames": 48,
+      "fps": 12
+    },
+    "llama": {
+      "frames": 48,
+      "fps": 12
+    },
+    "sloth": {
+      "frames": 48,
+      "fps": 12
+    },
+    "polarbear": {
+      "frames": 48,
+      "fps": 12
+    },
+    "tiger": {
+      "frames": 48,
+      "fps": 12
+    },
+    "camel": {
+      "frames": 48,
+      "fps": 12
+    },
+    "beaver": {
+      "frames": 48,
+      "fps": 12
+    },
+    "flamingo": {
+      "frames": 48,
+      "fps": 12
+    },
+    "hedgehog": {
+      "frames": 48,
+      "fps": 12
+    },
+    "turtle": {
+      "frames": 48,
+      "fps": 12
+    },
+    "orangutan": {
+      "frames": 48,
+      "fps": 12
+    },
+    "otter": {
+      "frames": 48,
+      "fps": 12
+    },
     "fox": {
       "frames": 48,
       "fps": 12

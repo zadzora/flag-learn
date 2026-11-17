@@ -63,8 +63,9 @@ export type Pet = { id: string; label: string; emoji: string; home: string }
 
 /**
  * Companion animals, each from somewhere on the map. Drawn art in
- * `public/pets.webp` (cut by `scripts/gen-pet-sprites.py` from
- * `graphic/support-animals.png`); the emoji is the fallback and the text form.
+ * `public/pets.webp` and an animation strip each in `public/pets/` (both from
+ * `scripts/gen-pet-sprites.py`, out of `graphic/support-animals.png`); the
+ * emoji is only the fallback for an id the sprites do not know.
  */
 export const PETS: Pet[] = [
     { id: "panda", label: "Panda", emoji: "🐼", home: "China" },

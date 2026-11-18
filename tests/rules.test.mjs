@@ -4,7 +4,7 @@ import assert from "node:assert/strict"
 import { after, before, beforeEach, describe, test } from "node:test"
 import { assertFails, assertSucceeds, initializeTestEnvironment } from "@firebase/rules-unit-testing"
 import { CLOUD_KEYS, ROAD_TRIP_LIMIT, VALUE_LIMIT } from "../src/utils/cloudMerge.ts"
-import { PETS, TEXT_COLOURS, TINTS } from "../src/utils/supporterLook.ts"
+import { EXCLUSIVE_PETS, PETS, TEXT_COLOURS, TINTS } from "../src/utils/supporterLook.ts"
 
 let env
 const TIMESTAMP = { ".sv": "timestamp" }
@@ -452,6 +452,20 @@ describe("supporters: the cosmetics a payment unlocks", () => {
         for (const t of TINTS) await assertSucceeds(db.ref("supporters/alice/look").set(look({ bg: t.id })))
         for (const p of [{ id: "none" }, ...PETS]) await assertSucceeds(db.ref("supporters/alice/look").set(look({ pet: p.id })))
         await assertSucceeds(db.ref("supporters/alice/look").set(look({ badge: false })))
+    })
+
+    test("an exclusive animal only on an account it was unlocked for, and nobody unlocks their own", async () => {
+        await seed("supporters/alice", { since: 1, unlocks: Object.fromEntries(EXCLUSIVE_PETS.map(p => [p.id, true])) })
+        await seed("supporters/bob", { since: 1 })
+        for (const p of EXCLUSIVE_PETS) {
+            await assertSucceeds(google("alice").ref("supporters/alice/look").set(look({ pet: p.id })))
+            await assertFails(google("bob").ref("supporters/bob/look").set(look({ pet: p.id })))
+            await assertFails(google("bob").ref(`supporters/bob/unlocks/${p.id}`).set(true))
+            await assertFails(google("bob").ref("supporters/bob/unlocks").set({ [p.id]: true }))
+            await assertFails(google("alice").ref(`supporters/alice/unlocks/${p.id}`).remove())
+        }
+        await seed("supporters/carol", { since: 1, unlocks: { turtle: false } })
+        await assertFails(google("carol").ref("supporters/carol/look").set(look({ pet: "turtle" })))
     })
 
     test("nothing outside the lists, nothing extra, and only their own", async () => {

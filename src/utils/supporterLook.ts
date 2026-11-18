@@ -12,7 +12,7 @@
  */
 
 /** One payment, once. Anything above it is a tip towards hosting. */
-export const SUPPORT_PRICE_EUR = 3
+export const SUPPORT_PRICE_EUR = 5
 
 /** One colour, or the stops of a gradient (left to right). */
 type Paint = string | string[]
@@ -73,7 +73,6 @@ export const PETS: Pet[] = [
     { id: "kangaroo", label: "Kangaroo", emoji: "🦘", home: "Australia" },
     { id: "penguin", label: "Penguin", emoji: "🐧", home: "Antarctica" },
     { id: "llama", label: "Llama", emoji: "🦙", home: "Peru" },
-    { id: "sloth", label: "Sloth", emoji: "🦥", home: "Costa Rica" },
     { id: "fox", label: "Fennec fox", emoji: "🦊", home: "Sahara" },
     { id: "polarbear", label: "Polar bear", emoji: "🐻‍❄️", home: "Arctic" },
     { id: "elephant", label: "Elephant", emoji: "🐘", home: "Kenya" },
@@ -82,10 +81,21 @@ export const PETS: Pet[] = [
     { id: "beaver", label: "Beaver", emoji: "🦫", home: "Canada" },
     { id: "flamingo", label: "Flamingo", emoji: "🦩", home: "Caribbean" },
     { id: "hedgehog", label: "Hedgehog", emoji: "🦔", home: "Europe" },
-    { id: "turtle", label: "Sea turtle", emoji: "🐢", home: "Galápagos" },
     { id: "orangutan", label: "Orangutan", emoji: "🦧", home: "Borneo" },
     { id: "otter", label: "Otter", emoji: "🦦", home: "Scotland" },
     { id: "owl", label: "Owl", emoji: "🦉", home: "Everywhere" },
+]
+
+/**
+ * Animals outside the supporter pack: nobody gets them by paying. Each is
+ * unlocked per account by hand (`supporters/<uid>/unlocks/<id>: true`, written
+ * only with the admin key - `scripts/grant-supporter.mjs <uid> --unlock <id>`),
+ * and the rules refuse the id in a look unless that row says so. The sea turtle
+ * and the sloth are the developer's own, given to whomever the developer chooses.
+ */
+export const EXCLUSIVE_PETS: Pet[] = [
+    { id: "turtle", label: "Sea turtle", emoji: "🐢", home: "Galápagos" },
+    { id: "sloth", label: "Sloth", emoji: "🦥", home: "Costa Rica" },
 ]
 
 export type SupporterLook = { text: string; bg: string; pet: string; badge: boolean }
@@ -95,15 +105,22 @@ export const DEFAULT_LOOK: SupporterLook = { text: "gold", bg: "none", pet: "non
 
 export const textById = (id: string | undefined): TextColour | undefined => TEXT_COLOURS.find(c => c.id === id)
 export const tintById = (id: string | undefined): Tint | undefined => TINTS.find(t => t.id === id)
-export const petById = (id: string | undefined): Pet | undefined => PETS.find(p => p.id === id)
+export const petById = (id: string | undefined): Pet | undefined => PETS.find(p => p.id === id) ?? EXCLUSIVE_PETS.find(p => p.id === id)
+export const isExclusivePet = (id: string | undefined): boolean => EXCLUSIVE_PETS.some(p => p.id === id)
 
-/** A stored look, cleaned: an id this version does not know falls back rather than throws. */
-export function readLook(raw: unknown): SupporterLook {
+/**
+ * A stored look, cleaned: an id this version does not know falls back rather
+ * than throws. An exclusive animal shows only on an account it is unlocked
+ * for (`unlocks`) - the rules already refuse anything else, this also covers a
+ * look saved before the animal left the pack.
+ */
+export function readLook(raw: unknown, unlocks: readonly string[] = []): SupporterLook {
     const look = (raw ?? {}) as Partial<SupporterLook>
+    const petOk = look.pet === "none" || (petById(look.pet) && (!isExclusivePet(look.pet) || unlocks.includes(look.pet!)))
     return {
         text: textById(look.text) ? look.text! : DEFAULT_LOOK.text,
         bg: tintById(look.bg) ? look.bg! : DEFAULT_LOOK.bg,
-        pet: look.pet === "none" || petById(look.pet) ? look.pet! : DEFAULT_LOOK.pet,
+        pet: petOk ? look.pet! : DEFAULT_LOOK.pet,
         badge: typeof look.badge === "boolean" ? look.badge : DEFAULT_LOOK.badge,
     }
 }

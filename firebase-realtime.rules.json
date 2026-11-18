@@ -381,7 +381,7 @@
             ".validate": "newData.isString() && newData.val().matches(/^(none|gold|rose|mint|sky|lavender|sunset|aurora|rainbow|night)$/)"
           },
           "pet": {
-            ".validate": "newData.isString() && newData.val().matches(/^(none|panda|koala|kangaroo|penguin|llama|sloth|fox|polarbear|elephant|tiger|camel|beaver|flamingo|hedgehog|turtle|orangutan|otter|owl)$/)"
+            ".validate": "newData.isString() && (newData.val().matches(/^(none|panda|koala|kangaroo|penguin|llama|fox|polarbear|elephant|tiger|camel|beaver|flamingo|hedgehog|orangutan|otter|owl)$/) || (newData.val().matches(/^(turtle|sloth)$/) && root.child('supporters').child($uid).child('unlocks').child(newData.val()).val() === true))"
           },
           "badge": {
             ".validate": "newData.isBoolean()"

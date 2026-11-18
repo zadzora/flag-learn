@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { onValue, ref, set } from "firebase/database"
 import { db, observeSession } from "../../lib/firebase"
-import { DEFAULT_LOOK, PETS, TEXT_COLOURS, TINTS, readLook, type SupporterLook } from "./supporterLook"
+import { DEFAULT_LOOK, EXCLUSIVE_PETS, PETS, TEXT_COLOURS, TINTS, readLook, type SupporterLook } from "./supporterLook"
 
 /**
  * Who supports the site, read from `supporters/<uid>`. The row is written by
@@ -15,7 +15,8 @@ import { DEFAULT_LOOK, PETS, TEXT_COLOURS, TINTS, readLook, type SupporterLook }
  * so moving between pages does not refetch.
  */
 
-export type Supporter = { since: number; look: SupporterLook }
+/** `unlocks`: the exclusive animals (`EXCLUSIVE_PETS`) given to this account by hand. */
+export type Supporter = { since: number; look: SupporterLook; unlocks: string[] }
 type Table = Record<string, Supporter>
 
 const EMPTY: Table = {}
@@ -27,9 +28,11 @@ let closeTimer: number | undefined
 function readTable(raw: unknown): Table {
     if (!raw || typeof raw !== "object") return EMPTY
     const out: Table = {}
-    for (const [uid, row] of Object.entries(raw as Record<string, { since?: unknown; look?: unknown }>)) {
+    for (const [uid, row] of Object.entries(raw as Record<string, { since?: unknown; look?: unknown; unlocks?: unknown }>)) {
         if (typeof row?.since !== "number") continue
-        out[uid] = { since: row.since, look: readLook(row.look) }
+        const given = row.unlocks && typeof row.unlocks === "object" ? row.unlocks as Record<string, unknown> : {}
+        const unlocks = EXCLUSIVE_PETS.map(p => p.id).filter(id => given[id] === true)
+        out[uid] = { since: row.since, look: readLook(row.look, unlocks), unlocks }
     }
     return out
 }
@@ -69,7 +72,7 @@ export function useSupporter(uid: string | null | undefined): Supporter | null {
     const test = useSyncExternalStore(subscribeTest, testSnapshot, testSnapshot)
     if (!uid) return null
     if (test && (test.mode === "everyone" || uid === test.uid)) {
-        return { since: TEST_SINCE, look: uid === test.uid && test.look ? test.look : lookFor(uid) }
+        return { since: TEST_SINCE, look: uid === test.uid && test.look ? test.look : lookFor(uid), unlocks: uid === test.uid ? EXCLUSIVE_PETS.map(p => p.id) : [] }
     }
     return all[uid] ?? null
 }

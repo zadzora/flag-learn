@@ -3,8 +3,11 @@
  * player picked on /support (at least SUPPORT_PRICE_EUR, the rest a tip).
  *
  * A Payment Link cannot be handed an amount, which is why this exists: the
- * page shows the amount and the "+ €1 / + €2 / + €5 / + €10" buttons, and the
- * session is made for exactly that sum. The player is identified by their
+ * page offers €5 / €10 / €15 or an amount typed in, and the session is made
+ * for exactly that sum.
+ *
+ * The buyer keeps the EU 14-day right of withdrawal - no waiver is asked for,
+ * by the user's choice. Stripe, as the seller, handles a withdrawal or refund. The player is identified by their
  * Firebase ID token, not by a uid the page could make up, and the uid goes on
  * the session as `client_reference_id` for `api/stripe-webhook.ts`.
  *
@@ -25,7 +28,7 @@ import { cert, getApps, initializeApp } from "firebase-admin/app"
 import { getAuth } from "firebase-admin/auth"
 
 /** Mirrors SUPPORT_PRICE_EUR in src/utils/supporterLook.ts, in cents. */
-const MIN_CENTS = 300
+const MIN_CENTS = 500
 /** A typo guard, not a policy: nobody means to give €5000 by accident. */
 const MAX_CENTS = 50000
 const SITE = "https://flaglearn.eu"

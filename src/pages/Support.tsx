@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import type { User } from "firebase/auth"
-import { AlertTriangle, Car, Check, Gift, Heart, Loader2, PawPrint, Sparkles, Trophy } from "lucide-react"
+import { AlertTriangle, Car, Check, Heart, Loader2, PawPrint, Sparkles, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { GoogleButton } from "../components/AccountPanel"
@@ -10,7 +10,7 @@ import PetSprite from "../components/PetSprite"
 import { isGoogleUser, observeSession } from "../../lib/firebase"
 import { connectGoogle } from "../utils/cloudSave"
 import { paymentsOpen, saveLook, startCheckout, useSupporter } from "../utils/supporters"
-import { PETS, SUPPORT_PRICE_EUR, TEXT_COLOURS, TINTS, cssPaint, hardToRead, type SupporterLook } from "../utils/supporterLook"
+import { EXCLUSIVE_PETS, PETS, SUPPORT_PRICE_EUR, TEXT_COLOURS, TINTS, cssPaint, hardToRead, type SupporterLook } from "../utils/supporterLook"
 import { useDarkMode } from "../utils/useDarkMode"
 
 /**
@@ -98,7 +98,7 @@ export default function Support() {
                         <h1 className="mt-2 !text-3xl font-extrabold tracking-[-0.02em] sm:!text-4xl">Help keep it online, get a little sparkle</h1>
                         <p className={`mt-3 leading-relaxed ${muted}`}>
                             Flag Learn has no ads and every mode is free to play. If you would like to help keep it online,
-                            a one-time €{SUPPORT_PRICE_EUR} makes you a supporter, and you get a few things to show for it.
+                            a one-time payment from €{SUPPORT_PRICE_EUR} makes you a supporter, and you get a few things to show for it.
                         </p>
                     </div>
                     <div className="flex items-end gap-1" aria-hidden>
@@ -151,9 +151,6 @@ export default function Support() {
                                 A small heart after your name. Anyone who hovers it sees that you help keep Flag Learn running. You can switch it off.
                             </Perk>
 
-                            <Perk icon={<Gift size={18} aria-hidden />} title="Everything that comes later">
-                                Every new content is yours too. One payment, no subscription.
-                            </Perk>
                         </ul>
 
                         <div className={`mt-6 text-sm ${muted}`}>
@@ -173,7 +170,7 @@ export default function Support() {
                     </aside>
                 </div>
 
-                {supporter && user && <LookEditor uid={user.uid} saved={supporter.look} />}
+                {supporter && user && <LookEditor uid={user.uid} saved={supporter.look} unlocks={supporter.unlocks} />}
 
                 <section className="mt-12 max-w-[640px]">
                     <h2 className="mb-3 !text-xl font-bold">Questions</h2>
@@ -184,7 +181,7 @@ export default function Support() {
                         </div>
                         <div>
                             <dt className="font-bold">Can I give more than €{SUPPORT_PRICE_EUR}?</dt>
-                            <dd className={muted}>Yes - you choose the amount on the payment page.</dd>
+                            <dd className={muted}>Yes - pick €10 or €15, or type any amount. The perks are the same either way; anything above €{SUPPORT_PRICE_EUR} is simply a bigger thank-you.</dd>
                         </div>
                         <div>
                             <dt className="font-bold">I paid, but nothing changed.</dt>
@@ -206,7 +203,8 @@ export default function Support() {
     )
 }
 
-const EXTRAS = [1, 2, 5, 10]
+/** Fixed amounts, not "+ €1" steps: an increment button anchors on the minimum. */
+const PRESETS = [SUPPORT_PRICE_EUR, 10, 15]
 const MAX_EUR = 500
 const euro = (eur: number) => `€${eur.toFixed(2)}`
 
@@ -259,7 +257,7 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
     return (
         <div className={`${panel} p-6`}>
             <p className={`text-sm ${muted}`}>
-                <strong className="text-slate-900 dark:text-white">€{SUPPORT_PRICE_EUR}</strong> one-time payment · pay more if you like
+                <strong className="text-slate-900 dark:text-white">From €{SUPPORT_PRICE_EUR}</strong> · one-time payment · you choose the amount
             </p>
 
             {returning && google ? (
@@ -269,7 +267,25 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
                 </p>
             ) : google ? (
                 <>
-                    <label className="mt-4 flex items-center rounded-lg border-2 border-slate-200 bg-white px-3 focus-within:border-slate-500 dark:border-[#232B45] dark:bg-[#0A0E1A] dark:focus-within:border-[#4A5680]">
+                    <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label="Amount">
+                        {PRESETS.map(eur => {
+                            const on = amount === eur
+                            return (
+                                <button
+                                    key={eur}
+                                    type="button"
+                                    aria-pressed={on}
+                                    onClick={() => setTyped(eur.toFixed(2))}
+                                    className={`min-h-11 rounded-lg border-2 text-lg font-extrabold tabular-nums ${on ? "border-rose-500 bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300" : "border-slate-200 hover:border-slate-400 dark:border-[#232B45] dark:hover:border-[#4A5680]"}`}
+                                >
+                                    €{eur}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    <p className={`mt-3 text-xs font-semibold ${muted}`}>Or your own amount</p>
+                    <label className="mt-1 flex items-center rounded-lg border-2 border-slate-200 bg-white px-3 focus-within:border-slate-500 dark:border-[#232B45] dark:bg-[#0A0E1A] dark:focus-within:border-[#4A5680]">
                         <span className="text-2xl font-bold text-slate-400" aria-hidden>€</span>
                         <input
                             inputMode="decimal"
@@ -283,21 +299,9 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
                     {tooLow && <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">The minimum is €{SUPPORT_PRICE_EUR}.</p>}
                     {tooHigh && <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">That is very generous - the most is €{MAX_EUR}.</p>}
 
-                    <p className="mt-4 flex items-center gap-1.5 text-sm font-semibold">
-                        <Heart size={15} className="text-rose-500" aria-hidden /> Add a little extra
+                    <p className={`mt-3 text-sm ${muted}`}>
+                        Every amount unlocks the same perks. Paying more is simply a bigger thank-you.
                     </p>
-                    <div className="mt-2 grid grid-cols-4 gap-2">
-                        {EXTRAS.map(extra => (
-                            <button
-                                key={extra}
-                                type="button"
-                                onClick={() => setTyped(euro(Math.min(MAX_EUR, (tooLow ? SUPPORT_PRICE_EUR : amount) + extra)).slice(1))}
-                                className="min-h-9 rounded-md bg-emerald-500 px-1 text-sm font-bold text-white shadow-[inset_0_-2px_0_rgba(0,0,0,0.18)] hover:bg-emerald-600"
-                            >
-                                + €{extra}
-                            </button>
-                        ))}
-                    </div>
 
                     {paymentsOpen ? (
                         <button type="button" onClick={pay} disabled={busy || tooLow || tooHigh} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-rose-500 px-5 text-base font-bold text-white hover:bg-rose-600 disabled:opacity-60">
@@ -318,7 +322,7 @@ function PayCard({ google, returning }: { google: User | null; returning: boolea
             )}
             <p className={`mt-4 text-xs ${muted}`}>
                 Secure payment by Stripe: card, Apple Pay, Google Pay and what else Stripe offers in your country. VAT is included in the amount.
-                By paying you agree to the <Link to="/terms" className="font-semibold underline-offset-2 hover:underline">terms</Link>; the perks are unlocked straight away.
+                By paying you agree to the <Link to="/terms" className="font-semibold underline-offset-2 hover:underline">terms</Link>. Under 18? Please ask a parent or guardian first.
             </p>
         </div>
     )
@@ -348,7 +352,7 @@ function Preview({ look, name, dark }: { look: SupporterLook; name: string; dark
     )
 }
 
-function LookEditor({ uid, saved }: { uid: string; saved: SupporterLook }) {
+function LookEditor({ uid, saved, unlocks }: { uid: string; saved: SupporterLook; unlocks: string[] }) {
     const [look, setLook] = useState<SupporterLook>(saved)
     const [state, setState] = useState<"idle" | "saving" | "saved" | "failed">("idle")
     const [name] = useState(() => localStorage.getItem("flag-master-map-speedrun-name") || localStorage.getItem("flag-master-nickname") || "You")
@@ -414,7 +418,7 @@ function LookEditor({ uid, saved }: { uid: string; saved: SupporterLook }) {
 
             <h3 className={`mt-5 text-xs font-bold uppercase tracking-wider ${muted}`}>Animal</h3>
             <ul className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-2">
-                {[{ id: "none", label: "None", home: "" }, ...PETS].map(p => (
+                {[{ id: "none", label: "None", home: "" }, ...EXCLUSIVE_PETS.filter(p => unlocks.includes(p.id)), ...PETS].map(p => (
                     <li key={p.id}>
                         <PetChoice id={p.id} label={p.label} home={p.home} selected={look.pet === p.id} onPick={() => pick({ pet: p.id })} />
                     </li>

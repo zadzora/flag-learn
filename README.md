@@ -146,8 +146,8 @@ is what owns a territory, that would quietly wipe a player's empire.
 
 ### Supporters (Stripe)
 
-`/support` sells one thing: a one-time €3 (or more - the player types an
-amount or adds + €1 / + €2 / + €5 / + €10) that makes an account a supporter:
+`/support` sells one thing: a one-time €5 (or more - the player picks €10 /
+€15 or types an amount) that makes an account a supporter:
 their own letter colour and tint on every leaderboard, an animated
 animal beside the name, walking along their collection bars and riding their
 Road Trip car, and the Racer and supporter paints. Cosmetic only.
@@ -201,7 +201,17 @@ delivery and the function's reply.
 A payment without an account on it, a refund or a gift is handled by hand:
 `node scripts/grant-supporter.mjs <uid> --key service-account.json` (add
 `--revoke` to take it back, or `--emulator` instead of `--key` to try it
-locally). The player's uid is shown on their `/support` page.
+locally). The player's uid is shown on their `/support` page, or found from a
+leaderboard name with `--find "<name>"`; `--list` prints every supporter.
+
+**Exclusive animals** (`EXCLUSIVE_PETS`, today the sea turtle and the sloth) are not in the
+pack anybody can pay for. `--unlock turtle` gives one to an account (and makes
+it a supporter, since the animal is shown beside a supporter's name); `--lock
+turtle` takes it back (likewise `sloth`). The rules accept that animal in a look only when
+`supporters/<uid>/unlocks/turtle` is `true`, and no client can write that row,
+so the key file is the only way in. The same row can be added by hand in the
+Firebase console (Realtime Database -> Data -> `supporters/<uid>` -> add
+`unlocks` / `turtle: true`, plus `since` with any number if the row is new).
 
 #### Testing it locally
 
@@ -222,7 +232,7 @@ Three levels, from quickest to the whole payment:
      `STRIPE_SECRET_KEY=sk_test_...` and, once step b prints it,
      `STRIPE_WEBHOOK_SECRET=whsec_...`
    - install the [Stripe CLI](https://docs.stripe.com/stripe-cli), `stripe login`,
-     then `stripe listen --forward-to localhost:8787/api/stripe-webhook`
+     then `stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded --forward-to localhost:8787/api/stripe-webhook` (newer CLIs refuse to start without `--events`)
    - `npm run webhook:dev` - serves `api/checkout` and `api/stripe-webhook` on
      port 8787 against the emulators; `npm run dev:emu` passes `/api/*` to it
    - restart `npm run dev:emu` (it reads `VITE_PAYMENTS` on start), sign in on

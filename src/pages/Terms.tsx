@@ -18,7 +18,7 @@ import { SUPPORT_PRICE_EUR } from "../utils/supporterLook"
 
 const THEME_KEY = "flag-master-theme"
 const CONTACT = "flaglearn@gmail.com"
-const UPDATED = "17 November 2026"
+const UPDATED = "18 November 2026"
 /** If the site closes, payments made this many days before payments stop are refunded. */
 const REFUND_DAYS = 30
 
@@ -64,6 +64,7 @@ export default function Terms() {
                     <ul className="ml-5 list-disc space-y-1.5">
                         <li>Every mode is free to play today. Supporting is optional and gives looks only - never an advantage.</li>
                         <li>The supporter payment is a one-time payment, not a subscription. Nothing renews and nothing is charged again.</li>
+                        <li>Changed your mind? You can withdraw within 14 days of paying and get your money back.</li>
                         <li>The perks are yours for as long as Flag Learn runs.</li>
                         <li>Stripe sells the perks on Flag Learn's behalf and takes care of the payment, the VAT, the receipt and refunds.</li>
                     </ul>
@@ -89,17 +90,24 @@ export default function Terms() {
                     <ul className="ml-5 list-disc space-y-1.5">
                         <li>your own letter colour and tint for your name on the leaderboards and in the online modes, and a supporter heart;</li>
                         <li>a companion animal shown beside your name and in some modes;</li>
-                        <li>the Racer car and the supporter paints in the Road Trip;</li>
-                        <li>supporter looks added later, while they are offered.</li>
+                        <li>the Racer car and the supporter paints in the Road Trip.</li>
                     </ul>
+                    <p>
+                        The payment covers the perks listed here. Anything added to Flag Learn later - new looks, new perks or anything else offered
+                        for a payment - is not included automatically; whether and how it is available to existing supporters is said when it is
+                        offered.
+                    </p>
                     <p>
                         They are cosmetic only. What you get is a personal right to use these perks inside Flag Learn, for as long as Flag Learn is
                         available. It is not ownership of anything, it has no value in money, and it cannot be sold or moved to another account. The
                         perks are unlocked straight after the payment.
                     </p>
                     <p>
-                        Looks may be redrawn, renamed or replaced by similar ones as the game develops. Your supporter status itself is not taken away,
-                        except as described under refunds below.
+                        Looks may be redrawn, renamed or replaced by similar ones as the game develops - for example when the art is improved, a mode is
+                        reworked or retired, or a legal or security reason requires it. Such changes never cost you anything. If a change would make your
+                        supporter perks clearly worse, it will be announced on the site at least 30 days before it takes effect, and you may then ask for
+                        your money back within 30 days of the change. Your supporter status itself is not taken away, except as described under refunds
+                        below.
                     </p>
                 </Section>
 
@@ -108,12 +116,19 @@ export default function Terms() {
                         The payment is made on Stripe's checkout page. Stripe acts as the seller (merchant of record, through Stripe Managed Payments):
                         your purchase contract and payment are with Stripe under{" "}
                         <External href="https://stripe.com/legal">Stripe's terms</External>, Stripe charges and pays the VAT of your country (the price
-                        includes it) and sends the receipt. Refund requests go to Stripe through the link in the receipt, or to me at <Mail /> and I
-                        will help.
+                        includes it) and sends the receipt. Refunds are handled by Stripe: request one through the link in the receipt.
                     </p>
                     <p>
-                        Your rights as a consumer under the law of the country you live in - including any right to withdraw from the purchase and your
-                        rights if the perks do not work as described - are not affected by anything on this page.
+                        You can withdraw from the purchase within 14 days of paying, without giving a reason, even though the perks are unlocked
+                        straight away: ask Stripe through the link in the receipt. You get the full amount back and the perks are removed.
+                    </p>
+                    <p>
+                        If you are under 18, please ask a parent or guardian before paying. A parent or guardian can ask Stripe for a refund the same
+                        way.
+                    </p>
+                    <p>
+                        Your other rights as a consumer under the law of the country you live in - including your rights if the perks do not work as
+                        described - are not affected by anything on this page.
                     </p>
                     <p>
                         If something does not show up after paying, write to me before contacting your bank, and I will sort it out. If a payment is

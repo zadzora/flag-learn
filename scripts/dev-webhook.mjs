@@ -4,7 +4,7 @@
 //
 //   npm run emulators                       # terminal 1
 //   npm run dev:emu                         # terminal 2 (the site; Vite passes /api/* on to port 8787)
-//   stripe listen --forward-to localhost:8787/api/stripe-webhook     # terminal 3
+//   stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded --forward-to localhost:8787/api/stripe-webhook   # terminal 3
 //   npm run webhook:dev                     # terminal 4, with the keys below
 //
 // `stripe listen` prints the whsec_ to use. The keys can also go in

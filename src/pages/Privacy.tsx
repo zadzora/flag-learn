@@ -11,7 +11,7 @@ import SiteFooter from "../components/SiteFooter"
 
 const THEME_KEY = "flag-master-theme"
 const CONTACT = "flaglearn@gmail.com"
-const UPDATED = "17 November 2026"
+const UPDATED = "18 November 2026"
 
 const muted = "text-slate-500 dark:text-[#8C97B3]"
 const link = "font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
@@ -113,7 +113,7 @@ export default function Privacy() {
                             privacy policy. Your card details never reach me. Stripe tells me the amount, the currency, the date, a payment reference and your
                             account ID (which the game passes to Stripe so the payment finds your account); its dashboard also shows me the name, email and
                             country you entered, which I use only to answer you about the payment. Publicly, the database then shows that your account ID is a supporter, since when, and the
-                            look you picked (letter colour, tint, animal, heart), so it can appear next to your nickname. It shows no amount, no name and no
+                            look you picked (letter colour, tint, animal, heart) and any animal given to the account by hand, so it can appear next to your nickname. It shows no amount, no name and no
                             email. Legal basis: Art. 6(1)(b) GDPR, and for the
                             payment records Art. 6(1)(c) GDPR.
                         </Item>

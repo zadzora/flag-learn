@@ -1,3 +1,4 @@
+import PetPerch from "../components/PetPerch"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowDown, ArrowUp, Flame, RotateCcw, ArrowLeft } from "lucide-react"
@@ -200,6 +201,7 @@ export default function ElementHigherLower() {
                                 <h2 className="!text-3xl font-bold tabular-nums">Streak of {streak}</h2>
                                 <p className="mt-1 text-slate-500 dark:text-slate-400">{newBest ? "A new best!" : `Best: ${best}`}</p>
                             </div>
+                            <PetPerch cheer={newBest} className="ml-auto" />
                         </div>
                         {round && prop && (
                             <p className="text-sm text-slate-600 dark:text-slate-300">

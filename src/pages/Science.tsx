@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { Sparkles, ChevronRight, Grid2x2Plus, ArrowUpDown, LayoutGrid } from "lucide-react"
 import { AtomIcon, CompoundsIcon, ElementDetectiveIcon, ElementleIcon, ElementSpeedrunIcon, FormulaIcon, GaugeIcon, SymbolSpellerIcon, type ModeIcon } from "../components/ModeIcons"
+import PetLane from "../components/PetLane"
+import { pickPetSpot } from "../utils/petSpots"
 import TopBar from "../components/TopBar"
 import ModeTag, { type ModeTagKind } from "../components/ModeTag"
 import { ELEMENTS, ELEMENT_MODES, readElementProgress, type ElementModeKey } from "../utils/elements"
@@ -337,6 +339,8 @@ export default function Science() {
     })
     const [learn] = useState(buildLearn)
     const [games] = useState(buildGames)
+    // The supporter animal wanders one of the two shelves, a different one each visit.
+    const [petSpot] = useState(() => pickPetSpot(["learn", "games"] as const))
 
     useEffect(() => {
         const root = document.documentElement
@@ -359,9 +363,11 @@ export default function Science() {
                 </div>
 
                 <SectionHead title="Learn" aside="Spaced repetition, a little at a time" />
+                {petSpot === "learn" && <PetLane size={32} top={-16} bottom={2} />}
                 <TopicGrid topics={learn} />
 
                 <SectionHead title="Chemistry games" aside="Quick rounds on the periodic table" />
+                {petSpot === "games" && <PetLane size={32} top={-16} bottom={2} />}
                 <TopicGrid topics={games} />
 
                 <p className="mt-8 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">

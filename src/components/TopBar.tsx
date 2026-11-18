@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, Moon, Sun } from "lucide-react"
 import { readStore } from "../utils/profileStore"
 import { asset } from "../utils/asset"
+import PetNap from "./PetNap"
 
 type Props = {
     /** Page name, shown after the wordmark. */
@@ -89,6 +90,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                 )}
                 <div className="ml-auto flex items-center gap-2">
                     {children}
+                    <PetNap />
                     <ProfileLink onLeave={onLeave} />
                     {theme && onToggleTheme && (
                         <BarButton onClick={onToggleTheme} label={theme === "light" ? "Dark theme" : "Light theme"}>

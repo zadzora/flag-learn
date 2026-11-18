@@ -1,3 +1,4 @@
+import PetPerch from "./PetPerch"
 import { useEffect, useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import { Medal, Repeat, Timer, X } from "lucide-react"
@@ -107,7 +108,10 @@ export default function MapSpeedrunPanel<R extends string>({ regions, boardFor, 
                                 : intro}
                         </p>
                     </div>
-                    <BarButton onClick={onClose} label="Close"><X size={20} aria-hidden /></BarButton>
+                    <div className="flex shrink-0 items-start gap-2">
+                        {result && <PetPerch size={40} cheer={notice === "first" || notice === "improved"} />}
+                        <BarButton onClick={onClose} label="Close"><X size={20} aria-hidden /></BarButton>
+                    </div>
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5 sm:p-6">

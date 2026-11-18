@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, Check, ChevronRight, Crosshair, Flame, Grid3x3, MapPinCheck, Lightbulb, LogOut, Maximize, Moon, RefreshCw, RotateCcw, SkipForward, Sun, Target, Timer, Trophy, X, ZoomIn, ZoomOut } from "lucide-react"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, useMapContext, useZoomPanContext } from "react-simple-maps"
 import { BarButton } from "../components/TopBar"
+import PetNap from "../components/PetNap"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
 import { PENALTY_SECONDS, fitCamera, formatRunTime, openRunTracker, roundRunTime, type RunTracker } from "../utils/mapSpeedrun"
 import {
@@ -788,6 +789,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                                 </span>
                                 <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Left: <span className="font-bold tabular-nums text-slate-900 dark:text-white">{run.queue.length + (status === "idle" ? 1 : 0)}</span></span>
                                 <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {run.mistakes}</span>
+                                <PetNap />
                                 <BarButton onClick={() => setTheme(dark ? "light" : "dark")} label={dark ? "Light theme" : "Dark theme"}>
                                     {dark ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
                                 </BarButton>
@@ -835,6 +837,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                                         <ChevronRight size={15} aria-hidden className="text-slate-400" />
                                     </button>
                                 )}
+                                <PetNap />
                                 <BarButton onClick={() => setTheme(dark ? "light" : "dark")} label={dark ? "Light theme" : "Dark theme"}>
                                     {dark ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
                                 </BarButton>

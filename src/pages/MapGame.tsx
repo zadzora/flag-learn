@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, ZoomIn, ZoomOut, Maximize, Trophy, Loader2, Check, Lock, RotateCcw, X, Unlock, Dumbbell, LogOut, Timer, Repeat, CheckSquare, Square, RefreshCw, Sun, Moon, Share2, Flame, ChevronRight, MousePointerClick, Flag as FlagIcon } from "lucide-react"
 import { BarButton } from "../components/TopBar"
+import PetNap from "../components/PetNap"
 import CursorTarget from "../components/CursorTarget"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
 import { MAP_GAME_UNSUPPORTED_CODES, MAP_REGIONS, PENALTY_SECONDS, formatRunTime, mapBoard, openRunTracker, regionCamera, regionInfo, regionPool, roundRunTime, type MapRegion, type RunTracker } from "../utils/mapSpeedrun"
@@ -848,6 +849,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                                 </span>
                                 <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Left: <span className="font-bold tabular-nums text-slate-900 dark:text-white">{run.queue.length + (status === 'idle' ? 1 : 0)}</span></span>
                                 <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {run.mistakes}</span>
+                                <PetNap />
                                 <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
                                     {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>
@@ -920,6 +922,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                                         <ChevronRight size={15} aria-hidden className="text-slate-400" />
                                     </button>
                                 )}
+                                <PetNap />
                                 <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
                                     {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>
@@ -968,6 +971,7 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
                                 <span className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums" title="Time"><Timer size={15} aria-hidden />{formatTime(practiceElapsedTime)}</span>
                                 <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Rem: <span className="font-bold text-slate-900 dark:text-white">{practicePool.length}</span></span>
                                 <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {practiceMistakes}</span>
+                                <PetNap />
                                 <BarButton onClick={toggleTheme} label={theme === 'light' ? 'Dark theme' : 'Light theme'}>
                                     {theme === 'light' ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>

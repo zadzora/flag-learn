@@ -1,3 +1,4 @@
+import PetPerch from "../components/PetPerch"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion"
@@ -433,9 +434,12 @@ export default function HigherLowerGame() {
                         {complete && (
                             <section className={`${panel} mb-6 flex w-full max-w-md flex-col gap-5 p-6`}>
                                 <div>
-                                    <h2 className={`text-2xl font-bold ${lost ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                                        {lost ? "Game over" : "You did it!"}
-                                    </h2>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <h2 className={`text-2xl font-bold ${lost ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                                            {lost ? "Game over" : "You did it!"}
+                                        </h2>
+                                        <PetPerch cheer={!lost} />
+                                    </div>
                                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                         {lost
                                             ? "Wrong guess — that ends your run."

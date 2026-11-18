@@ -1,3 +1,4 @@
+import PetPerch from "../components/PetPerch"
 import { useEffect, useEffectEvent, useRef, useState, type KeyboardEvent } from "react"
 import { ChevronRight, RotateCcw, Settings2, Trophy, Lightbulb, Timer, X } from "lucide-react"
 import TopBar from "../components/TopBar"
@@ -418,6 +419,7 @@ export default function SymbolSpeller() {
                                     {" · "}{newBest ? "A new best!" : `Best: ${best}`}
                                 </p>
                             </div>
+                            <PetPerch cheer={newBest} className="ml-auto" />
                         </div>
                         <ul className="flex flex-col gap-1.5">
                             {results.map(r => (

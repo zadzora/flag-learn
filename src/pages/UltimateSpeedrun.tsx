@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps"
 import { CornerDownLeft, Flag as FlagIcon, Landmark, LogOut, MapPin, Maximize, Moon, MousePointerClick, RotateCcw, Sun, Timer, X, ZoomIn, ZoomOut } from "lucide-react"
 import { BarButton } from "../components/TopBar"
+import PetNap from "../components/PetNap"
 import CursorTarget from "../components/CursorTarget"
 import MapSpeedrunPanel, { type MapRunResult } from "../components/MapSpeedrunPanel"
 import MapTips from "../components/MapTips"
@@ -545,6 +546,7 @@ export default function UltimateSpeedrun() {
                                 </span>
                                 <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">Left: <span className="font-bold tabular-nums text-slate-900 dark:text-white">{run.queue.length + (status === "error" ? 0 : 1)}</span></span>
                                 <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {run.mistakes}</span>
+                                <PetNap />
                                 <BarButton onClick={toggleTheme} label={theme === "light" ? "Dark theme" : "Light theme"}>
                                     {theme === "light" ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>
@@ -554,6 +556,7 @@ export default function UltimateSpeedrun() {
                         <>
                             <div className="flex items-center gap-2 text-lg font-bold"><Timer size={19} aria-hidden /> Ultimate Speedrun</div>
                             <div className="ml-auto">
+                                <PetNap />
                                 <BarButton onClick={toggleTheme} label={theme === "light" ? "Dark theme" : "Light theme"}>
                                     {theme === "light" ? <Moon size={18} aria-hidden /> : <Sun size={18} aria-hidden />}
                                 </BarButton>

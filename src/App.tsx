@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import Game from "./pages/Game"
@@ -43,6 +44,9 @@ import Terms from "./pages/Terms"
 import Support from "./pages/Support"
 import AchievementToasts from "./components/AchievementToasts"
 import ScrollMemory from "./components/ScrollMemory"
+
+/** Dev only: every supporter animal in every state (`/dev/pets`). Never part of a production build. */
+const PetGallery = import.meta.env.DEV ? lazy(() => import("./pages/PetGallery")) : null
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -99,6 +103,9 @@ export default function App() {
                 <Route path="/science/speller" element={<SymbolSpeller />} />
                 <Route path="/science/higher-lower" element={<ElementHigherLower />} />
                 <Route path="/science/connections" element={<ChemConnections />} />
+
+                {PetGallery && <Route path="/dev/pets" element={<Suspense fallback={null}><PetGallery /></Suspense>} />}
+
 
                 {/* The mode was called Flag Wars before; keep the old link working. */}
                 <Route path="/flag-wars" element={<FlagWars />} />

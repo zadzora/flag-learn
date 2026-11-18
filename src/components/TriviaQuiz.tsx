@@ -1,3 +1,4 @@
+import PetPerch from "./PetPerch"
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { AnimatePresence, Reorder, motion } from "framer-motion"
@@ -1372,6 +1373,7 @@ export function EndScreen({ played, best, onAgain, reduce, label = "Final score"
     return (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
             <div className="flex flex-col items-center gap-2 py-4 text-center">
+                <PetPerch size={52} cheer={newBest} />
                 <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{label}</span>
                 <CountUpValue target={score} format={fmt} durationMs={reduce ? 1 : 1800} className="text-[clamp(3.5rem,11vw,5.5rem)] font-extrabold leading-none tracking-[-0.04em] tabular-nums" />
                 {newBest && (

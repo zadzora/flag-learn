@@ -18,6 +18,8 @@ import ModeTag, { type ModeTagKind } from "../components/ModeTag"
 import { RANKS, TIER_NAMES, TRACKS, nextGoal, pointsOf, rankOf, unitFor } from "../utils/achievements"
 import { PROFILE_EVENT, readStore } from "../utils/profileStore"
 import { asset } from "../utils/asset"
+import PetLane from "../components/PetLane"
+import { pickPetSpot } from "../utils/petSpots"
 
 const LAST_MODE_KEY = "flag-master-last-mode"
 const TARGET_STREAK = 3
@@ -293,6 +295,9 @@ export default function Home() {
         return () => window.removeEventListener(PROFILE_EVENT, reload)
     }, [])
 
+    // The supporter animal wanders one section, a different one each visit.
+    const [petSpot] = useState(() => pickPetSpot(["learn", "today", "multiplayer", "more"] as const))
+
     const solved = dailies.filter(d => d.done).length
     const lastDeck = decks.find(d => d.mode === hero) ?? decks[0]
 
@@ -389,6 +394,7 @@ export default function Home() {
 
             <main className="mx-auto w-full max-w-[1120px] flex-1 px-5 pb-16 sm:px-6">
                 <SectionHead id="learn" title="Learn" />
+                {petSpot === "learn" && <PetLane size={32} top={-16} bottom={2} />}
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {decks.map(deck => (
                         <li key={deck.mode}>
@@ -435,6 +441,7 @@ export default function Home() {
                 <ProfileStrip profile={profile} />
 
                 <SectionHead id="today" title="Today" aside={`${solved} of ${dailies.length} solved · resets 00:00 UTC`} />
+                {petSpot === "today" && <PetLane size={32} top={-16} bottom={2} />}
                 <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {dailies.map(({ mode, done, streak }) => (
                         <li key={mode.key}>
@@ -475,9 +482,11 @@ export default function Home() {
                 </ul>
 
                 <SectionHead id="multiplayer" title="Play with others" aside="Live or async" />
+                {petSpot === "multiplayer" && <PetLane size={32} top={-16} bottom={2} />}
                 <EntryList items={MULTIPLAYER} streaks={streaks} />
 
                 <SectionHead id="more" title="More modes" />
+                {petSpot === "more" && <PetLane size={32} top={-16} bottom={2} />}
                 <EntryList items={MORE_MODES} streaks={streaks} />
 
                 <Link

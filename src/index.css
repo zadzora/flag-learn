@@ -410,3 +410,65 @@
     .pet-strip { animation: pet-strip var(--pet-dur) steps(var(--pet-steps)) infinite; }
     .pet-strip.pet-breathe { animation: pet-strip var(--pet-dur) steps(var(--pet-steps)) infinite, pet-breathe 3.7s ease-in-out infinite; }
 }
+
+/*
+ * Napping (components/PetNap.tsx, PetLane.tsx): a deeper, slower breath on the
+ * still pose, and a thought bubble of z's. A walking animal dozes off by the
+ * `.pet-napping` class alone: its strip stops on frame 0, which is the still
+ * cell, so it never jumps.
+ */
+@keyframes pet-sleep {
+    0%, 100% { transform: scale(1, 1); }
+    50% { transform: scale(1.04, 0.95); }
+}
+@keyframes pet-zzz-in {
+    from { opacity: 0; transform: translateY(3px) scale(0.6); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes pet-zzz-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+@keyframes pet-z {
+    0%, 12% { opacity: 0.2; }
+    30%, 78% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
+@keyframes pet-hop {
+    0%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-32%); }
+    70% { transform: translateY(0) scale(1.06, 0.94); }
+}
+.pet-napping .pet-strip { background-position: 0 0; }
+.pet-zzz { display: none; width: 0; height: 0; }
+.pet-napping .pet-zzz { display: block; }
+.pet-zzz-dot { position: absolute; left: 0; bottom: 0; width: 0.32em; height: 0.32em; border-radius: 999px; }
+.pet-zzz-dot-2 { left: 0.3em; bottom: 0.38em; width: 0.45em; height: 0.45em; }
+.pet-zzz-bubble {
+    position: absolute;
+    left: 0.55em;
+    bottom: 0.75em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.05em;
+    padding: 0.2em 0.5em 0.28em;
+    border-radius: 999px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+.pet-zzz-bubble > span:nth-child(1) { font-size: 0.75em; }
+.pet-zzz-bubble > span:nth-child(2) { font-size: 0.9em; }
+.pet-zzz-bubble > span:nth-child(3) { font-size: 1.05em; }
+@media (prefers-reduced-motion: no-preference) {
+    .pet-sleep { transform-origin: 50% 100%; animation: pet-sleep 4.6s ease-in-out infinite; }
+    .pet-napping .pet-strip.pet-breathe { animation: pet-sleep 4.6s ease-in-out infinite; }
+    .pet-napping .pet-zzz { animation: pet-zzz-in 0.5s ease-out both; }
+    .pet-zzz-bubble { animation: pet-zzz-float 3s ease-in-out infinite; }
+    .pet-zzz-bubble > span { animation: pet-z 2.4s ease-in-out infinite; }
+    .pet-zzz-bubble > span:nth-child(2) { animation-delay: 0.35s; }
+    .pet-zzz-bubble > span:nth-child(3) { animation-delay: 0.7s; }
+    /* Woken in the top bar: one small hop. A new best at the end of a game: a few happy ones. */
+    .pet-hop-once { animation: pet-hop 0.45s ease-out; transform-origin: 50% 100%; }
+    .pet-cheer { animation: pet-hop 0.55s ease-out 0.4s 4; transform-origin: 50% 100%; }
+}

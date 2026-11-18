@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import PetLane from '../components/PetLane'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lightbulb, RefreshCw, Flag, Check, X, ChevronRight, Flame, Loader2, Paintbrush } from 'lucide-react'
@@ -410,6 +411,7 @@ export default function PaintGame() {
 
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-5">
         {/* Cycle progress */}
+        <PetLane top={0} bottom={1} />
         <div className="h-1.5 w-full shrink-0 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
           <motion.div
             className="h-full bg-emerald-500"

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react"
+import PetLane from "../components/PetLane"
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { SkipForward, Check, Loader2, Flame, Map as MapIcon, Minus, Plus, Repeat } from "lucide-react"
@@ -304,6 +305,7 @@ export default function BorderGuessGame() {
             </TopBar>
 
             <main className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col gap-3 px-4 pb-4 pt-3">
+                <PetLane top={0} bottom={-11} />
                 <div className="h-1.5 shrink-0 overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700">
                     <motion.div
                         className="h-full bg-blue-500"

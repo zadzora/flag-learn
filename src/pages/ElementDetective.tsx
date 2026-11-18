@@ -1,3 +1,4 @@
+import PetPerch from "../components/PetPerch"
 import { useEffect, useState } from "react"
 import { ChevronRight, RotateCcw, Settings2, Trophy, Lightbulb } from "lucide-react"
 import PeriodicTableBoard, { type CellState } from "../components/PeriodicTableBoard"
@@ -294,6 +295,7 @@ export default function ElementDetective() {
                                     {newBest ? "A new best for this setting!" : `Best for this setting: ${best}`}
                                 </p>
                             </div>
+                            <PetPerch cheer={newBest} className="ml-auto" />
                         </div>
 
                         <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">

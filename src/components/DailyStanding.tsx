@@ -1,6 +1,7 @@
 import { motion } from "framer-motion"
 import { BarChart3, Users } from "lucide-react"
 import type { ReactNode } from "react"
+import PetPerch from "./PetPerch"
 import type { DailyDistribution, DailyStanding as Standing } from "../utils/dailyStats"
 
 type Props = {
@@ -72,6 +73,7 @@ export default function DailyStanding({
         <div className={`w-full rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 ${compact ? "p-4" : "p-5"}`}>
             <h3 className={`flex items-center gap-2 !text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${compact ? "mb-2" : "mb-4"}`}>
                 <BarChart3 size={14} aria-hidden /> Today&apos;s Standing
+                <PetPerch size={30} cheer={myBucket !== null} className="-my-2 ml-auto" />
             </h3>
 
             {statsError ? (

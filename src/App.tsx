@@ -47,6 +47,8 @@ import ScrollMemory from "./components/ScrollMemory"
 
 /** Dev only: every supporter animal in every state (`/dev/pets`). Never part of a production build. */
 const PetGallery = import.meta.env.DEV ? lazy(() => import("./pages/PetGallery")) : null
+/** Dev only: the trivia question editor (`/dev/trivia`), backed by the dev server's /__trivia/ endpoints. */
+const TriviaEditor = import.meta.env.DEV ? lazy(() => import("./pages/TriviaEditor")) : null
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
 
 export default function App() {
@@ -105,6 +107,7 @@ export default function App() {
                 <Route path="/science/connections" element={<ChemConnections />} />
 
                 {PetGallery && <Route path="/dev/pets" element={<Suspense fallback={null}><PetGallery /></Suspense>} />}
+                {TriviaEditor && <Route path="/dev/trivia" element={<Suspense fallback={null}><TriviaEditor /></Suspense>} />}
 
 
                 {/* The mode was called Flag Wars before; keep the old link working. */}

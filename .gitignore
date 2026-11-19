@@ -34,3 +34,9 @@ CLAUDE.md
 graphic/badges-prompts.md
 graphic/icons-prompts.md
 backups/
+
+# Dev-only trivia editor: questions rejected there
+.trivia-editor/
+
+# Playwright MCP snapshots and screenshots
+.playwright-mcp/

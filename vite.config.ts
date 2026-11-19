@@ -85,9 +85,35 @@ function flagPack(): Plugin {
   }
 }
 
+/**
+ * The dev-only trivia question editor's back end (/__trivia/*, page at
+ * /dev/trivia): reads and writes data/trivia/*.json and the review queue in
+ * .trivia-editor/. `apply: 'serve'` keeps it out of every build, so the live
+ * site has no such endpoint. It is loaded through Vite's own module graph
+ * (`ssrLoadModule`) on each request, not with a plain import: Node keeps an
+ * imported module for the life of the process, so after an edit to
+ * scripts/trivia-*.mjs - even across Vite's own restarts - the old code kept
+ * answering. Vite re-evaluates the module once any of those files changes.
+ */
+function triviaEditor(): Plugin {
+  return {
+    name: 'trivia-editor',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith('/__trivia/')) return next()
+        server.ssrLoadModule('/scripts/trivia-editor-server.mjs').then(
+          mod => mod.triviaEditor()(req, res, next),
+          error => next(error),
+        )
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), assetVersions(), flagPack()],
+  plugins: [react(), assetVersions(), flagPack(), triviaEditor()],
   // The payment functions in api/ run on Vercel; locally `npm run webhook:dev` serves them on 8787.
   server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
   build: {

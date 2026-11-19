@@ -23,6 +23,7 @@
     "firebase": "^12.9.0",
     "firebase-admin": "^14.5.1",
     "framer-motion": "^12.43.0",
+    "jose": "^6.2.18",
     "lucide-react": "^0.563.0",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",

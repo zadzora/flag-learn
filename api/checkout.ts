@@ -20,12 +20,17 @@
  * STRIPE_MANAGED_PAYMENTS=0 falls back to a plain Checkout Session (no tax
  * handled) - for an account Managed Payments has not been switched on for.
  *
- * Environment: STRIPE_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT, FIREBASE_DATABASE_URL,
- * optionally STRIPE_MANAGED_PAYMENTS.
+ * Environment: STRIPE_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT (only its
+ * project_id is read here), optionally STRIPE_MANAGED_PAYMENTS.
+ *
+ * The ID token is checked with `jose`, not firebase-admin/auth. That module
+ * reaches `jose` through jwks-rsa's `require()`, and `jose` is ES-module only:
+ * Vercel's function loader refuses that require even on Node 24
+ * (ERR_REQUIRE_ESM), so the function died before its first line. Importing
+ * `jose` directly from this ES module is fine.
  */
 import Stripe from "stripe"
-import { cert, getApps, initializeApp } from "firebase-admin/app"
-import { getAuth } from "firebase-admin/auth"
+import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose"
 
 /** Mirrors SUPPORT_PRICE_EUR in src/utils/supporterLook.ts, in cents. */
 const MIN_CENTS = 500
@@ -40,16 +45,32 @@ const SITE = "https://flaglearn.eu"
  */
 const TAX_CODE = "txcd_10000000"
 
-function auth() {
-    if (!getApps().length) {
-        // Locally the emulator hosts are set and the admin SDK needs no key.
-        const emulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST
-        initializeApp({
-            ...(emulator ? { projectId: "demo-flaglearn" } : { credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? "{}")) }),
-            databaseURL: process.env.FIREBASE_DATABASE_URL,
-        })
+/**
+ * Google's public keys for Firebase ID tokens - the same keys firebase-admin
+ * reads from the x509 form of this address. Fetched once and cached by `jose`
+ * for the life of the function instance, refetched when an unknown key id turns up.
+ */
+const FIREBASE_KEYS = createRemoteJWKSet(new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"))
+
+type IdToken = { sub?: string; email_verified?: boolean; firebase?: { sign_in_provider?: string } }
+
+/** What firebase-admin's verifyIdToken checks: Google's signature (RS256), issuer, audience, expiry, a uid. */
+async function verifyIdToken(token: string): Promise<IdToken & { sub: string }> {
+    let payload: IdToken
+    if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+        // The auth emulator signs nothing (alg "none"); only `npm run webhook:dev` sets this.
+        payload = decodeJwt(token) as IdToken
+    } else {
+        const projectId: unknown = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? "{}").project_id
+        if (typeof projectId !== "string" || !projectId) throw new Error("FIREBASE_SERVICE_ACCOUNT has no project_id")
+        payload = (await jwtVerify(token, FIREBASE_KEYS, {
+            algorithms: ["RS256"],
+            issuer: `https://securetoken.google.com/${projectId}`,
+            audience: projectId,
+        })).payload as IdToken
     }
-    return getAuth()
+    if (typeof payload.sub !== "string" || !payload.sub) throw new Error("The token names no user")
+    return payload as IdToken & { sub: string }
 }
 
 /** Where Stripe sends the player back: the site they came from, if it is one of ours. */
@@ -76,10 +97,10 @@ export async function POST(request: Request): Promise<Response> {
     let uid: string
     try {
         const token = (request.headers.get("authorization") ?? "").replace(/^Bearer /, "")
-        const decoded = await auth().verifyIdToken(token)
+        const decoded = await verifyIdToken(token)
         // The perks live in the account, so the account must survive cleared site data: Google, not anonymous.
-        if (decoded.firebase.sign_in_provider !== "google.com" && !decoded.email_verified) return json(403, { error: "google-only" })
-        uid = decoded.uid
+        if (decoded.firebase?.sign_in_provider !== "google.com" && decoded.email_verified !== true) return json(403, { error: "google-only" })
+        uid = decoded.sub
     } catch {
         return json(401, { error: "signed-out" })
     }

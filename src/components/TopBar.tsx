@@ -2,6 +2,7 @@ import { useState, type MouseEvent, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Moon, Sun } from "lucide-react"
 import { readStore } from "../utils/profileStore"
+import { useGuestWithProgress } from "../utils/signInNudge"
 import { asset } from "../utils/asset"
 import PetNap from "./PetNap"
 
@@ -44,18 +45,34 @@ export function BarButton({ onClick, label, children }: { onClick: () => void; l
     )
 }
 
+/**
+ * A dot in the corner of a profile button while the progress is in this
+ * browser only (see `utils/signInNudge.ts`) - the profile is where it is kept.
+ */
+export function GuestDot() {
+    return (
+        <span
+            aria-hidden
+            className="pointer-events-none absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-amber-500 dark:border-[#0A0E1A] dark:bg-amber-400"
+        />
+    )
+}
+
 /** The way to the profile from any page, wearing the player's current rank. */
 function ProfileLink({ onLeave }: { onLeave?: (to: string) => void }) {
     const [rank] = useState(() => readStore()?.rank ?? 0)
+    const guest = useGuestWithProgress()
+    const label = guest ? "Your profile - progress saved in this browser only" : "Your profile"
     return (
         <Link
             to="/profile"
             onClick={guard(onLeave, "/profile")}
-            aria-label="Your profile"
-            title="Your profile"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
+            aria-label={label}
+            title={label}
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
         >
             <img src={asset(`/badges/rank-${rank}.webp`)} alt="" className="h-7 w-7" />
+            {guest && <GuestDot />}
         </Link>
     )
 }

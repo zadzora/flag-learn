@@ -20,7 +20,8 @@ if (existsSync(local)) {
         if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
     }
 }
-if (process.env.STRIPE_SECRET_KEY?.startsWith("sk_live")) {
+// sk_live_ is a full secret key, rk_live_ a restricted one (what production uses) - both are live.
+if (/^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY ?? "")) {
     console.error("A live key - this runner is for test mode only.");
     process.exit(1);
 }

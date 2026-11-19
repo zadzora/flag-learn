@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, type MouseEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
-    ArrowRight, Car, Check, ChevronRight, Crown, Flame, Moon, Sun, Play,
+    ArrowRight, Car, Check, ChevronRight, CloudOff, Crown, Flame, Moon, Sun, Play, X,
 } from "lucide-react"
+import { GoogleButton } from "../components/AccountPanel"
+import { GuestDot } from "../components/TopBar"
+import { barHidden, hideBar, signInFromNudge, useGuestWithProgress } from "../utils/signInNudge"
 import {
     AtomIcon, BlurModeIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
     HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, TriviaRoomsIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, WorldTriviaIcon, type ModeIcon,
@@ -208,6 +211,42 @@ function ProfileStrip({ profile }: { profile: ReturnType<typeof readProfile> }) 
     )
 }
 
+/** Under the profile strip, for a guest with progress: it is in this browser only, and one click keeps it. */
+function SignInBar({ onClose }: { onClose: () => void }) {
+    const [busy, setBusy] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const signIn = async () => {
+        setBusy(true)
+        setError(null)
+        setError(await signInFromNudge())
+        setBusy(false)
+    }
+    return (
+        <div className="relative mt-3 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[10px] border border-slate-200 bg-white p-3.5 pr-11 dark:border-[#1C2338] dark:bg-[#0F1424]">
+            <span className="flex min-w-0 flex-1 basis-[280px] items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-blue-600 dark:border-[#2A3350] dark:text-blue-300">
+                    <CloudOff size={20} aria-hidden />
+                </span>
+                <span className="min-w-0">
+                    <span className="block font-bold">Your progress is saved in this browser only</span>
+                    <span className="block text-xs text-slate-500 dark:text-[#8C97B3]">Another browser or device starts from zero. Sign in to keep it everywhere - free, optional.</span>
+                    {error && <span className="mt-1 block text-xs font-semibold text-red-600 dark:text-red-400" role="alert">{error}</span>}
+                </span>
+            </span>
+            <GoogleButton busy={busy} onClick={signIn} />
+            <button
+                type="button"
+                onClick={onClose}
+                aria-label="Hide for a few days"
+                title="Hide for a few days"
+                className="absolute right-2 top-2 flex h-7 min-h-0 w-7 items-center justify-center rounded-md p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            >
+                <X size={16} aria-hidden />
+            </button>
+        </div>
+    )
+}
+
 function SectionHead({ id, title, aside }: { id: string; title: string; aside?: string }) {
     return (
         <div className="mb-4 mt-14 flex items-baseline justify-between gap-4">
@@ -295,6 +334,10 @@ export default function Home() {
         return () => window.removeEventListener(PROFILE_EVENT, reload)
     }, [])
 
+    // A guest with progress is told it lives in this browser only (utils/signInNudge.ts).
+    const guest = useGuestWithProgress()
+    const [barClosed, setBarClosed] = useState(barHidden)
+
     // The supporter animal wanders one section, a different one each visit.
     const [petSpot] = useState(() => pickPetSpot(["learn", "today", "multiplayer", "more"] as const))
 
@@ -355,8 +398,16 @@ export default function Home() {
                         <a href="#today" onClick={scrollToSection} className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Daily</a>
                         <a href="#multiplayer" onClick={scrollToSection} className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Multiplayer</a>
                         <Link to="/science" className="hidden rounded-lg px-3 py-1.5 hover:text-slate-900 md:block dark:hover:text-white">Science</Link>
-                        <Link to="/profile" aria-label="Your profile" className="flex items-center gap-1.5 rounded-lg px-2 py-1 hover:text-slate-900 dark:hover:text-white">
-                            <RankShield rank={profile.rank} size={24} />
+                        <Link
+                            to="/profile"
+                            aria-label={guest ? "Your profile - progress saved in this browser only" : "Your profile"}
+                            title={guest ? "Progress saved in this browser only" : undefined}
+                            className="flex items-center gap-1.5 rounded-lg px-2 py-1 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            <span className="relative">
+                                <RankShield rank={profile.rank} size={24} />
+                                {guest && <GuestDot />}
+                            </span>
                             <span className="hidden sm:inline">Profile</span>
                         </Link>
                         <button
@@ -439,6 +490,7 @@ export default function Home() {
                     ))}
                 </ul>
                 <ProfileStrip profile={profile} />
+                {guest && !barClosed && <SignInBar onClose={() => { hideBar(); setBarClosed(true) }} />}
 
                 <SectionHead id="today" title="Today" aside={`${solved} of ${dailies.length} solved · resets 00:00 UTC`} />
                 {petSpot === "today" && <PetLane size={32} top={-16} bottom={2} />}

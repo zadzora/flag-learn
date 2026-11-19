@@ -14,8 +14,9 @@ import {
  * of the progress in the account, signing out, deleting the account, and a
  * backup file for anyone who would rather not have an account at all.
  *
- * Signing in is never required and never asked for twice: a guest sees one
- * line about it here and, once, a suggestion after their first badge.
+ * Signing in is never required. A guest with progress is reminded that it
+ * lives in this browser only - a dot on the profile button, a bar on the home
+ * page and a toast at most twice a day (`utils/signInNudge.ts`).
  */
 
 const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-[#1C2338] dark:bg-[#0F1424]"

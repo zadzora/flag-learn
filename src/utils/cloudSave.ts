@@ -27,8 +27,6 @@ import { PROGRESS_EVENT } from "./profileStore"
 export const ACCOUNT_KEY = "flag-master-cloud-uid"
 /** Per key, the local value as of the last sync - what "changed here since" is measured against. */
 const BASE_KEY = "flag-master-cloud-base"
-/** The one-time "keep your progress" suggestion has been shown. */
-const NUDGE_KEY = "flag-master-cloud-nudge"
 
 /** Fired whenever the status changes, so the profile can show it. */
 export const CLOUD_EVENT = "flaglearn:cloud"
@@ -427,13 +425,4 @@ export async function importSave(file: File): Promise<number> {
         }
         return changed
     })
-}
-
-// --- The one-time suggestion -------------------------------------------------------------
-
-/** Suggest signing in once, to a guest with something to lose, and never again. */
-export function takeNudge(): boolean {
-    if (linkedAccount() || read(NUDGE_KEY)) return false
-    write(NUDGE_KEY, "1")
-    return true
 }

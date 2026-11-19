@@ -12,7 +12,7 @@ import NextDailyLink from "../components/NextDailyLink"
 import { DailyTriviaIcon } from "../components/DailyModeIcons"
 import { isMuted, setMuted } from "../utils/triviaSound"
 import { bumpCounter, recordBest } from "../utils/profileStore"
-import { TYPE_INFO, dealQuiz, loadBank, markSeen, questionValue, type Dealt, type Loaded, type QuizSettings } from "../utils/trivia"
+import { TYPE_INFO, dealQuiz, loadBank, markSeen, questionById, questionValue, type Dealt, type Loaded, type QuizSettings } from "../utils/trivia"
 import { AutoHeight, Chip, EndScreen, IntroCard, QuestionCard, ResultPanel, RunningTotal } from "../components/TriviaQuiz"
 import { TYPE_ORDER, fmt, isRight, readBest, type Outcome, type Played } from "../utils/triviaPlay"
 import { getTodayString } from "../utils/dailySeed"
@@ -31,6 +31,19 @@ const QUIZ: QuizSettings = { length: 20, region: "", only: "" }
 
 type Phase = "loading" | "error" | "setup" | "intro" | "question" | "result" | "end"
 type Mode = "solo" | "daily"
+
+/**
+ * Dev server only: `/trivia?q=or-098,ch-012` deals exactly those questions, in
+ * that order, to check one a player reported. Such a run records no best and
+ * marks nothing seen.
+ */
+function pickedQuestions(bank: Loaded[]): Dealt[] | null {
+    if (!import.meta.env.DEV) return null
+    const ids = new URLSearchParams(window.location.search).get("q")
+    if (!ids) return null
+    const picked = ids.split(",").map(id => questionById(bank, id.trim())).filter((q): q is Loaded => !!q)
+    return picked.length ? picked.map(q => ({ q, double: false })) : null
+}
 
 const total = (played: { points: number }[]) => played.reduce((sum, p) => sum + p.points, 0)
 const onOffer = (played: { q: Loaded; double: boolean }[]) => played.reduce((sum, p) => sum + questionValue(p.q, p.double), 0)
@@ -145,6 +158,8 @@ export default function TriviaGame({ mode = "solo" }: { mode?: Mode }) {
 
     const score = total(played)
     const current = quiz[index]
+    /** A dev run of hand-picked questions (`?q=`), kept out of the best and the seen list. */
+    const testRun = useRef(false)
 
     const start = () => {
         if (!bank) return
@@ -154,7 +169,9 @@ export default function TriviaGame({ mode = "solo" }: { mode?: Mode }) {
             setPhase("intro")
             return
         }
-        const dealt = dealQuiz(bank, QUIZ)
+        const picked = pickedQuestions(bank)
+        testRun.current = picked !== null
+        const dealt = picked ?? dealQuiz(bank, QUIZ)
         if (!dealt.length) return
         setQuiz(dealt)
         setIndex(0)
@@ -196,7 +213,7 @@ export default function TriviaGame({ mode = "solo" }: { mode?: Mode }) {
         }
         if (daily) {
             if (saveRef.current) finishDaily(saveRef.current, quiz)
-        } else {
+        } else if (!testRun.current) {
             const sum = total(played)
             setBest(Math.max(sum, readBest()))
             recordBest("trivia", sum)

@@ -19,6 +19,7 @@ import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { bumpCounter } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
 import { asset } from "../utils/asset"
+import { useHoldToasts } from "../utils/holdToasts"
 
 const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
@@ -94,6 +95,8 @@ export default function UltimateSpeedrun() {
     const [showSetup, setShowSetup] = useState(true)
     const [region, setRegion] = useState<MapRegion>("world")
     const [run, setRun] = useState<Run | null>(null)
+    // No toast over the board while the clock runs (utils/holdToasts.ts).
+    useHoldToasts(run !== null)
     const [current, setCurrent] = useState<UltimateFlag | null>(null)
     const [step, setStep] = useState<Step>("map")
     const [status, setStatus] = useState<Status>("idle")

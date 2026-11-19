@@ -14,6 +14,7 @@ import YouTag from "../components/YouTag"
 import SupporterName from "../components/SupporterName"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 import { bumpCounter } from "../utils/profileStore"
+import { useHoldToasts } from "../utils/holdToasts"
 
 type GameMode = "world" | "capitals" | "us"
 
@@ -64,6 +65,8 @@ export default function Highscore() {
     })
 
     const [started, setStarted] = useState(false)
+    // No toast over the board while the clock runs (utils/holdToasts.ts).
+    useHoldToasts(started)
     const [queue, setQueue] = useState<QuizItem[]>([])
     const [current, setCurrent] = useState<QuizItem | null>(null)
     const [input, setInput] = useState("")

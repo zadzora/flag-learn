@@ -8,6 +8,7 @@ import { ATLAS, RANKS, TIER_NAMES, checkProgress, trackById, type Unlock } from 
 import { PROGRESS_EVENT } from "../utils/profileStore"
 import { addNudgeTime, barHidden, markSignInNudgeShown, signInFromNudge, signInNudgeDue, useGuestWithProgress } from "../utils/signInNudge"
 import { asset } from "../utils/asset"
+import { toastsHeld, useToastsHeld } from "../utils/holdToasts"
 import { paymentsOpen } from "../utils/supporters"
 import { SUPPORT_PRICE_EUR } from "../utils/supporterLook"
 import { SUPPORT_NUDGE_EVENT, addSiteTime, isSupporterNow, markSupportNudgeShown, pickNudgePet, skipSupportNudge, supportNudgeDue } from "../utils/supportNudge"
@@ -58,7 +59,7 @@ export default function AchievementToasts() {
         const signInAllowed = signInPlace(pathname)
         // Sign-in suggestion: after a badge or a few minutes on the site, see `utils/signInNudge.ts`.
         const offerSignIn = (badge: boolean) => {
-            if (!signInAllowed || !signInNudgeDue(badge)) return
+            if (!signInAllowed || toastsHeld() || !signInNudgeDue(badge)) return
             markSignInNudgeShown()
             setSignIn(true)
         }
@@ -72,7 +73,7 @@ export default function AchievementToasts() {
         const showSupport = () => setQueue(q => [...q, { key: nextKey++, support: pickNudgePet() }])
         // After 10 minutes on the site, once more 15 minutes later, then not until a reload.
         const offerSupport = () => {
-            if (!paymentsOpen || QUIET_ROUTES.some(r => pathname.startsWith(r)) || NO_SUPPORT_ROUTES.some(r => pathname.startsWith(r))) return
+            if (!paymentsOpen || toastsHeld() || QUIET_ROUTES.some(r => pathname.startsWith(r)) || NO_SUPPORT_ROUTES.some(r => pathname.startsWith(r))) return
             if (!supportNudgeDue()) return
             markSupportNudgeShown()
             void isSupporterNow().then(already => { if (!already) showSupport() })
@@ -101,7 +102,9 @@ export default function AchievementToasts() {
         }
     }, [pathname])
 
-    const quiet = QUIET_ROUTES.some(r => pathname.startsWith(r))
+    // A run against the clock (utils/holdToasts.ts) holds everything back until it ends.
+    const held = useToastsHeld()
+    const quiet = held || QUIET_ROUTES.some(r => pathname.startsWith(r))
     const current = quiet ? undefined : queue[0]
 
     useEffect(() => {
@@ -116,7 +119,7 @@ export default function AchievementToasts() {
         navigate(current && "support" in current ? "/support" : "/profile")
     }
     // Hidden, not dropped, on the pages it does not belong on; gone for good once signed in.
-    const showSignIn = signIn && guest && signInPlace(pathname)
+    const showSignIn = signIn && guest && !held && signInPlace(pathname)
 
     return (
         <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[70] flex flex-col items-center gap-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px]" aria-live="polite">

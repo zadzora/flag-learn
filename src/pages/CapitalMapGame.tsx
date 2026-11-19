@@ -16,6 +16,7 @@ import { bumpCounter, recordBest } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
 import MapTips from "../components/MapTips"
 import { asset } from "../utils/asset"
+import { useHoldToasts } from "../utils/holdToasts"
 
 const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
@@ -448,6 +449,8 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
     const [showSetup, setShowSetup] = useState(isSpeedrunMode)
     const [setupRegion, setSetupRegion] = useState<CapitalRegion>("world")
     const [run, setRun] = useState<Run | null>(null)
+    // No toast over the board while the clock runs (utils/holdToasts.ts).
+    useHoldToasts(run !== null)
     const [runTarget, setRunTarget] = useState<Capital | null>(null)
     const [runResult, setRunResult] = useState<MapRunResult<CapitalRegion> | null>(null)
     const [runElapsed, setRunElapsed] = useState(0)

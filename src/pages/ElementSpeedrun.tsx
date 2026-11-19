@@ -9,6 +9,7 @@ import { CATEGORY_META, elementBySymbol, type CellMark, type ElementItem } from 
 import { ELEMENT_SETS, SET_COUNTS, elementBoard, setPool, type ElementSet } from "../utils/elementSpeedrun"
 import { PENALTY_SECONDS, formatRunTime, openRunTracker, roundRunTime, type RunTracker } from "../utils/mapSpeedrun"
 import { bumpCounter } from "../utils/profileStore"
+import { useHoldToasts } from "../utils/holdToasts"
 
 /**
  * Element Speedrun - every element of a set, clicked on a blank periodic table
@@ -68,6 +69,8 @@ export default function ElementSpeedrun() {
     const [set, setSet] = useState<ElementSet>(readSet)
     const [showSetup, setShowSetup] = useState(true)
     const [run, setRun] = useState<Run | null>(null)
+    // No toast over the board while the clock runs (utils/holdToasts.ts).
+    useHoldToasts(run !== null)
     const [runResult, setRunResult] = useState<MapRunResult<ElementSet> | null>(null)
     const [elapsed, setElapsed] = useState(0)
     /** The cell just clicked wrong, flashed for a moment. */

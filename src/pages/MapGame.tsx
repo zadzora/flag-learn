@@ -14,6 +14,7 @@ import MapTips from "../components/MapTips"
 import worldData from "../../data/flags.json"
 import { OCEAN_LABELS, checkCountryMatch } from "../utils/mapCountryMatch"
 import { asset } from "../utils/asset"
+import { useHoldToasts } from "../utils/holdToasts"
 
 const geoUrl = asset("/world-map.json")
 const STORAGE_KEY_MAP = "flag-master-map-v1"
@@ -124,6 +125,8 @@ export default function MapGame({ mode = "learn" }: { mode?: "learn" | "speedrun
     const [showSpeedrunSetup, setShowSpeedrunSetup] = useState(isSpeedrunMode)
     const [speedrunRegion, setSpeedrunRegion] = useState<MapRegion>("world")
     const [run, setRun] = useState<SpeedrunRun | null>(null)
+    // No toast over the board while the clock runs (utils/holdToasts.ts).
+    useHoldToasts(run !== null)
     const [runResult, setRunResult] = useState<MapRunResult<MapRegion> | null>(null)
     const [runElapsed, setRunElapsed] = useState(0)
     const [penaltyFxKey, setPenaltyFxKey] = useState(0)

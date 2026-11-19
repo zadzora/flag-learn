@@ -179,9 +179,12 @@ One-off setup:
    is on, every checkout fails - set `STRIPE_MANAGED_PAYMENTS=0` in the meantime
    to sell through a plain Checkout Session instead (then no tax is handled).
    Under Managed Payments Stripe picks the payment methods itself.
-3. **Developers → Webhooks → Add endpoint** `https://flaglearn.eu/api/stripe-webhook`
+3. **Developers → Webhooks → Add endpoint** `https://www.flaglearn.eu/api/stripe-webhook`
    with the events `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`. Copy its signing secret.
+   The `www` matters: the bare domain answers with a 307 to `www`, and Stripe
+   does not follow redirects - every payment would go through and no
+   supporter would ever be written.
 4. **Firebase → Project settings → Service accounts → Generate new private key.**
    Keep the file out of the repo.
 5. **Vercel → Project → Settings → Environment Variables** (Production):

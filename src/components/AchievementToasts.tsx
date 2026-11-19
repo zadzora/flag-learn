@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { Cloud, X } from "lucide-react"
+import { Cloud, Heart, X } from "lucide-react"
 import { BadgeMedal, RankShield } from "./BadgeArt"
 import { ATLAS, RANKS, TIER_NAMES, checkProgress, trackById, type Unlock } from "../utils/achievements"
 import { PROGRESS_EVENT } from "../utils/profileStore"
 import { takeNudge } from "../utils/cloudSave"
 import { asset } from "../utils/asset"
+import { paymentsOpen } from "../utils/supporters"
+import { SUPPORT_PRICE_EUR } from "../utils/supporterLook"
+import { SUPPORT_NUDGE_EVENT, addSiteTime, isSupporterNow, markSupportNudgeShown, pickNudgePet, skipSupportNudge, supportNudgeDue } from "../utils/supportNudge"
+import PetSprite from "./PetSprite"
 
 /**
  * Watches every save on the site and announces what it earns, on whatever page
@@ -22,12 +26,18 @@ import { asset } from "../utils/asset"
 const TICK_MS = 4000
 const SHOW_MS = 5200
 const QUIET_ROUTES = ["/road-trip", "/daily-rally"]
+/** Pages that are about the support already, or that a player reads rather than plays. */
+const NO_SUPPORT_ROUTES = ["/support", "/terms", "/privacy"]
 
 /** Badges first, then continents, then the rank they add up to - the order they make sense in. */
 const ORDER: Record<Unlock["kind"], number> = { welcome: 0, badge: 1, continent: 2, rank: 3 }
 
-/** A badge to announce, or the one-time suggestion to keep the progress in an account. */
-type Queued = { key: number; unlock: Unlock } | { key: number; nudge: true }
+/**
+ * A badge to announce, the one-time suggestion to keep the progress in an
+ * account, or the mention (twice a session) that the site can be supported (`support`:
+ * the animal it shows - see `utils/supportNudge.ts`).
+ */
+type Queued = { key: number; unlock: Unlock } | { key: number; nudge: true } | { key: number; support: string }
 let nextKey = 0
 
 export default function AchievementToasts() {
@@ -44,18 +54,33 @@ export default function AchievementToasts() {
             if (unlocks.some(u => u.kind === "badge" || u.kind === "welcome") && takeNudge()) sorted.push({ key: nextKey++, nudge: true })
             setQueue(q => [...q, ...sorted])
         }
+        const showSupport = () => setQueue(q => [...q, { key: nextKey++, support: pickNudgePet() }])
+        // After 10 minutes on the site, once more 15 minutes later, then not until a reload.
+        const offerSupport = () => {
+            if (!paymentsOpen || QUIET_ROUTES.some(r => pathname.startsWith(r)) || NO_SUPPORT_ROUTES.some(r => pathname.startsWith(r))) return
+            if (!supportNudgeDue()) return
+            markSupportNudgeShown()
+            void isSupporterNow().then(already => { if (!already) showSupport() })
+        }
+        // Somebody who opens the support page on their own does not need telling again this session.
+        if (pathname.startsWith("/support")) skipSupportNudge()
         // Deferred: a page that has just mounted may write its save in its own first effect.
         const first = window.setTimeout(run, 500)
         const tick = window.setInterval(() => {
-            if (document.visibilityState === "visible") run()
+            if (document.visibilityState !== "visible") return
+            addSiteTime(TICK_MS / 1000)
+            run()
+            offerSupport()
         }, TICK_MS)
         window.addEventListener(PROGRESS_EVENT, run)
         window.addEventListener("storage", run)
+        window.addEventListener(SUPPORT_NUDGE_EVENT, showSupport)
         return () => {
             window.clearTimeout(first)
             window.clearInterval(tick)
             window.removeEventListener(PROGRESS_EVENT, run)
             window.removeEventListener("storage", run)
+            window.removeEventListener(SUPPORT_NUDGE_EVENT, showSupport)
         }
     }, [pathname])
 
@@ -71,7 +96,7 @@ export default function AchievementToasts() {
     const dismiss = () => setQueue(q => q.slice(1))
     const open = () => {
         setQueue([])
-        navigate(current && "nudge" in current ? "/profile#account" : "/profile")
+        navigate(current && "nudge" in current ? "/profile#account" : current && "support" in current ? "/support" : "/profile")
     }
 
     return (
@@ -91,7 +116,7 @@ export default function AchievementToasts() {
                             onClick={open}
                             className="flex w-full items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-3.5 pr-10 text-left font-normal shadow-[0_12px_40px_rgba(10,14,26,0.28)] hover:border-slate-400 dark:border-[#2A3352] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
                         >
-                            {"unlock" in current ? <ToastBody unlock={current.unlock} /> : <NudgeBody />}
+                            {"unlock" in current ? <ToastBody unlock={current.unlock} /> : "support" in current ? <SupportBody pet={current.support} /> : <NudgeBody />}
                         </button>
                         <button
                             type="button"
@@ -124,6 +149,25 @@ function NudgeBody() {
         </>
     )
 }
+function SupportBody({ pet }: { pet: string }) {
+    return (
+        <>
+            <span className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full bg-rose-50 dark:bg-[#2A1622]">
+                <PetSprite id={pet} size={50} animate centred />
+            </span>
+            <span className="min-w-0">
+                <span className={`${kicker} flex items-center gap-1 text-rose-500`}>
+                    <Heart size={11} className="fill-rose-500" aria-hidden /> Enjoying Flag Learn?
+                </span>
+                <span className="block text-base font-bold text-slate-900 dark:text-white">No ads, free for everyone</span>
+                <span className="block text-[13px] text-slate-500 dark:text-[#8C97B3]">
+                    €{SUPPORT_PRICE_EUR} once helps keep it online - and gives your name an animal like this one
+                </span>
+            </span>
+        </>
+    )
+}
+
 const KICKER_TONE = ["text-slate-500", "text-[#B06A34] dark:text-[#D9955E]", "text-slate-500 dark:text-[#B7C2D3]", "text-amber-600 dark:text-amber-400", "text-sky-600 dark:text-sky-300"]
 
 /** Rays behind the picture for the big moments; still under reduced motion. */

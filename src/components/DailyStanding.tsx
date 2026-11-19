@@ -1,7 +1,11 @@
 import { motion } from "framer-motion"
 import { BarChart3, Users } from "lucide-react"
 import type { ReactNode } from "react"
+import { useLocation } from "react-router-dom"
 import PetPerch from "./PetPerch"
+import { AccentConfetti } from "./SupporterAccent"
+import { accentFrameStyle, accentTextStyle, useMyAccent } from "../utils/myAccent"
+import { useDarkMode } from "../utils/useDarkMode"
 import type { DailyDistribution, DailyStanding as Standing } from "../utils/dailyStats"
 
 type Props = {
@@ -30,6 +34,10 @@ type Props = {
 /**
  * "Today's Standing" panel: where this result lands among everyone who played
  * today. Shared by every daily mode so the three of them stay in step.
+ *
+ * A supporter sees it in their own colours (`utils/myAccent.ts`): the frame,
+ * the "Top X%" and, on a win, a burst of confetti once a day. The bars keep
+ * their green and red - those say whether the day was won.
  */
 export default function DailyStanding({
     distribution,
@@ -44,6 +52,9 @@ export default function DailyStanding({
     compact = false,
     record,
 }: Props) {
+    const { pathname } = useLocation()
+    const accent = useMyAccent()
+    const dark = useDarkMode()
     const maxBucketCount = distribution
         ? Math.max(...distribution.solved, failLabel === null ? 0 : distribution.failed, 1)
         : 0
@@ -70,7 +81,11 @@ export default function DailyStanding({
         : []
 
     return (
-        <div className={`w-full rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 ${compact ? "p-4" : "p-5"}`}>
+        <div
+            className={`relative w-full rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 ${compact ? "p-4" : "p-5"}`}
+            style={accent ? { ...accentFrameStyle(accent, dark ? "#1E293B" : "#FFFFFF"), borderWidth: 2 } : undefined}
+        >
+            {accent && myBucket !== null && <AccentConfetti stops={accent} page={pathname} />}
             <h3 className={`flex items-center gap-2 !text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${compact ? "mb-2" : "mb-4"}`}>
                 <BarChart3 size={14} aria-hidden /> Today&apos;s Standing
                 <PetPerch size={30} cheer={myBucket !== null} className="-my-2 ml-auto" />
@@ -94,7 +109,12 @@ export default function DailyStanding({
             ) : (
                 <>
                     <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
-                        <span className={`${compact ? "text-3xl" : "text-4xl"} font-extrabold tracking-[-0.02em] ${accentClass}`}>Top {standing.topPercent}%</span>
+                        <span
+                            className={`${compact ? "text-3xl" : "text-4xl"} font-extrabold tracking-[-0.02em] ${accent ? "" : accentClass}`}
+                            style={accent ? accentTextStyle(accent) : undefined}
+                        >
+                            Top {standing.topPercent}%
+                        </span>
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">of today&apos;s players</span>
                     </div>
                     <p className={`text-sm text-slate-500 dark:text-slate-400 ${compact ? "mb-2" : "mb-4"}`}>

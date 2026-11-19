@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { ArrowRight, Check, Copy, Flame, Loader2, RefreshCw, Volume2, VolumeX } from "lucide-react"
+import { ArrowRight, Check, Copy, Loader2, RefreshCw, Volume2, VolumeX } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import { TriviaRoomsIcon, WorldTriviaIcon } from "../components/ModeIcons"
 import TopBar, { BarButton } from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
@@ -216,7 +217,7 @@ export default function TriviaGame({ mode = "solo" }: { mode?: Mode }) {
             <TopBar title={daily ? "Daily Trivia" : "World Trivia"} back={back} onLeave={leave} theme={theme} onToggleTheme={() => setTheme(t => (t === "light" ? "dark" : "light"))}>
                 {daily && streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-bold text-orange-500" title="Daily Trivia streak">
-                        <Flame size={16} aria-hidden /> {streak}
+                        <StreakMark size={16}>{streak}</StreakMark>
                     </span>
                 )}
                 <BarButton onClick={() => { setMuted(!muted); setMutedState(!muted) }} label={muted ? "Sound on" : "Sound off"}>
@@ -392,7 +393,7 @@ function DailySetup({ today, answered, streak, onStart }: { today: string; answe
                 Leaving during a question counts it as unanswered.
             </p>
             {streak > 0 && (
-                <p className="flex items-center gap-1.5 text-sm font-bold text-orange-500"><Flame size={16} aria-hidden /> {streak} day streak - keep it going</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold text-orange-500"><StreakMark size={16}>{streak} day streak - keep it going</StreakMark></p>
             )}
             <button type="button" onClick={onStart} className={PRIMARY}>
                 {answered > 0 ? `Continue - question ${answered + 1} of ${DAILY_LENGTH}` : "Start today's quiz"} <ArrowRight size={18} aria-hidden />
@@ -432,7 +433,7 @@ function DailyEnd({ today, played, streak, reduce }: { today: string; played: Pl
             aside={
                 <div className="flex flex-col gap-4">
                     <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                        {streak > 0 && <span className="flex items-center gap-1 font-bold text-orange-500"><Flame size={15} aria-hidden /> {streak} day streak</span>}
+                        {streak > 0 && <span className="flex items-center gap-1 font-bold text-orange-500"><StreakMark size={15}>{streak} day streak</StreakMark></span>}
                         <span className="flex items-center gap-1"><RefreshCw size={12} aria-hidden /> New questions at midnight UTC</span>
                     </p>
                     <DailyStanding

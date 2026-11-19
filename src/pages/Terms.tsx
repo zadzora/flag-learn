@@ -90,6 +90,7 @@ export default function Terms() {
                     <ul className="ml-5 list-disc space-y-1.5">
                         <li>your own letter colour and tint for your name on the leaderboards and in the online modes, and a supporter heart;</li>
                         <li>a companion animal shown beside your name and in some modes;</li>
+                        <li>your colours on your day streaks and results in the daily puzzles;</li>
                         <li>the Racer car and the supporter paints in the Road Trip.</li>
                     </ul>
                     <p>

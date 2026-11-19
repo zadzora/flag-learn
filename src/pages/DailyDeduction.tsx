@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowDown, ArrowUp, Check, Flame, Share2, Target, Trophy, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Check, Share2, Target, Trophy, X } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import {
     MAX_GUESSES, buildDailyPuzzle, buildShareText, evaluateGuess,
     lookupGuess, suggestCountries, type Compare, type GuessFeedback, type RegionMatch,
@@ -258,7 +259,7 @@ export default function DailyDeduction() {
                 <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">#{puzzle.number}</span>
                 {streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
-                        <Flame size={15} aria-hidden /> {streak}
+                        <StreakMark size={15}>{streak}</StreakMark>
                     </span>
                 )}
             </TopBar>
@@ -380,7 +381,7 @@ export default function DailyDeduction() {
                                 </p>
                                 {streak > 0 && (
                                     <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
-                                        <Flame size={15} aria-hidden /> {streak} day streak
+                                        <StreakMark size={15}>{streak} day streak</StreakMark>
                                     </p>
                                 )}
                             </div>

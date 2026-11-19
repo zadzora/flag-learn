@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link, useSearchParams } from "react-router-dom"
-import { Check, Flame, Shuffle, X } from "lucide-react"
+import { Check, Shuffle, X } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import {
     buildDailyPuzzle, countryByCode, getTodayString, shiftDate,
     type ConnectionsPuzzle, type ConnectionsColor, type PuzzleGroup,
@@ -586,7 +587,7 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                             </p>
                             {isRealDay && streak > 0 && (
                                 <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
-                                    <Flame size={15} aria-hidden /> {streak} day streak
+                                    <StreakMark size={15}>{streak} day streak</StreakMark>
                                 </p>
                             )}
                         </div>

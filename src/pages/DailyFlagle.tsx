@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Flame, Trophy, X, Check, MapPin } from "lucide-react"
+import { Trophy, X, Check, MapPin } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
@@ -273,7 +274,7 @@ export default function DailyFlagle() {
                 <span className="hidden text-sm tabular-nums text-slate-500 sm:block dark:text-slate-400">{todayStr}</span>
                 {streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
-                        <Flame size={15} aria-hidden /> {streak}
+                        <StreakMark size={15}>{streak}</StreakMark>
                     </span>
                 )}
             </TopBar>
@@ -382,7 +383,7 @@ export default function DailyFlagle() {
                                         <p className="mt-0.5 text-slate-500 dark:text-slate-400">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
                                         {streak > 0 && (
                                             <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
-                                                <Flame size={15} aria-hidden /> {streak} day streak
+                                                <StreakMark size={15}>{streak} day streak</StreakMark>
                                             </p>
                                         )}
                                     </div>

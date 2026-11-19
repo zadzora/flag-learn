@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, Flame, Share2, Shuffle, X } from "lucide-react"
+import { Check, Share2, Shuffle, X } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import TopBar from "../components/TopBar"
 import DailyStanding from "../components/DailyStanding"
 // Tiles are plain, never family-coloured: "the orange ones" would hand over a family group.
@@ -218,7 +219,7 @@ export default function ChemConnections() {
                 <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">#{puzzle.number}</span>
                 {streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
-                        <Flame size={16} aria-hidden /> {streak}
+                        <StreakMark size={16}>{streak}</StreakMark>
                     </span>
                 )}
             </TopBar>

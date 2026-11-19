@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import SupporterName from "../components/SupporterName"
+import { useMediaQuery } from "../utils/useMediaQuery"
 import { useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ComposableMap, Geographies, Geography, Line, Marker, ZoomableGroup } from "react-simple-maps"
@@ -93,6 +94,9 @@ type Outcome = {
     otherName?: string
 }
 
+/** Where the standings panel gets its full 272px (60vw caps it below): 272 / 0.6. */
+const STANDINGS_WIDE = "(min-width: 454px)"
+
 export default function FlagWars() {
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
@@ -150,6 +154,7 @@ export default function FlagWars() {
     const [hallOfFame, setHallOfFame] = useState<HallOfFameEntry[] | null>(null)
     const [loadingHall, setLoadingHall] = useState(false)
     const [showStandings, setShowStandings] = useState(false)
+    const standingsWide = useMediaQuery(STANDINGS_WIDE)
     const [position, setPosition] = useState({ coordinates: [10, 25] as [number, number], zoom: 1.1 })
 
     /**
@@ -824,8 +829,9 @@ export default function FlagWars() {
                     </div>
                 )}
 
-                {/* Standings */}
-                <div className="absolute left-3 bottom-3 w-56 max-w-[60vw]">
+                {/* Standings. Wide enough for a supporter's animal and heart beside a long name; on a
+                    screen where 60vw caps it (under STANDINGS_WIDE), the animals shrink instead. */}
+                <div className="absolute left-3 bottom-3 w-[272px] max-w-[60vw]">
                     <button
                         type="button"
                         onClick={() => setShowStandings(v => !v)}
@@ -861,7 +867,7 @@ export default function FlagWars() {
                                 >
                                     <span className="w-4 font-bold tabular-nums text-slate-400 dark:text-slate-500">{index + 1}</span>
                                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colorForPlayer(row.color) }} />
-                                    <span className="flex min-w-0 flex-1"><SupporterName uid={row.uid} name={row.name} className="font-semibold" live /></span>
+                                    <span className="flex min-w-0 flex-1"><SupporterName uid={row.uid} name={row.name} className="font-semibold" live petSize={standingsWide ? 28 : 20} /></span>
                                     {index === 0 && <Crown size={12} aria-hidden className="text-amber-500 shrink-0" />}
                                     <span className="font-bold tabular-nums">{row.territories}</span>
                                 </div>

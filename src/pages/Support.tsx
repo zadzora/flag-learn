@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import type { User } from "firebase/auth"
-import { AlertTriangle, Car, Check, Heart, Loader2, PawPrint, Sparkles, Trophy } from "lucide-react"
+import { AlertTriangle, Car, Check, Flame, Heart, Loader2, PawPrint, Sparkles, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { GoogleButton } from "../components/AccountPanel"
@@ -141,6 +141,11 @@ export default function Support() {
                             }>
                                 {PETS.length} animals from around the map, every one of them animated - hover the small ones. Yours sits beside your
                                 name, wakes up when someone hovers it, and rides on the roof of your Road Trip car.
+                            </Perk>
+
+                            <Perk icon={<Flame size={18} aria-hidden />} title="Your colours in the daily puzzles">
+                                Your day streak, the frame of Today&apos;s Standing and your &ldquo;Top X%&rdquo; take the colour of your name, and a
+                                solved daily ends in a burst of confetti in it - once a day per puzzle.
                             </Perk>
 
                             <Perk icon={<Car size={18} aria-hidden />} title="The Racer and supporter paints in the Road Trip">

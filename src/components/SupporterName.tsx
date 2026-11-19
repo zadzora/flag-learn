@@ -18,6 +18,8 @@ type Props = {
      * the link opens in a new tab - following it in place would leave the game.
      */
     live?: boolean
+    /** The animal's size in px; smaller where a list has little room for the name. */
+    petSize?: number
 }
 
 /**
@@ -28,7 +30,7 @@ type Props = {
  *
  * Everyone else's name renders exactly as before, a plain truncating span.
  */
-export default function SupporterName({ uid, name: typed, className = "", live = false }: Props) {
+export default function SupporterName({ uid, name: typed, className = "", live = false, petSize }: Props) {
     // A name that got past the filter (saved before it, or written from the console) is never drawn as typed.
     const name = shownName(typed)
     const supporter = useSupporter(uid)
@@ -40,7 +42,7 @@ export default function SupporterName({ uid, name: typed, className = "", live =
         const r = e.currentTarget.getBoundingClientRect()
         setTip({ x: r.left + r.width / 2, y: r.top })
     }
-    const body = <LookedName look={supporter.look} name={name} className={className} animate={!!tip} />
+    const body = <LookedName look={supporter.look} name={name} className={className} petSize={petSize} animate={!!tip} />
     const common = {
         className: "inline-flex min-w-0 max-w-full items-center gap-1 rounded hover:opacity-90",
         "aria-label": `${name}, a Flag Learn supporter`,

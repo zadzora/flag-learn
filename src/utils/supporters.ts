@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { onValue, ref, set } from "firebase/database"
 import { db, observeSession } from "../../lib/firebase"
+import { SUPPORT_NUDGE_EVENT } from "./supportNudge"
 import { DEFAULT_LOOK, EXCLUSIVE_PETS, PETS, TEXT_COLOURS, TINTS, readLook, type SupporterLook } from "./supporterLook"
 
 /**
@@ -122,7 +123,8 @@ export async function startCheckout(cents: number): Promise<string> {
 //
 // `window.supporterTest` shows the cosmetics without paying: `.me()` makes the
 // signed-in player a supporter on this browser, `.everyone()` gives every name
-// on screen a look of its own, `.off()` ends it. Only on `npm run dev`, like
+// on screen a look of its own, `.off()` ends it. `.nudge()` shows the
+// "support the site" toast now (see `supportNudge.ts`). Only on `npm run dev`, like
 // every other test hook - on the live site it would be a free unlock.
 
 type TestState = { mode: "me" | "everyone"; uid?: string; look?: SupporterLook } | null
@@ -166,7 +168,7 @@ function lookFor(uid: string): SupporterLook {
 
 declare global {
     interface Window {
-        supporterTest?: { me: () => Promise<string>; everyone: () => string; off: () => string }
+        supporterTest?: { me: () => Promise<string>; everyone: () => string; off: () => string; nudge: () => string }
     }
 }
 
@@ -189,6 +191,10 @@ export function installSupporterTest() {
         off: () => {
             setTest(null)
             return "Test supporter off."
+        },
+        nudge: () => {
+            window.dispatchEvent(new Event(SUPPORT_NUDGE_EVENT))
+            return "Support toast shown (the real one comes after 10 minutes on the site, then once more 15 minutes later)."
         },
     }
 }

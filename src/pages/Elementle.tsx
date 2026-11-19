@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronsDown, ChevronsUp, Flame, Share2, Trophy, X } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronsDown, ChevronsUp, Share2, Trophy, X } from "lucide-react"
+import { StreakMark } from "../components/SupporterAccent"
 import PeriodicTableBoard, { type CellState } from "../components/PeriodicTableBoard"
 import DailyStanding from "../components/DailyStanding"
 import TopBar from "../components/TopBar"
@@ -230,7 +231,7 @@ export default function Elementle() {
                 <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">#{puzzleNumber(todayStr)}</span>
                 {streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
-                        <Flame size={16} aria-hidden /> {streak}
+                        <StreakMark size={16}>{streak}</StreakMark>
                     </span>
                 )}
             </TopBar>

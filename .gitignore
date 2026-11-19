@@ -40,3 +40,7 @@ backups/
 
 # Playwright MCP snapshots and screenshots
 .playwright-mcp/
+
+# Private notes, not for the repo
+reports/
+research_notes/

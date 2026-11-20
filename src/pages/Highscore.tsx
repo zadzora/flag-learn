@@ -9,7 +9,7 @@ import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { resolveTextAnswer } from "../utils/textAnswerMatch"
 import { db, ensureSignedIn } from "../../lib/firebase"
-import { bestPerAccount, loadPlayerName, playerIdFor, rememberPlayerName, useIsMyRow } from "../utils/mapSpeedrun"
+import { attributeLegacyRows, bestPerAccount, loadPlayerName, playerIdFor, rememberPlayerName, useIsMyRow } from "../utils/mapSpeedrun"
 import YouTag from "../components/YouTag"
 import SupporterName from "../components/SupporterName"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
@@ -59,11 +59,17 @@ export default function Highscore() {
         return "light"
     })
     const [gameMode, setGameMode] = useState<GameMode>("world")
-    const [leaderboards, setLeaderboards] = useState<LeaderboardsByMode>({
+    // Rows as stored, sorted; `leaderboards` lends old uid-less rows the
+    // account another board knows for the same id (`attributeLegacyRows`).
+    const [rawBoards, setRawBoards] = useState<LeaderboardsByMode>({
         world: [],
         capitals: [],
         us: [],
     })
+    const leaderboards = useMemo<LeaderboardsByMode>(() => {
+        const [world, capitals, us] = attributeLegacyRows([rawBoards.world, rawBoards.capitals, rawBoards.us])
+        return { world: bestPerAccount(world), capitals: bestPerAccount(capitals), us: bestPerAccount(us) }
+    }, [rawBoards])
 
     const [started, setStarted] = useState(false)
     // No toast over the board while the clock runs (utils/holdToasts.ts).
@@ -128,7 +134,7 @@ export default function Highscore() {
                     if (a.bestTimeSeconds !== b.bestTimeSeconds) return a.bestTimeSeconds - b.bestTimeSeconds
                     return a.mistakes - b.mistakes
                 })
-                setLeaderboards((prev) => ({ ...prev, [mode]: bestPerAccount(entries) }))
+                setRawBoards((prev) => ({ ...prev, [mode]: entries }))
             })
         )
 

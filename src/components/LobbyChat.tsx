@@ -67,7 +67,9 @@ export default function LobbyChat({ scope, id, uid, nameOf, className = "" }: Pr
                 ref={list}
                 onScroll={onScroll}
                 aria-live="polite"
-                className="mt-3 flex max-h-60 min-h-[4.5rem] flex-col gap-1.5 overflow-y-auto pr-1 text-[15px]"
+                // overscroll-contain: the list sits at its bottom (the newest message), so without it every
+                // wheel turn downwards - and any past the top - went on to scroll the page instead.
+                className="mt-3 flex max-h-60 min-h-[4.5rem] flex-col gap-1.5 overflow-y-auto overscroll-contain pr-1 text-[15px] [scrollbar-width:thin]"
             >
                 {messages.length === 0 && (
                     <li className="text-sm text-slate-500 dark:text-slate-400">{offline ? "The chat could not be reached." : "Say hi while you wait."}</li>

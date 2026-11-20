@@ -298,7 +298,7 @@ export default function Profile() {
                                     <span>{area.label}</span>
                                     <span className="tabular-nums">{done} / {tracks.length}</span>
                                 </h3>
-                                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                                <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-7">
                                     {tracks.map(track => (
                                         <li key={track.id}>
                                             <BadgeCard track={track} value={store.peaks[track.id] ?? 0} onOpen={() => setOpenTrack(track)} />
@@ -330,7 +330,7 @@ export default function Profile() {
                 <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
                     <div className={`${panel} relative p-5`}>
                         <SnowCap seed="profile-journal" />
-                        <Activity days={store.days} since={store.since} />
+                        <Activity days={store.days} dailies={store.dailies} since={store.since} />
                         <Milestones store={store} />
                     </div>
                     <Records store={store} />
@@ -480,15 +480,15 @@ function BadgeCard({ track, value, onOpen }: { track: Track; value: number; onOp
         <button
             type="button"
             onClick={onOpen}
-            className={`${panel} flex h-full min-h-0 w-full flex-col items-center p-3 pb-3.5 text-center font-normal hover:border-slate-400 dark:hover:border-[#3A4670] ${tier === 0 ? "border-dashed" : ""}`}
+            className={`${panel} flex h-full min-h-0 w-full flex-col items-center p-2 pb-2.5 text-center font-normal hover:border-slate-400 dark:hover:border-[#3A4670] ${tier === 0 ? "border-dashed" : ""}`}
         >
-            <BadgeMedal id={track.id} tier={tier} size={64} className="my-1.5" />
-            <span className="mt-1 block text-sm font-bold leading-tight">{track.title}</span>
-            <span className={`mt-0.5 block text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>{TIER_NAMES[tier]}</span>
-            <span className="mt-2 block w-full">
+            <BadgeMedal id={track.id} tier={tier} size={44} className="my-1" />
+            <span className="mt-0.5 block text-xs font-bold leading-tight">{track.title}</span>
+            <span className={`mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.06em] ${muted}`}>{TIER_NAMES[tier]}</span>
+            <span className="mt-1.5 block w-full">
                 <Bar share={complete ? 1 : value / target} tone={complete ? "bg-amber-500 dark:bg-amber-400" : undefined} />
             </span>
-            <span className={`mt-1 block text-[11px] tabular-nums ${muted}`}>
+            <span className={`mt-1 block text-[10px] tabular-nums ${muted}`}>
                 {complete ? "Complete" : `${value.toLocaleString()} / ${target.toLocaleString()}`}
             </span>
         </button>
@@ -565,39 +565,153 @@ function AvatarPicker({ owned, current, onPick, onClose }: { owned: typeof WORLD
     )
 }
 
-const WEEKS = 20
+const DAY_MS = 86_400_000
+/** The calendar never grows past half a year; older weeks drop off the left. */
+const MAX_WEEKS = 26
+const WEEKDAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", ""]
 
-/** Days with progress, GitHub style. It starts the day the profile did; nothing before was recorded. */
-function Activity({ days, since }: { days: Record<string, number>; since: string }) {
-    const cells = useMemo(() => {
-        const end = Date.parse(`${todayUtc()}T00:00:00Z`)
-        const endDow = new Date(end).getUTCDay()
-        const start = end - ((WEEKS - 1) * 7 + endDow) * 86_400_000
-        const out: { date: string; level: number; future: boolean }[] = []
-        for (let t = start; t < start + WEEKS * 7 * 86_400_000; t += 86_400_000) {
-            const date = new Date(t).toISOString().slice(0, 10)
-            const n = days[date] ?? 0
-            out.push({ date, level: n === 0 ? 0 : n < 3 ? 1 : n < 8 ? 2 : n < 20 ? 3 : 4, future: t > end })
+const dayOf = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`
+
+/**
+ * What the player did and when. The raw number per day is a count of progress
+ * events - meaningless to read - so the numbers shown are days played, this
+ * week, the run of days in a row and dailies finished; the calendar only says
+ * "a little" or "a lot". It starts the week the profile did (nothing before was
+ * recorded) and sits left, under its title, growing to the right.
+ */
+function Activity({ days, dailies, since }: { days: Record<string, number>; dailies: Record<string, string[]>; since: string }) {
+    const view = useMemo(() => {
+        const today = todayUtc()
+        const end = Date.parse(`${today}T00:00:00Z`)
+        const monday = (ms: number) => ms - ((new Date(ms).getUTCDay() + 6) % 7) * DAY_MS
+        const sinceMs = Date.parse(`${since}T00:00:00Z`)
+        const lastWeek = monday(end)
+        const firstWeek = Math.max(Number.isNaN(sinceMs) ? lastWeek : monday(Math.min(sinceMs, end)), lastWeek - (MAX_WEEKS - 1) * 7 * DAY_MS)
+        const weeks = Math.round((lastWeek - firstWeek) / (7 * DAY_MS)) + 1
+
+        const cells: { date: string; level: number; hidden: boolean; done: number }[] = []
+        const months: { col: number; label: string }[] = []
+        for (let w = 0; w < weeks; w++) {
+            const weekStart = firstWeek + w * 7 * DAY_MS
+            // A month is labelled over the first week that holds its 1st (or over the first week shown).
+            const firstOfMonth = Array.from({ length: 7 }, (_, d) => new Date(weekStart + d * DAY_MS)).find(d => d.getUTCDate() === 1)
+            const labelDay = firstOfMonth ?? (w === 0 ? new Date(weekStart) : undefined)
+            if (labelDay) months.push({ col: w, label: labelDay.toLocaleDateString(undefined, { month: "short", timeZone: "UTC" }) })
+            for (let d = 0; d < 7; d++) {
+                const t = weekStart + d * DAY_MS
+                const date = dayOf(t)
+                const n = days[date] ?? 0
+                cells.push({ date, level: n === 0 ? 0 : n < 3 ? 1 : n < 8 ? 2 : n < 20 ? 3 : 4, hidden: t > end || date < since, done: dailies[date]?.length ?? 0 })
+            }
         }
-        return out
-    }, [days])
+        // Two labels in neighbouring columns would overprint each other; the later month wins.
+        const monthLabels = months.filter((m, i) => !months[i + 1] || months[i + 1].col - m.col >= 3)
+
+        const active = new Set(Object.keys(days).filter(d => (days[d] ?? 0) > 0))
+        let thisWeek = 0
+        for (let t = lastWeek; t <= end; t += DAY_MS) if (active.has(dayOf(t))) thisWeek++
+        // Today not played yet does not break the run - the day is not over.
+        let streak = 0
+        for (let t = active.has(today) ? end : end - DAY_MS; active.has(dayOf(t)); t -= DAY_MS) streak++
+        let best = 0
+        let run = 0
+        let prev = NaN
+        for (const d of [...active].sort()) {
+            const t = Date.parse(`${d}T00:00:00Z`)
+            run = t - prev === DAY_MS ? run + 1 : 1
+            best = Math.max(best, run)
+            prev = t
+        }
+        const dailyCount = Object.values(dailies).reduce((sum, list) => sum + list.length, 0)
+        return { cells, weeks, monthLabels, played: active.size, thisWeek, daysThisWeek: Math.round((end - lastWeek) / DAY_MS) + 1, streak, best, dailyCount }
+    }, [days, dailies, since])
+
     const tone = ["bg-slate-200 dark:bg-[#1C2338]", "bg-blue-200 dark:bg-[#1d3a6b]", "bg-blue-400 dark:bg-[#2559a8]", "bg-blue-500 dark:bg-blue-500", "bg-blue-700 dark:bg-blue-300"]
+    const stats: [string, string, string?][] = [
+        ["Days played", view.played.toLocaleString()],
+        ["This week", `${view.thisWeek} / ${view.daysThisWeek}`, "days"],
+        ["In a row", view.streak.toLocaleString(), view.best > view.streak ? `best ${plural(view.best, "day")}` : view.streak === 1 ? "day" : "days"],
+        ["Dailies done", view.dailyCount.toLocaleString()],
+    ]
+    const cell = 13
+    const gap = 3
     return (
         <div>
-            <div className="mb-2 flex items-baseline justify-between">
+            <div className="flex items-baseline justify-between">
                 <span className="text-sm font-bold">Activity</span>
                 <span className={`text-xs ${muted}`}>since {shortDate(since)}</span>
             </div>
-            {/* Pushed right, so the newest week sits under "since" and the empty past trails off to the left. */}
-            <div className="flex overflow-x-auto">
-                <div className="ml-auto grid grid-flow-col grid-rows-[repeat(7,12px)] gap-[3px]" style={{ gridAutoColumns: "12px" }}>
-                    {cells.map(c => (
-                        <span key={c.date} title={c.future ? undefined : `${shortDate(c.date)}: ${days[c.date] ?? 0}`} className={`rounded-[2px] ${c.future ? "opacity-0" : tone[c.level]}`} />
-                    ))}
+            <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {stats.map(([label, value, unit]) => (
+                    <div key={label} className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#141A2C]">
+                        <dt className={`text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>{label}</dt>
+                        <dd className="text-lg font-extrabold tabular-nums leading-tight">
+                            {value} {unit && <span className={`text-xs font-semibold ${muted}`}>{unit}</span>}
+                        </dd>
+                    </div>
+                ))}
+            </dl>
+            <div className="mt-4 overflow-x-auto">
+                <div className="inline-grid gap-x-2" style={{ gridTemplateColumns: "auto auto" }}>
+                    <span />
+                    <div className="relative h-4" style={{ width: view.weeks * (cell + gap) - gap }}>
+                        {view.monthLabels.map(m => (
+                            <span key={m.col} className={`absolute top-0 text-[11px] leading-none ${muted}`} style={{ left: m.col * (cell + gap) }}>
+                                {m.label}
+                            </span>
+                        ))}
+                    </div>
+                    <div className={`grid text-[10px] leading-none ${muted}`} style={{ gridTemplateRows: `repeat(7, ${cell}px)`, rowGap: gap }}>
+                        {WEEKDAY_LABELS.map((l, i) => (
+                            <span key={i} className="flex items-center">{l}</span>
+                        ))}
+                    </div>
+                    <div className="grid grid-flow-col" style={{ gridTemplateRows: `repeat(7, ${cell}px)`, gridAutoColumns: `${cell}px`, gap }}>
+                        {view.cells.map(c => (
+                            <span
+                                key={c.date}
+                                title={c.hidden ? undefined : `${shortDate(c.date)} · ${c.level === 0 ? "not played" : "played"}${c.done ? ` · ${c.done} ${c.done === 1 ? "daily" : "dailies"}` : ""}`}
+                                className={`rounded-[3px] ${c.hidden ? "opacity-0" : tone[c.level]}`}
+                            />
+                        ))}
+                    </div>
                 </div>
+            </div>
+            <div className={`mt-2 flex items-center gap-1 text-[11px] ${muted}`}>
+                <span className="mr-1">Less</span>
+                {tone.map(t => (
+                    <span key={t} className={`h-[11px] w-[11px] rounded-[2px] ${t}`} />
+                ))}
+                <span className="ml-1">More</span>
             </div>
         </div>
     )
+}
+
+/** Milestones shown before the list starts to scroll. */
+const MILESTONES_SHOWN = 5
+
+/**
+ * Caps the scroll box at the bottom of its fifth entry, measured rather than
+ * guessed, so exactly five show whatever the font does. A callback ref, as the
+ * list mounts only once there is a badge.
+ */
+function fitMilestones(box: HTMLDivElement | null) {
+    if (!box) return
+    const fit = () => {
+        const items = box.querySelectorAll<HTMLElement>("ol > li")
+        if (items.length <= MILESTONES_SHOWN) {
+            box.style.maxHeight = ""
+            return
+        }
+        const bottom = items[MILESTONES_SHOWN - 1].getBoundingClientRect().bottom
+        box.style.maxHeight = `${Math.ceil(bottom - box.getBoundingClientRect().top + box.scrollTop) + 6}px`
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(box)
+    return () => observer.disconnect()
 }
 
 function Milestones({ store }: { store: ProfileStore }) {
@@ -610,36 +724,48 @@ function Milestones({ store }: { store: ProfileStore }) {
         return <p className={`mt-6 text-sm ${muted}`}>Your first badge will start the story here.</p>
     }
     return (
-        <div className="mt-6">
-            <span className="text-sm font-bold">Milestones</span>
-            <ol className="relative mt-3 flex flex-col gap-4 pl-6 before:absolute before:bottom-1 before:left-[7px] before:top-1 before:w-0.5 before:bg-slate-200 dark:before:bg-[#1C2338]">
-                {dated.slice(0, 12).map(e => (
-                    <li key={e.track.id} className="relative flex items-center gap-3">
-                        <span className={`absolute -left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 bg-white dark:bg-[#0F1424] ${e.tier >= 3 ? "border-amber-500 !bg-amber-500" : "border-blue-500"}`} />
-                        <BadgeMedal id={e.track.id} tier={e.tier} size={34} />
-                        <span className="min-w-0">
-                            <span className={`block text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>{shortDate(e.at)}</span>
-                            <span className="block text-sm font-semibold">
-                                {e.track.title} <span className={muted}>· {TIER_NAMES[e.tier]}</span>
-                            </span>
-                        </span>
-                    </li>
-                ))}
-                {before.length > 0 && (
-                    <li className="relative">
-                        <span className="absolute -left-6 top-2 h-3.5 w-3.5 rounded-full border-2 border-slate-400 bg-white dark:bg-[#0F1424]" />
-                        <span className={`block text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>Before {shortDate(store.since)}</span>
-                        <span className="mb-2 block text-sm font-semibold">{before.length} badges you had already earned</span>
-                        <span className="flex flex-wrap gap-1.5">
-                            {before.map(e => (
-                                <span key={e.track.id} title={`${e.track.title} · ${TIER_NAMES[e.tier]}`}>
-                                    <BadgeMedal id={e.track.id} tier={e.tier} size={30} />
+        <div className="mt-8">
+            <div className="flex items-baseline justify-between">
+                <span className="text-sm font-bold">Milestones</span>
+                {dated.length + (before.length ? 1 : 0) > MILESTONES_SHOWN && <span className={`text-xs ${muted}`}>Scroll for older</span>}
+            </div>
+            {/* The scroll box wraps the list, not the other way round: the timeline line is drawn on the
+                list, and on the scroll box itself it would be only as tall as the visible part. */}
+            <div
+                ref={fitMilestones}
+                tabIndex={0}
+                aria-label="Milestones"
+                className="mt-3 overflow-y-auto overscroll-contain pr-1 outline-none [scrollbar-width:thin] focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+                <ol className="relative flex flex-col gap-4 pl-6 before:absolute before:bottom-1 before:left-[7px] before:top-1 before:w-0.5 before:bg-slate-200 dark:before:bg-[#1C2338]">
+                    {dated.map(e => (
+                        <li key={e.track.id} className="relative flex items-center gap-3">
+                            <span className={`absolute -left-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 bg-white dark:bg-[#0F1424] ${e.tier >= 3 ? "border-amber-500 !bg-amber-500" : "border-blue-500"}`} />
+                            <BadgeMedal id={e.track.id} tier={e.tier} size={34} />
+                            <span className="min-w-0">
+                                <span className={`block text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>{shortDate(e.at)}</span>
+                                <span className="block text-sm font-semibold">
+                                    {e.track.title} <span className={muted}>· {TIER_NAMES[e.tier]}</span>
                                 </span>
-                            ))}
-                        </span>
-                    </li>
-                )}
-            </ol>
+                            </span>
+                        </li>
+                    ))}
+                    {before.length > 0 && (
+                        <li className="relative">
+                            <span className="absolute -left-6 top-2 h-3.5 w-3.5 rounded-full border-2 border-slate-400 bg-white dark:bg-[#0F1424]" />
+                            <span className={`block text-[11px] font-semibold uppercase tracking-[0.06em] ${muted}`}>Before {shortDate(store.since)}</span>
+                            <span className="mb-2 block text-sm font-semibold">{before.length} badges you had already earned</span>
+                            <span className="flex flex-wrap gap-1.5">
+                                {before.map(e => (
+                                    <span key={e.track.id} title={`${e.track.title} · ${TIER_NAMES[e.tier]}`}>
+                                        <BadgeMedal id={e.track.id} tier={e.tier} size={30} />
+                                    </span>
+                                ))}
+                            </span>
+                        </li>
+                    )}
+                </ol>
+            </div>
         </div>
     )
 }

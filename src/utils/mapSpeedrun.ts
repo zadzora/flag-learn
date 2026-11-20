@@ -201,6 +201,24 @@ function byTimeThenMistakes(a: MapLeaderboardRecord, b: MapLeaderboardRecord) {
  * account's row was looked up by uid) keeps both in the database; only its
  * best is shown. Rows without a uid (from before accounts) are all kept.
  */
+/**
+ * Gives a row saved before rows carried `uid` the account of a row elsewhere
+ * under the same leaderboard id. The id is one browser's, and `playerIdFor`
+ * never hands an id another account already writes under, so a match names
+ * the account - without it a supporter's old record on one board was drawn
+ * plain beside their newer, decorated one on the next. Display only: nothing
+ * is written back.
+ */
+export function attributeLegacyRows<T extends BoardRow>(boards: T[][]): T[][] {
+    const owner = new Map<string, string>()
+    for (const board of boards) for (const r of board) if (r.uid && r.playerId && !owner.has(r.playerId)) owner.set(r.playerId, r.uid)
+    return boards.map(board => board.map(r => {
+        if (r.uid || !r.playerId) return r
+        const uid = owner.get(r.playerId)
+        return uid ? { ...r, uid } : r
+    }))
+}
+
 export function bestPerAccount<T extends BoardRow>(sorted: T[]): T[] {
     const seen = new Set<string>()
     return sorted.filter(r => {

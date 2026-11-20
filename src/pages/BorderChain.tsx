@@ -39,6 +39,7 @@ import {
 import { bumpCounter } from "../utils/profileStore"
 import { asset } from "../utils/asset"
 import { isNameOffensive, NAME_REFUSED, shownName } from "../utils/nameFilter"
+import SnowCap from "../components/SnowCap"
 
 const geoUrl = asset("/world-map.json")
 const MAP_WIDTH = 800
@@ -539,6 +540,8 @@ export default function BorderChain() {
                     </section>
 
                     <aside className="flex flex-col gap-3">
+                        {/* The card clips, so its Christmas snow cap sits on this wrapper. */}
+                        <div className="relative">
                         <div className={`${PANEL} relative overflow-hidden p-4`}>
                             <div className="flex items-center gap-3">
                                 {current && (
@@ -590,13 +593,15 @@ export default function BorderChain() {
                                 )}
                             </AnimatePresence>
                         </div>
+                        <SnowCap seed="chain-current" thin />
+                        </div>
 
                         {deadEnd ? (
                             <DeadEnd chain={chain} seconds={Math.ceil(msLeft / 1000)} />
                         ) : !seated ? (
                             <form
                                 onSubmit={takeSeat}
-                                className={`${PANEL} p-4`}
+                                className={`${PANEL} relative p-4`}
                             >
                                 <p className="mb-2.5 text-sm font-semibold">Take a seat to play</p>
                                 <div className="flex gap-2">
@@ -619,11 +624,12 @@ export default function BorderChain() {
                                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                                     You can watch without sitting - the chain keeps moving either way.
                                 </p>
+                                <SnowCap seed="chain-seat" thin />
                             </form>
                         ) : (
                             <form
                                 onSubmit={submit}
-                                className={`${PANEL} p-4`}
+                                className={`${PANEL} relative p-4`}
                             >
                                 <input
                                     ref={inputRef}
@@ -656,10 +662,11 @@ export default function BorderChain() {
                                         </span>
                                     )}
                                 </div>
+                                <SnowCap seed="chain-answer" thin />
                             </form>
                         )}
 
-                        <div className={`${PANEL} p-1.5`}>
+                        <div className={`${PANEL} relative p-1.5`}>
                             {table.map((row, index) => (
                                 <div
                                     key={row.id}
@@ -683,6 +690,7 @@ export default function BorderChain() {
                                     <span className="w-10 text-right font-bold tabular-nums">{row.points}</span>
                                 </div>
                             ))}
+                            <SnowCap seed="chain-table" thin />
                         </div>
 
                         <ChainFeed moves={moves} />

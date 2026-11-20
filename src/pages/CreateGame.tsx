@@ -4,10 +4,11 @@ import { Swords, Loader2, Clock, Users, User, EyeOff } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { db, ensureSignedIn } from "../../lib/firebase"
-import { ref, set } from "firebase/database"
+import { ref, serverTimestamp, set } from "firebase/database"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
+import SnowCap from "../components/SnowCap"
 
 export default function CreateGame() {
     const navigate = useNavigate()
@@ -94,7 +95,8 @@ export default function CreateGame() {
                     left: false
                 }
             },
-            createdAt: Date.now()
+            // The database's clock: the daily clean-up (api/cleanup.ts) measures from it.
+            createdAt: serverTimestamp()
         }
 
         try {
@@ -108,7 +110,7 @@ export default function CreateGame() {
         }
     }
 
-    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
     const label = "mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
     const segmented = "grid gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
     const segment = (on: boolean) =>
@@ -130,6 +132,8 @@ export default function CreateGame() {
                 </div>
 
                 <section className={`${panel} space-y-6 p-5 sm:p-6`}>
+                    {/* First, not last: space-y would give the card's real last child a bottom margin. */}
+                    <SnowCap seed="pvp-create" thin />
 
                     {/* Nickname */}
                     <div>

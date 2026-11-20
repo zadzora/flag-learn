@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { isNameOffensive, shownName } from "../src/utils/nameFilter.ts"
+import { isNameOffensive, isTextOffensive, shownName } from "../src/utils/nameFilter.ts"
 
 const json = f => JSON.parse(readFileSync(new URL(`../data/${f}.json`, import.meta.url), "utf8"))
 
@@ -45,4 +45,12 @@ test("no country, capital, US state, element or constellation is refused", () =>
 test("a bad name already on a board is shown as Player", () => {
     assert.equal(shownName("kurva"), "Player")
     assert.equal(shownName("Jana"), "Jana")
+})
+
+test("chat: a sentence is judged word by word", () => {
+    for (const text of ["you are a f.u.c.k", "f u c k this", "ty kokot", "what an ass", "kurva drahe"]) assert.ok(isTextOffensive(text), text)
+    for (const text of [
+        "kde bilo to more", "magic gang", "glass classic", "hi all, ready?", "Start pls", "the bil",
+        "gg wp", "a b c", "Niger and Nigeria", "na jeba no",
+    ]) assert.ok(!isTextOffensive(text), text)
 })

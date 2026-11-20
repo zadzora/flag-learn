@@ -72,6 +72,24 @@ export function isNameOffensive(raw: string): boolean {
     return false
 }
 
+/**
+ * The same filter for a sentence (room chat). A name is judged squeezed
+ * together, but a sentence cannot be: "kde bilo" would read as "debil". So each
+ * word is judged alone, and a run of single letters ("f u c k") as one word.
+ */
+export function isTextOffensive(raw: string): boolean {
+    const words = raw.split(/\s+/).filter(Boolean)
+    const parts: string[] = []
+    let letters = ""
+    for (const w of words) {
+        if (w.length === 1) { letters += w; continue }
+        if (letters) { parts.push(letters); letters = "" }
+        parts.push(w)
+    }
+    if (letters) parts.push(letters)
+    return parts.some(isNameOffensive)
+}
+
 /** What a name field says about a refused name. */
 export const NAME_REFUSED = "That name is not allowed - please pick another."
 

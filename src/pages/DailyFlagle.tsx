@@ -9,6 +9,7 @@ import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
 import TopBar from "../components/TopBar"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
+import SnowCap from "../components/SnowCap"
 
 // Types
 type Flag = {
@@ -261,7 +262,7 @@ export default function DailyFlagle() {
     const currentZoom = status === 'playing' ? ZOOM_LEVELS[guesses.length] : 1
 
     // --- RENDER ---
-    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
     const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
     const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
     const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
@@ -367,6 +368,7 @@ export default function DailyFlagle() {
                             </button>
                         </div>
                     )}
+                    <SnowCap seed="flagle-main" thin />
                 </section>
 
                 {/* MAIN GAME ENDED - RESULTS & BONUS START */}
@@ -410,6 +412,7 @@ export default function DailyFlagle() {
                                 </div>
                             </div>
                         )}
+                        <SnowCap seed="flagle-result" thin />
                     </section>
                 )}
 
@@ -439,6 +442,7 @@ export default function DailyFlagle() {
                         <button onClick={handleBonusGuess} disabled={!input} className={`w-full py-4 text-lg font-bold ${input ? primary : disabledBtn}`}>
                             Lock in Answer
                         </button>
+                        <SnowCap seed="flagle-bonus" thin />
                     </section>
                 )}
 

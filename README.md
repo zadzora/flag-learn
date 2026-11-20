@@ -243,6 +243,22 @@ Three levels, from quickest to the whole payment:
      back to `/support?thanks=1` and the page turns into the thank-you.
    The runner writes to the emulator only and refuses a live key.
 
+### The daily clean-up
+
+`api/cleanup.ts` runs once a day through Vercel Cron (`crons` in `vercel.json`)
+and deletes, with admin rights, PvP games and trivia rooms older than six hours,
+their chats, and room passwords whose room is gone. Nothing on the client can do
+it: the list of PvP games must stay unreadable, and a rules query cannot be
+limited to "only the old ones".
+
+It needs `FIREBASE_SERVICE_ACCOUNT` and `FIREBASE_DATABASE_URL` (the same as
+the webhook, see above) and **`CRON_SECRET`** - any long random string, e.g.
+`node -e "console.log(crypto.randomUUID()+crypto.randomUUID())"`. Vercel sends it
+as `Authorization: Bearer ...`; without it the function answers 401 to everyone,
+the cron included. Publish the rules first (they add the `createdAt` index on
+`games` the query uses). Vercel → Cron Jobs shows each run and the function's
+reply (`games N, rooms N, ...`), and has a Run button.
+
 ### Accounts and the cloud save
 
 Signing in is optional. A guest plays exactly as before, on `localStorage`; the

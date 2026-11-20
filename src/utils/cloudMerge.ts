@@ -258,6 +258,15 @@ const json = (key: string, policy?: Policy): CloudKey => ({ key, kind: "json", p
 const text = (key: string, policy?: Policy): CloudKey => ({ key, kind: "text", policy })
 
 /**
+ * The Learn mode's Extras packs (data/extraFlags.json), each saved under
+ * `flag-master-extra-<id>-v1` (utils/extraFlags.ts). Listed by hand because
+ * this file stays free of imports Node cannot run; `npm test` checks the list
+ * against the JSON. The rules accept the whole `extra-[a-z]+-v1` pattern, so a
+ * new pack needs a line here, not a rules change.
+ */
+export const EXTRA_PACK_IDS = ["regions", "historical", "de", "ch", "pl", "cz", "au", "br"]
+
+/**
  * Every key the cloud save keeps. **Mirrored as a list in
  * `firebase-realtime.rules.json`** (`users/$uid/save/$key`): a key added here
  * and not there is refused by the database. Anything not listed stays on the
@@ -268,6 +277,7 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-v1", repetition),
     json("flag-master-capitals-v1", repetition),
     json("flag-master-us-v1", repetition),
+    ...EXTRA_PACK_IDS.map(id => json(`flag-master-extra-${id}-v1`, repetition)),
     json("flag-master-map-v1", repetition),
     json("flag-master-constellations-v1", repetition),
     json("capital-map-v1", repetition),

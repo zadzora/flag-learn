@@ -20,6 +20,7 @@ import TopBar, { BarButton } from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import CountUpValue from "../components/CountUpValue"
 import { recordBest } from "../utils/profileStore"
+import SnowCap from "../components/SnowCap"
 
 const THEME_KEY = "flag-master-theme"
 
@@ -432,7 +433,7 @@ export default function HigherLowerGame() {
                         )}
 
                         {complete && (
-                            <section className={`${panel} mb-6 flex w-full max-w-md flex-col gap-5 p-6`}>
+                            <section className={`${panel} relative mb-6 flex w-full max-w-md flex-col gap-5 p-6`}>
                                 <div>
                                     <div className="flex items-center justify-between gap-3">
                                         <h2 className={`text-2xl font-bold ${lost ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
@@ -473,6 +474,7 @@ export default function HigherLowerGame() {
                                 >
                                     <Repeat size={18} aria-hidden /> Play again
                                 </button>
+                                <SnowCap seed="hl-result" thin />
                             </section>
                         )}
 
@@ -514,6 +516,7 @@ export default function HigherLowerGame() {
                                                 <span className="text-xs text-red-500">Data unavailable</span>
                                             )}
                                         </div>
+                                        <SnowCap seed="hl-left" thin />
                                     </motion.div>
 
                                     {/* Mystery */}
@@ -569,6 +572,7 @@ export default function HigherLowerGame() {
                                                 )}
                                             </div>
                                         )}
+                                        <SnowCap seed="hl-right" thin />
                                     </motion.div>
                                 </div>
                             </LayoutGroup>

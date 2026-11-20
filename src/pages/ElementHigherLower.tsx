@@ -10,6 +10,7 @@ import {
     formatValue, nextOpponent, pickProperty, readBest, recordBest, valueOf,
     type PropertyKey,
 } from "../utils/elementHigherLower"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Higher or Lower with elements - see `utils/elementHigherLower.ts`. One
@@ -55,7 +56,7 @@ function firstRound(): Round | null {
 function ElementCard({ element, prop, value, tone }: { element: ElementItem; prop: PropertyKey; value: "shown" | "hidden" | "revealed"; tone?: "right" | "wrong" }) {
     const meta = CATEGORY_META[element.category]
     return (
-        <div className={`flex flex-col items-center gap-3 rounded-[10px] border bg-white p-5 text-center transition-colors dark:bg-slate-800 sm:p-6 ${tone === "right"
+        <div className={`relative flex flex-col items-center gap-3 rounded-[10px] border bg-white p-5 text-center transition-colors dark:bg-slate-800 sm:p-6 ${tone === "right"
             ? "border-emerald-400 dark:border-emerald-500/60"
             : tone === "wrong" ? "border-red-400 dark:border-red-500/60" : "border-slate-200 dark:border-slate-700"}`}>
             <span className={`flex h-24 w-24 flex-col items-center justify-center rounded-[10px] leading-none ${meta.chip}`}>
@@ -69,6 +70,7 @@ function ElementCard({ element, prop, value, tone }: { element: ElementItem; pro
             <p key={`${element.symbol}-${value}`} className={`fl-in min-h-[2.25rem] text-3xl font-black tabular-nums ${value === "hidden" ? "text-slate-300 dark:text-slate-600" : ""}`}>
                 {value === "hidden" ? "?" : formatValue(element, prop)}
             </p>
+            <SnowCap seed={`element-hl-${element.symbol}`} thin />
         </div>
     )
 }
@@ -194,7 +196,7 @@ export default function ElementHigherLower() {
                 )}
 
                 {phase === "over" && (
-                    <section className={`${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`relative ${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-orange-500 dark:border-slate-700"><Flame size={28} aria-hidden /></span>
                             <div>
@@ -212,6 +214,7 @@ export default function ElementHigherLower() {
                             <button type="button" onClick={restart} className={`${PRIMARY} flex flex-1 items-center justify-center gap-2 py-3.5`}><RotateCcw size={17} aria-hidden /> Play again</button>
                             <button type="button" onClick={() => navigate("/science")} className={`${QUIET} flex flex-1 items-center justify-center gap-2 py-3.5`}><ArrowLeft size={17} aria-hidden /> Back to Science</button>
                         </div>
+                        <SnowCap seed="element-hl-over" thin />
                     </section>
                 )}
             </main>

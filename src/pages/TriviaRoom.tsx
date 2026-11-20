@@ -18,10 +18,12 @@ import { useRoomClock, useRoomPassed } from "../utils/useRoomClock"
 import { usePageMeta } from "../utils/pageMeta"
 import {
     ANSWER_GRACE_MS, BOARD_MS, INTRO_MS, REVEAL_MS, JoinError, NAME_MAX, activePlayers, backToLobby, closeRoom, finaleTimeline, finishGame, holdSeat, hostWatch, joinRoom,
-    leaveSeat, markClosed, nameTaken, normalizeCode, readNickname, removePlayer, roomTypes, saveNickname, serverNow, setStep, standings, startGame, submitAnswer, watchRoom,
+    leaveSeat, leftThePage, markClosed, nameTaken, normalizeCode, readNickname, removePlayer, roomTypes, saveNickname, serverNow, setStep, standings, startGame, submitAnswer, watchRoom,
     type Room, type RoomStep,
 } from "../utils/triviaRooms"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
+import SnowCap from "../components/SnowCap"
+import LobbyChat from "../components/LobbyChat"
 
 const THEME_KEY = "flag-master-theme"
 const PRIMARY = "flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-6 py-3.5 font-bold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
@@ -92,6 +94,13 @@ export default function TriviaRoom() {
         if (!isHost || !status || status === "closed") return
         return hostWatch(code, status)
     }, [isHost, status, code])
+    // Leaving the page any other way than the Leave button (Back, a link) still closes the room or frees the seat.
+    const here = useRef({ isHost, seated, status })
+    useEffect(() => { here.current = { isHost, seated, status } })
+    useEffect(() => () => {
+        const h = here.current
+        if (uid) leftThePage(code, uid, h.isHost, h.seated, h.status)
+    }, [code, uid])
 
     // --- The host's clock -------------------------------------------------------
     const advanced = useRef("")
@@ -205,7 +214,7 @@ export default function TriviaRoom() {
                     )}
 
                     {room && status === "playing" && step && (
-                        <AutoHeight reduce={reduce} className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                        <AutoHeight reduce={reduce} snow="room-card" className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
                             <ProgressLine room={room} index={step.index} />
                             <AnimatePresence mode="wait">
                                 {step.phase === "intro" && quiz[step.index] && (
@@ -372,7 +381,7 @@ function Lobby({ room, uid, isHost, canStart, onStart, onLeave }: { room: Room; 
 
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-5">
-            <section className="rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-800">
+            <section className="relative rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-800">
                 <p className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {night ? <MonitorPlay size={16} aria-hidden /> : <Swords size={16} aria-hidden />} {night ? "Quiz night" : "Battle"}
                     {room.private && <><Lock size={14} aria-hidden /> Private</>}
@@ -384,6 +393,7 @@ function Lobby({ room, uid, isHost, canStart, onStart, onLeave }: { room: Room; 
                 <button type="button" onClick={copy} className={`${SECONDARY} mx-auto mt-4`}>
                     {copied ? <><Check size={17} aria-hidden /> Link copied</> : <><Copy size={17} aria-hidden /> Copy invite link</>}
                 </button>
+                <SnowCap seed="room-lobby" thin />
             </section>
 
             <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
@@ -414,6 +424,13 @@ function Lobby({ room, uid, isHost, canStart, onStart, onLeave }: { room: Room; 
                     </AnimatePresence>
                 </ul>
             </section>
+
+            <LobbyChat
+                scope="trivia"
+                id={room.code}
+                uid={uid}
+                nameOf={u => room.players?.[u]?.name ?? (u === room.host ? room.hostName : "Player")}
+            />
 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <button type="button" onClick={onLeave} className={SECONDARY}><LogOut size={17} aria-hidden /> {isHost ? "Close room" : "Leave"}</button>
@@ -455,7 +472,7 @@ function JoinPanel({ room, uid, error, onError }: { room: Room; uid: string; err
     }
 
     return (
-        <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onSubmit={submit} autoComplete="off" className="mx-auto flex max-w-md flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+        <motion.form initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onSubmit={submit} autoComplete="off" className="relative mx-auto flex max-w-md flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
             <div className="text-center">
                 <p className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Room {room.code} · host {room.hostName}</p>
                 <h1 className="mt-1 !text-2xl font-extrabold">{room.name}</h1>
@@ -483,6 +500,7 @@ function JoinPanel({ room, uid, error, onError }: { room: Room; uid: string; err
                     </button>
                 </>
             )}
+            <SnowCap seed="room-join" thin />
         </motion.form>
     )
 }
@@ -530,7 +548,7 @@ function Finale({ room, uid, isHost, lastIndex, reduce, onLeave }: { room: Room;
     })
 
     return (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative flex flex-col gap-6 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
             <div className="text-center">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Final standings</p>
                 <AnimatePresence mode="wait" initial={false}>
@@ -558,6 +576,7 @@ function Finale({ room, uid, isHost, lastIndex, reduce, onLeave }: { room: Room;
                 </button>
                 {!isHost && <p className="w-full text-center text-sm text-slate-500 dark:text-slate-400">Stay here if {room.hostName} starts another game.</p>}
             </div>
+            <SnowCap seed="room-finale" thin />
         </motion.div>
     )
 }

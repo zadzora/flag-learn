@@ -12,6 +12,7 @@ import {
     completeFrom, nextPicks, pointsFor, readBest, readName, recordBest, spellText, symbolsNeeded, wordLimit, wordsFor, type SpellerPool,
 } from "../utils/symbolSpeller"
 import { formatRunTime } from "../utils/mapSpeedrun"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Symbol Speller - a word, spelled by typing the full names of the elements
@@ -292,7 +293,7 @@ export default function SymbolSpeller() {
                         </div>
 
                         {/* The toy: anything typed, spelled where it can be. */}
-                        <section className={`${PANEL} p-4`}>
+                        <section className={`relative ${PANEL} p-4`}>
                             <p className="text-sm font-bold">Spell anything</p>
                             <input
                                 value={free}
@@ -310,12 +311,13 @@ export default function SymbolSpeller() {
                                     </div>
                                 ))}
                             </div>
+                            <SnowCap seed="speller-free" thin />
                         </section>
                     </div>
                 )}
 
                 {phase === "play" && word && (
-                    <section className={`rounded-[10px] border bg-white p-5 dark:bg-slate-800 sm:p-7 ${expired
+                    <section className={`relative rounded-[10px] border bg-white p-5 dark:bg-slate-800 sm:p-7 ${expired
                         ? "border-red-400 dark:border-red-500/60"
                         : finished ? "border-emerald-400 dark:border-emerald-500/60" : "border-slate-200 dark:border-slate-700"}`}>
                         <div className="flex items-center justify-between text-sm">
@@ -403,11 +405,12 @@ export default function SymbolSpeller() {
                                 </p>
                             ) : null}
                         </div>
+                        <SnowCap seed="speller-round" thin />
                     </section>
                 )}
 
                 {phase === "done" && (
-                    <section className={`${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`relative ${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                             <div>
@@ -437,6 +440,7 @@ export default function SymbolSpeller() {
                             <button type="button" onClick={start} className={`${PRIMARY} flex flex-1 items-center justify-center gap-2 py-3.5`}><RotateCcw size={17} aria-hidden /> Play again</button>
                             <button type="button" onClick={() => setPhase("setup")} className={`${QUIET} flex flex-1 items-center justify-center gap-2 py-3.5`}><Settings2 size={17} aria-hidden /> Change settings</button>
                         </div>
+                        <SnowCap seed="speller-done" thin />
                     </section>
                 )}
             </main>

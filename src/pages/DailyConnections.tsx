@@ -14,6 +14,7 @@ import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../uti
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
 import TopBar from "../components/TopBar"
+import SnowCap from "../components/SnowCap"
 
 const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-connections-save"
@@ -402,7 +403,7 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
     }
 
     // --- RENDER ---
-    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
     const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
     const quiet = "rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
     const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
@@ -591,6 +592,7 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                                 </p>
                             )}
                         </div>
+                        <SnowCap seed="connections-result" thin />
                     </section>
                 )}
 

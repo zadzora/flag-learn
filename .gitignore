@@ -33,6 +33,7 @@ CLAUDE.md
 # Image-generation prompts, kept local
 graphic/badges-prompts.md
 graphic/icons-prompts.md
+graphic/support-animals-prompts.md
 backups/
 
 # Dev-only trivia editor: questions rejected there
@@ -44,3 +45,6 @@ backups/
 # Private notes, not for the repo
 reports/
 research_notes/
+
+# Python bytecode from the sprite scripts
+__pycache__/

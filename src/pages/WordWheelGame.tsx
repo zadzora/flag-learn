@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2, RefreshCw, Shuffle, Timer } from "lucide-react"
 import TopBar from "../components/TopBar"
 import { generateWordWheelPuzzle, pathLetters, type WheelLetter, type WordWheelPuzzle } from "../utils/wordWheelPuzzle"
 import worldData from "../../data/flags.json"
+import SnowCap from "../components/SnowCap"
 
 const THEME_KEY = "flag-master-theme"
 const WORD_WHEEL_PROGRESS_KEY = "flag-master-word-wheel-level"
@@ -432,7 +433,7 @@ export default function WordWheelGame() {
                     {Math.floor(ROUND_SECONDS / 60)} minutes. Every 30 seconds one random letter is revealed.
                 </p>
 
-                <section className={`${panel} mb-6 w-full p-4 sm:p-5`}>
+                <section className={`${panel} relative mb-6 w-full p-4 sm:p-5`}>
                     <div className="space-y-4">
                         {puzzle.entries.map((e) => {
                             const done = solvedKeys.has(e.key)
@@ -478,6 +479,7 @@ export default function WordWheelGame() {
                             )
                         })}
                     </div>
+                    <SnowCap seed="wheel-words" thin />
                 </section>
 
                 <div className="mb-2 min-h-[2rem] text-center font-mono text-lg font-bold tracking-[0.2em] text-slate-700 dark:text-slate-200">

@@ -12,6 +12,7 @@ import {
 import { getTodayString } from "../utils/dailySeed"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Elementle - the daily element in six guesses, on the periodic table.
@@ -240,7 +241,7 @@ export default function Elementle() {
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-[380px_minmax(0,1fr)] xl:items-start">
                     <div className="flex flex-col gap-3 xl:col-start-1 xl:row-start-1">
                         {status === "playing" ? (
-                            <section className={`${panel} p-4`}>
+                            <section className={`relative ${panel} p-4`}>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Find today's element in {MAX_GUESSES} guesses. Click its cell or type a name or symbol; every guess says
                                     where the answer sits from it on the table.
@@ -285,9 +286,10 @@ export default function Elementle() {
                                     <span className="text-slate-500 dark:text-slate-400">{left} guess{left === 1 ? "" : "es"} left</span>
                                     {message && <span className="fl-in font-bold text-amber-600 dark:text-amber-400">{message}</span>}
                                 </div>
+                                <SnowCap seed="elementle-guess" thin />
                             </section>
                         ) : (
-                            <section className={`fl-in rounded-[10px] border bg-white p-4 dark:bg-slate-800 ${status === "won"
+                            <section className={`relative fl-in rounded-[10px] border bg-white p-4 dark:bg-slate-800 ${status === "won"
                                 ? "border-emerald-400 dark:border-emerald-500/60"
                                 : "border-red-400 dark:border-red-500/60"}`}>
                                 <div className="flex items-center gap-3">
@@ -311,6 +313,7 @@ export default function Elementle() {
                                     {copied ? <><Check size={17} aria-hidden /> Copied</> : <><Share2 size={17} aria-hidden /> Share result</>}
                                 </button>
                                 <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">A new element tomorrow at midnight UTC.</p>
+                                <SnowCap seed="elementle-result" thin />
                             </section>
                         )}
 

@@ -20,6 +20,7 @@ import { usePageMeta } from "../utils/pageMeta"
 import { STREAK_KEYS, activeStreak, readStreak, recordDailyResult } from "../utils/dailyStreak"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 import { isDailyFinished, dailyMode } from "../utils/dailyModes"
+import SnowCap from "../components/SnowCap"
 import {
     BAND_LABELS, DAILY_KEY, DAILY_LENGTH, SCORE_BANDS, abandoned, dailyLabel, dailyQuiz, loadSave, scoreBucket, shareText, writeSave, type DailySave,
 } from "../utils/triviaDaily"
@@ -260,7 +261,7 @@ export default function TriviaGame({ mode = "solo" }: { mode?: Mode }) {
                     </div>
                 )}
 
-                <AutoHeight reduce={reduce} className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                <AutoHeight reduce={reduce} snow="trivia-card" className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
                     {phase === "loading" && (
                         <div className="flex min-h-[340px] items-center justify-center gap-2 text-slate-500"><Loader2 className="animate-spin" size={20} aria-hidden /> Loading questions</div>
                     )}
@@ -365,7 +366,7 @@ function SoloSetup({ bankSize, best, onStart }: { bankSize: number; best: number
 
 /** The other two ways to play, under the solo card. */
 function TriviaHub({ today, dailyDone }: { today: string; dailyDone: boolean }) {
-    const card = "group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
+    const card = "group relative flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
     return (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Link to="/daily-trivia" className={card}>
@@ -380,6 +381,7 @@ function TriviaHub({ today, dailyDone }: { today: string; dailyDone: boolean }) 
                     </span>
                 </span>
                 <ArrowRight size={18} aria-hidden className="mt-1 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+                <SnowCap seed="trivia-hub-daily" thin />
             </Link>
             <Link to="/trivia/rooms" className={card}>
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
@@ -392,6 +394,7 @@ function TriviaHub({ today, dailyDone }: { today: string; dailyDone: boolean }) 
                     </span>
                 </span>
                 <ArrowRight size={18} aria-hidden className="mt-1 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+                <SnowCap seed="trivia-hub-rooms" thin />
             </Link>
         </div>
     )

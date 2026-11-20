@@ -23,6 +23,7 @@ import {
 } from "../utils/trivia"
 import { answerText, countryOf, fmt, isRight, optionsOf, placeIsAnswer, placeOf, type Outcome, type Played } from "../utils/triviaPlay"
 import { useQuizCoin, useQuizShuffle } from "../utils/triviaShuffle"
+import SnowCap from "./SnowCap"
 
 /**
  * The quiz itself - the question card with its clock, the card before each
@@ -74,7 +75,7 @@ export function FlagConfetti({ codes }: { codes: string[] }) {
  * instead of snapping - a question, its result and the next intro all differ.
  * The padding sits inside the measured box, so focus rings are never clipped.
  */
-export function AutoHeight({ reduce, className, children }: { reduce: boolean; className?: string; children: ReactNode }) {
+export function AutoHeight({ reduce, className, children, snow }: { reduce: boolean; className?: string; children: ReactNode; snow?: string }) {
     const inner = useRef<HTMLDivElement>(null)
     const [height, setHeight] = useState<number | "auto">("auto")
     useEffect(() => {
@@ -84,7 +85,7 @@ export function AutoHeight({ reduce, className, children }: { reduce: boolean; c
         observer.observe(el)
         return () => observer.disconnect()
     }, [])
-    return (
+    const box = (
         <motion.div
             className={className}
             style={{ overflow: "hidden" }}
@@ -94,6 +95,14 @@ export function AutoHeight({ reduce, className, children }: { reduce: boolean; c
         >
             <div ref={inner} className="flex flex-col p-4 sm:p-6">{children}</div>
         </motion.div>
+    )
+    if (!snow) return box
+    // The box clips (its height animates), so the Christmas snow cap sits on a wrapper around it.
+    return (
+        <div className="relative">
+            {box}
+            <SnowCap seed={snow} thin />
+        </div>
     )
 }
 

@@ -5,6 +5,7 @@ import { AtomIcon, CompoundsIcon, ElementDetectiveIcon, ElementleIcon, ElementSp
 import PetLane from "../components/PetLane"
 import { pickPetSpot } from "../utils/petSpots"
 import TopBar from "../components/TopBar"
+import SnowCap from "../components/SnowCap"
 import ModeTag, { type ModeTagKind } from "../components/ModeTag"
 import { ELEMENTS, ELEMENT_MODES, readElementProgress, type ElementModeKey } from "../utils/elements"
 import { QUANTITIES, QUANTITY_MODES, readQuantityProgress } from "../utils/quantities"
@@ -272,8 +273,9 @@ function TopicGrid({ topics, columns = "md:grid-cols-3" }: { topics: Topic[]; co
                     name at a different height. */}
                 <Link
                     to={to}
-                    className="group flex h-full flex-col rounded-[10px] border border-slate-200 bg-white p-4 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
+                    className="group relative flex h-full flex-col rounded-[10px] border border-slate-200 bg-white p-4 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-[#3A4670]"
                 >
+                    <SnowCap seed={to} />
                     <div className="flex h-10 items-center gap-3">
                         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 ${accent}`}>
                             <Icon size={19} aria-hidden />

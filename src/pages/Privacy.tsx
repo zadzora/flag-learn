@@ -101,7 +101,9 @@ export default function Privacy() {
                         <Item title="Trivia Rooms">
                             A trivia room is listed for everybody while it exists: its name, the host's nickname, the players' nicknames and the points each
                             player scored on each question. A private room's password is stored so the database can check it, and nobody can read it back -
-                            not even the host. When you join one, the password you typed is stored under your anonymous ID for the same check. A room is
+                            not even the host. When you join one, the password you typed is stored under your anonymous ID for the same check. While a room
+                            or a PvP battle waits to start, its players can chat: each message is stored with your anonymous ID and the time, and only the
+                            players in that room can read it. The chat is deleted with the room, and a PvP battle's chat when the battle starts. A room is
                             deleted when its host closes it, and anyone may remove one left for more than six hours. If you report a problem with a
                             question, the report holds the question, the reason, your note and your anonymous ID, and only I can read it. Legal basis:
                             Art. 6(1)(b) GDPR.
@@ -159,9 +161,10 @@ export default function Privacy() {
                             That removes the saved progress, its backup copy, the speedrun timing record and the sign-in account straight away.
                         </li>
                         <li>
-                            Public entries - leaderboard records, World Conqueror territories and Hall of Fame, Border Chain moves, PvP games - stay after
+                            Public entries - leaderboard records, World Conqueror territories and Hall of Fame, Border Chain moves - stay after
                             you delete your account, because they are part of other players' results too. Email me and I will remove or anonymise yours.
                         </li>
+                        <li>PvP battles and trivia rooms, with their chats: deleted automatically once they are six hours old, at the latest a day after that.</li>
                         <li>Anonymous accounts of the online modes are kept so your results stay yours. Email me to have one removed.</li>
                         <li>
                             Supporter status and look: as long as the account exists, and after it is deleted until you ask me to remove them. Payment records:

@@ -10,6 +10,7 @@ import { ELEMENT_SETS, SET_COUNTS, elementBoard, setPool, type ElementSet } from
 import { PENALTY_SECONDS, formatRunTime, openRunTracker, roundRunTime, type RunTracker } from "../utils/mapSpeedrun"
 import { bumpCounter } from "../utils/profileStore"
 import { useHoldToasts } from "../utils/holdToasts"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Element Speedrun - every element of a set, clicked on a blank periodic table
@@ -187,7 +188,7 @@ export default function ElementSpeedrun() {
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
                     {/* What to find. On a phone it sits above the table, so the name
                         and the cells are on screen together. */}
-                    <section className="flex items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 xl:col-start-1 xl:row-start-1 xl:flex-col xl:items-stretch xl:p-5">
+                    <section className="relative flex items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 xl:col-start-1 xl:row-start-1 xl:flex-col xl:items-stretch xl:p-5">
                         {target ? (
                             <>
                                 <div key={target.symbol} className="fl-in flex min-w-0 flex-1 items-center gap-4 xl:flex-col xl:items-center xl:text-center">
@@ -211,6 +212,7 @@ export default function ElementSpeedrun() {
                                 Pick a set and start: the element to find shows here, you click its cell. A wrong cell is +{PENALTY_SECONDS}s.
                             </p>
                         )}
+                        <SnowCap seed="element-speedrun-target" thin />
                     </section>
 
                     <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900 xl:col-start-2 xl:row-start-1 xl:row-span-2">

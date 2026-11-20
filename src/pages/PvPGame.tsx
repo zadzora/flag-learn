@@ -11,6 +11,9 @@ import usData from "../../data/us_states.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { bumpCounterOnce } from "../utils/profileStore"
 import { isNameOffensive, NAME_REFUSED, shownName } from "../utils/nameFilter"
+import SnowCap from "../components/SnowCap"
+import LobbyChat from "../components/LobbyChat"
+import { chatPath } from "../utils/roomChat"
 
 type Flag = {
     code: string
@@ -273,9 +276,11 @@ export default function PvPGame() {
     }
 
     const startGame = () => {
-        update(ref(db, `games/${gameId}`), {
-            status: 'playing',
-            startTime: Date.now()
+        // The lobby chat goes with the lobby, in the same write.
+        update(ref(db), {
+            [`games/${gameId}/status`]: 'playing',
+            [`games/${gameId}/startTime`]: Date.now(),
+            [chatPath('pvp', gameId ?? '')]: null,
         })
     }
 
@@ -418,7 +423,7 @@ export default function PvPGame() {
 
     // --- RENDER ---
 
-    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
     const primary = "rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
     const disabledButton = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-bold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
     const textInput = "w-full border border-slate-200 bg-slate-50 outline-none transition-colors focus:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-[#4A5680]"
@@ -454,6 +459,7 @@ export default function PvPGame() {
                             Join Lobby
                         </button>
                         {isNameOffensive(myName) && <p className="mt-2 text-sm font-bold text-red-600 dark:text-red-400" role="alert">{NAME_REFUSED}</p>}
+                        <SnowCap seed="pvp-join" thin />
                     </section>
                 </main>
             </div>
@@ -586,7 +592,17 @@ export default function PvPGame() {
                         ) : (
                             <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400"><Loader2 size={15} className="animate-spin" aria-hidden /> Waiting for host to start...</div>
                         )}
+                        <SnowCap seed="pvp-lobby" thin />
                     </section>
+                    {myPlayer && gameId && (
+                        <LobbyChat
+                            scope="pvp"
+                            id={gameId}
+                            uid={myId}
+                            nameOf={u => gameData.players[u]?.name ?? "Player"}
+                            className="mt-5 !rounded-[10px]"
+                        />
+                    )}
                 </main>
             </div>
         )
@@ -642,6 +658,7 @@ export default function PvPGame() {
                         <Link to="/" className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}>
                             <Home size={18} aria-hidden /> Back to Menu
                         </Link>
+                        <SnowCap seed="pvp-results" thin />
                     </section>
                 </main>
             </div>
@@ -661,6 +678,7 @@ export default function PvPGame() {
                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Your Score</div>
                             <div className="mt-1 text-3xl font-bold tabular-nums">{myPlayer.score} / {gameData.flags.length}</div>
                         </div>
+                        <SnowCap seed="pvp-finished" thin />
                     </section>
                 </main>
             </div>
@@ -800,6 +818,7 @@ export default function PvPGame() {
                             {answerLocked ? 'Wait...' : 'Submit Answer'}
                         </button>
                     </div>
+                    <SnowCap seed="pvp-question" thin />
                 </section>
             </main>
         </div>

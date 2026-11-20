@@ -1,7 +1,8 @@
 // The cloud save's join. Runs under plain Node: `npm test`.
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { CLOUD_KEYS, mergeSave } from "../src/utils/cloudMerge.ts"
+import { readFileSync } from "node:fs"
+import { CLOUD_KEYS, EXTRA_PACK_IDS, mergeSave } from "../src/utils/cloudMerge.ts"
 
 const spec = key => {
     const found = CLOUD_KEYS.find(k => k.key === key)
@@ -108,4 +109,16 @@ test("a save cannot reach the prototype", () => {
 test("an unreadable save loses to a readable one", () => {
     const remote = flags({ fr: { streak: 2, seen: 1 } })
     assert.equal(mergeSave(spec("flag-master-v1"), null, "{broken", remote), remote)
+})
+
+test("every Extras pack is synced, and the rules take its key", () => {
+    const read = file => readFileSync(new URL(file, import.meta.url), "utf8")
+    const packs = JSON.parse(read("../data/extraFlags.json")).packs.map(p => p.id)
+    assert.deepEqual([...EXTRA_PACK_IDS].sort(), [...packs].sort(), "EXTRA_PACK_IDS in cloudMerge.ts must list the packs in data/extraFlags.json")
+    const save = JSON.parse(read("../firebase-realtime.rules.json")).rules.users.$uid.save.$key[".validate"]
+    const keyPattern = new RegExp(save.match(/\$key\.matches\(\/(.*?)\/\)/)[1])
+    for (const id of packs) {
+        assert.ok(CLOUD_KEYS.some(k => k.key === `flag-master-extra-${id}-v1`), `${id} is not in CLOUD_KEYS`)
+        assert.ok(keyPattern.test(`flag-master-extra-${id}-v1`), `the rules refuse ${id}'s key`)
+    }
 })

@@ -11,6 +11,7 @@ import {
     GEO_URL, UNSUPPORTED_MAP_CODES, geoMatchesFlag, getDisplayName, getNames, loadGeoInfoByCode,
     type GeoInfo,
 } from "../utils/mapGeo"
+import SnowCap from "../components/SnowCap"
 
 const STORAGE_KEY = "border-guess-v1"
 interface SaveData { queue: string[]; completed: number; total: number; incorrectRounds: number; cycleComplete?: boolean }
@@ -261,7 +262,7 @@ export default function BorderGuessGame() {
             <div className="flex h-screen flex-col overflow-hidden text-slate-900 dark:text-[#E8ECF6]">
                 <TopBar title="Border Guess" />
                 <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-8">
-                    <section className="flex flex-col gap-6 rounded-[10px] border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-700 dark:bg-slate-800">
+                    <section className="relative flex flex-col gap-6 rounded-[10px] border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-700 dark:bg-slate-800">
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-blue-600 dark:border-slate-700 dark:text-blue-400"><MapIcon size={28} aria-hidden /></span>
                             <div>
@@ -285,6 +286,7 @@ export default function BorderGuessGame() {
                             </button>
                             <Link to="/" className={`${quiet} flex flex-1 items-center justify-center py-3.5 font-bold`}>Back to menu</Link>
                         </div>
+                        <SnowCap seed="border-guess-done" thin />
                     </section>
                 </main>
             </div>

@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, useParams, useSearchParams } from "react-router-dom"
 import Home from "./pages/Home"
 import Game from "./pages/Game"
+import Extras from "./pages/Extras"
+import ExtraBrowse from "./pages/ExtraBrowse"
 import BlurGame from "./pages/BlurGame"
 import CreateGame from "./pages/CreateGame"
 import PvPGame from "./pages/PvPGame"
@@ -44,12 +46,27 @@ import Terms from "./pages/Terms"
 import Support from "./pages/Support"
 import AchievementToasts from "./components/AchievementToasts"
 import ScrollMemory from "./components/ScrollMemory"
+import Snowfall from "./components/Snowfall"
 
 /** Dev only: every supporter animal in every state (`/dev/pets`). Never part of a production build. */
 const PetGallery = import.meta.env.DEV ? lazy(() => import("./pages/PetGallery")) : null
 /** Dev only: the trivia question editor (`/dev/trivia`), backed by the dev server's /__trivia/ endpoints. */
 const TriviaEditor = import.meta.env.DEV ? lazy(() => import("./pages/TriviaEditor")) : null
+const ExtraFlagsReview = import.meta.env.DEV ? lazy(() => import("./pages/ExtraFlagsReview")) : null
 // import FlagQuestionGame from "./pages/FlagQuestionGame"
+
+/** /play, or /play?deck=<id> for an Extras pack - a fresh page per deck, so no state leaks between them. */
+function GameRoute() {
+    const [params] = useSearchParams()
+    const deck = params.get("deck")
+    return <Game key={deck ?? "main"} deck={deck} />
+}
+
+/** /extras/<id>: every flag of one pack to look through; keyed so another pack starts fresh. */
+function ExtraBrowseRoute() {
+    const { id } = useParams()
+    return <ExtraBrowse key={id} />
+}
 
 export default function App() {
     return (
@@ -62,7 +79,9 @@ export default function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/support" element={<Support />} />
 
-                <Route path="/play" element={<Game />} />
+                <Route path="/play" element={<GameRoute />} />
+                <Route path="/extras" element={<Extras />} />
+                <Route path="/extras/:id" element={<ExtraBrowseRoute />} />
                 <Route path="/blur" element={<BlurGame />} />
                 <Route path="/pvp/create" element={<CreateGame />} />
                  <Route path="/pvp/:gameId" element={<PvPGame />} />
@@ -108,6 +127,7 @@ export default function App() {
 
                 {PetGallery && <Route path="/dev/pets" element={<Suspense fallback={null}><PetGallery /></Suspense>} />}
                 {TriviaEditor && <Route path="/dev/trivia" element={<Suspense fallback={null}><TriviaEditor /></Suspense>} />}
+                {ExtraFlagsReview && <Route path="/dev/extra-flags" element={<Suspense fallback={null}><ExtraFlagsReview /></Suspense>} />}
 
 
                 {/* The mode was called Flag Wars before; keep the old link working. */}
@@ -117,6 +137,7 @@ export default function App() {
             </Routes>
             {/* Badges are earned on every page, so they are announced from outside the routes. */}
             <AchievementToasts />
+            <Snowfall />
             <Analytics />
         </BrowserRouter>
     )

@@ -402,6 +402,77 @@ describe("triviaRooms: multiplayer trivia", () => {
     })
 })
 
+describe("room chats: the wait before a game", () => {
+    const K1 = "-Nabcdefghijklmnopqr"
+    const K2 = "-Nabcdefghijklmnopqs"
+    const msg = (uid, text = "hi all") => ({ uid, text, at: TIMESTAMP })
+    const say = (db, path, uid, key = K1, text) => db.ref(path).update({ [`m/${key}`]: msg(uid, text), [`last/${uid}`]: TIMESTAMP })
+    const seat = name => ({ name, joinedAt: 1, left: false })
+    const triviaRoom = (extra = {}) => ({
+        host: "host", hostName: "Host", name: "Friday quiz", private: false, style: "battle",
+        settings: { length: 10, region: "", maxPlayers: 8 }, createdAt: Date.now(), status: "lobby", round: 1,
+        players: { host: seat("Host"), bob: seat("Bob") }, ...extra,
+    })
+    const pvpPlayer = name => ({ name, score: 0, currentIndex: 0, finished: false, finishedAt: 0, left: false })
+    const pvpGame = (extra = {}) => ({
+        id: "abc123", hostId: "host", settings: { roundCount: 10, region: "world", timeLimit: 60, maxPlayers: 4 },
+        flags: ["fr"], status: "waiting", startTime: 0, createdAt: Date.now(),
+        players: { host: pvpPlayer("Host"), bob: pvpPlayer("Bob") }, ...extra,
+    })
+
+    test("trivia: seated players talk in the lobby, nobody else reads or writes", async () => {
+        await seed("triviaRooms/CHT23", triviaRoom())
+        await assertSucceeds(say(anon("bob"), "triviaChat/CHT23", "bob"))
+        await assertSucceeds(anon("host").ref("triviaChat/CHT23/m").limitToLast(50).once("value"))
+        await assertFails(anon("carol").ref("triviaChat/CHT23/m").once("value"))
+        await assertFails(guest().ref("triviaChat/CHT23/m").once("value"))
+        await assertFails(say(anon("carol"), "triviaChat/CHT23", "carol", K2))
+    })
+
+    test("trivia: a quiz night's host, who has no seat, may talk too", async () => {
+        await seed("triviaRooms/NGT23", triviaRoom({ style: "night", players: { bob: seat("Bob") } }))
+        await assertSucceeds(say(anon("host"), "triviaChat/NGT23", "host"))
+    })
+
+    test("trivia: no forged sender, no long text, no flood, no message without its stamp", async () => {
+        await seed("triviaRooms/CHT23", triviaRoom())
+        await assertFails(anon("bob").ref("triviaChat/CHT23").update({ [`m/${K1}`]: msg("host"), "last/bob": TIMESTAMP }))
+        await assertFails(say(anon("bob"), "triviaChat/CHT23", "bob", K1, "x".repeat(201)))
+        await assertFails(anon("bob").ref(`triviaChat/CHT23/m/${K1}`).set(msg("bob")))
+        await assertSucceeds(say(anon("bob"), "triviaChat/CHT23", "bob", K1))
+        await assertFails(say(anon("bob"), "triviaChat/CHT23", "bob", K2))
+        await assertFails(anon("bob").ref(`triviaChat/CHT23/m/${K1}`).remove())
+    })
+
+    test("trivia: the chat closes once the game starts", async () => {
+        await seed("triviaRooms/RUN23", triviaRoom({ status: "playing" }))
+        await assertFails(say(anon("bob"), "triviaChat/RUN23", "bob"))
+    })
+
+    test("trivia: the chat goes with the room", async () => {
+        await seed("triviaRooms/CHT23", triviaRoom())
+        await seed("triviaChat/CHT23", { m: { [K1]: { uid: "bob", text: "hi", at: 1 } } })
+        await assertFails(anon("bob").ref("triviaChat/CHT23").remove())
+        await assertSucceeds(anon("host").ref().update({ "triviaRooms/CHT23": null, "triviaChat/CHT23": null }))
+        await seed("triviaRooms/OLD23", triviaRoom({ createdAt: Date.now() - 7 * 3600_000 }))
+        await seed("triviaChat/OLD23", { m: { [K1]: { uid: "bob", text: "hi", at: 1 } } })
+        await assertSucceeds(anon("passer-by").ref().update({ "triviaRooms/OLD23": null, "triviaChat/OLD23": null }))
+        await seed("triviaChat/GONE2", { m: { [K1]: { uid: "bob", text: "hi", at: 1 } } })
+        await assertSucceeds(anon("passer-by").ref("triviaChat/GONE2").remove())
+    })
+
+    test("pvp: players talk while waiting; the host's start clears it", async () => {
+        await seed("games/abc123", pvpGame())
+        await assertSucceeds(say(anon("bob"), "pvpChat/abc123", "bob"))
+        await assertFails(say(anon("carol"), "pvpChat/abc123", "carol", K2))
+        await assertFails(anon("carol").ref("pvpChat/abc123/m").once("value"))
+        await assertSucceeds(anon("bob").ref("pvpChat/abc123/m").once("value"))
+        await assertFails(anon("bob").ref("pvpChat/abc123").remove())
+        await assertSucceeds(anon("host").ref().update({ "games/abc123/status": "playing", "games/abc123/startTime": 5, "pvpChat/abc123": null }))
+        await assertFails(say(anon("host"), "pvpChat/abc123", "host", K2))
+    })
+})
+
 describe("triviaReports: a player flags a question", () => {
     const report = (uid, extra = {}) => ({ q: "eu-001", reason: "wrong-answer", note: "The answer looks wrong.", uid, at: TIMESTAMP, ...extra })
 

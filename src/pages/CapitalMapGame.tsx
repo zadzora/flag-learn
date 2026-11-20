@@ -16,6 +16,7 @@ import { bumpCounter, recordBest } from "../utils/profileStore"
 import { panButton, steadyClicks } from "../utils/steadyClicks"
 import MapTips from "../components/MapTips"
 import { asset } from "../utils/asset"
+import BrandLogo from "../components/BrandLogo"
 import { useHoldToasts } from "../utils/holdToasts"
 
 const geoUrl = asset("/world-map.json")
@@ -802,7 +803,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
                         <>
                             <Link to="/" aria-label="Back" className={backClass}><ArrowLeft size={19} aria-hidden /></Link>
                             <Link to="/" className="hidden shrink-0 items-center gap-2 font-bold lg:flex">
-                                <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
+                                <BrandLogo className="h-8 w-8" />
                                 Flag Learn
                             </Link>
                             {promptCard || (

@@ -116,10 +116,14 @@
         background-color: var(--wall-bg);
     }
 
+    /*
+     * The page colour lives on <html> alone. The Christmas snow (components/Snowfall.tsx)
+     * is a canvas at z-index -10, between the page colour and everything on it, so
+     * it falls behind the cards - a background on body would cover it.
+     */
     body {
         font-family: var(--font-sans);
         letter-spacing: -0.005em;
-        background-color: var(--wall-bg);
         color: #0f1424;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
@@ -471,4 +475,29 @@
     /* Woken in the top bar: one small hop. A new best at the end of a game: a few happy ones. */
     .pet-hop-once { animation: pet-hop 0.45s ease-out; transform-origin: 50% 100%; }
     .pet-cheer { animation: pet-hop 0.55s ease-out 0.4s 4; transform-origin: 50% 100%; }
+}
+
+/*
+ * The Christmas snow drifts on menu cards (components/SnowCap.tsx). White with a
+ * blue-grey shade band for thickness; on the pale day page the outline and a soft
+ * shadow are what keep white snow on a white card readable at all.
+ */
+.snow-cap-body { fill: #ffffff; }
+.snow-cap-shade { fill: #c8d5ec; }
+.snow-cap-edge { fill: none; stroke: rgba(70, 95, 140, 0.42); stroke-width: 1; }
+.snow-cap svg { filter: drop-shadow(0 1.5px 2px rgba(60, 80, 120, 0.22)); }
+.dark .snow-cap-body { fill: #eef3ff; }
+.dark .snow-cap-shade { fill: #b9c6e2; }
+.dark .snow-cap-edge { stroke: rgba(0, 0, 0, 0.35); }
+.dark .snow-cap svg { filter: none; }
+
+/* A supporter's sparkles on the snow drifts: a four-point twinkle in their accent (--sparkle). */
+.snow-sparkle { position: absolute; translate: -50% -50%; opacity: 0.7; }
+.snow-sparkle::before,
+.snow-sparkle::after { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; border-radius: 2px; background: var(--sparkle); }
+.snow-sparkle::before { width: 2px; height: 100%; }
+.snow-sparkle::after { width: 100%; height: 2px; }
+@keyframes snow-twinkle { 0%, 100% { opacity: 0; scale: 0.4; } 50% { opacity: 1; scale: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+    .snow-sparkle { animation: snow-twinkle 2.6s ease-in-out infinite; }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, type MouseEvent } from "react"
+import { Link } from "react-router-dom"
 import PetLane from "../components/PetLane"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, X, Check, RotateCcw, Dumbbell, Trophy, Share2, CheckSquare, Square, Timer, Repeat, Unlock, Info, ChevronRight, Flame } from "lucide-react"
@@ -10,6 +11,9 @@ import SiteFooter from "../components/SiteFooter"
 import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { recordBest } from "../utils/profileStore"
+import { extraPack, extraStorageKey, packPhrase } from "../utils/extraFlags"
+import ExtrasCredit from "../components/ExtrasCredit"
+import SnowCap from "../components/SnowCap"
 
 // --- TYPES ---
 type Flag = {
@@ -18,6 +22,10 @@ type Flag = {
     capital?: (string | null)[] | null
     image: string
     difficulty?: number
+    /** Extras' historical states: first and last year. */
+    years?: [number | null, number | null]
+    /** Extras: what the place is, in a line. */
+    info?: string
 }
 
 type FlagProgress = {
@@ -65,7 +73,11 @@ const SECTION_LABELS: Record<GameMode, { title: string; detail: string }> = {
     capitals: { title: "World Capitals", detail: "Guess capitals from flags" },
 }
 
-export default function Game() {
+/**
+ * `deck` is an Extras pack id (/play?deck=<id>, see utils/extraFlags.ts). The
+ * route remounts the page per deck (`key`), so nothing carries over between them.
+ */
+export default function Game({ deck }: { deck?: string | null }) {
     // --- GAME MODE STATE ---
     const [gameMode, setGameMode] = useState<GameMode>(() => {
         if (typeof window !== 'undefined') {
@@ -73,21 +85,26 @@ export default function Game() {
         }
         return 'world'
     })
+    // An Extras pack: names its flags like the Countries deck, on its own save.
+    const pack = extraPack(deck)
+    const deckMode: GameMode | 'extra' = pack ? 'extra' : gameMode
 
     // Determine active dataset and storage key based on mode
     const activeData = useMemo(() => {
-        if (gameMode === 'us') return usData as unknown as Flag[]
-        if (gameMode === 'capitals') {
+        if (pack) return pack.flags as Flag[]
+        if (deckMode === 'us') return usData as unknown as Flag[]
+        if (deckMode === 'capitals') {
             return (worldData as unknown as Flag[]).filter(f => f.capital && f.capital[0] !== null)
         }
         return worldData as unknown as Flag[]
-    }, [gameMode])
+    }, [deckMode, pack])
 
     const activeStorageKey = useMemo(() => {
-        if (gameMode === 'us') return STORAGE_KEY_US
-        if (gameMode === 'capitals') return STORAGE_KEY_CAPITALS
+        if (pack) return extraStorageKey(pack.id)
+        if (deckMode === 'us') return STORAGE_KEY_US
+        if (deckMode === 'capitals') return STORAGE_KEY_CAPITALS
         return STORAGE_KEY_WORLD
-    }, [gameMode])
+    }, [deckMode, pack])
 
     const [current, setCurrent] = useState<Flag | null>(null)
     const [input, setInput] = useState("")
@@ -181,7 +198,7 @@ export default function Game() {
 
     // --- HELPERS ---
     function getCorrectAnswerDisplay(flag: Flag): string {
-        if (gameMode === 'capitals' && flag.capital) {
+        if (deckMode === 'capitals' && flag.capital) {
             return flag.capital[0] || ""
         }
         if (Array.isArray(flag.name)) return flag.name[0]
@@ -250,12 +267,13 @@ export default function Game() {
 
     function resetProgress() {
         let modeName = "World Flags"
-        if (gameMode === 'us') modeName = "US States"
-        if (gameMode === 'capitals') modeName = "World Capitals"
+        if (deckMode === 'us') modeName = "US States"
+        if (deckMode === 'capitals') modeName = "World Capitals"
+        if (pack) modeName = pack.title
 
         if (confirm(`Reset all progress for ${modeName} mode?`)) {
             localStorage.removeItem(activeStorageKey)
-            if (gameMode === 'world') localStorage.removeItem(TUTORIAL_KEY)
+            if (deckMode === 'world') localStorage.removeItem(TUTORIAL_KEY)
             setSessionStreak(0)
             window.location.reload()
         }
@@ -282,7 +300,7 @@ export default function Game() {
     function handleOpenGallery() {
         setShowGallery(true)
         setShowCheatConfirm(false)
-        if (!tutorialDismissed && gameMode === 'world') {
+        if (!tutorialDismissed && deckMode === 'world') {
             setTutorialDismissed(true)
             localStorage.setItem(TUTORIAL_KEY, "true")
         }
@@ -491,7 +509,7 @@ export default function Game() {
         if (!current || status !== 'idle') return
 
         const accept: string[] =
-            gameMode === 'capitals'
+            deckMode === 'capitals'
                 ? current.capital && Array.isArray(current.capital)
                     ? current.capital.filter((c): c is string => typeof c === 'string')
                     : []
@@ -583,12 +601,14 @@ export default function Game() {
 
     const handleShare = async () => {
         let modeTitle = "world"
-        if (gameMode === 'us') modeTitle = "US state"
-        if (gameMode === 'capitals') modeTitle = "capital city"
+        if (deckMode === 'us') modeTitle = "US state"
+        if (deckMode === 'capitals') modeTitle = "capital city"
 
         const shareData = {
             title: 'Flag Learn 🌍',
-            text: `🏆 I just mastered ${totalStats.total} ${modeTitle} flags in Flag Learn! Can you match me? 🔥`,
+            text: pack
+                ? `🏆 I just mastered the flags of all ${totalStats.total} ${packPhrase(pack)} in Flag Learn! Can you match me? 🔥`
+                : `🏆 I just mastered ${totalStats.total} ${modeTitle} flags in Flag Learn! Can you match me? 🔥`,
             url: 'https://www.flaglearn.eu/'
         }
 
@@ -617,19 +637,19 @@ export default function Game() {
         (() => {
             const code = countryFactsModalFlag.code
             const fromDisk = readCapitalsStreakFromStorage(code)
-            const live = gameMode === "capitals" ? (progress[code]?.streak ?? 0) : 0
+            const live = deckMode === "capitals" ? (progress[code]?.streak ?? 0) : 0
             return Math.max(fromDisk, live) < TARGET_STREAK
         })()
 
     /** In Capitals mode, hide country name & currency from API until country is mastered in Countries (world save). */
     const countryFactsModalCountryIdentityMasked =
         countryFactsModalFlag != null &&
-        gameMode === "capitals" &&
+        deckMode === "capitals" &&
         readWorldStreakFromStorage(countryFactsModalFlag.code) < TARGET_STREAK
 
     if (!isLoaded) return null
 
-    const deckTitle = gameMode === 'world' ? 'Countries' : gameMode === 'us' ? 'US States' : 'World Capitals'
+    const deckTitle = pack ? pack.title : deckMode === 'world' ? 'Countries' : deckMode === 'us' ? 'US States' : 'World Capitals'
     const isNewFlag = !!current && !isPracticeMode && !isReview && progress[current.code]?.seen === 0
     const flagStreak = current ? (progress[current.code]?.streak || 0) : 0
     const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
@@ -645,28 +665,42 @@ export default function Game() {
                     <span className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-sm font-bold text-red-600 dark:text-red-300" title="Mistakes"><X size={14} aria-hidden /> {practiceMistakes}</span>
                 </TopBar>
             ) : (
-                <TopBar title={deckTitle} theme={theme} onToggleTheme={toggleTheme} />
+                <TopBar title={deckTitle} back={pack ? "/extras" : "/"} theme={theme} onToggleTheme={toggleTheme} />
             )}
 
             <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
                 {!isPracticeMode && !practiceResults && (
                     <>
-                        {/* The three decks, named - no icons to decode. */}
+                        {pack ? (
+                            // An Extras pack has no siblings here - the other packs are on /extras.
+                            <div className="flex items-end justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Extras</div>
+                                    <h1 className="!text-2xl font-bold">{pack.title}</h1>
+                                </div>
+                                <span className="flex shrink-0 gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                                    <Link to={`/extras/${pack.id}`} className="hover:text-slate-900 dark:hover:text-white">Browse all</Link>
+                                    <Link to="/extras" className="hover:text-slate-900 dark:hover:text-white">All packs</Link>
+                                </span>
+                            </div>
+                        ) : (
+                        /* The three decks, named - no icons to decode. */
                         <div className="grid grid-cols-3 gap-1 rounded-[10px] border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" role="tablist" aria-label="Deck">
                             {(['world', 'us', 'capitals'] as const).map(mode => (
                                 <button
                                     key={mode}
                                     type="button"
                                     role="tab"
-                                    aria-selected={gameMode === mode}
+                                    aria-selected={deckMode === mode}
                                     onClick={() => switchGameMode(mode)}
                                     title={SECTION_LABELS[mode].detail}
-                                    className={`min-h-10 rounded-md px-2 text-sm font-semibold ${gameMode === mode ? 'bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+                                    className={`min-h-10 rounded-md px-2 text-sm font-semibold ${deckMode === mode ? 'bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                                 >
                                     {mode === 'capitals' ? 'Capitals' : SECTION_LABELS[mode].title}
                                 </button>
                             ))}
                         </div>
+                        )}
 
                         {/* Mastery so far - the whole row opens the collection. */}
                         <button type="button" onClick={handleOpenGallery} className="group mt-5 block w-full px-0 py-0 text-left font-normal" title="Open your collection">
@@ -693,7 +727,7 @@ export default function Game() {
 
                 {current ? (
                     // The card stays put between questions; only the flag inside it changes.
-                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                    <section className={`${panel} relative mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
                         <div className="flex min-h-6 items-center justify-between gap-3">
                             <span className={`text-xs font-bold uppercase tracking-wider ${isNewFlag ? 'text-blue-600 dark:text-blue-400' : isReview ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
                                 {isPracticeMode ? 'Practice' : isReview ? 'Review' : isNewFlag ? 'New flag' : 'Name this flag'}
@@ -719,10 +753,12 @@ export default function Game() {
                         {isNewFlag && (
                             <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-center text-blue-900 dark:text-blue-100">
                                 <div className="text-lg">
-                                    {gameMode === 'capitals' ? 'Capital of ' : 'This is '}
-                                    <span className="font-extrabold">{gameMode === 'capitals' ? getCountryName(current) : getCorrectAnswerDisplay(current)}</span>
-                                    {gameMode === 'capitals' && <> is <span className="font-extrabold">{getCorrectAnswerDisplay(current)}</span></>}
+                                    {deckMode === 'capitals' ? 'Capital of ' : 'This is '}
+                                    <span className="font-extrabold">{deckMode === 'capitals' ? getCountryName(current) : getCorrectAnswerDisplay(current)}</span>
+                                    {deckMode === 'capitals' && <> is <span className="font-extrabold">{getCorrectAnswerDisplay(current)}</span></>}
+                                    {current.years && <span className="ml-1.5 text-sm font-semibold tabular-nums text-blue-700/80 dark:text-blue-200/70">{current.years.map(y => y ?? "?").join("–")}</span>}
                                 </div>
+                                {current.info && <div className="mt-1 text-sm text-blue-900/80 dark:text-blue-100/80">{current.info}</div>}
                                 <div className="mt-0.5 text-xs text-blue-700/80 dark:text-blue-200/70">Type it below - next time you're on your own.</div>
                             </div>
                         )}
@@ -735,8 +771,8 @@ export default function Game() {
                                 onKeyDown={e => { if (e.key === "Enter") handleCheck() }}
                                 onFocus={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                 disabled={status !== 'idle'}
-                                aria-label={gameMode === 'capitals' ? 'Capital' : 'Answer'}
-                                placeholder={isNewFlag ? `Type: ${getCorrectAnswerDisplay(current)}` : (gameMode === 'capitals' ? `Capital of ${getCountryName(current)}...` : "Type country name...")}
+                                aria-label={deckMode === 'capitals' ? 'Capital' : 'Answer'}
+                                placeholder={isNewFlag ? `Type: ${getCorrectAnswerDisplay(current)}` : (deckMode === 'capitals' ? `Capital of ${getCountryName(current)}...` : pack ? "Type the name..." : "Type country name...")}
                                 className={`w-full border px-5 py-4 text-center text-xl font-medium outline-none transition-colors duration-150 dark:text-white
                                     ${status === 'error' ? 'border-red-400 bg-red-500/10 text-red-900 dark:border-red-500/60 dark:text-red-100' : ''}
                                     ${status === 'correct' || status === 'mastered' ? 'border-emerald-400 bg-emerald-500/10 text-emerald-900 dark:border-emerald-500/60 dark:text-emerald-100' : ''}
@@ -759,9 +795,10 @@ export default function Game() {
                                 {status === 'idle' ? 'Check answer' : 'Checking...'}
                             </button>
                         </div>
+                        <SnowCap seed="play-question" thin />
                     </section>
                 ) : practiceResults ? (
-                    <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`${panel} relative mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
                         <div>
                             <h2 className="!text-3xl font-bold">Practice complete</h2>
                             <p className="mt-1 text-slate-500 dark:text-slate-400">You reviewed <strong className="text-slate-900 dark:text-white">{practiceResults.count}</strong> flags.</p>
@@ -780,17 +817,18 @@ export default function Game() {
                             <button onClick={() => startPracticeMode(lastPracticePool)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Practice again</button>
                             <button onClick={exitPracticeMode} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to overview</button>
                         </div>
+                        <SnowCap seed="play-practice-done" thin />
                     </section>
                 ) : (
                     totalStats.percent === 100 && !isPracticeMode && (
-                        <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`${panel} relative mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                                 <div>
                                     <h2 className="!text-3xl font-bold">Flag Master</h2>
                                     <p className="mt-1 text-slate-500 dark:text-slate-400">
                                         You have mastered all <strong className="text-slate-900 dark:text-white">{totalStats.total}</strong>{" "}
-                                        {gameMode === "world" ? "flags of the world" : gameMode === "us" ? "US state flags" : "world capitals"}.
+                                        {pack ? `flags of ${packPhrase(pack)}` : deckMode === "world" ? "flags of the world" : deckMode === "us" ? "US state flags" : "world capitals"}.
                                     </p>
                                 </div>
                             </div>
@@ -798,6 +836,7 @@ export default function Game() {
                                 <button onClick={handleShare} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Share2 size={18} aria-hidden /> Share</button>
                                 <button onClick={() => startPracticeMode()} className={`${quiet} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Dumbbell size={18} aria-hidden /> Keep practising</button>
                             </div>
+                            <SnowCap seed="play-mastered" thin />
                         </section>
                     )
                 )}
@@ -805,10 +844,14 @@ export default function Game() {
 
             <SiteFooter
                 about={
+                    <>
                     <p>
-                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {gameMode === 'world' ? 'world flags' : (gameMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively.
+                        Flag Learn is a free educational <strong>geography quiz</strong> designed to help you <strong>learn {pack ? `the flags of ${packPhrase(pack)}` : deckMode === 'world' ? 'world flags' : (deckMode === 'us' ? 'US state flags' : 'world capitals')}</strong> effectively.
                         Unlike other <strong>flag games</strong>, it uses spaced repetition and streak mechanics to make learning stick.
                     </p>
+                    {/* An Extras pack's flags are not Flagpedia's, which the footer credits. */}
+                    {pack && <div className="mt-2"><ExtrasCredit /></div>}
+                    </>
                 }
             />
 
@@ -819,7 +862,7 @@ export default function Game() {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900 gap-4">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Collection</h2><p className="text-slate-500 dark:text-slate-400 text-sm">{gameMode === 'world' ? 'World Flags' : (gameMode === 'us' ? 'US State Flags' : 'World Capitals')} — Select mastered flags to practice. {(gameMode === 'world' || gameMode === 'capitals') && <span className="text-indigo-600 dark:text-indigo-400">Tap <Info size={12} className="inline align-text-bottom mx-0.5" /> on a mastered flag for country facts.</span>}</p></div>
+                                    <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">Collection</h2><p className="text-slate-500 dark:text-slate-400 text-sm">{pack ? pack.title : deckMode === 'world' ? 'World Flags' : (deckMode === 'us' ? 'US State Flags' : 'World Capitals')} — Select mastered flags to practice. {(deckMode === 'world' || deckMode === 'capitals') && <span className="text-indigo-600 dark:text-indigo-400">Tap <Info size={12} className="inline align-text-bottom mx-0.5" /> on a mastered flag for country facts.</span>}</p></div>
                                     <div className="flex items-center gap-2">
                                         <button onClick={() => { if (selectedFlags.length > 0) { const customPool = activeData.filter(f => selectedFlags.includes(f.code)); startPracticeMode(customPool) } else { startPracticeMode() } }} disabled={selectedFlags.length === 0 && totalStats.mastered < 5} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm shadow-md transition-all ${selectedFlags.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : (totalStats.mastered >= 5 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed')}`}><Dumbbell size={16} /> {selectedFlags.length > 0 ? `Practice Selected (${selectedFlags.length})` : `Practice Mastered (${totalStats.mastered})`}</button>
                                         <div className="flex gap-1 ml-2 border-l border-slate-300 dark:border-slate-700 pl-3">
@@ -854,7 +897,7 @@ export default function Game() {
                                         const isSeen = p.seen > 0
                                         const isLocked = !isSeen
 
-                                        const displayName = gameMode === 'capitals' ? getCorrectAnswerDisplay(flag) : getCountryName(flag)
+                                        const displayName = deckMode === 'capitals' ? getCorrectAnswerDisplay(flag) : getCountryName(flag)
                                         const isSelected = selectedFlags.includes(flag.code)
                                         const canSelect = isMastered
 
@@ -887,7 +930,7 @@ export default function Game() {
 
                                                         {!isSelected && !isMastered && isSeen && <div className="absolute bottom-0 w-full bg-slate-900/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">{p.streak}/3</div>}
 
-                                                        {isMastered && (gameMode === 'world' || gameMode === 'capitals') && (
+                                                        {isMastered && (deckMode === 'world' || deckMode === 'capitals') && (
                                                             <button
                                                                 type="button"
                                                                 title="Country info"
@@ -903,7 +946,10 @@ export default function Game() {
 
                                                 {!isLocked && (
                                                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                                                        <span className="text-white text-xs font-bold text-center">{isMastered ? displayName : "Yet to learn"}</span>
+                                                        <span className="text-white text-xs font-bold text-center">
+                                                            {isMastered ? displayName : "Yet to learn"}
+                                                            {isMastered && flag.info && <span className="mt-1 line-clamp-3 block text-[10px] font-normal leading-tight text-white/75">{flag.info}</span>}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
@@ -941,7 +987,7 @@ export default function Game() {
                                             getCountryName(countryFactsModalFlag)
                                         )}
                                     </h3>
-                                    {gameMode === 'capitals' && (
+                                    {deckMode === 'capitals' && (
                                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                             Capital:{" "}
                                             {countryFactsModalCapitalMasked ? (

@@ -10,6 +10,7 @@ import { buildDailyPuzzle, buildShareText, type ChemPuzzle, type ConnectionsColo
 import { getTodayString } from "../utils/dailySeed"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Chemistry Connections - sixteen elements, four groups of four, a new board
@@ -319,7 +320,7 @@ export default function ChemConnections() {
 
                 {status !== "playing" && (
                     <>
-                        <section className={`${panel} flex items-center gap-4 p-5 sm:p-6`}>
+                        <section className={`relative ${panel} flex items-center gap-4 p-5 sm:p-6`}>
                             <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 ${status === "won" ? "text-emerald-500" : "text-red-500"}`}>
                                 {status === "won" ? <Check size={28} strokeWidth={3} aria-hidden /> : <X size={28} strokeWidth={3} aria-hidden />}
                             </span>
@@ -332,6 +333,7 @@ export default function ChemConnections() {
                             <button type="button" onClick={share} className={`${primary} flex shrink-0 items-center gap-2 px-4 py-2.5 text-sm font-bold`}>
                                 {copied ? <><Check size={16} aria-hidden /> Copied</> : <><Share2 size={16} aria-hidden /> Share</>}
                             </button>
+                            <SnowCap seed="chem-connections-result" thin />
                         </section>
                         <DailyStanding
                             distribution={distribution}

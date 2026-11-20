@@ -1,0 +1,96 @@
+{
+  "animated": {
+    "panda": {
+      "frames": 48,
+      "fps": 12
+    },
+    "kangaroo": {
+      "frames": 48,
+      "fps": 12
+    },
+    "llama": {
+      "frames": 48,
+      "fps": 12
+    },
+    "sloth": {
+      "frames": 48,
+      "fps": 12
+    },
+    "polarbear": {
+      "frames": 48,
+      "fps": 12
+    },
+    "tiger": {
+      "frames": 48,
+      "fps": 12
+    },
+    "camel": {
+      "frames": 48,
+      "fps": 12
+    },
+    "beaver": {
+      "frames": 48,
+      "fps": 12
+    },
+    "flamingo": {
+      "frames": 48,
+      "fps": 12
+    },
+    "hedgehog": {
+      "frames": 48,
+      "fps": 12
+    },
+    "turtle": {
+      "frames": 48,
+      "fps": 12
+    },
+    "orangutan": {
+      "frames": 48,
+      "fps": 12
+    },
+    "otter": {
+      "frames": 48,
+      "fps": 12
+    },
+    "fox": {
+      "frames": 48,
+      "fps": 12
+    },
+    "penguin": {
+      "frames": 48,
+      "fps": 12
+    },
+    "elephant": {
+      "frames": 48,
+      "fps": 12
+    },
+    "owl": {
+      "frames": 48,
+      "fps": 12
+    },
+    "koala": {
+      "frames": 48,
+      "fps": 12
+    }
+  },
+  "sag": {
+    "panda": 0.042,
+    "koala": 0.04,
+    "kangaroo": 0.04,
+    "penguin": 0.04,
+    "llama": 0.041,
+    "sloth": 0.041,
+    "fox": 0.041,
+    "polarbear": 0.042,
+    "elephant": 0.042,
+    "tiger": 0.042,
+    "camel": 0.042,
+    "beaver": 0.041,
+    "flamingo": 0.04,
+    "hedgehog": 0.042,
+    "turtle": 0.04,
+    "orangutan": 0.042,
+    "otter": 0.041,
+    "owl": 0.042
+  }
+}

@@ -65,6 +65,11 @@ export default function SupporterName({ uid, name: typed, className = "", live =
                     <span className="flex items-center justify-center gap-1 font-bold">
                         <Heart size={12} className="fill-rose-500 text-rose-500" aria-hidden /> Supports Flag Learn
                     </span>
+                    {Number.isFinite(supporter.since) && (
+                        <span className="mt-0.5 block">
+                            since {new Date(supporter.since).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                    )}
                     <span className="mt-0.5 block opacity-75">Click to see how you can too</span>
                 </div>,
                 document.body,

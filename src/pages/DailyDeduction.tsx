@@ -15,6 +15,7 @@ import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../uti
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
 import TopBar from "../components/TopBar"
+import SnowCap from "../components/SnowCap"
 
 const THEME_KEY = "flag-master-theme"
 const STORAGE_KEY = "flag-master-deduction-save"
@@ -249,7 +250,7 @@ export default function DailyDeduction() {
         [distribution, myBucket],
     )
 
-    const panel = "rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+    const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
     const primary = "rounded-lg bg-slate-900 text-white hover:bg-slate-700 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
     const disabledBtn = "cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500"
 
@@ -277,6 +278,7 @@ export default function DailyDeduction() {
                             <ArrowDown size={13} strokeWidth={3} className="inline align-[-2px]" aria-label="down" /> point toward the answer.
                             The compass arrow shows which way it lies, the percentage how close you are.
                         </p>
+                        <SnowCap seed="deduction-intro" thin />
                     </div>
                 )}
 
@@ -401,6 +403,7 @@ export default function DailyDeduction() {
                         >
                             {copied ? <><Check size={18} aria-hidden /> Copied!</> : <><Share2 size={18} aria-hidden /> Share result</>}
                         </button>
+                        <SnowCap seed="deduction-result" thin />
                     </section>
                 )}
 

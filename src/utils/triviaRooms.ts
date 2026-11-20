@@ -24,6 +24,7 @@ import {
 import { db, ensureSignedIn } from "../../lib/firebase"
 import { TYPE_INFO, type QuestionType, type Region } from "./trivia"
 import { isNameOffensive, maskNames, NAME_REFUSED, shownName } from "./nameFilter"
+import { chatPath } from "./roomChat"
 
 export type RoomStyle = "battle" | "night"
 export type RoomStatus = "lobby" | "playing" | "done" | "closed"
@@ -206,7 +207,7 @@ export function watchRooms(onData: (rooms: Room[]) => void, onError?: () => void
 /** Removes rooms abandoned long ago, which the rules let anyone do. Failures are ignored - the next visitor tries again. */
 export function sweepStale(rooms: Room[]) {
     const cutoff = serverNow() - STALE_MS
-    for (const r of rooms) if (r.createdAt && r.createdAt < cutoff) remove(roomRef(r.code)).catch(() => {})
+    for (const r of rooms) if (r.createdAt && r.createdAt < cutoff) closeRoom(r.code).catch(() => {})
 }
 
 export const activePlayers = (room: Room) =>
@@ -285,12 +286,28 @@ export async function leaveSeat(code: string, uid: string) {
  * host's tab closes; one in play is marked closed, so the players are told.
  */
 export function hostWatch(code: string, status: RoomStatus) {
+    const chat = ref(db, chatPath("trivia", code))
     const target = status === "lobby" ? onDisconnect(roomRef(code)).remove() : onDisconnect(roomRef(code, "status")).set("closed")
     target.catch(() => {})
+    onDisconnect(chat).remove().catch(() => {})
     return () => {
         onDisconnect(roomRef(code)).cancel().catch(() => {})
         onDisconnect(roomRef(code, "status")).cancel().catch(() => {})
+        onDisconnect(chat).cancel().catch(() => {})
     }
+}
+
+/**
+ * The host's page going away without the Leave button - the browser's Back,
+ * a link, another room's code. hostWatch's cleanup cancels the disconnect
+ * handler there (the connection lives on in a single-page app), so without
+ * this the room stayed listed as open for six hours with nobody hosting it.
+ * A seated player's seat is marked away for the same reason.
+ */
+export function leftThePage(code: string, uid: string, isHost: boolean, seated: boolean, status: RoomStatus | undefined) {
+    if (!status || status === "closed") return
+    if (isHost) (status === "lobby" ? closeRoom(code) : markClosed(code)).catch(() => {})
+    else if (seated) leaveSeat(code, uid).catch(() => {})
 }
 
 export function startGame(code: string, questions: { id: string; double: boolean }[]) {
@@ -315,8 +332,9 @@ export function backToLobby(room: Room) {
     return update(roomRef(room.code), { status: "lobby", questions: null, answers: null, step: null, round: (room.round ?? 1) + 1 })
 }
 
+/** Deletes the room and its chat in one write. */
 export function closeRoom(code: string) {
-    return remove(roomRef(code))
+    return update(ref(db), { [`triviaRooms/${code}`]: null, [chatPath("trivia", code)]: null })
 }
 
 /** The host left mid-game: the room stays so the players are told why it stopped. */

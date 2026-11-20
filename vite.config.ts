@@ -45,6 +45,37 @@ function assetVersions(): Plugin {
     configResolved(config) {
       versions = hashPublic(config.publicDir)
     },
+    // The table is read once at startup, so a file generated while the dev
+    // server runs (a new sprite sheet) was missing from it and asset() warned
+    // "no file". Keep it current: re-hash the one file that changed, then
+    // reload the page with the new table.
+    configureServer(server) {
+      const publicDir = server.config.publicDir
+      server.watcher.add(publicDir)
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const refresh = (file: string, removed: boolean) => {
+        const rel = path.relative(publicDir, file)
+        if (rel.startsWith('..') || path.isAbsolute(rel)) return
+        const key = '/' + rel.split(path.sep).join('/')
+        if (UNVERSIONED.has(key.split('/')[1])) return
+        if (removed) delete versions[key]
+        else {
+          try {
+            if (statSync(file).isDirectory()) return
+            versions[key] = createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 10)
+          } catch { return }
+        }
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          const mod = server.moduleGraph.getModuleById('\0' + id)
+          if (mod) server.moduleGraph.invalidateModule(mod)
+          server.ws.send({ type: 'full-reload' })
+        }, 300)
+      }
+      server.watcher.on('add', f => refresh(f, false))
+      server.watcher.on('change', f => refresh(f, false))
+      server.watcher.on('unlink', f => refresh(f, true))
+    },
     resolveId: source => (source === id ? '\0' + id : undefined),
     load: source => (source === '\0' + id ? `export default ${JSON.stringify(versions)}` : undefined),
     // index.html's own references (favicon) go through the same table.

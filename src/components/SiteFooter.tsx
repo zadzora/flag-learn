@@ -3,10 +3,14 @@ import { Link } from "react-router-dom"
 import { Coffee, ExternalLink, Heart, MessagesSquare } from "lucide-react"
 import CountryDataCredit from "./CountryDataCredit"
 
-/** The page foot every screen shares: credits, community links and the plain-text description. */
+/**
+ * The page foot every screen shares: credits, community links and the plain-text description.
+ * In the snow season snow piles up along its bottom (`data-snow-pile`, components/Snowfall.tsx),
+ * up to the bottom of the inner column's last child - keep that the last line of text.
+ */
 export default function SiteFooter({ about }: { about?: ReactNode }) {
     return (
-        <footer className="mt-auto w-full border-t border-slate-200 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+        <footer data-snow-pile className="mt-auto w-full border-t border-slate-200 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
             <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-3 px-5 py-8 text-center sm:px-6">
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
                     <span className="flex items-center gap-1.5">Made with <Heart size={14} className="fill-red-400 text-red-400" aria-hidden /> for learning</span>

@@ -7,7 +7,7 @@ import { GoogleButton } from "../components/AccountPanel"
 import { GuestDot } from "../components/TopBar"
 import { barHidden, hideBar, signInFromNudge, useGuestWithProgress } from "../utils/signInNudge"
 import {
-    AtomIcon, BlurModeIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
+    AtomIcon, BlurModeIcon, ExtrasIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
     HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, TriviaRoomsIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, WorldTriviaIcon, type ModeIcon,
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
@@ -21,7 +21,10 @@ import ModeTag, { type ModeTagKind } from "../components/ModeTag"
 import { RANKS, TIER_NAMES, TRACKS, nextGoal, pointsOf, rankOf, unitFor } from "../utils/achievements"
 import { PROFILE_EVENT, readStore } from "../utils/profileStore"
 import { asset } from "../utils/asset"
+import BrandLogo from "../components/BrandLogo"
+import { EXTRA_PACKS, packProgress } from "../utils/extraFlags"
 import PetLane from "../components/PetLane"
+import SnowCap, { SnowToggle } from "../components/SnowCap"
 import { pickPetSpot } from "../utils/petSpots"
 
 const LAST_MODE_KEY = "flag-master-last-mode"
@@ -149,7 +152,8 @@ function readSnapshot() {
         streak: streaks[mode.streakKey] ?? 0,
     }))
     const decks = DECKS.map(deck => ({ ...deck, ...deckProgress(deck) }))
-    return { streaks, dailies, decks, hero: heroDeck(decks), wall: seeded(WALL_POOL, `${today}-wall`) }
+    const extras = EXTRA_PACKS.map(pack => ({ pack, ...packProgress(pack) }))
+    return { streaks, dailies, decks, extras, hero: heroDeck(decks), wall: seeded(WALL_POOL, `${today}-wall`) }
 }
 
 
@@ -178,7 +182,7 @@ function ProfileStrip({ profile }: { profile: ReturnType<typeof readProfile> }) 
     return (
         <Link
             to="/profile"
-            className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+            className="relative mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
         >
             <span className="flex items-center gap-3">
                 <RankShield rank={profile.rank} size={44} />
@@ -204,6 +208,7 @@ function ProfileStrip({ profile }: { profile: ReturnType<typeof readProfile> }) 
                     </span>
                 </span>
             )}
+            <SnowCap seed="profile" thin />
             <span className="ml-auto flex items-center gap-1 text-sm font-bold">
                 Your profile <ChevronRight size={16} aria-hidden />
             </span>
@@ -244,6 +249,35 @@ function SignInBar({ onClose }: { onClose: () => void }) {
                 <X size={16} aria-hidden />
             </button>
         </div>
+    )
+}
+
+/**
+ * The Extras (utils/extraFlags.ts): one button under the three decks, to
+ * /extras. The packs are listed there, not here - the user wanted the home
+ * screen to keep just the way in.
+ */
+function ExtrasButton({ extras }: { extras: { mastered: number; total: number }[] }) {
+    const total = extras.reduce((n, e) => n + e.total, 0)
+    const mastered = extras.reduce((n, e) => n + e.mastered, 0)
+    return (
+        <Link
+            to="/extras"
+            className="group relative mt-4 flex w-full items-center gap-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3 font-normal hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+        >
+            <SnowCap seed="extras" thin />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-[#0A0E1A]">
+                <ExtrasIcon size={20} aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className="block font-bold">Extras</span>
+                <span className="block truncate text-xs text-slate-500 dark:text-[#8C97B3]">
+                    {total} more flags: territories, historical states, regions of countries
+                </span>
+            </span>
+            {mastered > 0 && <span className="shrink-0 text-xs tabular-nums text-slate-500 dark:text-[#8C97B3]">{mastered} / {total}</span>}
+            <ChevronRight size={18} aria-hidden className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-[#556080]" />
+        </Link>
     )
 }
 
@@ -325,7 +359,7 @@ export default function Home() {
 
     const navigate = useNavigate()
     // A snapshot of the day: the home screen is read once per visit, not watched.
-    const [{ streaks, dailies, decks, hero, wall }] = useState(readSnapshot)
+    const [{ streaks, dailies, decks, extras, hero, wall }] = useState(readSnapshot)
     // The one live part: on a first visit the profile is created just after this page mounts.
     const [profile, setProfile] = useState(readProfile)
     useEffect(() => {
@@ -390,7 +424,7 @@ export default function Home() {
 
                 <nav className="relative z-10 mx-auto flex max-w-[1120px] items-center justify-between px-5 pt-4 sm:px-6">
                     <Link to="/" className="flex items-center gap-2.5 font-bold tracking-[0.01em]">
-                        <img src={asset("/logo2.png")} alt="" className="h-11 w-11" />
+                        <BrandLogo className="h-11 w-11" />
                         Flag Learn
                     </Link>
                     <div className="flex items-center gap-1 rounded-xl bg-[#F4F6FB]/85 p-1.5 text-sm text-slate-600 dark:bg-[#0A0E1A]/80 dark:text-[#A6B0C8]">
@@ -410,6 +444,7 @@ export default function Home() {
                             </span>
                             <span className="hidden sm:inline">Profile</span>
                         </Link>
+                        <SnowToggle className="ml-1 flex h-9 min-h-0 w-9 items-center justify-center rounded-lg border border-slate-300 p-0 text-slate-700 hover:border-slate-500 dark:border-[#2A3350] dark:text-[#E8ECF6] dark:hover:border-[#4A5680]" />
                         <button
                             type="button"
                             onClick={toggleTheme}
@@ -452,8 +487,9 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={() => startMode(deck.mode)}
-                                className="group flex w-full flex-col gap-3.5 rounded-[10px] border border-slate-200 bg-white p-3.5 text-left font-normal hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+                                className="group relative flex w-full flex-col gap-3.5 rounded-[10px] border border-slate-200 bg-white p-3.5 text-left font-normal hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
                             >
+                                <SnowCap seed={deck.mode} />
                                 <span className="flex w-full items-center gap-4">
                                 {/* A small hand of cards: on hover it fans out, the top card lifting off the pile. */}
                                 <span className="relative h-[52px] w-[76px] shrink-0" aria-hidden>
@@ -489,6 +525,7 @@ export default function Home() {
                         </li>
                     ))}
                 </ul>
+                <ExtrasButton extras={extras} />
                 <ProfileStrip profile={profile} />
                 {guest && !barClosed && <SignInBar onClose={() => { hideBar(); setBarClosed(true) }} />}
 
@@ -496,7 +533,8 @@ export default function Home() {
                 {petSpot === "today" && <PetLane size={32} top={-16} bottom={2} />}
                 <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {dailies.map(({ mode, done, streak }) => (
-                        <li key={mode.key}>
+                        <li key={mode.key} className="relative">
+                            <SnowCap seed={mode.key} className="transition-[translate] duration-200 [li:hover>&]:-translate-y-0.5" />
                             <Link
                                 to={mode.to}
                                 className="group flex h-full flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white transition-[border-color,translate] duration-200 hover:-translate-y-0.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#121829] dark:hover:border-[#3A4670]"
@@ -544,8 +582,9 @@ export default function Home() {
                 <Link
                     id="science"
                     to="/science"
-                    className="group mt-14 flex items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
+                    className="group relative mt-14 flex items-center gap-4 rounded-[10px] border border-slate-200 bg-white p-3.5 hover:border-slate-400 dark:border-[#1C2338] dark:bg-[#0F1424] dark:hover:border-[#3A4670]"
                 >
+                    <SnowCap seed="science" thin />
                     <span className="flex h-[52px] w-[76px] shrink-0 items-center justify-center text-cyan-600 dark:text-cyan-400">
                         <AtomIcon size={30} aria-hidden />
                     </span>

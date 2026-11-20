@@ -15,6 +15,7 @@ import SupporterName from "../components/SupporterName"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 import { bumpCounter } from "../utils/profileStore"
 import { useHoldToasts } from "../utils/holdToasts"
+import SnowCap from "../components/SnowCap"
 
 type GameMode = "world" | "capitals" | "us"
 
@@ -433,7 +434,7 @@ export default function Highscore() {
                 </div>
 
                 {!started && finishedTime === null && (
-                    <section className={`${panel} mt-6 p-5 sm:p-7`}>
+                    <section className={`${panel} relative mt-6 p-5 sm:p-7`}>
                         <h2 className="!text-xl font-bold">Speedrun: {MODE_LABELS[gameMode]}</h2>
                         <p className="mb-5 mt-1.5 text-sm text-slate-500 dark:text-slate-400">
                             Finish the full set as fast as you can. Mistakes add time. Enter a name to save your best run to the leaderboard.
@@ -441,12 +442,15 @@ export default function Highscore() {
                         <button type="button" onClick={startRun} className={`${primary} flex w-full items-center justify-center gap-2 py-3.5`}>
                             <Timer size={18} aria-hidden /> Start timed run
                         </button>
+                        <SnowCap seed="highscore-start" thin />
                     </section>
                 )}
 
                 {started && current && (
                     // The card stays put between questions; only the flag inside it changes.
-                    <section className={`${panel} relative mt-6 flex flex-col gap-5 overflow-hidden p-5 sm:p-7`}>
+                    // A wrapper for the snow: the card clips (overflow-hidden), which would cut the part above its edge.
+                    <div className="relative mt-6">
+                    <section className={`${panel} relative flex flex-col gap-5 overflow-hidden p-5 sm:p-7`}>
                         <div className="flex min-h-6 items-center justify-between gap-3">
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{MODE_LABELS[gameMode]} Mode</span>
                             <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">Remaining: {queue.length + 1}</span>
@@ -518,10 +522,12 @@ export default function Highscore() {
                             )}
                         </AnimatePresence>
                     </section>
+                    <SnowCap seed="highscore-play" thin />
+                    </div>
                 )}
 
                 {finishedTime !== null && (
-                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                    <section className={`${panel} relative mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={24} aria-hidden /></span>
                             <h2 className="!text-2xl font-bold">Run completed!</h2>
@@ -558,10 +564,11 @@ export default function Highscore() {
                         <button type="button" onClick={startRun} className={`${quiet} flex w-full items-center justify-center gap-2 py-3.5`}>
                             <Repeat size={18} aria-hidden /> Start again
                         </button>
+                        <SnowCap seed="highscore-done" thin />
                     </section>
                 )}
 
-                <section className={`${panel} mt-6 p-5 sm:p-6`}>
+                <section className={`${panel} relative mt-6 p-5 sm:p-6`}>
                     <div className="mb-3 flex items-center justify-between gap-2">
                         <h3 className="!text-lg font-bold">{MODE_LABELS[gameMode]} leaderboard</h3>
                         {/* <div className="flex items-center gap-2">
@@ -607,6 +614,7 @@ export default function Highscore() {
                             ))}
                         </ol>
                     )}
+                    <SnowCap seed="highscore-board" thin />
                 </section>
             </main>
 

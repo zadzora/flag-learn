@@ -3,6 +3,7 @@ import { BarChart3, Users } from "lucide-react"
 import type { ReactNode } from "react"
 import { useLocation } from "react-router-dom"
 import PetPerch from "./PetPerch"
+import SnowCap from "./SnowCap"
 import { AccentConfetti } from "./SupporterAccent"
 import { accentFrameStyle, accentTextStyle, useMyAccent } from "../utils/myAccent"
 import { useDarkMode } from "../utils/useDarkMode"
@@ -171,6 +172,7 @@ export default function DailyStanding({
                     )}
                 </>
             )}
+            <SnowCap seed="daily-standing" thin />
         </div>
     )
 }

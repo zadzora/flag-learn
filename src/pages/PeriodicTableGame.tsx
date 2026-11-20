@@ -20,6 +20,7 @@ import {
     TARGET_STREAK, type SrProgressMap,
 } from "../utils/spacedRepetition"
 import { resolveTextAnswer, normalizeAnswer, TYPO_FEEDBACK } from "../utils/textAnswerMatch"
+import SnowCap from "../components/SnowCap"
 
 /**
  * The first Science mode: the periodic table on the same streak-based spaced
@@ -479,7 +480,7 @@ export default function PeriodicTableGame() {
                 {/* The round */}
                 <div className="mt-6">
                     {practiceResult ? (
-                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`relative ${panel} flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                                 <div>
@@ -497,9 +498,10 @@ export default function PeriodicTableGame() {
                                     Back to learning
                                 </button>
                             </div>
+                            <SnowCap seed="elements-practice-done" thin />
                         </section>
                     ) : !current ? (
-                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`relative ${panel} flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-emerald-500 dark:border-slate-700"><CheckCircle2 size={28} aria-hidden /></span>
                                 <div>
@@ -512,10 +514,11 @@ export default function PeriodicTableGame() {
                             <button type="button" onClick={startPractice} className={`${primary} flex items-center justify-center gap-2 py-3.5`}>
                                 <Dumbbell size={18} aria-hidden /> Practice all
                             </button>
+                            <SnowCap seed="elements-all-mastered" thin />
                         </section>
                     ) : (
                         // The card stays put between questions; only what is inside it changes.
-                        <section className={`rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
+                        <section className={`relative rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
                             ? "border-red-400 dark:border-red-500/60"
                             : status === "mastered"
                                 ? "border-amber-400 dark:border-amber-500/60"
@@ -708,6 +711,7 @@ export default function PeriodicTableGame() {
                                 <span className="text-slate-500 dark:text-slate-400">{positionLabel(current)}</span>
                                 <span className="text-slate-500 dark:text-slate-400">{formatMass(current)} u</span>
                             </div>
+                            <SnowCap seed="elements-round" thin />
                         </section>
                     )}
                 </div>

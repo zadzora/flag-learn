@@ -5,6 +5,12 @@
       "destination": "/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cleanup",
+      "schedule": "17 4 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -77,7 +83,7 @@
       ]
     },
     {
-      "source": "/(badges|constellations|pets)/(.*)",
+      "source": "/(badges|constellations|pets|extra-flags)/(.*)",
       "has": [
         {
           "type": "query",
@@ -92,7 +98,7 @@
       ]
     },
     {
-      "source": "/(badges|constellations|pets)/(.*)",
+      "source": "/(badges|constellations|pets|extra-flags)/(.*)",
       "missing": [
         {
           "type": "query",
@@ -107,7 +113,7 @@
       ]
     },
     {
-      "source": "/(logo2.png|favicon.png|flag-wall.webp|og-image.png|pets-48.webp|pets-96.webp|world-map.json|landmarks.json)",
+      "source": "/(logo2.png|favicon.png|flag-wall.webp|og-image.png|pets-48.webp|pets-96.webp|pets-winter-48.webp|pets-winter-96.webp|world-map.json|landmarks.json)",
       "has": [
         {
           "type": "query",
@@ -122,7 +128,7 @@
       ]
     },
     {
-      "source": "/(logo2.png|favicon.png|flag-wall.webp|og-image.png|pets-48.webp|pets-96.webp|world-map.json|landmarks.json)",
+      "source": "/(logo2.png|favicon.png|flag-wall.webp|og-image.png|pets-48.webp|pets-96.webp|pets-winter-48.webp|pets-winter-96.webp|world-map.json|landmarks.json)",
       "missing": [
         {
           "type": "query",

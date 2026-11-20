@@ -5,6 +5,7 @@ import { EyeOff, AlertTriangle, Play, Loader2, X, RotateCcw, Trophy, Skull } fro
 import TopBar from "../components/TopBar"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
+import SnowCap from "../components/SnowCap"
 
 // Types
 type Flag = {
@@ -189,7 +190,7 @@ export default function BlurGame() {
             <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
                 <TopBar title="Blur Mode" theme={theme} onToggleTheme={toggleTheme} />
                 <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
-                    <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`${panel} relative flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700">
                                 <Trophy size={28} aria-hidden />
@@ -224,6 +225,7 @@ export default function BlurGame() {
                                 Back to Menu
                             </Link>
                         </div>
+                        <SnowCap seed="blur-over" thin />
                     </section>
                 </main>
             </div>
@@ -287,7 +289,7 @@ export default function BlurGame() {
             <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
                 {/* Game Area - the card stays put between flags; only the flag inside it changes. */}
                 {!showIntro && current && (
-                    <section className={`${panel} flex flex-col gap-5 p-5 sm:p-7`}>
+                    <section className={`${panel} relative flex flex-col gap-5 p-5 sm:p-7`}>
                         <div className="flex min-h-6 items-center justify-between gap-3">
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Name this flag</span>
                             {showClock && (
@@ -377,6 +379,7 @@ export default function BlurGame() {
                                 {status === 'idle' ? 'Check Answer' : 'Wait...'}
                             </button>
                         </div>
+                        <SnowCap seed="blur-play" thin />
                     </section>
                 )}
             </main>

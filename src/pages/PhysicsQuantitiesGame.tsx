@@ -21,6 +21,7 @@ import {
     TARGET_STREAK, type SrProgressMap,
 } from "../utils/spacedRepetition"
 import { TYPO_FEEDBACK } from "../utils/textAnswerMatch"
+import SnowCap from "../components/SnowCap"
 
 /**
  * The second Science topic: basic physical quantities on the same streak-based
@@ -420,7 +421,7 @@ export default function PhysicsQuantitiesGame() {
                 {/* The round */}
                 <div className="mt-6">
                     {practiceResult ? (
-                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`relative ${panel} flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                                 <div>
@@ -438,9 +439,10 @@ export default function PhysicsQuantitiesGame() {
                                     Back to learning
                                 </button>
                             </div>
+                            <SnowCap seed="quantities-practice-done" thin />
                         </section>
                     ) : !current ? (
-                        <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`relative ${panel} flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-emerald-500 dark:border-slate-700"><CheckCircle2 size={28} aria-hidden /></span>
                                 <div>
@@ -453,10 +455,11 @@ export default function PhysicsQuantitiesGame() {
                             <button type="button" onClick={startPractice} className={`${primary} flex items-center justify-center gap-2 py-3.5`}>
                                 <Dumbbell size={18} aria-hidden /> Practice all
                             </button>
+                            <SnowCap seed="quantities-all-mastered" thin />
                         </section>
                     ) : (
                         // The card stays put between questions; only what is inside it changes.
-                        <section className={`rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
+                        <section className={`relative rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
                             ? "border-red-400 dark:border-red-500/60"
                             : status === "mastered"
                                 ? "border-amber-400 dark:border-amber-500/60"
@@ -579,6 +582,7 @@ export default function PhysicsQuantitiesGame() {
                                 <span className="rounded-[5px] bg-slate-100 px-1.5 py-0.5 font-bold dark:bg-slate-700">[{current.unit}]</span>
                                 {current.formula && <span className="text-slate-500 dark:text-slate-400"><Formula formula={current.formula} /></span>}
                             </div>
+                            <SnowCap seed="quantities-round" thin />
                         </section>
                     )}
                 </div>

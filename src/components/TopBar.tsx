@@ -4,7 +4,9 @@ import { ArrowLeft, Moon, Sun } from "lucide-react"
 import { readStore } from "../utils/profileStore"
 import { useGuestWithProgress } from "../utils/signInNudge"
 import { asset } from "../utils/asset"
+import BrandLogo from "./BrandLogo"
 import PetNap from "./PetNap"
+import { SnowToggle } from "./SnowCap"
 
 type Props = {
     /** Page name, shown after the wordmark. */
@@ -97,7 +99,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                     </Link>
                 )}
                 <Link to="/" onClick={guard(onLeave, "/")} className="hidden items-center gap-2 font-bold sm:flex">
-                    <img src={asset("/logo2.png")} alt="" className="h-8 w-8" />
+                    <BrandLogo className="h-8 w-8" />
                     Flag Learn
                 </Link>
                 {title && (
@@ -107,6 +109,7 @@ export default function TopBar({ title, back = "/", theme, onToggleTheme, childr
                 )}
                 <div className="ml-auto flex items-center gap-2">
                     {children}
+                    <SnowToggle className="hidden h-10 min-h-0 w-10 shrink-0 items-center sm:flex justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]" />
                     <PetNap />
                     <ProfileLink onLeave={onLeave} />
                     {theme && onToggleTheme && (

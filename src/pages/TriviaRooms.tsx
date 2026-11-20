@@ -12,11 +12,12 @@ import {
     readNickname, roomTypes, saveNickname, serverNow, sweepStale, watchRooms, type Room, type RoomSettings, type RoomStyle,
 } from "../utils/triviaRooms"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
+import SnowCap from "../components/SnowCap"
 
 const THEME_KEY = "flag-master-theme"
 const PRIMARY = "flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-3 font-bold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-white dark:text-[#0A0E1A] dark:hover:bg-[#DCE3F2]"
 const FIELD = "w-full rounded-lg border-2 border-slate-300 bg-white px-3.5 py-2.5 font-semibold outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800"
-const PANEL = "rounded-xl border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-700 dark:bg-slate-800"
+const PANEL = "relative rounded-xl border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-700 dark:bg-slate-800"
 
 const STYLE_INFO: Record<RoomStyle, { label: string; blurb: string }> = {
     battle: { label: "Battle", blurb: "Everyone plays, you too. Same questions at the same time, a leaderboard after each one." },
@@ -60,7 +61,8 @@ export default function TriviaRooms() {
 
     const listed = useMemo(() => {
         const cutoff = serverNow() - STALE_MS
-        const live = (rooms ?? []).filter(r => r.status !== "closed" && r.createdAt > cutoff)
+        // A lobby whose host's seat is marked away has nobody to start it - their tab closed and the room is on its way out.
+        const live = (rooms ?? []).filter(r => r.status !== "closed" && r.createdAt > cutoff && !(r.status === "lobby" && r.players?.[r.host]?.left))
         return [...live.filter(r => r.status === "lobby"), ...live.filter(r => r.status !== "lobby")]
     }, [rooms])
 
@@ -90,6 +92,7 @@ export default function TriviaRooms() {
                             <Plus size={18} aria-hidden /> Create a room
                         </button>
                     </div>
+                    <SnowCap seed="rooms-join" thin />
                 </section>
 
                 {creating && <CreateRoom onCancel={() => setCreating(false)} onCreated={c => navigate(`/trivia/room/${c}`)} />}
@@ -104,6 +107,7 @@ export default function TriviaRooms() {
                     <ul className="mt-3 flex flex-col gap-2">
                         {listed.map(r => <RoomRow key={r.code} room={r} />)}
                     </ul>
+                    <SnowCap seed="rooms-list" thin />
                 </section>
             </main>
 
@@ -328,6 +332,7 @@ function CreateRoom({ onCancel, onCreated }: { onCancel: () => void; onCreated: 
                     {busy ? <Loader2 size={18} className="animate-spin" aria-hidden /> : null} Open the room
                 </button>
             </div>
+            <SnowCap seed="rooms-create" thin />
         </motion.form>
     )
 }

@@ -7,6 +7,7 @@ import SiteFooter from "../components/SiteFooter"
 import constData from "../../data/constellations.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { asset } from "../utils/asset"
+import SnowCap from "../components/SnowCap"
 
 // --- TYPES ---
 type Constellation = {
@@ -505,7 +506,7 @@ export default function ConstellationGame() {
 
                 {current ? (
                     // The card stays put between questions; only the sky inside it changes.
-                    <section className={`${panel} mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
+                    <section className={`${panel} relative mt-6 flex flex-col gap-5 p-5 sm:p-7`}>
                         <div className="flex min-h-6 items-center justify-between gap-3">
                             <span className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${isNewItem ? 'text-blue-600 dark:text-blue-400' : isReview ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
                                 {isPracticeMode && <Dumbbell size={13} aria-hidden />}
@@ -582,9 +583,10 @@ export default function ConstellationGame() {
                                 {status === 'idle' ? 'Check Answer' : 'Checking...'}
                             </button>
                         </div>
+                        <SnowCap seed="stars-question" thin />
                     </section>
                 ) : practiceResults ? (
-                    <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`${panel} relative mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-300"><Dumbbell size={28} aria-hidden /></span>
                             <div>
@@ -606,10 +608,11 @@ export default function ConstellationGame() {
                             <button type="button" onClick={() => startPracticeMode(lastPracticePool)} className={`${primary} flex flex-1 items-center justify-center gap-2 py-3.5 font-bold`}><Repeat size={18} aria-hidden /> Practice Again</button>
                             <button type="button" onClick={exitPracticeMode} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to Overview</button>
                         </div>
+                        <SnowCap seed="stars-practice-done" thin />
                     </section>
                 ) : (
                     totalStats.percent === 100 && !isPracticeMode && (
-                        <section className={`${panel} mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
+                        <section className={`${panel} relative mt-6 flex flex-col gap-6 p-6 sm:p-8`}>
                             <div className="flex items-center gap-4">
                                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Star size={28} aria-hidden className="fill-amber-400" /></span>
                                 <div>
@@ -618,6 +621,7 @@ export default function ConstellationGame() {
                                 </div>
                             </div>
                             <button type="button" onClick={() => startPracticeMode()} className={`${primary} flex w-full items-center justify-center gap-2 py-3.5 font-bold`}><Dumbbell size={18} aria-hidden /> Keep Practicing</button>
+                            <SnowCap seed="stars-mastered" thin />
                         </section>
                     )
                 )}

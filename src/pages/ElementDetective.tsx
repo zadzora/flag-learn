@@ -14,6 +14,7 @@ import {
     readSettings, saveSettings, readBest, recordScore,
     type DetectiveSettings,
 } from "../utils/elementDetective"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Element Detective: what an element is used for, and the player finds it on
@@ -213,7 +214,7 @@ export default function ElementDetective() {
 
                         {/* The clue. Its hint lines are always in the layout, so a miss
                             fills one in rather than pushing the table down mid-hunt. */}
-                        <section className={`${PANEL} p-5 sm:p-6 xl:col-start-1 xl:row-start-1`}>
+                        <section className={`relative ${PANEL} p-5 sm:p-6 xl:col-start-1 xl:row-start-1`}>
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 What it is used for
                             </span>
@@ -233,6 +234,7 @@ export default function ElementDetective() {
                                     )
                                 })}
                             </ul>
+                            <SnowCap seed="detective-clue" thin />
                         </section>
 
                         <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900 xl:col-start-2 xl:row-span-2 xl:row-start-1">
@@ -286,7 +288,7 @@ export default function ElementDetective() {
                 )}
 
                 {phase === "done" && (
-                    <section className={`${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`relative ${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                             <div>
@@ -324,6 +326,7 @@ export default function ElementDetective() {
                                 <Settings2 size={17} aria-hidden /> Change settings
                             </button>
                         </div>
+                        <SnowCap seed="detective-done" thin />
                     </section>
                 )}
             </main>

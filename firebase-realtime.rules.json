@@ -3,6 +3,7 @@
     ".read": false,
     ".write": false,
     "games": {
+      ".indexOn": ["createdAt"],
       "$gameId": {
         ".read": true,
         ".write": "auth != null && !data.exists() && newData.exists() && $gameId.matches(/^[a-z0-9]{4,12}$/) && newData.child('hostId').val() === auth.uid",
@@ -368,6 +369,70 @@
         }
       }
     },
+    "triviaChat": {
+      "$room": {
+        ".read": "auth != null && (root.child('triviaRooms').child($room).child('players').child(auth.uid).exists() || root.child('triviaRooms').child($room).child('host').val() === auth.uid)",
+        ".write": "auth != null && !newData.exists() && (!root.child('triviaRooms').child($room).exists() || root.child('triviaRooms').child($room).child('host').val() === auth.uid || root.child('triviaRooms').child($room).child('createdAt').val() < now - 21600000)",
+        "m": {
+          "$msg": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('triviaRooms').child($room).child('status').val() === 'lobby' && (root.child('triviaRooms').child($room).child('players').child(auth.uid).exists() || root.child('triviaRooms').child($room).child('host').val() === auth.uid) && newData.parent().parent().child('last').child(auth.uid).val() === now",
+            ".validate": "$msg.matches(/^[-0-9A-Za-z_]{20}$/) && newData.hasChildren(['uid','text','at'])",
+            "uid": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
+            },
+            "at": {
+              ".validate": "newData.val() === now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "last": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && newData.val() === now && (!data.exists() || data.val() < now - 1500)"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "pvpChat": {
+      "$game": {
+        ".read": "auth != null && root.child('games').child($game).child('players').child(auth.uid).exists()",
+        ".write": "auth != null && !newData.exists() && (!root.child('games').child($game).exists() || root.child('games').child($game).child('hostId').val() === auth.uid || root.child('games').child($game).child('status').val() !== 'waiting')",
+        "m": {
+          "$msg": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('games').child($game).child('status').val() === 'waiting' && root.child('games').child($game).child('players').child(auth.uid).exists() && newData.parent().parent().child('last').child(auth.uid).val() === now",
+            ".validate": "$msg.matches(/^[-0-9A-Za-z_]{20}$/) && newData.hasChildren(['uid','text','at'])",
+            "uid": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "text": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
+            },
+            "at": {
+              ".validate": "newData.val() === now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "last": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && newData.val() === now && (!data.exists() || data.val() < now - 1500)"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
     "supporters": {
       ".read": true,
       "$uid": {
@@ -399,7 +464,7 @@
         "save": {
           "$key": {
             ".write": "auth != null && auth.uid === $uid && (auth.token.firebase.sign_in_provider === 'google.com' || auth.token.email_verified === true)",
-            ".validate": "$key.matches(/^(flag-master-(v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
+            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
             "v": {
               ".validate": true
             },
@@ -414,7 +479,7 @@
         "backup": {
           ".write": "auth != null && auth.uid === $uid && (auth.token.firebase.sign_in_provider === 'google.com' || auth.token.email_verified === true)",
           "$key": {
-            ".validate": "$key.matches(/^(flag-master-(v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
+            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
             "v": {
               ".validate": true
             },

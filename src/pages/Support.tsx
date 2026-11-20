@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import type { User } from "firebase/auth"
-import { AlertTriangle, Car, Check, Flame, Heart, Loader2, PawPrint, Sparkles, Trophy } from "lucide-react"
+import { AlertTriangle, Car, Check, Flame, Heart, Loader2, PawPrint, Snowflake, Sparkles, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { GoogleButton } from "../components/AccountPanel"
@@ -12,6 +12,7 @@ import { connectGoogle } from "../utils/cloudSave"
 import { paymentsOpen, saveLook, startCheckout, useSupporter } from "../utils/supporters"
 import { EXCLUSIVE_PETS, PETS, SUPPORT_PRICE_EUR, TEXT_COLOURS, TINTS, cssPaint, hardToRead, type SupporterLook } from "../utils/supporterLook"
 import { useDarkMode } from "../utils/useDarkMode"
+import { useSnow } from "../utils/snowSeason"
 
 /**
  * The support page: what a supporter gets, the one payment, and - once paid -
@@ -151,6 +152,8 @@ export default function Support() {
                             <Perk icon={<Car size={18} aria-hidden />} title="The Racer and supporter paints in the Road Trip">
                                 The Racer - the low striped car with the rear wing - plus Rose gold, Midnight and Mint, three paints no badge unlocks.
                             </Perk>
+
+                            <WinterPerk />
 
                             <Perk icon={<Heart size={18} aria-hidden />} title="The supporter heart">
                                 A small heart after your name. Anyone who hovers it sees that you help keep Flag Learn running. You can switch it off.
@@ -476,5 +479,21 @@ function HoverPet({ id, label }: { id: string; label: string }) {
         <span onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} className="block">
             <PetSprite id={id} size={36} animate={hover} title={label} />
         </span>
+    )
+}
+
+/**
+ * Shown only while it is the Christmas season (utils/snowSeason.ts): the
+ * supporter's own snow. Worded for this winter only - the page promises
+ * nothing about seasons to come.
+ */
+function WinterPerk() {
+    if (useSnow() === "off-season") return null
+    return (
+        <Perk icon={<Snowflake size={18} aria-hidden />} title="Your own snow, this winter">
+            While it snows on Flag Learn, your animal wears a knitted hat and scarf, a third of the flakes on the menus fall in
+            the colour of your name, they step aside from your mouse and a click throws a snowball. The snow on the cards sparkles
+            in your colour, and a solved daily ends in snowflakes instead of confetti.
+        </Perk>
     )
 }

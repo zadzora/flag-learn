@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { Copy, Trash2, Undo, Move } from "lucide-react"
 import TopBar from "../components/TopBar"
 import constData from "../../data/constellations.json"
+import SnowCap from "../components/SnowCap"
 
 // (0/undefined=bright, 1=medium, 2=dim)
 type StarPoint = [number, number, number?]
@@ -95,7 +96,7 @@ export default function ConstellationBuilder() {
             <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-6 px-4 pb-14 pt-6 sm:px-6 sm:pt-8 md:flex-row">
 
                 <div className="flex min-w-0 flex-1 flex-col gap-4">
-                    <section className={`${panel} p-5 sm:p-6`}>
+                    <section className={`${panel} relative p-5 sm:p-6`}>
                         <label htmlFor="builder-constellation" className={label}>1. Select Constellation</label>
                         <select id="builder-constellation" value={selectedCode} onChange={(e) => setSelectedCode(e.target.value)} className={`${field} mb-4 p-3 font-mono`}>
                             {allConstellations.map(c => <option key={c.code} value={c.code}>[{c.code.toUpperCase()}] {c.name.la[0]} {c.stars.length === 0 ? " (EMPTY)" : ` (${c.stars.length} stars)`}</option>)}
@@ -139,6 +140,7 @@ export default function ConstellationBuilder() {
                                 <button type="button" onClick={() => { setBgOffsetX(0); setBgOffsetY(0); setBgScale(100) }} className="mt-1 min-h-0 self-center px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Reset Position & Scale</button>
                             </div>
                         )}
+                        <SnowCap seed="builder-select" thin />
                     </section>
 
                     <section className={`${panel} flex max-h-[350px] flex-1 flex-col p-5 sm:p-6`}>

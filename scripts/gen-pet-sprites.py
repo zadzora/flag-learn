@@ -3,6 +3,17 @@ The supporters' companion animals, from graphic/support-animals.png.
 
     python scripts/gen-pet-sprites.py            # writes the sprites
     python scripts/gen-pet-sprites.py --debug    # also draws the rig over each animal (<temp>/pets-debug/)
+    python scripts/gen-pet-sprites.py --winter   # the Christmas set, from graphic/support-animals-winter.png
+
+The winter set (hat and scarf) writes public/pets-winter-<cell>.webp,
+public/pets/<id>-winter-<frame>.webp and data/petSpritesWinter.json, and leaves
+the everyday files alone. It reuses the RIGS below: each winter animal is lined
+up with its everyday self by the body - the bottom of the sticker and the width
+of its lower third, which the hat and scarf do not change - and every bone and
+hand-placed eye is moved along. Ear bones are dropped (`is_ear`): the ears sit
+under or beside the hat now, and twitching them tore the hat. Head tilts, tails,
+flippers and blinks stay. The still cells' sag (see PetSprite) is measured here
+for the winter set, as the hat changes where each animal's middle is.
 
 Writes
   public/pets-<cell>.webp   every animal, one cell each - the still form, used
@@ -41,6 +52,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
 SHEET = ROOT / "graphic" / "support-animals.png"
+WINTER_SHEET = ROOT / "graphic" / "support-animals-winter.png"
 GRID = [["panda", "koala", "kangaroo", "penguin", "llama", "sloth"],
         ["fox", "polarbear", "elephant", "tiger", "camel", "beaver"],
         ["flamingo", "hedgehog", "turtle", "orangutan", "otter", "owl"]]
@@ -228,8 +240,50 @@ RIGS = {
 
 # --- Cutting --------------------------------------------------------------------
 
-def cut_animals():
-    im = np.array(Image.open(SHEET).convert("RGB")).astype(np.int32)
+def split_touching(im, fg):
+    """
+    Stickers whose white borders run into each other, as separate components.
+    Each animal's drawing (anything that is not background and not near-white)
+    is labelled first, and only the largest piece in each grid cell is kept as a
+    seed - the dark outline that closes the animal. Every other foreground pixel
+    (the white borders, and features inside the face that the outline does not
+    touch, like a panda's eye patch) goes to the nearest seed by a breadth-first
+    fill from all of them at once, so the white between two animals is split
+    down the middle. The winter sheet needs it: its borders are soft and the
+    polar bear's runs into the elephant's.
+    """
+    H, W = fg.shape
+    art = fg & ~(im.min(axis=2) > 225)
+    lab = np.zeros((H, W), np.int32)
+    n = 0
+    largest = {}
+    for y in range(H):
+        for x in np.nonzero(art[y] & (lab[y] == 0))[0]:
+            if lab[y, x]:
+                continue
+            n += 1
+            q = deque([(y, x)]); lab[y, x] = n; size = 0; sy = sx = 0
+            while q:
+                cy, cx = q.popleft(); size += 1; sy += cy; sx += cx
+                for ny, nx in ((cy + 1, cx), (cy - 1, cx), (cy, cx + 1), (cy, cx - 1)):
+                    if 0 <= ny < H and 0 <= nx < W and art[ny, nx] and not lab[ny, nx]:
+                        lab[ny, nx] = n; q.append((ny, nx))
+            cell = (int(sy / size // (H / 3)), int(sx / size // (W / 6)))
+            if cell not in largest or largest[cell][1] < size:
+                largest[cell] = (n, size)
+    seeds = np.array(sorted(k for k, _ in largest.values()))
+    # Everything that is not a seed is filled in below, from the seeds.
+    lab[~np.isin(lab, seeds)] = 0
+    q = deque(zip(*np.nonzero(lab)))
+    while q:
+        cy, cx = q.popleft()
+        for ny, nx in ((cy + 1, cx), (cy - 1, cx), (cy, cx + 1), (cy, cx - 1)):
+            if 0 <= ny < H and 0 <= nx < W and fg[ny, nx] and not lab[ny, nx]:
+                lab[ny, nx] = lab[cy, cx]; q.append((ny, nx))
+    return lab
+
+def cut_animals(sheet=SHEET, split=False):
+    im = np.array(Image.open(sheet).convert("RGB")).astype(np.int32)
     H, W, _ = im.shape
     corner = np.median(np.concatenate([im[0, :], im[-1, :], im[:, 0], im[:, -1]]), axis=0)
     cand = np.abs(im - corner).sum(axis=2) < 30
@@ -245,6 +299,17 @@ def cut_animals():
                 bg[ny, nx] = True
                 q.append((ny, nx))
     fg = ~bg
+    if split:
+        lab = split_touching(im, fg)
+        best = {}
+        for k in range(1, lab.max() + 1):
+            ys, xs = np.nonzero(lab == k)
+            if len(ys) < 2000:
+                continue
+            name = GRID[int(ys.mean() // (H / 3))][int(xs.mean() // (W / 6))]
+            if name not in best or best[name][1] < len(ys):
+                best[name] = (k, len(ys), xs.min(), ys.min(), xs.max(), ys.max())
+        return crop_animals(im, lab, best)
     lab = np.zeros((H, W), np.int32)
     best = {}
     n = 0
@@ -269,6 +334,9 @@ def cut_animals():
             name = GRID[int(sy / pts // (H / 3))][int(sx / pts // (W / 6))]
             if name not in best or best[name][1] < pts:
                 best[name] = (n, pts, x0, y0, x1, y1)
+    return crop_animals(im, lab, best)
+
+def crop_animals(im, lab, best):
     missing = [nm for row in GRID for nm in row if nm not in best]
     if missing:
         sys.exit(f"Could not find: {missing} - is the grid still 6x3?")
@@ -373,6 +441,56 @@ def blink_amount(t, at, hold=2):
             return v
     return 0.0
 
+# --- The winter set -------------------------------------------------------------
+
+def body_frame(rgba):
+    """Where the body is: the bottom row of the sticker and the centre and width of its lower third."""
+    m = rgba[..., 3] > 128
+    rows = np.nonzero(m.any(axis=1))[0]
+    bottom = rows[-1]
+    low = rows[0] + (bottom - rows[0]) * 2 // 3
+    cols = np.nonzero(m[low:bottom + 1].any(axis=0))[0]
+    return bottom, (cols[0] + cols[-1]) / 2, cols[-1] - cols[0] + 1
+
+def is_ear(bone, shape):
+    """A small bone at the top of the head: an ear twitch."""
+    if "poly" not in bone:
+        return False
+    H, W = shape[:2]
+    xs = [x for x, _ in bone["poly"]]; ys = [y for _, y in bone["poly"]]
+    return min(ys) <= 0.06 * H and max(ys) <= 0.56 * H and (max(xs) - min(xs)) <= 0.62 * W
+
+def winter_rigs(plain, winter):
+    """RIGS moved onto the winter animals, ears dropped."""
+    out = {}
+    for name, rig in RIGS.items():
+        b0, c0, w0 = body_frame(plain[name])
+        b1, c1, w1 = body_frame(winter[name])
+        k = w1 / w0
+        def at(x, y):
+            return (c1 + (x - c0) * k, b1 + (y - b0) * k)
+        bones = []
+        for b in rig["bones"]:
+            if is_ear(b, plain[name].shape):
+                continue
+            if "poly" in b:
+                b = {**b, "poly": [at(x, y) for x, y in b["poly"]], "pivot": at(*b["pivot"])}
+            bones.append(b)
+        moved = {**rig, "bones": bones}
+        if "eyes" in rig:
+            moved["eyes"] = [(*at(x, y), w * k, h * k) for x, y, w, h in rig["eyes"]]
+        else:
+            # If the finder misses the winter eyes, the everyday ones it found, moved along, stand in.
+            moved["eyes_fallback"] = [{"cx": at(e["cx"], e["cy"])[0], "cy": at(e["cx"], e["cy"])[1], "w": e["w"] * k, "h": e["h"] * k}
+                                      for e in find_eyes(plain[name])]
+        out[name] = moved
+    return out
+
+def sag_of(canvas):
+    """How far the art's middle sits below the square's middle, as a share of the side."""
+    rows = np.nonzero((canvas[..., 3] > 128).any(axis=1))[0]
+    return round(((rows[0] + rows[-1]) / 2) / canvas.shape[0] - 0.5, 3)
+
 # --- Frames ---------------------------------------------------------------------
 
 def square(rgba):
@@ -417,7 +535,19 @@ def to_image(arr, size):
 
 def main():
     debug = "--debug" in sys.argv
-    animals = cut_animals()
+    winter = "--winter" in sys.argv
+    if winter:
+        animals = cut_animals(WINTER_SHEET, split=True)
+        rigs = winter_rigs(cut_animals(SHEET), animals)
+        tag = "-winter"
+        # Hand-placed eyes were for the everyday drawings; the winter ones are found again where possible.
+        for rig_name, rig in rigs.items():
+            if "eyes" in rig and len(find_eyes(animals[rig_name])) == 2:
+                del rig["eyes"]
+    else:
+        animals = cut_animals()
+        rigs = RIGS
+        tag = ""
     order = [nm for row in GRID for nm in row]
 
     (ROOT / "public").mkdir(exist_ok=True)
@@ -426,14 +556,14 @@ def main():
         for i, name in enumerate(order):
             canvas, _, _ = square(animals[name])
             atlas.paste(to_image(canvas, cell), ((i % 6) * cell, (i // 6) * cell))
-        atlas.save(ROOT / "public" / f"pets-{cell}.webp", "WEBP", quality=90, method=6)
+        atlas.save(ROOT / "public" / f"pets{tag}-{cell}.webp", "WEBP", quality=90, method=6)
 
     (ROOT / "public" / "pets").mkdir(exist_ok=True)
     animated = {}
-    for name, rig in RIGS.items():
+    for name, rig in rigs.items():
         src = animals[name]
         # Eyes the finder cannot see (inside a dark patch, or only one in profile) are given by hand.
-        eyes = [{"cx": x, "cy": y, "w": w, "h": h} for x, y, w, h in rig["eyes"]] if "eyes" in rig else find_eyes(src)
+        eyes = [{"cx": x, "cy": y, "w": w, "h": h} for x, y, w, h in rig["eyes"]] if "eyes" in rig else find_eyes(src) or rig.get("eyes_fallback", [])
         if not eyes:
             print(f"  {name}: no eyes found, no blink")
         canvas, ox, oy = square(src)
@@ -455,7 +585,7 @@ def main():
             for size, strip in strips.items():
                 strip.paste(to_image(frame, size), (f * size, 0))
         for size, strip in strips.items():
-            strip.save(ROOT / "public" / "pets" / f"{name}-{size}.webp", "WEBP", quality=88, method=6)
+            strip.save(ROOT / "public" / "pets" / f"{name}{tag}-{size}.webp", "WEBP", quality=88, method=6)
         animated[name] = {"frames": FRAMES, "fps": FPS}
         print(f"  {name}: {FRAMES} frames, eyes {[(round(e['cx']), round(e['cy'])) for e in eyes]}")
 
@@ -470,8 +600,14 @@ def main():
                 px, py = b["pivot"]; d.ellipse([px * 2 - 6, py * 2 - 6, px * 2 + 6, py * 2 + 6], fill=(0, 200, 255))
             for e in eyes:
                 d.rectangle([(e["cx"] - e["w"] / 2) * 2, (e["cy"] - e["h"] / 2) * 2, (e["cx"] + e["w"] / 2) * 2, (e["cy"] + e["h"] / 2) * 2], outline=(0, 255, 0))
-            img.save(dbg_dir / f"{name}.png")
+            img.save(dbg_dir / f"{name}{tag}.png")
 
+    if winter:
+        # Same cells, frames and order as the everyday set; what differs is which animals move and where their middle is.
+        data = {"animated": animated, "sag": {nm: sag_of(square(animals[nm])[0]) for nm in order}}
+        (ROOT / "data" / "petSpritesWinter.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf8")
+        print(f"Wrote public/pets-winter-*.webp ({len(order)} animals) and {len(animated)} winter strips.")
+        return
     data = {"cells": CELLS, "cols": 6, "order": order, "frames": FRAME_SIZES, "animated": animated}
     (ROOT / "data" / "petSprites.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf8")
     print(f"Wrote public/pets-*.webp ({len(order)} animals) and {len(animated)} strips.")

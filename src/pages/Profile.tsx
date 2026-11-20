@@ -5,6 +5,7 @@ import { AtomIcon, CapitalSpeedrunIcon, HighscoreIcon, MapSpeedrunIcon, Ultimate
 import { formatRunTime } from "../utils/mapSpeedrun"
 import { installProfileTest, RECORD_GAMES, useRecordsHeld, type HeldRecord, type RecordGame } from "../utils/recordsHeld"
 import TopBar from "../components/TopBar"
+import SnowCap from "../components/SnowCap"
 import SiteFooter from "../components/SiteFooter"
 import Overlay from "../components/Overlay"
 import AccountPanel, { AccountLine } from "../components/AccountPanel"
@@ -133,7 +134,8 @@ export default function Profile() {
 
             <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 pb-16 sm:px-6">
                 {/* --- Who you are and where you stand --- */}
-                <section className={`${panel} mt-8 p-5 sm:p-6`}>
+                <section className={`${panel} relative mt-8 p-5 sm:p-6`}>
+                    <SnowCap seed="profile-hero" />
                     <div className="flex flex-col gap-6 md:flex-row md:items-center">
                         <div className="flex min-w-0 flex-1 items-center gap-5">
                             <button
@@ -251,7 +253,7 @@ export default function Profile() {
                     title="Your atlas"
                     aside={`${snapshot.worldMastered.size} of ${WORLD.length} flags · ${snapshot.continentsDone.length} of ${CONTINENTS.length} continents`}
                 />
-                <div className={`${panel} divide-y divide-slate-200 dark:divide-[#1C2338]`}>
+                <div className={`${panel} relative divide-y divide-slate-200 dark:divide-[#1C2338]`}>
                     {CONTINENTS.map(c => {
                         const flags = ATLAS[c]
                         const have = flags.filter(f => snapshot.worldMastered.has(f.code)).length
@@ -277,6 +279,8 @@ export default function Profile() {
                             </div>
                         )
                     })}
+                    {/* Last, not first: divide-y draws a line under every child but the last. */}
+                    <SnowCap seed="profile-atlas" />
                 </div>
 
                 {/* --- Titles held against everybody else --- */}
@@ -324,7 +328,8 @@ export default function Profile() {
                 {/* --- Journal --- */}
                 <SectionHead title="Journal" />
                 <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-                    <div className={`${panel} p-5`}>
+                    <div className={`${panel} relative p-5`}>
+                        <SnowCap seed="profile-journal" />
                         <Activity days={store.days} since={store.since} />
                         <Milestones store={store} />
                     </div>
@@ -657,7 +662,8 @@ function Records({ store }: { store: ProfileStore }) {
     ]
     const rows = all.filter(([, n]) => n > 0).map(([label, n, format]) => [label, format(n)])
     return (
-        <div className={`${panel} p-5`}>
+        <div className={`${panel} relative p-5`}>
+            <SnowCap seed="profile-records" />
             <span className="text-sm font-bold">Personal records</span>
             {rows.length === 0 ? (
                 <p className={`mt-3 text-sm ${muted}`}>Records appear as you play.</p>

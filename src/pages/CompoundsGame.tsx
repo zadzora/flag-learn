@@ -14,6 +14,7 @@ import {
     pickNext, recordAnswer, freshProgress, masterAll, srStats, isMastered, TARGET_STREAK, type SrProgressMap,
 } from "../utils/spacedRepetition"
 import { TYPO_FEEDBACK } from "../utils/textAnswerMatch"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Compounds & Ions - formulas and names, and the charges that decide them,
@@ -259,15 +260,16 @@ export default function CompoundsGame() {
 
                 <div className="mt-6">
                     {!current ? (
-                        <section className={`${panel} flex items-center gap-4 p-6 sm:p-8`}>
+                        <section className={`relative ${panel} flex items-center gap-4 p-6 sm:p-8`}>
                             <CheckCircle2 size={32} aria-hidden className="shrink-0 text-emerald-500" />
                             <div>
                                 <h2 className="!text-2xl font-bold">All mastered</h2>
                                 <p className="mt-1 text-slate-500 dark:text-slate-400">Nothing left to learn in this direction - switch above.</p>
                             </div>
+                            <SnowCap seed="compounds-all-mastered" thin />
                         </section>
                     ) : (
-                        <section className={`rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
+                        <section className={`relative rounded-[10px] border bg-white p-5 transition-colors dark:bg-slate-800 sm:p-7 ${status === "error"
                             ? "border-red-400 dark:border-red-500/60"
                             : status === "mastered" ? "border-amber-400 dark:border-amber-500/60"
                                 : status === "correct" ? "border-emerald-400 dark:border-emerald-500/60"
@@ -386,6 +388,7 @@ export default function CompoundsGame() {
                                     </>
                                 )}
                             </div>
+                            <SnowCap seed="compounds-round" thin />
                         </section>
                     )}
                 </div>

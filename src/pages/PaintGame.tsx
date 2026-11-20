@@ -9,6 +9,7 @@ import {
   PAINTABLE_CODES, applyStroke, isLightColor, loadPaintableFlag, refineInjectedRegions,
   type Region,
 } from '../utils/flagPaint'
+import SnowCap from '../components/SnowCap'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -363,7 +364,7 @@ export default function PaintGame() {
       <div className={pageClass}>
         <TopBar title="Paint the Flag" back={() => navigate(-1)} />
         <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-14 pt-6 sm:pt-8">
-          <section className={`${panel} flex flex-col gap-6 p-6 sm:p-8`}>
+          <section className={`${panel} relative flex flex-col gap-6 p-6 sm:p-8`}>
             <div className="flex items-center gap-4">
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700 dark:text-amber-400">
@@ -390,6 +391,7 @@ export default function PaintGame() {
               </button>
               <button onClick={() => navigate(-1)} className={`${quiet} flex-1 py-3.5 font-bold`}>Back to menu</button>
             </div>
+              <SnowCap seed="paint-card" thin />
           </section>
         </main>
       </div>

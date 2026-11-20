@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>https://flaglearn.eu/extras</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
         <loc>https://flaglearn.eu/daily</loc>
         <lastmod>2026-03-02</lastmod>
         <changefreq>daily</changefreq>

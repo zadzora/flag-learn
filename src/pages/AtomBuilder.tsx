@@ -16,6 +16,7 @@ import {
     coreInText, coreSymbol, startBoxes, toggleRow, withCore,
     type Boxes, type BuilderSettings, type Verdict,
 } from "../utils/atomBuilder"
+import SnowCap from "../components/SnowCap"
 
 /**
  * Atom Builder: the game names an element - or lights its cell on a blank
@@ -373,7 +374,7 @@ export default function AtomBuilder() {
             />
         </div>
     ) : (
-        <section className={`${PANEL} flex items-center gap-4 p-5`}>
+        <section className={`relative ${PANEL} flex items-center gap-4 p-5`}>
             <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border-2 border-slate-900 text-3xl font-black dark:border-white">
                 {current.symbol}
             </span>
@@ -385,6 +386,7 @@ export default function AtomBuilder() {
             {current.predicted && (
                 <span className={`${BADGE} ml-auto self-start bg-slate-200 text-[10px] uppercase tracking-wider text-slate-500 dark:bg-slate-700 dark:text-slate-400`}>Predicted</span>
             )}
+            <SnowCap seed="atom-target" thin />
         </section>
     ))
 
@@ -448,7 +450,7 @@ export default function AtomBuilder() {
                             {target}
 
                             <div className="flex flex-col gap-4">
-                                <section className={`${PANEL} flex flex-col gap-4 p-4 sm:p-5`}>
+                                <section className={`relative ${PANEL} flex flex-col gap-4 p-4 sm:p-5`}>
                                     {onCell && step === "write" && <p className={LABEL}>The atom in the lit cell</p>}
 
                                     {step === "write" ? (
@@ -565,6 +567,7 @@ export default function AtomBuilder() {
                                             </button>
                                         </div>
                                     )}
+                                    <SnowCap seed="atom-work" thin />
                                 </section>
 
                                 {outcome && (
@@ -583,7 +586,7 @@ export default function AtomBuilder() {
                 )}
 
                 {phase === "done" && (
-                    <section className={`${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
+                    <section className={`relative ${PANEL} flex flex-col gap-6 p-6 sm:p-8`}>
                         <div className="flex items-center gap-4">
                             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-amber-500 dark:border-slate-700"><Trophy size={28} aria-hidden /></span>
                             <div>
@@ -622,6 +625,7 @@ export default function AtomBuilder() {
                                 <Settings2 size={17} aria-hidden /> Change settings
                             </button>
                         </div>
+                        <SnowCap seed="atom-done" thin />
                     </section>
                 )}
             </main>

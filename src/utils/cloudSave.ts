@@ -305,6 +305,22 @@ export async function connectGoogle(): Promise<ConnectResult> {
 }
 
 /**
+ * The part of the account's save the backup may hold: only keys still in
+ * `CLOUD_KEYS`. A save written before a mode was removed keeps its old key
+ * (the Daily Gauntlet's `flag-master-gauntlet-*`), the rules no longer list
+ * it, and copying the whole node made the backup - and with it the sign-in -
+ * fail with permission_denied.
+ */
+function backupOf(save: RemoteSave): Record<string, { v: string; at: number }> | null {
+    const out: Record<string, { v: string; at: number }> = {}
+    for (const spec of CLOUD_KEYS) {
+        const entry = save?.[spec.key] as { v?: unknown; at?: unknown } | undefined
+        if (entry && typeof entry.v === "string" && typeof entry.at === "number") out[spec.key] = { v: entry.v, at: entry.at }
+    }
+    return Object.keys(out).length ? out : null
+}
+
+/**
  * Joins this browser's progress into the signed-in account ("join"), or
  * drops it and takes the account's as it is ("replace"). Before another
  * browser's progress is joined in, the account's save is copied to
@@ -318,7 +334,8 @@ export function finishConnect(choice: "join" | "replace"): Promise<ConnectResult
         const snapshot = await withTimeout(get(ref(db, savePath(user.uid))), NETWORK_WAIT_MS)
         const save = snapshot.val() as RemoteSave
 
-        if (!sameAccount && save) await withTimeout(set(ref(db, `users/${user.uid}/backup`), save), NETWORK_WAIT_MS)
+        const backup = backupOf(save)
+        if (!sameAccount && backup) await withTimeout(set(ref(db, `users/${user.uid}/backup`), backup), NETWORK_WAIT_MS)
         if (!sameAccount) write(BASE_KEY, null)
         if (choice === "replace") for (const spec of CLOUD_KEYS) write(spec.key, null)
 

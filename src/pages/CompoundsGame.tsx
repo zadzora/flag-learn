@@ -15,6 +15,7 @@ import {
 } from "../utils/spacedRepetition"
 import { TYPO_FEEDBACK } from "../utils/textAnswerMatch"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 /**
  * Compounds & Ions - formulas and names, and the charges that decide them,
@@ -150,6 +151,7 @@ export default function CompoundsGame() {
         const { progress: next, outcome } = recordAnswer(progress, item.id, correct, isReview)
         save(mode, next)
         setSessionStreak(prev => (correct ? prev + 1 : 0))
+        if (correct) recordHotStreak(sessionStreak + 1)
         const message: Record<typeof outcome, string> = {
             introduced: "Got it - now remember it. 🌱",
             advanced: `Correct ✅ ${TARGET_STREAK - (next[item.id]?.streak ?? 0)} more to master`,

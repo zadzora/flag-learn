@@ -8,6 +8,7 @@ import constData from "../../data/constellations.json"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { asset } from "../utils/asset"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 // --- TYPES ---
 type Constellation = {
@@ -336,7 +337,10 @@ export default function ConstellationGame() {
 
         const isCorrect = match === 'exact'
 
-        if (isCorrect) setSessionStreak(prev => prev + 1)
+        if (isCorrect) {
+            setSessionStreak(prev => prev + 1)
+            recordHotStreak(sessionStreak + 1)
+        }
         else setSessionStreak(0)
 
         const displayCorrect = getLocalName(current) ? `${getPrimaryName(current)} (${getLocalName(current)})` : getPrimaryName(current)

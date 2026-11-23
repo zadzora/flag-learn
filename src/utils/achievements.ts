@@ -124,7 +124,8 @@ export function readSnapshot(store: ProfileStore | null): Snapshot {
         elements,
         quantities,
         formulas,
-        "sharp-eye": records["sharp-eye"] ?? 0,
+        // Every flame streak feeds sharp-eye; Capital Pinpoint's in-range run was a record before that, so it counts too.
+        "sharp-eye": Math.max(records["sharp-eye"] ?? 0, records.pinpoint ?? 0),
         paint: numberIn("flags-paint-v1", "completed"),
         "word-wheel": Math.max(0, (Number(localStorage.getItem("flag-master-word-wheel-level")) || 1) - 1),
         "higher-lower": records["higher-lower"] ?? 0,
@@ -193,7 +194,7 @@ export const TRACKS: Track[] = [
     { id: "continents", title: "Continental", area: "learn", unit: ["continent", "continents"], tiers: [1, 3, 5, CONTINENTS.length], detail: "Continents with every flag mastered", to: "/play" },
     { id: "map", title: "Map reader", area: "learn", unit: ["country", "countries"], tiers: [10, 50, 120, 200], detail: "Countries placed in Map Locator and Border Guess", to: "/map" },
     { id: "capital-map", title: "Pinpoint", area: "learn", unit: ["capital", "capitals"], tiers: [10, 50, 120, CAPITALS.length], detail: "Capitals mastered on the map in Capital Pinpoint", to: "/capital-map" },
-    { id: "sharp-eye", title: "Sharp eye", area: "learn", unit: ["answer", "answers"], tiers: [10, 25, 50, 100], detail: "Correct answers in a row in the flag quiz", to: "/play" },
+    { id: "sharp-eye", title: "Sharp eye", area: "learn", unit: ["answer", "answers"], tiers: [10, 25, 50, 100], detail: "Correct answers in a row in any learning mode", to: "/play" },
     { id: "paint", title: "Painter", area: "learn", unit: ["flag", "flags"], tiers: [5, 25, 75, 150], detail: "Flags painted in Paint the Flag", to: "/paint" },
     { id: "word-wheel", title: "Wordsmith", area: "learn", unit: ["level", "levels"], tiers: [5, 15, 30, 60], detail: "Country Wheel levels solved", to: "/word-wheel" },
     { id: "higher-lower", title: "Sense of scale", area: "learn", unit: ["in a row", "in a row"], tiers: [5, 10, 20, 35], detail: "Best Higher or Lower run", to: "/higher-lower" },

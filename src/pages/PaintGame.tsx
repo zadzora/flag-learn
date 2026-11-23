@@ -10,6 +10,7 @@ import {
   type Region,
 } from '../utils/flagPaint'
 import SnowCap from '../components/SnowCap'
+import { recordHotStreak } from "../utils/profileStore"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -307,6 +308,7 @@ export default function PaintGame() {
     setCompleted(newDone); setIncorrectCount(newIncorrect)
     const newStreak = didComplete ? streak + 1 : 0
     setStreak(newStreak)
+    if (didComplete) recordHotStreak(newStreak)
     writeSave({ queue: newQ, completed: newDone, total, incorrectCount: newIncorrect, streak: newStreak })
     setQueue(newQ)
   }

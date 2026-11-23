@@ -8,6 +8,7 @@ import worldData from "../../data/flags.json"
 import { checkCountryMatch } from "../utils/mapCountryMatch"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
 import { asset } from "../utils/asset"
+import { recordHotStreak } from "../utils/profileStore"
 
 const geoUrl = asset("/world-map.json")
 const THEME_KEY = "flag-master-theme"
@@ -179,6 +180,7 @@ export default function UltimateGame() {
         if (isCorrect) {
             setStatus('correct');
             setStreak(s => s + 1);
+            recordHotStreak(streak + 1);
             setFeedbackMsg("Perfect location! ✅");
             setTimeout(() => finalizeStep(true), 1000);
         } else {
@@ -217,6 +219,7 @@ export default function UltimateGame() {
         if (isCorrect) {
             setStatus('correct');
             setStreak(s => s + 1);
+            recordHotStreak(streak + 1);
             setFeedbackMsg("Correct! ✅");
             setTimeout(() => finalizeStep(true), 1000);
         } else {

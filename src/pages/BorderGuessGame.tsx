@@ -12,6 +12,7 @@ import {
     type GeoInfo,
 } from "../utils/mapGeo"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 const STORAGE_KEY = "border-guess-v1"
 interface SaveData { queue: string[]; completed: number; total: number; incorrectRounds: number; cycleComplete?: boolean }
@@ -155,6 +156,7 @@ export default function BorderGuessGame() {
         setCompleted(newCompleted)
         setIncorrectRounds(newIncorrect)
         setStreak(prev => didComplete ? prev + 1 : 0)
+        if (didComplete) recordHotStreak(streak + 1)
         setInput(""); setSuggestions([]); setFeedbackMsg(null); setWrongAttempts(0); setStatus("idle")
 
         if (nextQueue.length === 0) {

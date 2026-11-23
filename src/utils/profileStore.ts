@@ -128,6 +128,15 @@ export function recordBest(key: string, value: number) {
     })
 }
 
+/**
+ * A run of right answers in a row - the orange flame in every learning mode (Play, Constellations,
+ * Border Guess, Ultimate, Paint, the Science topics). One record for all of them: the Sharp eye badge.
+ * Capital Pinpoint keeps its own `pinpoint` record, which the badge reads alongside.
+ */
+export function recordHotStreak(run: number) {
+    recordBest("sharp-eye", run)
+}
+
 /** A daily mode was finished today. Called from `recordDailyResult`, so every daily reports here. */
 export function markDaily(mode: string, date: string) {
     const done = readStore()?.dailies[date] ?? []

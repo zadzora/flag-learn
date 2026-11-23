@@ -10,7 +10,7 @@ import TopBar from "../components/TopBar"
 import SiteFooter from "../components/SiteFooter"
 import { fetchCountryFactsFree } from "../utils/countryFactsFree"
 import { resolveTextAnswer, typoFeedbackForStreak } from "../utils/textAnswerMatch"
-import { recordBest } from "../utils/profileStore"
+import { recordHotStreak } from "../utils/profileStore"
 import { extraPack, extraStorageKey, packPhrase } from "../utils/extraFlags"
 import ExtrasCredit from "../components/ExtrasCredit"
 import SnowCap from "../components/SnowCap"
@@ -528,8 +528,7 @@ export default function Game({ deck }: { deck?: string | null }) {
 
         if (isCorrect) {
             setSessionStreak(prev => prev + 1)
-            // The Sharp eye badge: the best run of right answers, kept on the profile.
-            recordBest("sharp-eye", sessionStreak + 1)
+            recordHotStreak(sessionStreak + 1)
         } else {
             setSessionStreak(0)
         }

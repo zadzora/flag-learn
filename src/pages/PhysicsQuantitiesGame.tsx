@@ -22,6 +22,7 @@ import {
 } from "../utils/spacedRepetition"
 import { TYPO_FEEDBACK } from "../utils/textAnswerMatch"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 /**
  * The second Science topic: basic physical quantities on the same streak-based
@@ -275,6 +276,7 @@ export default function PhysicsQuantitiesGame() {
         const { progress: nextProgress, outcome } = recordAnswer(progress, item.id, correct, isReview)
         save(mode, nextProgress)
         setSessionStreak(prev => (correct ? prev + 1 : 0))
+        if (correct) recordHotStreak(sessionStreak + 1)
 
         const message: Record<typeof outcome, string> = {
             introduced: "Got it - now remember it. 🌱",

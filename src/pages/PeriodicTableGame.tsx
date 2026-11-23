@@ -21,6 +21,7 @@ import {
 } from "../utils/spacedRepetition"
 import { resolveTextAnswer, normalizeAnswer, TYPO_FEEDBACK } from "../utils/textAnswerMatch"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 /**
  * The first Science mode: the periodic table on the same streak-based spaced
@@ -304,6 +305,7 @@ export default function PeriodicTableGame() {
         const { progress: nextProgress, outcome } = recordAnswer(progress, element.symbol, correct, isReview)
         save(mode, nextProgress)
         setSessionStreak(prev => (correct ? prev + 1 : 0))
+        if (correct) recordHotStreak(sessionStreak + 1)
 
         const message: Record<typeof outcome, string> = {
             introduced: "Got it - now remember it. 🌱",

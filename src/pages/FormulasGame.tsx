@@ -19,6 +19,7 @@ import {
     TARGET_STREAK, type SrProgressMap,
 } from "../utils/spacedRepetition"
 import SnowCap from "../components/SnowCap"
+import { recordHotStreak } from "../utils/profileStore"
 
 /**
  * Basic formulas, physics and maths, on the Science wing's spaced repetition.
@@ -256,6 +257,7 @@ export default function FormulasGame() {
         const { progress: nextProgress, outcome } = recordAnswer(progress, item.id, correct, isReview)
         save(mode, nextProgress)
         setSessionStreak(prev => (correct ? prev + 1 : 0))
+        if (correct) recordHotStreak(sessionStreak + 1)
 
         // The whole equation is printed under the card on every answer, so the
         // wrong-answer line points there instead of squeezing it in twice.

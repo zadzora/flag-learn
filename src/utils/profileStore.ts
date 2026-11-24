@@ -45,14 +45,20 @@ export type ProfileStore = {
     avatar?: string
     /** Rank last announced, so a rank-up is told once. */
     rank: number
+    /**
+     * Highest tier of each badge already added to the shared rarity counters
+     * (utils/badgeStats.ts), so this browser counts every tier once. Any entry
+     * at all means the player has been counted too.
+     */
+    reported: Record<string, number>
 }
 
 export function todayUtc(): string {
     return new Date().toISOString().slice(0, 10)
 }
 
-function emptyStore(): ProfileStore {
-    return { since: todayUtc(), earned: {}, peaks: {}, days: {}, dailies: {}, counters: {}, records: {}, once: {}, continents: [], rank: 0 }
+export function emptyStore(): ProfileStore {
+    return { since: todayUtc(), earned: {}, peaks: {}, days: {}, dailies: {}, counters: {}, records: {}, once: {}, continents: [], rank: 0, reported: {} }
 }
 
 const obj = <T,>(v: unknown, fallback: T): T => (v && typeof v === "object" && !Array.isArray(v) ? (v as T) : fallback)
@@ -75,6 +81,7 @@ export function readStore(): ProfileStore | null {
             continents: Array.isArray(raw.continents) ? raw.continents.filter((c: unknown) => typeof c === "string") : [],
             avatar: typeof raw.avatar === "string" ? raw.avatar : undefined,
             rank: typeof raw.rank === "number" ? raw.rank : 0,
+            reported: obj(raw.reported, {}),
         }
     } catch {
         return null

@@ -18,7 +18,8 @@ import {
 import { CONTINENTS } from "../utils/roadTripGoals"
 import { loadLog } from "../utils/roadTripLog"
 import { readStreak, STREAK_KEYS } from "../utils/dailyStreak"
-import { PROFILE_EVENT, readStore, setAvatar, todayUtc, type ProfileStore } from "../utils/profileStore"
+import { PROFILE_EVENT, emptyStore, readStore, setAvatar, todayUtc, type ProfileStore } from "../utils/profileStore"
+import { formatShare, installBadgeStatsTest, rarityOf, useBadgeStats, type BadgeStats } from "../utils/badgeStats"
 import { asset } from "../utils/asset"
 import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 
@@ -34,7 +35,7 @@ import { isNameOffensive, NAME_REFUSED } from "../utils/nameFilter"
 const THEME_KEY = "flag-master-theme"
 const NAME_KEY = "flag-master-nickname"
 
-const EMPTY: ProfileStore = { since: todayUtc(), earned: {}, peaks: {}, days: {}, dailies: {}, counters: {}, records: {}, once: {}, continents: [], rank: 0 }
+const EMPTY: ProfileStore = emptyStore()
 
 function load() {
     const stored = readStore()
@@ -96,6 +97,9 @@ export default function Profile() {
     const [draftName, setDraftName] = useState("")
     const [pickingAvatar, setPickingAvatar] = useState(false)
     const [openTrack, setOpenTrack] = useState<Track | null>(null)
+    // How rare each badge is; null (and nothing drawn) until enough players are counted.
+    const stats = useBadgeStats()
+    useEffect(() => installBadgeStatsTest(), []) // dev server only - see badgeStats.ts
 
     const points = pointsOf(store)
     const rank = rankOf(points)
@@ -287,7 +291,18 @@ export default function Profile() {
                 <Titles />
 
                 {/* --- Badges --- */}
-                <SectionHead title="Badges" aside="Tap one to see every tier" />
+                <SectionHead
+                    title="Badges"
+                    aside={
+                        stats?.test ? (
+                            <span className="font-bold text-rose-500">Test data · badgeStatsTest.clear()</span>
+                        ) : stats ? (
+                            `Tap one to see every tier · % of ${stats.players.toLocaleString()} players with a badge`
+                        ) : (
+                            "Tap one to see every tier"
+                        )
+                    }
+                />
                 <div className="flex flex-col gap-8">
                     {AREAS.map(area => {
                         const tracks = TRACKS.filter(t => t.area === area.key)
@@ -301,7 +316,7 @@ export default function Profile() {
                                 <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-7">
                                     {tracks.map(track => (
                                         <li key={track.id}>
-                                            <BadgeCard track={track} value={store.peaks[track.id] ?? 0} onOpen={() => setOpenTrack(track)} />
+                                            <BadgeCard track={track} value={store.peaks[track.id] ?? 0} stats={stats} onOpen={() => setOpenTrack(track)} />
                                         </li>
                                     ))}
                                 </ul>
@@ -343,7 +358,7 @@ export default function Profile() {
 
             <SiteFooter />
 
-            {openTrack && <TrackSheet track={openTrack} store={store} onClose={() => setOpenTrack(null)} />}
+            {openTrack && <TrackSheet track={openTrack} store={store} stats={stats} onClose={() => setOpenTrack(null)} />}
             {pickingAvatar && (
                 <AvatarPicker
                     owned={owned}
@@ -472,10 +487,31 @@ function RecordCard({ record }: { record: HeldRecord }) {
     )
 }
 
-function BadgeCard({ track, value, onOpen }: { track: Track; value: number; onOpen: () => void }) {
+/** Under 5% of players: worth pointing out. */
+const RARE_SHARE = 0.05
+
+/**
+ * "4.2% of players" - for the tier held, or bronze while it is locked, the way
+ * Steam shows every achievement's share whether you have it or not.
+ */
+function Rarity({ share, label, className = "" }: { share: number | null; label: string; className?: string }) {
+    if (share === null) return null
+    const rare = share < RARE_SHARE
+    return (
+        <span
+            title={`${formatShare(share)} of players have ${label}`}
+            className={`block text-[10px] tabular-nums ${rare ? "font-bold text-slate-900 dark:text-white" : muted} ${className}`}
+        >
+            {formatShare(share)} of players
+        </span>
+    )
+}
+
+function BadgeCard({ track, value, stats, onOpen }: { track: Track; value: number; stats: BadgeStats | null; onOpen: () => void }) {
     const tier = tierOf(track, value)
     const target = track.tiers[Math.min(tier, 3)]
     const complete = tier >= 4
+    const shown = Math.max(tier, 1)
     return (
         <button
             type="button"
@@ -491,11 +527,16 @@ function BadgeCard({ track, value, onOpen }: { track: Track; value: number; onOp
             <span className={`mt-1 block text-[10px] tabular-nums ${muted}`}>
                 {complete ? "Complete" : `${value.toLocaleString()} / ${target.toLocaleString()}`}
             </span>
+            <Rarity
+                share={rarityOf(stats, track.id, shown)}
+                label={`${track.title} ${TIER_NAMES[shown]}`}
+                className="mt-1 w-full border-t border-slate-200 pt-1 dark:border-[#1C2338]"
+            />
         </button>
     )
 }
 
-function TrackSheet({ track, store, onClose }: { track: Track; store: ProfileStore; onClose: () => void }) {
+function TrackSheet({ track, store, stats, onClose }: { track: Track; store: ProfileStore; stats: BadgeStats | null; onClose: () => void }) {
     const value = store.peaks[track.id] ?? 0
     const tier = tierOf(track, value)
     const earned = store.earned[track.id]
@@ -519,6 +560,7 @@ function TrackSheet({ track, store, onClose }: { track: Track; store: ProfileSto
                             <BadgeMedal id={track.id} tier={reached ? i + 1 : 0} size={44} />
                             <span className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.06em]">{TIER_NAMES[i + 1]}</span>
                             <span className={`text-xs tabular-nums ${muted}`}>{t.toLocaleString()}</span>
+                            <Rarity share={rarityOf(stats, track.id, i + 1)} label={`${track.title} ${TIER_NAMES[i + 1]}`} className="mt-1" />
                         </li>
                     )
                 })}
@@ -779,6 +821,7 @@ function Records({ store }: { store: ProfileStore }) {
         ["Deduction streak", readStreak(STREAK_KEYS.deduction).best, days],
         ["Daily Trivia streak", readStreak(STREAK_KEYS.trivia).best, days],
         ["Rally streak", readStreak(STREAK_KEYS.rally).best, days],
+        ["Landmarks streak", readStreak(STREAK_KEYS.landmarks).best, days],
         ["World Trivia best score", store.records.trivia ?? 0, n => `${n.toLocaleString()} pts`],
         ["Right answers in a row", store.records["sharp-eye"] ?? 0, n => n.toLocaleString()],
         ["Higher or Lower run", store.records["higher-lower"] ?? 0, n => n.toLocaleString()],

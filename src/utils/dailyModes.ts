@@ -1,4 +1,4 @@
-import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyRallyIcon, DailyTriviaIcon } from "../components/DailyModeIcons"
+import { DailyConnectionsIcon, DailyDeductionIcon, DailyFlagleIcon, DailyLandmarksIcon, DailyRallyIcon, DailyTriviaIcon } from "../components/DailyModeIcons"
 import type { ModeIcon } from "../components/ModeIcons"
 import { STREAK_KEYS } from "./dailyStreak"
 
@@ -15,7 +15,7 @@ import { STREAK_KEYS } from "./dailyStreak"
  * instead of dead-ending on "come back tomorrow".
  */
 
-export type DailyModeKey = "connections" | "deduction" | "flagle" | "trivia" | "rally"
+export type DailyModeKey = "connections" | "deduction" | "flagle" | "trivia" | "rally" | "landmarks"
 
 export type DailyMode = {
     key: DailyModeKey
@@ -44,6 +44,19 @@ export type DailyMode = {
 }
 
 export const DAILY_MODES: DailyMode[] = [
+    {
+        key: "flagle",
+        to: "/daily",
+        label: "Daily Flagle",
+        tagline: "Scratch off as little as you can, then name the flag",
+        icon: DailyFlagleIcon,
+        detail: "Today's flag under a scratch card - the less you uncover, the more it is worth",
+        accent: "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400",
+        hover: "hover:border-emerald-400 dark:hover:border-emerald-500",
+        streakKey: STREAK_KEYS.flagle,
+        saveKeys: ["flag-master-daily-save"],
+        isFinished: save => save.status === "won" || save.status === "lost",
+    },
     {
         key: "connections",
         to: "/daily-connections",
@@ -87,6 +100,20 @@ export const DAILY_MODES: DailyMode[] = [
         isFinished: save => save.status === "done",
     },
     {
+        key: "landmarks",
+        to: "/daily-landmarks",
+        label: "Daily Landmarks",
+        tagline: "Three sights, one city - name it against the clock",
+        icon: DailyLandmarksIcon,
+        detail: "Famous sights of one city appear every few seconds - name it fastest",
+        accent: "bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400",
+        hover: "hover:border-teal-400 dark:hover:border-teal-500",
+        badge: "NEW",
+        streakKey: STREAK_KEYS.landmarks,
+        saveKeys: ["flag-master-landmarks-save"],
+        isFinished: save => save.status === "won" || save.status === "lost",
+    },
+    {
         key: "deduction",
         to: "/daily-deduction",
         label: "Daily Deduction",
@@ -98,19 +125,6 @@ export const DAILY_MODES: DailyMode[] = [
         badge: "NEW",
         streakKey: STREAK_KEYS.deduction,
         saveKeys: ["flag-master-deduction-save"],
-        isFinished: save => save.status === "won" || save.status === "lost",
-    },
-    {
-        key: "flagle",
-        to: "/daily",
-        label: "Daily Flagle",
-        tagline: "Guess today's flag from a tight zoom",
-        icon: DailyFlagleIcon,
-        detail: "Guess today's flag - new challenge every day",
-        accent: "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400",
-        hover: "hover:border-emerald-400 dark:hover:border-emerald-500",
-        streakKey: STREAK_KEYS.flagle,
-        saveKeys: ["flag-master-daily-save"],
         isFinished: save => save.status === "won" || save.status === "lost",
     },
 ]

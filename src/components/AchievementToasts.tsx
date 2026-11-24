@@ -6,6 +6,7 @@ import { BadgeMedal, RankShield } from "./BadgeArt"
 import { GoogleButton } from "./AccountPanel"
 import { ATLAS, RANKS, TIER_NAMES, checkProgress, trackById, type Unlock } from "../utils/achievements"
 import { PROGRESS_EVENT } from "../utils/profileStore"
+import { reportBadges } from "../utils/badgeStats"
 import { addNudgeTime, barHidden, markSignInNudgeShown, signInFromNudge, signInNudgeDue, useGuestWithProgress } from "../utils/signInNudge"
 import { asset } from "../utils/asset"
 import { toastsHeld, useToastsHeld } from "../utils/holdToasts"
@@ -65,6 +66,8 @@ export default function AchievementToasts() {
         }
         const run = () => {
             const { unlocks } = checkProgress()
+            // Into the shared rarity counters - a no-op unless a tier is new to them.
+            reportBadges()
             if (!unlocks.length) return
             const sorted: Queued[] = unlocks.sort((a, b) => ORDER[a.kind] - ORDER[b.kind]).map(unlock => ({ key: nextKey++, unlock }))
             setQueue(q => [...q, ...sorted])

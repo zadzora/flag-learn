@@ -21,9 +21,11 @@ import {
     multiShare, numberShare, pointsFor, questionValue, shuffle, timeFactor, typedCorrect,
     type Dealt, type Loaded, type PinViewName, type QuestionType,
 } from "../utils/trivia"
-import { answerText, countryOf, fmt, isRight, optionsOf, placeIsAnswer, placeOf, type Outcome, type Played } from "../utils/triviaPlay"
+import { answerText, countryOf, fmt, isClueType, isRight, optionsOf, placeIsAnswer, placeOf, type Outcome, type Played } from "../utils/triviaPlay"
 import { useQuizCoin, useQuizShuffle } from "../utils/triviaShuffle"
 import SnowCap from "./SnowCap"
+import { CityInput, ClueCard } from "./LandmarkUi"
+import { cityById, cluesOf, judgeCity } from "../utils/cityLandmarks"
 
 /**
  * The quiz itself - the question card with its clock, the card before each
@@ -934,6 +936,61 @@ function CluesInput({ q, locked, revealed, onSubmit }: InputProps<"clues">) {
     )
 }
 
+/**
+ * "Which city?": a city's sights appear one by one, the least famous first, as
+ * in "Who am I?"; the player types the city whenever they know it. The same
+ * clue clock and shares, the Landmarks modes' clue cards.
+ */
+function CityCluesInput({ q, locked, revealed, onSubmit }: InputProps<"city">) {
+    const city = cityById(q.city)
+    const clues = city ? cluesOf(city, q.picks) : []
+    const [shown, setShown] = useState(1)
+    const [typed, setTyped] = useState("")
+    const [verdict, setVerdict] = useState<boolean | null>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
+    useEffect(() => { inputRef.current?.focus({ preventScroll: true }) }, [])
+    useEffect(() => {
+        if (locked || shown >= clues.length) return
+        const id = setTimeout(() => setShown(n => n + 1), CLUE_EVERY_MS)
+        return () => clearTimeout(id)
+    }, [shown, locked, clues.length])
+    const answer = (text: string) => {
+        if (!city || locked || !text.trim()) return
+        // A misspelt name counts - the clock is the pressure here, not the keyboard.
+        const right = judgeCity(text, city) !== "wrong"
+        setTyped(text)
+        setVerdict(right)
+        onSubmit(right ? CLUE_SHARE[shown - 1] : 0, right && shown > 1 ? `Answered with ${shown} sights showing.` : undefined)
+    }
+    const visible = revealed ? clues.length : shown
+    return (
+        <div className="flex flex-col gap-3">
+            <ol className="flex flex-col gap-2">
+                {clues.slice(0, visible).map((l, i) => <ClueCard key={l.n} landmark={l} index={i} />)}
+            </ol>
+            {!locked && shown < clues.length && (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Answer now for {Math.round(CLUE_SHARE[shown - 1] * 100)}% - the next sight drops it to {Math.round(CLUE_SHARE[shown] * 100)}%.
+                </p>
+            )}
+            {locked ? (
+                <p className={`rounded-lg border-2 px-4 py-3 text-lg font-semibold ${!revealed ? OPT_CLASS.on : verdict ? OPT_CLASS.ok : OPT_CLASS.bad}`}>
+                    {typed || "No answer"}
+                </p>
+            ) : (
+                <CityInput onSubmit={answer} inputRef={inputRef} />
+            )}
+            {revealed && city && (
+                <p className="flex items-center gap-2 text-[15px]">
+                    <span className="font-bold">{verdict ? "Correct:" : "It was"}</span>
+                    {countryByCode(city.country)?.image && <img src={countryByCode(city.country)?.image} alt="" className="h-5 w-8 rounded-[2px] object-cover" />}
+                    {city.name}, {countryByCode(city.country)?.name}
+                </p>
+            )}
+        </div>
+    )
+}
+
 // --- One question, with its clock --------------------------------------------
 
 /**
@@ -1063,6 +1120,7 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
             {q.type === "jigsaw" && <JigsawInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "compass" && <CompassInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "clues" && <CluesInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
+            {q.type === "city" && <CityCluesInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
         </div>
     )
 }
@@ -1266,14 +1324,14 @@ export function ResultPanel({ played, last, onNext, reduce }: { played: Played; 
     }, [ready, onNext])
 
     // A "Who am I?" named after a few clues is still right - just worth less.
-    const right = share >= 1 || (q.type === "clues" && share > 0)
+    const right = isRight({ q, share })
     const tone = right ? "emerald" : share > 0 ? "amber" : "rose"
     const word = timeout ? "Time's up" : right ? "Correct!" : share > 0 ? "Partly right" : "Not this time"
     const toneClass = { emerald: "text-emerald-600 dark:text-emerald-400", amber: "text-amber-600 dark:text-amber-300", rose: "text-rose-600 dark:text-rose-400" }[tone]
     // Only a question about one country gets its flag beside the fact - with several, the fact may be about any of them.
     const flag = q.codes.length === 1 ? countryFlag(q.codes[0]) : undefined
     // Typed and number answers already show the solution right under the input.
-    const showAnswer = !right && q.type !== "number" && q.type !== "typed" && q.type !== "clues" && answerText(q)
+    const showAnswer = !right && q.type !== "number" && q.type !== "typed" && !isClueType(q) && answerText(q)
 
     return (
         <div className="flex flex-col gap-4">

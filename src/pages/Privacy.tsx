@@ -78,7 +78,8 @@ export default function Privacy() {
                     <ul className="ml-5 list-disc space-y-3">
                         <Item title="Progress in your browser">
                             What you have learned, your badges, streaks and settings are stored in your browser (localStorage). They stay on your device and
-                            are not sent anywhere unless you sign in.
+                            are not sent anywhere unless you sign in. The one exception carries nothing about you: when you earn a badge, a shared counter of
+                            how many players hold it goes up by one - no ID, no name, nothing that says who - so the profile can show how rare each badge is.
                         </Item>
                         <Item title="Signing in with Google (optional)">
                             When you sign in, Google shares your name, email address, profile picture and Google account ID with Firebase Authentication,

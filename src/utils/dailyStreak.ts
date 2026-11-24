@@ -23,6 +23,7 @@ export const STREAK_KEYS = {
     rally: "flag-master-rally-streak",
     elementle: "flag-master-elementle-streak",
     chemConnections: "flag-master-chem-connections-streak",
+    landmarks: "flag-master-landmarks-streak",
 } as const
 
 const EMPTY: StreakState = { streak: 0, best: 0, lastDate: "" }

@@ -336,6 +336,10 @@
     0%, 60%, 100% { transform: scale(1); }
     35% { transform: scale(0.55); }
 }
+@keyframes di-scrape {
+    0%, 50%, 100% { transform: translate(0, 0) rotate(0); }
+    25%, 75% { transform: translate(-2.4px, -1.4px) rotate(-8deg); }
+}
 @keyframes di-speed {
     0%, 100% { transform: translateX(0); opacity: 1; }
     45% { transform: translateX(-2.4px); opacity: 0.35; }
@@ -357,6 +361,7 @@
         & .di-drop { animation: di-drop 640ms ease-out 140ms both; }
         & .di-shadow { animation: di-shadow 640ms ease-out 140ms both; }
         & .di-speed { animation: di-speed 560ms ease-out both; }
+        & .di-scrape { animation: di-scrape 620ms ease-in-out both; }
     }
 }
 

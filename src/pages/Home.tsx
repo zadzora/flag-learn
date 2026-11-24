@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type MouseEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
-    ArrowRight, Car, Check, ChevronRight, CloudOff, Crown, Flame, Moon, Sun, Play, X,
+    ArrowRight, Car, Check, ChevronRight, CloudOff, Crown, Flame, Landmark, Moon, Sun, Play, X,
 } from "lucide-react"
 import { GoogleButton } from "../components/AccountPanel"
 import { GuestDot } from "../components/TopBar"
@@ -77,6 +77,7 @@ const MULTIPLAYER: Entry[] = [
 
 const MORE_MODES: Entry[] = [
     { to: "/trivia", label: "World Trivia", detail: "Fun facts about every country, in twelve kinds of questions", icon: WorldTriviaIcon, badge: "New" },
+    { to: "/landmarks", label: "Landmarks", detail: "Three famous sights of a city - name the city", icon: Landmark, badge: "New" },
     { to: "/road-trip", label: "Road Trip", detail: "Drive around the world map and uncover the flags beneath it", icon: Car, badge: "New" },
     { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: PaintFlagIcon },
     { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border", icon: BorderGuessIcon },

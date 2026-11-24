@@ -131,49 +131,62 @@ export const DailyDeductionIcon = dailyIcon("DailyDeductionIcon", fine => (
 
 const FLAGLE_INK = "#053b2c"
 const FLAGLE_GREEN = "#10b981"
-const CLOTH = "M16.4 16.2 C19.5 13.6 24 13 27 16 C29.8 18.8 32.5 19.2 37.6 17.4 L36 31.2 C33.2 33.6 30.4 33.4 27.4 31 C24 28.4 20 28.4 15.3 31.2 Z"
-
-const BRACKETS = [
-    { d: "M8 14 V10.5 Q8 8 10.5 8 H14", dx: 1.6, dy: 1.6 },
-    { d: "M34 8 H37.5 Q40 8 40 10.5 V14", dx: -1.6, dy: 1.6 },
-    { d: "M8 34 V37.5 Q8 40 10.5 40 H14", dx: 1.6, dy: -1.6 },
-    { d: "M34 40 H37.5 Q40 40 40 37.5 V34", dx: -1.6, dy: -1.6 },
+const FOIL = "#c3c9d2"
+const FOIL_DARK = "#a9b1bd"
+const CARD = "M10 10 H35 Q39 10 39 14 V30 Q39 34 35 34 H10 Q6 34 6 30 V14 Q6 10 10 10 Z"
+/** The scratched-off stripe, jagged where the coin tore the foil. */
+const SCRATCH = "M8.6 26 L13.4 20.2 L14 23 L19 18 L19.6 21 L25 16 L25.6 19 L31 14.2 L31.6 17.4 L37 15.6 L35.2 19.6 L37.6 21.6 L35.4 24.6 L36 27 L31 29.8 L30.6 27.4 L25 30.8 L24.6 28.4 L19 31.2 L18.6 28.8 L13.2 30.8 L12.8 28.4 L9 29.4 Z"
+/** Foil flakes coming off the card, each with the way it flies on hover. */
+const FLAKES = [
+    { d: "M15.6 39.6 L18.6 37.4 L20.6 40 L17.2 41.8 Z", dx: -1.4, dy: 1.6 },
+    { d: "M21.6 36.4 L25.2 35.6 L25.4 38.8 L22.2 39.2 Z", dx: -0.6, dy: 2 },
+    { d: "M23.4 42 L26.6 40.4 L28 43.2 L24.6 44.2 Z", dx: 0.4, dy: 1.8 },
 ]
 
 export const DailyFlagleIcon = dailyIcon("DailyFlagleIcon", (fine, uid) => (
     <>
         <defs>
-            <clipPath id={`${uid}cloth`}>
-                <path d={CLOTH} />
+            <clipPath id={`${uid}card`}>
+                <path d={CARD} />
+            </clipPath>
+            <clipPath id={`${uid}scratch`}>
+                <path d={SCRATCH} />
             </clipPath>
         </defs>
-        {BRACKETS.map(({ d, dx, dy }) => (
-            <g key={d} className="di-focus" style={{ "--dx": `${dx}px`, "--dy": `${dy}px` } as CSSProperties}>
-                <Tube d={d} color={FLAGLE_GREEN} ink={FLAGLE_INK} width={2.6} />
-            </g>
-        ))}
-        <g className="di-cloth" style={origin(15.8, 23.6)}>
-            <path d={CLOTH} fill="#059669" />
-            <g clipPath={`url(#${uid}cloth)`}>
-                <path d="M14 28 C20 25.4 24 25.4 27.4 28 C30.4 30.4 33.2 30.6 40 28 V40 H14 Z" fill="#047857" />
-                <path d="M32.6 12 L42 12 L42 38 L30.8 38 Z" fill="#6ee7b7" />
-            </g>
-            <path d={CLOTH} fill="none" stroke={FLAGLE_INK} strokeWidth={2} strokeLinejoin="round" />
-            {fine && <Glint d="M19.2 18.2 C20.6 16.8 22.4 16.3 24 16.4" width={1.2} />}
-            {fine && <Glint d="M34.3 24.6 L33.8 27.4" width={1.2} />}
+        <path d={CARD} fill={FOIL} />
+        <path d="M4 30 L41 25 V36 H4 Z" fill={FOIL_DARK} clipPath={`url(#${uid}card)`} />
+        <path d={CARD} fill="none" stroke={FLAGLE_INK} strokeWidth={2.2} strokeLinejoin="round" />
+        {fine && <Glint d="M9.6 17 Q9.6 13.4 13 13.4" width={1.3} />}
+        {fine && <Glint d="M15.6 13.4 h0.4" width={1.3} />}
+
+        <g clipPath={`url(#${uid}scratch)`}>
+            <rect x={6} y={12} width={34} height={22} fill={FLAGLE_GREEN} />
+            <path d="M6 24.8 L40 22.6 V34 H6 Z" fill="#fff" />
+            <path d="M6 30 L40 28.6 V34 H6 Z" fill="#e2e8f0" />
         </g>
-        <Tube d="M15.3 14.4 L12.9 36" color={FLAGLE_GREEN} ink={FLAGLE_INK} width={2} />
-        <circle cx={15.5} cy={12.6} r={2.4} fill={FLAGLE_GREEN} stroke={FLAGLE_INK} strokeWidth={1.8} />
-        {fine && <Glint d="M14.6 11.9 l0.6 -0.5" width={0.9} />}
-        <path
-            className="di-twinkle"
-            style={origin(33.6, 13.4)}
-            d="M33.6 10.6 Q34.1 12.9 36.4 13.4 Q34.1 13.9 33.6 16.2 Q33.1 13.9 30.8 13.4 Q33.1 12.9 33.6 10.6 Z"
-            fill="#fbbf24"
-            stroke={FLAGLE_INK}
-            strokeWidth={1.3}
-            strokeLinejoin="round"
-        />
+        <path d={SCRATCH} fill="none" stroke={FLAGLE_INK} strokeWidth={1.3} strokeLinejoin="round" />
+
+        {FLAKES.map(({ d, dx, dy }) => (
+            <path
+                key={d}
+                className="di-focus"
+                style={{ "--dx": `${dx}px`, "--dy": `${dy}px` } as CSSProperties}
+                d={d}
+                fill="#dfe3e8"
+                stroke={FLAGLE_INK}
+                strokeWidth={1}
+                strokeLinejoin="round"
+            />
+        ))}
+
+        <g className="di-scrape" style={origin(35.8, 31)}>
+            <g transform="rotate(32 35.8 31)">
+                <ellipse cx={37.4} cy={32.2} rx={7.4} ry={9} fill="#d99a12" stroke={FLAGLE_INK} strokeWidth={2.2} />
+                <ellipse cx={35.8} cy={31} rx={7.4} ry={9} fill="#fbbf24" stroke={FLAGLE_INK} strokeWidth={2.2} />
+                <ellipse cx={35.8} cy={31} rx={5.2} ry={6.6} fill="#fcd34d" />
+                {fine && <Glint d="M32.4 27.4 Q33.4 25 35.6 24.6" width={1.4} />}
+            </g>
+        </g>
     </>
 ))
 
@@ -218,6 +231,70 @@ export const DailyTriviaIcon = dailyIcon("DailyTriviaIcon", (fine, uid) => (
         <rect x={19.2} y={37.6} width={9.6} height={2.8} rx={1.4} fill="#94a3b8" stroke={TRIVIA_INK} strokeWidth={1.6} />
         {fine && <Glint d="M20.4 35.8 H22.6" width={0.9} />}
         <path d="M21.8 40.4 Q24 43.4 26.2 40.4" fill="#64748b" stroke={TRIVIA_INK} strokeWidth={1.5} strokeLinejoin="round" />
+    </>
+))
+
+/* ------------------------------------------------------------------ */
+
+const LANDMARKS_INK = "#0b2e22"
+const LM_GREEN = "#10b981"
+const LM_GREEN_DARK = "#059669"
+const LM_GOLD = "#fbbf24"
+const LM_GOLD_DARK = "#e9a20c"
+const LM_CREAM = "#fdf3dc"
+const LM_CREAM_DARK = "#efdfb8"
+const LM_SKY = "#d3e3ec"
+const LM_STONE = "#cbd2d9"
+const LM_LINE = { stroke: LANDMARKS_INK, strokeWidth: 1.5, strokeLinejoin: "round" } as const
+const DOME = "M31.9 23.4 A5.8 5.8 0 0 1 43.5 23.4 Z"
+/** The bridge's deck and pier, with the arch cut out underneath. */
+const PIER = "M12.6 29.2 Q22 27.6 31 29.2 V35.8 H26.6 C26.6 32.8 24.6 31.4 22 31.4 C19.4 31.4 17.4 32.8 17.4 35.8 H12.6 Z"
+const UNDER_ARCH = "M17.4 35.8 C17.4 32.8 19.4 31.4 22 31.4 C24.6 31.4 26.6 32.8 26.6 35.8 Z"
+/** The towers and the beam between them, notched at the top like the drawing. */
+const PORTAL = "M15.9 28.8 V18.2 Q15.9 17.6 16.5 17.6 H18.6 Q19.2 17.6 19.2 18.2 V19.6 H28.6 V18.2 Q28.6 17.6 29.2 17.6 H31.3 Q31.9 17.6 31.9 18.2 V28.8 Z"
+const PORTAL_ARCH = "M19.6 28.8 V24.4 C19.6 22.6 21.4 21.6 23.9 21.6 C26.4 21.6 28.2 22.6 28.2 24.4 V28.8 Z"
+
+/** graphic/daily_landmarks.png [1,1]: a skyline of a clock tower, a bridge and a dome. The clock's hand goes round and the dome's lantern hops on hover. */
+export const DailyLandmarksIcon = dailyIcon("DailyLandmarksIcon", fine => (
+    <>
+        {/* Bridge, behind the other two */}
+        <path d="M12.8 29 L16.4 19 M14.6 28.6 L16.4 23.4 M35 29 L31.4 19 M33.2 28.6 L31.4 23.4" stroke={LANDMARKS_INK} strokeWidth={1} strokeLinecap="round" />
+        <path d={PORTAL} fill={LM_GOLD} {...LM_LINE} />
+        <path d={PORTAL_ARCH} fill={LM_SKY} {...LM_LINE} />
+        <path d="M17.4 18.8 V28 M30.4 18.8 V28" stroke={LM_GOLD_DARK} strokeWidth={0.9} />
+        <path d={UNDER_ARCH} fill={LM_SKY} />
+        <path d={PIER} fill={LM_STONE} {...LM_LINE} />
+        <path d="M12.6 31 Q22 29.4 31 31" fill="none" stroke={LANDMARKS_INK} strokeWidth={1.1} />
+        <path d="M12.8 35.8 V34 A2.2 2.2 0 0 1 17.2 34 V35.8 Z M26.8 35.8 V34 A2.1 2.1 0 0 1 31 34 V35.8 Z" fill={LM_GREEN} {...LM_LINE} />
+
+        {/* Clock tower */}
+        <path d="M8.4 10.8 L11.4 17.6 H5.4 Z" fill={LM_GREEN} {...LM_LINE} />
+        {fine && <Glint d="M7.8 13.4 L7 15.4" width={0.8} />}
+        <rect x={4.6} y={17.6} width={7.6} height={2.2} rx={0.5} fill={LM_GREEN_DARK} {...LM_LINE} />
+        <rect x={5.3} y={26.6} width={6.2} height={9.2} fill={LM_GOLD} {...LM_LINE} />
+        <rect x={9.6} y={27.4} width={1.2} height={7.6} fill={LM_GOLD_DARK} />
+        <path d="M7.4 28.8 V33.4 M9.2 28.8 V33.4" stroke={LANDMARKS_INK} strokeWidth={1.1} strokeLinecap="round" />
+        <rect x={4.6} y={19.8} width={7.6} height={6.8} rx={0.5} fill={LM_GOLD} {...LM_LINE} />
+        <circle cx={8.4} cy={23.2} r={2.4} fill="#fff" stroke={LANDMARKS_INK} strokeWidth={1.2} />
+        <path d="M8.4 23.2 H9.6" stroke={LANDMARKS_INK} strokeWidth={0.9} strokeLinecap="round" />
+        <path className="di-tick" style={origin(8.4, 23.2)} d="M8.4 23.2 V21.6" stroke={LANDMARKS_INK} strokeWidth={0.9} strokeLinecap="round" />
+
+        {/* Domed building */}
+        <rect x={31.6} y={27.8} width={12.2} height={8} fill={LM_CREAM} {...LM_LINE} />
+        <rect x={40.6} y={28.6} width={2.4} height={6.4} fill={LM_CREAM_DARK} />
+        <path d="M34 29.8 V33.4 M41.4 29.8 V33.4" stroke={LANDMARKS_INK} strokeWidth={1.1} strokeLinecap="round" />
+        <path d="M36.2 35.8 V32 A1.5 1.5 0 0 1 39.2 32 V35.8 Z" fill={LM_GREEN} {...LM_LINE} />
+        <rect x={30.6} y={26.2} width={14.2} height={1.8} rx={0.5} fill={LM_CREAM_DARK} {...LM_LINE} />
+        <rect x={32.2} y={23.4} width={11} height={2.8} fill={LM_CREAM} {...LM_LINE} />
+        <path d="M34.8 24.2 V25.4 M37.7 24.2 V25.4 M40.6 24.2 V25.4" stroke={LANDMARKS_INK} strokeWidth={0.9} strokeLinecap="round" />
+        <path d={DOME} fill={LM_GREEN} {...LM_LINE} />
+        {fine && <Glint d="M34.6 21.2 A4 4 0 0 1 36.2 19.4" width={0.9} />}
+        <g className="di-hop">
+            <path d="M37.7 17.6 V16.6" stroke={LANDMARKS_INK} strokeWidth={1.2} strokeLinecap="round" />
+            <circle cx={37.7} cy={15.8} r={1} fill={LM_GREEN} stroke={LANDMARKS_INK} strokeWidth={1.1} />
+        </g>
+
+        <path d="M3 35.8 H45" stroke={LANDMARKS_INK} strokeWidth={2} strokeLinecap="round" />
     </>
 ))
 

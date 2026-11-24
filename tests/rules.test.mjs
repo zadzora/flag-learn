@@ -566,3 +566,26 @@ describe("supporters: the cosmetics a payment unlocks", () => {
         await assertFails(guest().ref("supporterLedger").once("value"))
     })
 })
+
+describe("badge rarity counters", () => {
+    test("anyone reads them and adds one, player and tiers in one update", async () => {
+        await assertSucceeds(guest().ref("badgeStats").once("value"))
+        await assertSucceeds(guest().ref("badgeStats").update({ players: 1, "badges/flags/t1": 1, "badges/flags/t2": 1 }))
+        await assertSucceeds(guest().ref("badgeStats").update({ players: 2, "badges/flags/t1": 2, "badges/all-rounder/t4": 1 }))
+        await assertSucceeds(anon("alice").ref("badgeStats/badges/flags/t1").set(3))
+    })
+
+    test("they only ever go up by one, and only for real badges and tiers", async () => {
+        await seed("badgeStats", { players: 5, badges: { flags: { t1: 5 } } })
+        const db = guest()
+        await assertFails(db.ref("badgeStats/players").set(7))
+        await assertFails(db.ref("badgeStats/players").set(4))
+        await assertFails(db.ref("badgeStats/players").remove())
+        await assertFails(db.ref("badgeStats/badges/flags/t1").set(0))
+        await assertFails(db.ref("badgeStats/badges/flags/t1").set("6"))
+        await assertFails(db.ref("badgeStats/badges/flags/t5").set(1))
+        await assertFails(db.ref("badgeStats/badges/made-up/t1").set(1))
+        await assertFails(db.ref("badgeStats/elsewhere").set(1))
+        await assertFails(db.ref("badgeStats").set({ players: 6 }))
+    })
+})

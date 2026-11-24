@@ -117,15 +117,28 @@
         }
       }
     },
+    "badgeStats": {
+      ".read": true,
+      "players": {
+        ".write": "newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))"
+      },
+      "badges": {
+        "$track": {
+          "$tier": {
+            ".write": "$track.matches(/^(flags|capitals|us-states|continents|map|capital-map|sharp-eye|paint|word-wheel|higher-lower|trivia|constellations|elements|quantities|formulas|flagle|connections|deduction|trivia-daily|rally|full-day|road-trip|stamps|landmarks|ferries|drift|border-chain|conqueror|pvp|trivia-battle|highscore|scholar|streak|dedication|all-rounder)$/) && $tier.matches(/^t[1-4]$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))"
+          }
+        }
+      }
+    },
     "dailyStats": {
       ".read": true,
       "$game": {
         "$date": {
           "best": {
-            ".write": "$game.matches(/^(flagle|connections|deduction|trivia|road-trip-rally|elementle|chem-connections)$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.isNumber() && newData.val() >= 1000 && newData.val() < 86400000 && (!data.exists() || newData.val() < data.val())"
+            ".write": "$game.matches(/^(flagle|connections|deduction|trivia|road-trip-rally|elementle|chem-connections|landmarks)$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.isNumber() && newData.val() >= 1000 && newData.val() < 86400000 && (!data.exists() || newData.val() < data.val())"
           },
           "$bucket": {
-            ".write": "$game.matches(/^(flagle|connections|deduction|trivia|road-trip-rally|elementle|chem-connections)$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $bucket.matches(/^(g[1-9]|fail)$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+            ".write": "$game.matches(/^(flagle|connections|deduction|trivia|road-trip-rally|elementle|chem-connections|landmarks)$/) && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $bucket.matches(/^(g[1-9]|fail)$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
             ".validate": "newData.isNumber() && newData.val() >= 0"
           }
         }
@@ -252,7 +265,7 @@
             ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
           },
           "types": {
-            ".validate": "newData.isString() && newData.val().length <= 120 && newData.val().matches(/^(choice|multi|order|number|typed|letters|match|pin|realflag|jigsaw|compass|clues)(,(choice|multi|order|number|typed|letters|match|pin|realflag|jigsaw|compass|clues))*$/)"
+            ".validate": "newData.isString() && newData.val().length <= 120 && newData.val().matches(/^(choice|multi|order|number|typed|letters|match|pin|realflag|jigsaw|compass|clues|city)(,(choice|multi|order|number|typed|letters|match|pin|realflag|jigsaw|compass|clues|city))*$/)"
           },
           "auto": {
             ".validate": "newData.isBoolean()"
@@ -464,7 +477,7 @@
         "save": {
           "$key": {
             ".write": "auth != null && auth.uid === $uid && (auth.token.firebase.sign_in_provider === 'google.com' || auth.token.email_verified === true)",
-            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
+            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|landmarks-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|landmarks-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
             "v": {
               ".validate": true
             },
@@ -479,7 +492,7 @@
         "backup": {
           ".write": "auth != null && auth.uid === $uid && (auth.token.firebase.sign_in_provider === 'google.com' || auth.token.email_verified === true)",
           "$key": {
-            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
+            ".validate": "$key.matches(/^(flag-master-(v1|extra-[a-z]+-v1|capitals-v1|us-v1|map-v1|constellations-v1|profile-v1|daily-streak|connections-streak|trivia-streak|deduction-streak|wars-streak|rally-streak|elementle-streak|chem-connections-streak|landmarks-streak|daily-save|connections-save|deduction-save|trivia-daily-save|elementle-save|chem-connections-save|landmarks-save|word-wheel-level|nickname|map-speedrun-name|player-id-v1|theme|tutorial-dismissed|blur-intro-seen|wars-intro-seen)|science-(elements-(symbol|name|category|locate)|quantities-(unit|symbol)|formulas-(physics|math)|compounds-(name|formula|ions))-v1|road-trip-(v1|log-v1|rally-save)|capital-map-v1|border-guess-v1|flags-paint-(v1|hints-v1))$/) && newData.hasChildren(['v','at']) && newData.child('v').isString() && (newData.child('v').val().length <= 100000 || ($key === 'road-trip-v1' && newData.child('v').val().length <= 2000000)) && newData.child('at').isNumber() && newData.child('at').val() <= now",
             "v": {
               ".validate": true
             },

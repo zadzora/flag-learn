@@ -11,6 +11,8 @@ import { Analytics } from "@vercel/analytics/react"
 import DailyFlagle from "./pages/DailyFlagle"
 import DailyConnections from "./pages/DailyConnections"
 import DailyDeduction from "./pages/DailyDeduction"
+import DailyLandmarks from "./pages/DailyLandmarks"
+import LandmarksGame from "./pages/LandmarksGame"
 import MapGame from "./pages/MapGame"
 import CapitalMapGame from "./pages/CapitalMapGame"
 import ConstellationGame from "./pages/ConstellationGame"
@@ -88,6 +90,8 @@ export default function App() {
                 <Route path="/daily" element={<DailyFlagle />} />
                 <Route path="/daily-connections" element={<DailyConnections />} />
                 <Route path="/daily-deduction" element={<DailyDeduction />} />
+                <Route path="/daily-landmarks" element={<DailyLandmarks />} />
+                <Route path="/landmarks" element={<LandmarksGame />} />
                 <Route path="/map" element={<MapGame key="learn" />} />
                 <Route path="/map-speedrun" element={<MapGame key="speedrun" mode="speedrun" />} />
                 <Route path="/capital-map" element={<CapitalMapGame key="learn" />} />

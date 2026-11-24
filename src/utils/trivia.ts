@@ -21,8 +21,9 @@ const FLAG_FACTS = flagFactsData as Record<string, string>
 
 import { resolveTextAnswer } from "./textAnswerMatch"
 import { seededRng } from "./dailySeed"
+import { CITIES, cityById, pickClues, type City } from "./cityLandmarks"
 
-export type QuestionType = "choice" | "multi" | "order" | "number" | "typed" | "letters" | "match" | "pin" | "realflag" | "jigsaw" | "compass" | "clues"
+export type QuestionType = "choice" | "multi" | "order" | "number" | "typed" | "letters" | "match" | "pin" | "realflag" | "jigsaw" | "compass" | "clues" | "city"
 
 export type TriviaImage = { flag?: string; shape?: string; map?: string; text?: string; lang?: string }
 
@@ -58,6 +59,8 @@ export type TriviaQuestion = Base & (
     | { type: "clues"; clues: string[] }
     /** Generated from the capitals: which way one lies from another on a map, in degrees from north. */
     | { type: "compass"; from: string; to: string; bearing: number }
+    /** Generated from data/cityLandmarks.json: three of a city's sights (indices into its list, hardest first); the answer is the city. */
+    | { type: "city"; city: string; picks: number[] }
 )
 
 export const TYPE_INFO: Record<QuestionType, { label: string; seconds: number }> = {
@@ -73,6 +76,7 @@ export const TYPE_INFO: Record<QuestionType, { label: string; seconds: number }>
     jigsaw: { label: "Fix the flag", seconds: 35 },
     compass: { label: "Which way?", seconds: 15 },
     clues: { label: "Who am I?", seconds: 30 },
+    city: { label: "Which city?", seconds: 30 },
 }
 
 export const CATEGORY_LABEL: Record<string, string> = {
@@ -98,7 +102,7 @@ export const DOUBLE_CHANCE = 0.15
  * foreign script, given its own small share so it turns up now and then.
  */
 type Bucket = QuestionType | "script"
-const MIX: Record<Bucket, number> = { choice: 80, script: 2, multi: 8, order: 8, number: 8, typed: 8, letters: 4, match: 7, pin: 8, realflag: 7, jigsaw: 7, compass: 6, clues: 7 }
+const MIX: Record<Bucket, number> = { choice: 80, script: 2, multi: 8, order: 8, number: 8, typed: 8, letters: 4, match: 7, pin: 8, realflag: 7, jigsaw: 7, compass: 6, clues: 7, city: 6 }
 const BUCKETS = Object.keys(MIX) as Bucket[]
 const bucketOf = (q: TriviaQuestion): Bucket => (q.type === "choice" && q.image?.text ? "script" : q.type)
 
@@ -145,7 +149,7 @@ let bankPromise: Promise<Loaded[]> | null = null
 export function loadBank(): Promise<Loaded[]> {
     bankPromise ??= Promise.all(Object.values(PACKS).map(load => load())).then(modules => {
         const written = modules.flatMap(m => (m.default as unknown as Record<string, unknown>[]).map(prepare))
-        return [...written, ...flagQuestions(written), ...compassQuestions()]
+        return [...written, ...flagQuestions(written), ...compassQuestions(), ...cityQuestions()]
     })
     // A failed load is not kept: one bad moment on the network would otherwise
     // break every trivia page in the tab until a full reload.
@@ -263,7 +267,11 @@ export type QuizSettings = { length: number; region: Region; only: QuestionType 
  */
 export function dealSeeded(bank: Loaded[], seed: string, length: number): Dealt[] {
     const rng = seededRng(seed)
-    const fixed = [...bank.filter(q => q.type !== "compass"), ...compassQuestions(seededRng(`${seed}:compass`))]
+    const fixed = [
+        ...bank.filter(q => q.type !== "compass" && q.type !== "city"),
+        ...compassQuestions(seededRng(`${seed}:compass`)),
+        ...cityQuestions(seededRng(`${seed}:city`)),
+    ]
     return dealQuiz(fixed, { length, region: "", only: "" }, { rng, ignoreSeen: true })
 }
 
@@ -492,7 +500,30 @@ export function questionById(bank: Loaded[], id: string): Loaded | undefined {
     const found = bank.find(q => q.id === id)
     if (found) return found
     const m = /^cp-([a-z]{2})-([a-z]{2})$/.exec(id)
-    return m ? compassQuestion(m[1], m[2]) ?? undefined : undefined
+    if (m) return compassQuestion(m[1], m[2]) ?? undefined
+    const c = /^ct-([a-z0-9-]+)-([0-9]{3})$/.exec(id)
+    const city = c ? cityById(c[1]) : undefined
+    return city ? cityQuestion(city, [...c![2]].map(Number)) ?? undefined : undefined
+}
+
+// --- City questions ----------------------------------------------------------
+
+/**
+ * "Which city?" - one per city in data/cityLandmarks.json, each with its own
+ * three sights drawn fresh on every visit (seeded for the daily quiz). The
+ * three are in the id (`ct-london-603`), so a room or a report can rebuild the
+ * exact question.
+ */
+function cityQuestions(rng: () => number = Math.random): Loaded[] {
+    return CITIES.flatMap(city => cityQuestion(city, pickClues(city, rng)) ?? [])
+}
+
+function cityQuestion(city: City, picks: number[]): Loaded | null {
+    if (picks.length !== 3 || picks.some(i => !city.landmarks[i]) || new Set(picks).size !== 3 || city.landmarks.length > 10) return null
+    return prepare({
+        id: `ct-${city.id}-${picks.join("")}`, type: "city", kind: "about", country: [city.country], cat: "places",
+        level: city.level, q: "Which city has these sights?", city: city.id, picks, fact: city.fact,
+    })
 }
 
 /** Which of the eight named directions a bearing falls in (0 = north). */

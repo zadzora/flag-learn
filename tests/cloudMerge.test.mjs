@@ -15,6 +15,12 @@ const join = (key, base, local, remote) => {
     return out === null ? null : spec(key).kind === "json" ? JSON.parse(out) : out
 }
 
+test("badge tiers counted for rarity on either device stay counted", () => {
+    const profile = reported => JSON.stringify({ since: "2026-11-01", earned: {}, reported })
+    const out = join("flag-master-profile-v1", profile({}), profile({ flags: 2 }), profile({ flags: 1, drift: 3 }))
+    assert.deepEqual(out.reported, { flags: 2, drift: 3 })
+})
+
 test("a review missed here and progress made elsewhere both survive", () => {
     const base = flags({ fr: { streak: 3, seen: 1 }, de: { streak: 1, seen: 1 } })
     const local = flags({ fr: { streak: 0, seen: 1 }, de: { streak: 1, seen: 1 } })

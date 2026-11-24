@@ -1,15 +1,21 @@
 import { useEffect, useState, useMemo, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Trophy, X, Check, MapPin } from "lucide-react"
+import { Trophy, X, Check, MapPin, Share2, Volume2, VolumeX, Eye, EyeOff } from "lucide-react"
 import { StreakMark } from "../components/SupporterAccent"
 import worldData from "../../data/flags.json"
 import { resolveTextAnswer, typoFeedbackForStreak, TYPO_FEEDBACK_DAILY_GUESS } from "../utils/textAnswerMatch"
 import { computeStanding, subscribeDailyStats, submitDailyResult, type DailyDistribution } from "../utils/dailyStats"
 import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
-import TopBar from "../components/TopBar"
+import TopBar, { BarButton } from "../components/TopBar"
+import ScratchCard from "../components/ScratchCard"
 import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
+import { dailyNumber } from "../utils/dailySeed"
 import SnowCap from "../components/SnowCap"
+import {
+    BAND_COUNT, BAND_LABELS, MAX_GUESSES, WRONG_GUESS_COST,
+    formatShare, gridFromStrokes, pointsBucket, pointsFor, shareGrid, shareOf, type SavedStroke,
+} from "../utils/flagleScratch"
+import { isScratchMuted, setScratchMuted } from "../utils/scratchSound"
 
 // Types
 type Flag = {
@@ -19,13 +25,52 @@ type Flag = {
     image: string
 }
 
+type Status = 'playing' | 'won' | 'lost'
+type BonusStatus = 'idle' | 'playing' | 'won' | 'lost'
+
+/**
+ * Today's run. `strokes` is what was scratched (see `flagleScratch.ts`) - kept
+ * so a reload puts the same card back rather than a fresh one. `points` is set
+ * when the flag is named; a save from before the scratch card has neither.
+ */
+type FlagleSave = {
+    date: string
+    guesses: string[]
+    status: Status
+    bonusStatus: BonusStatus
+    statsSubmitted: boolean
+    brokeStreak: boolean
+    strokes: SavedStroke[]
+    points: number | null
+}
+
 const THEME_KEY = "flag-master-theme"
 const DAILY_STORAGE_KEY = "flag-master-daily-save"
-const MAX_GUESSES = 6
 const DAILY_GAME_KEY = "flagle"
 
-// Controls the scale of the image based on mistake count (harder zoom)
-const ZOOM_LEVELS = [7, 5, 4, 3, 2, 1]
+function loadSave(date: string): FlagleSave {
+    const fresh: FlagleSave = { date, guesses: [], status: 'playing', bonusStatus: 'idle', statsSubmitted: false, brokeStreak: false, strokes: [], points: null }
+    try {
+        const raw = localStorage.getItem(DAILY_STORAGE_KEY)
+        const p = raw ? JSON.parse(raw) as Partial<FlagleSave> : null
+        if (!p || p.date !== date) return fresh
+        const strokes = Array.isArray(p.strokes)
+            ? p.strokes.filter((s): s is number[] => Array.isArray(s) && s.length >= 2 && s.every(n => typeof n === 'number' && n >= 0 && n <= 1000))
+            : []
+        return {
+            date,
+            guesses: Array.isArray(p.guesses) ? p.guesses.filter(g => typeof g === 'string') : [],
+            status: p.status === 'won' || p.status === 'lost' ? p.status : 'playing',
+            bonusStatus: p.bonusStatus === 'playing' || p.bonusStatus === 'won' || p.bonusStatus === 'lost' ? p.bonusStatus : 'idle',
+            statsSubmitted: p.statsSubmitted === true,
+            brokeStreak: p.brokeStreak === true,
+            strokes,
+            points: typeof p.points === 'number' ? p.points : null,
+        }
+    } catch {
+        return fresh
+    }
+}
 
 export default function DailyFlagle() {
     const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" }) // Format: YYYY-MM-DD
@@ -60,72 +105,29 @@ export default function DailyFlagle() {
         return validFlags[index]
     }, [todayStr, validFlags])
 
-    // --- GAME STATE WITH LAZY INITIALIZATION ---
-    // This reads from localStorage exactly ONCE during the first render
-    const [guesses, setGuesses] = useState<string[]>(() => {
-        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved)
-                if (parsed.date === todayStr) return parsed.guesses || []
-            } catch (e) {}
-        }
-        return []
-    })
-
-    const [status, setStatus] = useState<'playing' | 'won' | 'lost'>(() => {
-        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved)
-                if (parsed.date === todayStr) return parsed.status || 'playing'
-            } catch (e) {}
-        }
-        return 'playing'
-    })
-
-    const [bonusStatus, setBonusStatus] = useState<'idle' | 'playing' | 'won' | 'lost'>(() => {
-        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved)
-                if (parsed.date === todayStr) return parsed.bonusStatus || 'idle'
-            } catch (e) {}
-        }
-        return 'idle'
-    })
-
+    // --- GAME STATE, read from the save exactly once ---
+    const [initial] = useState(() => loadSave(todayStr))
+    const [guesses, setGuesses] = useState<string[]>(initial.guesses)
+    const [status, setStatus] = useState<Status>(initial.status)
+    const [bonusStatus, setBonusStatus] = useState<BonusStatus>(initial.bonusStatus)
     // Was today's result already added to the global counters? Kept in the daily
     // save so a refresh never counts the same player twice.
-    const [statsSubmitted, setStatsSubmitted] = useState<boolean>(() => {
-        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved)
-                if (parsed.date === todayStr) return parsed.statsSubmitted === true
-            } catch (e) {}
-        }
-        return false
-    })
-
+    const [statsSubmitted, setStatsSubmitted] = useState(initial.statsSubmitted)
     // Did today's loss end a running streak? Saved so the message stays put
     // after a refresh, by which point the stored streak is already zeroed.
-    const [brokeStreak, setBrokeStreak] = useState<boolean>(() => {
-        const saved = localStorage.getItem(DAILY_STORAGE_KEY)
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved)
-                if (parsed.date === todayStr) return parsed.brokeStreak === true
-            } catch { /* corrupt save - fall through */ }
-        }
-        return false
-    })
+    const [brokeStreak, setBrokeStreak] = useState(initial.brokeStreak)
+    const [strokes, setStrokes] = useState<SavedStroke[]>(initial.strokes)
+    const [share, setShare] = useState(() => shareOf(gridFromStrokes(initial.strokes)))
+    const [points, setPoints] = useState<number | null>(initial.points)
 
     const [distribution, setDistribution] = useState<DailyDistribution | null>(null)
     const [statsError, setStatsError] = useState(false)
 
     const [input, setInput] = useState("")
     const [feedback, setFeedback] = useState<string | null>(null)
+    const [muted, setMutedState] = useState(isScratchMuted)
+    const [peek, setPeek] = useState(false)
+    const [copied, setCopied] = useState(false)
 
     // Consecutive days solved. Lives in its own localStorage key so the home
     // screen can read it without loading the daily save.
@@ -136,38 +138,37 @@ export default function DailyFlagle() {
     const submitLockRef = useRef(false)
 
     // --- SAVE PROGRESS ---
-    // Only runs when state actually changes
     useEffect(() => {
-        const dataToSave = {
-            date: todayStr,
-            guesses,
-            status,
-            bonusStatus,
-            statsSubmitted,
-            brokeStreak
+        const save: FlagleSave = { date: todayStr, guesses, status, bonusStatus, statsSubmitted, brokeStreak, strokes, points }
+        try {
+            localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(save))
+        } catch {
+            // Private mode or full storage: the game still plays, it just is not remembered.
         }
-        localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(dataToSave))
-    }, [guesses, status, bonusStatus, statsSubmitted, brokeStreak, todayStr])
+    }, [guesses, status, bonusStatus, statsSubmitted, brokeStreak, strokes, points, todayStr])
+
+    // A save from before the scratch card has a result but no points; it keeps its old guess bucket.
+    const myBucket = status !== 'won' ? null : points !== null ? pointsBucket(points) : Math.min(guesses.length, BAND_COUNT)
 
     // --- DAILY STANDINGS ---
     // Report our result once the game is over, then watch the live distribution.
     useEffect(() => {
         if (status === 'playing' || statsSubmitted || submitLockRef.current) return
         submitLockRef.current = true
-        submitDailyResult(DAILY_GAME_KEY, todayStr, MAX_GUESSES, status === 'won' ? guesses.length : null)
+        submitDailyResult(DAILY_GAME_KEY, todayStr, BAND_COUNT, myBucket)
             .then(() => setStatsSubmitted(true))
             .catch(() => {
                 submitLockRef.current = false
                 setStatsError(true)
             })
-    }, [status, statsSubmitted, guesses.length, todayStr])
+    }, [status, statsSubmitted, myBucket, todayStr])
 
     useEffect(() => {
         if (status === 'playing') return
         const unsubscribe = subscribeDailyStats(
             DAILY_GAME_KEY,
             todayStr,
-            MAX_GUESSES,
+            BAND_COUNT,
             (next) => {
                 setDistribution(next)
                 setStatsError(false)
@@ -186,6 +187,11 @@ export default function DailyFlagle() {
         return f.capital && f.capital[0] ? f.capital[0] : ""
     }
 
+    function say(text: string, ms = 2200) {
+        setFeedback(text)
+        setTimeout(() => setFeedback(prev => (prev === text ? null : prev)), ms)
+    }
+
     // --- LOGIC ---
     /** Ends the main round: freezes the status and folds the result into the streak. */
     function finish(won: boolean) {
@@ -197,31 +203,27 @@ export default function DailyFlagle() {
 
     function handleGuess() {
         if (!input.trim() || status !== 'playing') return
-
         const accept = Array.isArray(dailyFlag.name) ? [...dailyFlag.name] : [dailyFlag.name]
         const match = resolveTextAnswer(input, accept)
 
         if (match === 'close') {
-            setFeedback(TYPO_FEEDBACK_DAILY_GUESS)
-            setTimeout(() => setFeedback(null), 2800)
+            say(TYPO_FEEDBACK_DAILY_GUESS, 2800)
             setTimeout(() => inputRef.current?.focus(), 100)
             return
         }
 
-        const isCorrect = match === 'exact'
         const newGuesses = [...guesses, input.trim()]
         setGuesses(newGuesses)
         setInput("")
 
-        if (isCorrect) {
+        if (match === 'exact') {
+            setPoints(pointsFor(share, newGuesses.length - 1))
             finish(true)
-            setFeedback("Perfect! 🎉")
-            setTimeout(() => setFeedback(null), 2000)
+            say("Perfect! 🎉", 2000)
         } else if (newGuesses.length >= MAX_GUESSES) {
             finish(false)
         } else {
-            setFeedback("Wrong! The flag zoomed out a bit. 👀")
-            setTimeout(() => setFeedback(null), 2000)
+            say(`Not that one - it cost ${WRONG_GUESS_COST} points.`)
             setTimeout(() => inputRef.current?.focus(), 100)
         }
     }
@@ -233,17 +235,12 @@ export default function DailyFlagle() {
         const match = resolveTextAnswer(input, capitals.length > 0 ? capitals : [getCapital(dailyFlag)])
 
         if (match === 'close') {
-            setFeedback(typoFeedbackForStreak(false))
-            setTimeout(() => setFeedback(null), 2800)
+            say(typoFeedbackForStreak(false), 2800)
             setTimeout(() => inputRef.current?.focus(), 100)
             return
         }
 
-        if (match === 'exact') {
-            setBonusStatus('won')
-        } else {
-            setBonusStatus('lost')
-        }
+        setBonusStatus(match === 'exact' ? 'won' : 'lost')
         setInput("")
     }
 
@@ -252,14 +249,33 @@ export default function DailyFlagle() {
         setTimeout(() => inputRef.current?.focus(), 100)
     }
 
-    const myBucket = status === 'won' ? guesses.length : null
+    function toggleSound() {
+        setScratchMuted(!muted)
+        setMutedState(!muted)
+    }
+
+    async function shareResult() {
+        const head = `Daily Flagle #${dailyNumber(todayStr)} · ${status === 'won' ? `${points ?? '?'} pts` : 'X'}`
+        const detail = status === 'won'
+            ? `Uncovered ${formatShare(share)} · named on guess ${guesses.length}/${MAX_GUESSES}`
+            : `Uncovered ${formatShare(share)} · not named`
+        const text = [head, detail, shareGrid(gridFromStrokes(strokes)), "https://flaglearn.eu/daily"].join("\n")
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch {
+            say("Could not copy - your browser blocked it.")
+        }
+    }
 
     const standing = useMemo(() => {
         if (!distribution) return null
         return computeStanding(distribution, myBucket)
     }, [distribution, myBucket])
 
-    const currentZoom = status === 'playing' ? ZOOM_LEVELS[guesses.length] : 1
+    const playing = status === 'playing'
+    const worth = pointsFor(share, guesses.length)
 
     // --- RENDER ---
     const panel = "relative rounded-[10px] border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
@@ -272,62 +288,86 @@ export default function DailyFlagle() {
     return (
         <div className="flex min-h-screen flex-col text-slate-900 dark:text-[#E8ECF6]">
             <TopBar title="Daily Flagle" theme={theme} onToggleTheme={toggleTheme}>
-                <span className="hidden text-sm tabular-nums text-slate-500 sm:block dark:text-slate-400">{todayStr}</span>
+                <span className="hidden text-sm tabular-nums text-slate-500 sm:block dark:text-slate-400">#{dailyNumber(todayStr)}</span>
                 {streak > 0 && (
                     <span className="flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400" title="Day streak">
                         <StreakMark size={15}>{streak}</StreakMark>
                     </span>
                 )}
+                <BarButton onClick={toggleSound} label={muted ? "Turn the scratching sound on" : "Turn the scratching sound off"}>
+                    {muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
+                </BarButton>
             </TopBar>
 
             <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-14 pt-6 sm:pt-8">
 
-                {/* The card stays put; only the zoom and what sits under the flag change. */}
-                <section className={`${panel} flex flex-col gap-5 p-5 sm:p-7`}>
+                <section className={`${panel} flex flex-col gap-4 p-5 sm:p-7`}>
                     <div className="flex min-h-6 items-center justify-between gap-3">
                         <span className={label}>
-                            {status === 'playing' ? 'Name this flag' : "Today's flag"}
+                            {playing ? 'Scratch as little as you can' : "Today's flag"}
                         </span>
-                        <span className="text-xs tabular-nums text-slate-400 sm:hidden dark:text-slate-500">{todayStr}</span>
+                        <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500">{todayStr}</span>
                     </div>
 
-                    {/* Flag Display Area */}
-                    <div className="relative flex h-52 w-full items-center justify-center overflow-hidden rounded-lg sm:h-60">
-                        <motion.img
-                            src={dailyFlag.image}
-                            alt="Daily Flag"
-                            // IMPORTANT: Set initial to currentZoom to prevent 1x flash
-                            initial={{ scale: currentZoom }}
-                            animate={{ scale: currentZoom }}
-                            transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                            className="h-full w-full rounded-[4px] object-contain"
-                            style={{ transformOrigin: 'center center' }}
-                        />
+                    <ScratchCard
+                        image={dailyFlag.image}
+                        seed={todayStr}
+                        initialStrokes={initial.strokes}
+                        active={playing}
+                        uncovered={!playing && !peek}
+                        onShare={setShare}
+                        onStrokes={setStrokes}
+                    >
+                        {!playing && !peek && (
+                            <div className="fl-in pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0A0E1A]/85 via-[#0A0E1A]/55 to-transparent px-4 pb-3 pt-10 text-center">
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-white/70">The flag is</div>
+                                <div className="text-2xl font-extrabold tracking-[-0.02em] text-white sm:text-3xl">{getPrimaryName(dailyFlag)}</div>
+                            </div>
+                        )}
+                    </ScratchCard>
 
-                        {/* End Game Overlay */}
-                        <AnimatePresence>
-                            {status !== 'playing' && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0E1A]/70 p-4"
-                                >
-                                    <div className="mb-1 text-xs font-bold uppercase tracking-wider text-white/70">
-                                        The flag is
-                                    </div>
-                                    <div className="text-center text-3xl font-extrabold tracking-[-0.02em] text-white">
-                                        {getPrimaryName(dailyFlag)}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                    {/* What the card is worth right now - the number the whole game is about. */}
+                    {playing ? (
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-end justify-between gap-3 whitespace-nowrap">
+                                <div className="text-sm text-slate-500 dark:text-slate-400">
+                                    Uncovered <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{formatShare(share)}</span>
+                                </div>
+                                <div className="text-right" title="What naming the flag is worth right now">
+                                    <span className="mr-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400">Worth</span>
+                                    <span className="text-2xl font-extrabold tabular-nums tracking-[-0.02em]">{worth}</span>
+                                    <span className="ml-1 text-sm font-semibold text-slate-500 dark:text-slate-400">pts</span>
+                                </div>
+                            </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-sm bg-slate-200 dark:bg-slate-700" aria-hidden>
+                                <div
+                                    className={`h-full rounded-sm transition-[width,background-color] duration-200 ${worth >= 70 ? 'bg-emerald-500' : worth >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                    style={{ width: `${worth}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Drag to scratch, click for a single dot. Every wrong guess costs {WRONG_GUESS_COST} points.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-sm text-slate-500 dark:text-slate-400">
+                                You uncovered <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{formatShare(share)}</span> of the card
+                            </div>
+                            <button
+                                onClick={() => setPeek(p => !p)}
+                                className={`${quiet} flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold`}
+                            >
+                                {peek ? <><EyeOff size={15} aria-hidden /> Show the flag</> : <><Eye size={15} aria-hidden /> Show my scratches</>}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Guesses Status Bar */}
                     <div className="flex w-full gap-1.5" aria-label={`${guesses.length} of ${MAX_GUESSES} guesses used`}>
                         {Array.from({ length: MAX_GUESSES }).map((_, i) => {
                             const isFilled = i < guesses.length
-                            const isCurrent = i === guesses.length && status === 'playing'
+                            const isCurrent = i === guesses.length && playing
 
                             let bgColor = "bg-slate-200 dark:bg-slate-700"
                             if (isFilled) bgColor = "bg-red-500"
@@ -341,7 +381,7 @@ export default function DailyFlagle() {
                     </div>
 
                     {/* MAIN GAME INPUT */}
-                    {status === 'playing' && (
+                    {playing && (
                         <div className="flex w-full flex-col gap-3">
                             <input
                                 ref={inputRef}
@@ -351,7 +391,6 @@ export default function DailyFlagle() {
                                 placeholder={`Guess ${guesses.length + 1} of ${MAX_GUESSES}...`}
                                 aria-label="Country"
                                 className={field}
-                                autoFocus
                                 autoComplete="off"
                             />
 
@@ -364,7 +403,7 @@ export default function DailyFlagle() {
                                 disabled={!input}
                                 className={`w-full py-4 text-lg font-bold ${input ? primary : disabledBtn}`}
                             >
-                                Submit Guess
+                                Name the flag
                             </button>
                         </div>
                     )}
@@ -372,7 +411,7 @@ export default function DailyFlagle() {
                 </section>
 
                 {/* MAIN GAME ENDED - RESULTS & BONUS START */}
-                {status !== 'playing' && bonusStatus === 'idle' && (
+                {!playing && bonusStatus === 'idle' && (
                     <section className={`${panel} flex flex-col gap-5 p-6 sm:p-7`}>
                         {status === 'won' ? (
                             <>
@@ -381,8 +420,12 @@ export default function DailyFlagle() {
                                         <Trophy size={28} aria-hidden />
                                     </span>
                                     <div className="min-w-0">
-                                        <h2 className="!text-2xl font-bold">Brilliant!</h2>
-                                        <p className="mt-0.5 text-slate-500 dark:text-slate-400">You got it in {guesses.length} {guesses.length === 1 ? 'try' : 'tries'}!</p>
+                                        <h2 className="!text-2xl font-bold">
+                                            {points !== null ? <>{points} points</> : 'Brilliant!'}
+                                        </h2>
+                                        <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+                                            {formatShare(share)} uncovered, named on {guesses.length === 1 ? 'the first guess' : `guess ${guesses.length}`}.
+                                        </p>
                                         {streak > 0 && (
                                             <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-orange-500 dark:text-orange-400">
                                                 <StreakMark size={15}>{streak} day streak</StreakMark>
@@ -390,6 +433,10 @@ export default function DailyFlagle() {
                                         )}
                                     </div>
                                 </div>
+
+                                <button onClick={shareResult} className={`${primary} flex w-full items-center justify-center gap-2 py-3 font-bold`}>
+                                    {copied ? <><Check size={18} aria-hidden /> Copied!</> : <><Share2 size={18} aria-hidden /> Share result</>}
+                                </button>
 
                                 <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
                                     <h3 className={`${label} !text-xs`}>Bonus Round</h3>
@@ -400,17 +447,22 @@ export default function DailyFlagle() {
                                 </div>
                             </>
                         ) : (
-                            <div className="flex items-center gap-4">
-                                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700">
-                                    <X size={28} aria-hidden />
-                                </span>
-                                <div className="min-w-0">
-                                    <h2 className="!text-2xl font-bold">Game Over</h2>
-                                    <p className="mt-0.5 text-slate-500 dark:text-slate-400">
-                                        {brokeStreak ? 'Your streak is back to zero - start a new one tomorrow!' : 'Better luck tomorrow!'}
-                                    </p>
+                            <>
+                                <div className="flex items-center gap-4">
+                                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-red-500 dark:border-slate-700">
+                                        <X size={28} aria-hidden />
+                                    </span>
+                                    <div className="min-w-0">
+                                        <h2 className="!text-2xl font-bold">Game Over</h2>
+                                        <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+                                            {brokeStreak ? 'Your streak is back to zero - start a new one tomorrow!' : 'Better luck tomorrow!'}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                                <button onClick={shareResult} className={`${quiet} flex w-full items-center justify-center gap-2 py-3 font-bold`}>
+                                    {copied ? <><Check size={18} aria-hidden /> Copied!</> : <><Share2 size={18} aria-hidden /> Share result</>}
+                                </button>
+                            </>
                         )}
                         <SnowCap seed="flagle-result" thin />
                     </section>
@@ -439,6 +491,9 @@ export default function DailyFlagle() {
                             className={field}
                             autoComplete="off"
                         />
+                        <div className="flex min-h-6 items-center justify-center px-2 text-center font-bold leading-tight text-red-600 dark:text-red-400">
+                            {feedback && <span key={feedback} className="fl-in">{feedback}</span>}
+                        </div>
                         <button onClick={handleBonusGuess} disabled={!input} className={`w-full py-4 text-lg font-bold ${input ? primary : disabledBtn}`}>
                             Lock in Answer
                         </button>
@@ -452,29 +507,32 @@ export default function DailyFlagle() {
                         <span className={`mt-0.5 shrink-0 ${bonusStatus === 'won' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                             {bonusStatus === 'won' ? <Check size={24} strokeWidth={3} aria-hidden /> : <X size={24} strokeWidth={3} aria-hidden />}
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <h3 className="!text-xl font-bold">{bonusStatus === 'won' ? 'Nailed it!' : 'Incorrect!'}</h3>
                             <p className="mt-0.5 text-slate-600 dark:text-slate-300">
                                 The capital is <strong className="text-slate-900 dark:text-white">{getCapital(dailyFlag)}</strong>.
                             </p>
-                            <div className={`${label} mt-3`}>Come back tomorrow!</div>
+                            <button onClick={shareResult} className={`${quiet} mt-3 flex items-center gap-2 px-3 py-2 text-sm font-bold`}>
+                                {copied ? <><Check size={16} aria-hidden /> Copied!</> : <><Share2 size={16} aria-hidden /> Share result</>}
+                            </button>
                         </div>
                     </section>
                 )}
 
-                {status !== 'playing' && (
+                {!playing && (
                     <DailyStanding
                         distribution={distribution}
                         standing={standing}
                         statsError={statsError}
                         myBucket={myBucket}
-                        bucketLabels={Array.from({ length: MAX_GUESSES }, (_, i) => `${i + 1}`)}
+                        bucketLabels={BAND_LABELS}
                         accentClass="text-slate-900 dark:text-white"
-                        footnote="Guesses used - X did not solve it"
+                        footnote="Points - X did not name it, or scored under 10"
+                        solvedWord="scored 10+"
                     />
                 )}
 
-                {status !== 'playing' && <NextDailyLink current="flagle" today={todayStr} />}
+                {!playing && <NextDailyLink current="flagle" today={todayStr} />}
 
                 {/* Guess History List */}
                 {guesses.length > 0 && (
@@ -492,6 +550,7 @@ export default function DailyFlagle() {
                                         <span className={`font-medium capitalize ${right ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-300'}`}>
                                             {g}
                                         </span>
+                                        {!right && <span className="ml-auto text-xs font-semibold tabular-nums text-slate-400 dark:text-slate-500">-{WRONG_GUESS_COST}</span>}
                                     </li>
                                 )
                             })}

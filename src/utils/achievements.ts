@@ -26,7 +26,7 @@ import { ELEMENTS, ELEMENT_MODES } from "./elements"
 import { QUANTITIES, QUANTITY_MODES } from "./quantities"
 import { FORMULAS, FORMULA_MODES } from "./formulas"
 import { CAPITALS, PROGRESS_KEY as CAPITAL_MAP_KEY } from "./capitalMap"
-import { PROFILE_EVENT, readStore, todayUtc, writeStore, type ProfileStore } from "./profileStore"
+import { PROFILE_EVENT, emptyStore, readStore, todayUtc, writeStore, type ProfileStore } from "./profileStore"
 
 const MASTERED = 3
 
@@ -295,9 +295,7 @@ export function checkProgress(): { store: ProfileStore; snapshot: Snapshot; unlo
     const existing = readStore()
     const first = existing === null
     const today = todayUtc()
-    const store: ProfileStore = existing ?? {
-        since: today, earned: {}, peaks: {}, days: {}, dailies: {}, counters: {}, records: {}, once: {}, continents: [], rank: 0,
-    }
+    const store: ProfileStore = existing ?? emptyStore()
     const snapshot = readSnapshot(store)
     const unlocks: Unlock[] = []
     let grew = false

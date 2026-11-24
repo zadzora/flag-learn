@@ -55,7 +55,9 @@ export const DAILY_MODES: DailyMode[] = [
         hover: "hover:border-emerald-400 dark:hover:border-emerald-500",
         streakKey: STREAK_KEYS.flagle,
         saveKeys: ["flag-master-daily-save"],
-        isFinished: save => save.status === "won" || save.status === "lost",
+        // A run without `strokes` is the old zoom-out Flagle, which the page
+        // discards and lets the day be played again (see loadSave there).
+        isFinished: save => Array.isArray(save.strokes) && (save.status === "won" || save.status === "lost"),
     },
     {
         key: "connections",

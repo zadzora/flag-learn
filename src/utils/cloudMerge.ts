@@ -177,6 +177,21 @@ const dailyRun: Resolver = (b, l, r, hasBase) => {
     return accountWins(b, l, r, hasBase)
 }
 
+/**
+ * Daily Flagle's run. A run without `strokes` is the old zoom-out Flagle, which
+ * the page throws away so the day can be played on the scratch card; left to
+ * `dailyRun`, the old finished run would beat the new one still in play and
+ * come back from the account on every sync.
+ */
+const isOldFlagle = (v: Json) => isObj(v) && !Array.isArray(v.strokes)
+const flagleRun: Resolver = (b, l, r, hasBase) => {
+    if (isObj(l) && isObj(r) && isOldFlagle(l) !== isOldFlagle(r)) {
+        const [old, current] = isOldFlagle(l) ? [l, r] : [r, l]
+        if (String(old.date ?? "") <= String(current.date ?? "")) return current
+    }
+    return dailyRun(b, l, r, hasBase)
+}
+
 /** A daily streak: the side that played more recently, with the best of both. */
 const dailyStreak: Resolver = (_b, l, r) => {
     if (!isObj(l)) return r
@@ -307,7 +322,7 @@ export const CLOUD_KEYS: CloudKey[] = [
     json("flag-master-landmarks-streak", atRoot(dailyStreak)),
 
     // Today's dailies, so a finished one stays finished.
-    json("flag-master-daily-save", atRoot(dailyRun)),
+    json("flag-master-daily-save", atRoot(flagleRun)),
     json("flag-master-connections-save", atRoot(dailyRun)),
     json("flag-master-deduction-save", atRoot(dailyRun)),
     json("flag-master-trivia-daily-save", atRoot(dailyRun)),

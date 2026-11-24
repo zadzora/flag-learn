@@ -83,6 +83,14 @@ test("a daily keeps the later day, then the finished run, never a mix", () => {
     assert.deepEqual(join("flag-master-daily-save", null, today, done), JSON.parse(done))
 })
 
+test("an old zoom-out Flagle run never beats a scratch-card run of the same day", () => {
+    const old = JSON.stringify({ date: "2026-11-24", status: "won", guesses: ["fr"] })
+    const fresh = JSON.stringify({ date: "2026-11-24", status: "playing", guesses: [], strokes: [], points: null })
+    assert.deepEqual(join("flag-master-daily-save", null, fresh, old), JSON.parse(fresh))
+    assert.deepEqual(join("flag-master-daily-save", old, fresh, old), JSON.parse(fresh))
+    assert.deepEqual(join("flag-master-daily-save", old, old, fresh), JSON.parse(fresh))
+})
+
 test("a daily streak follows the side that played last and keeps the best of both", () => {
     const local = JSON.stringify({ streak: 2, best: 9, lastDate: "2026-11-03" })
     const remote = JSON.stringify({ streak: 5, best: 5, lastDate: "2026-11-01" })

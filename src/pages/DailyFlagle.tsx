@@ -9,7 +9,7 @@ import DailyStanding from "../components/DailyStanding"
 import NextDailyLink from "../components/NextDailyLink"
 import TopBar, { BarButton } from "../components/TopBar"
 import ScratchCard from "../components/ScratchCard"
-import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS } from "../utils/dailyStreak"
+import { activeStreak, readStreak, recordDailyResult, STREAK_KEYS, undoDailyResult } from "../utils/dailyStreak"
 import { dailyNumber } from "../utils/dailySeed"
 import SnowCap from "../components/SnowCap"
 import {
@@ -55,6 +55,16 @@ function loadSave(date: string): FlagleSave {
         const raw = localStorage.getItem(DAILY_STORAGE_KEY)
         const p = raw ? JSON.parse(raw) as Partial<FlagleSave> : null
         if (!p || p.date !== date) return fresh
+        // A run from the old zoom-out Flagle (no `strokes`), played on the day
+        // the scratch card replaced it (2026-11-24): that day is reset for
+        // everyone who had played it. The save is overwritten here, at once, so
+        // a second call (StrictMode runs initialisers twice) finds the new
+        // format and does not take the streak back twice.
+        if (!Array.isArray(p.strokes)) {
+            if (p.status === 'won' || p.status === 'lost') undoDailyResult(STREAK_KEYS.flagle, date, p.status === 'won')
+            localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(fresh))
+            return fresh
+        }
         const strokes = Array.isArray(p.strokes)
             ? p.strokes.filter((s): s is number[] => Array.isArray(s) && s.length >= 2 && s.every(n => typeof n === 'number' && n >= 0 && n <= 1000))
             : []

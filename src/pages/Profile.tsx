@@ -412,17 +412,10 @@ function Titles() {
                 aside={held.test ? <span className="font-bold text-rose-500">Test data · profileTest.clear()</span> : aside}
             />
             {held.status === "ready" && count === 0 ? (
-                <div className={`${panel} flex flex-col gap-4 p-5 sm:flex-row sm:items-center`}>
-                    <p className={`flex-1 text-sm ${muted}`}>
+                <div className={`${panel} px-5 py-8`}>
+                    <p className={`mx-auto max-w-xl text-center text-sm ${muted}`}>
                         Set the fastest time on a global leaderboard, or hold the most land when a World Conqueror season ends, and the title shows here - for as long as nobody takes it.
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                        {[...(Object.keys(RECORD_GAMES) as RecordGame[]).map(g => ({ to: RECORD_GAMES[g].to, title: RECORD_GAMES[g].title, Icon: RECORD_ICONS[g] })), { to: "/world-conqueror", title: "World Conqueror", Icon: WorldConquerorIcon }].map(({ to, title, Icon }) => (
-                            <Link key={to} to={to} className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold hover:border-slate-400 dark:border-[#1C2338] dark:hover:border-[#3A4670]">
-                                <Icon size={15} aria-hidden /> {title}
-                            </Link>
-                        ))}
-                    </div>
                 </div>
             ) : held.status !== "ready" ? (
                 <div className={`${panel} h-[104px] ${held.status === "loading" ? "animate-pulse" : ""}`} />

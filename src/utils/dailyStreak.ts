@@ -71,6 +71,25 @@ export function recordDailyResult(key: string, date: string, won: boolean): Stre
     return next
 }
 
+/**
+ * Takes back the result recorded for `date`, so the day can be played again and
+ * counted afresh - for a daily whose game changed after people had played it.
+ * A win is undone exactly. A loss had already zeroed the streak and what it was
+ * before is not kept anywhere, so the day only becomes open again: winning the
+ * replay starts at 1. `best` stays. No-op unless `date` was the last day recorded.
+ */
+export function undoDailyResult(key: string, date: string, wasWin: boolean): void {
+    const previous = readStreak(key)
+    if (previous.lastDate !== date) return
+    const streak = wasWin ? Math.max(0, previous.streak - 1) : 0
+    const next: StreakState = { streak, best: previous.best, lastDate: streak > 0 ? previousDay(date) : "" }
+    try {
+        localStorage.setItem(key, JSON.stringify(next))
+    } catch {
+        // Storage unavailable - nothing was recorded either.
+    }
+}
+
 /** A streak only still counts if the last finished day was today or yesterday. */
 export function activeStreak(state: StreakState, today: string): number {
     if (state.streak <= 0) return 0

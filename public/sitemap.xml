@@ -16,7 +16,7 @@
 
     <url>
         <loc>https://flaglearn.eu/daily</loc>
-        <lastmod>2026-03-02</lastmod>
+        <lastmod>2026-11-24</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
@@ -131,5 +131,119 @@
         <lastmod>2026-11-14</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.85</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/landmarks</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/daily-landmarks</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/capital-map</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/map-speedrun</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/capital-speedrun</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/ultimate-speedrun</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/higher-lower</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.75</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.85</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/elements</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/elementle</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.85</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/connections</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/speedrun</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.75</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/detective</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/atom-builder</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/compounds</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/quantities</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/formulas</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/speller</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://flaglearn.eu/science/higher-lower</loc>
+        <lastmod>2026-11-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
     </url>
 </urlset>

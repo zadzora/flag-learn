@@ -33,7 +33,14 @@ window.addEventListener('vite:preloadError', event => {
     return
   }
   event.preventDefault()
-  window.location.reload()
+  // The failed chunk's 404 may sit in the HTTP cache under the year-long
+  // /assets/ header, which a plain reload would read straight back. Fetching it
+  // with cache: 'reload' replaces that entry first. Safari's message carries no
+  // URL; it gets the plain reload.
+  const message = String((event as Event & { payload?: unknown }).payload ?? '')
+  const urls = message.match(/\/assets\/[\w.-]+/g) ?? []
+  const refetch = urls.map(url => fetch(url, { cache: 'reload' }).catch(() => undefined))
+  void Promise.all(refetch).finally(() => window.location.reload())
 })
 
 // A signed-in player's progress is joined in before any page mounts: every page

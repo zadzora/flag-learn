@@ -1,3 +1,4 @@
+import { usePageMeta } from "../utils/pageMeta"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Check, ChevronLeft, ChevronRight, Flag, FlaskConical, Play, RotateCcw, Shuffle, Share2, Timer, Trophy, X } from "lucide-react"
@@ -148,6 +149,10 @@ function randomCityId(): string {
  * a new day or city remounts it, so every bit of state starts over.
  */
 export default function DailyLandmarks() {
+    usePageMeta(
+        "Daily Landmarks - guess today's city against the clock | Flag Learn",
+        "One city a day, the same for everyone: a new clue every three seconds - its sights, its country, its first letter. Name it fast and keep your streak.",
+    )
     const [params, setParams] = useSearchParams()
     const [run, setRun] = useState(0)
     const today = getTodayString()

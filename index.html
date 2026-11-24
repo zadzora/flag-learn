@@ -2,11 +2,46 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // If the build's own JS or CSS fails to load (a deploy caught mid-swap, or
+      // a 404 the browser cached under the year-long /assets/ header), fetch the
+      // failed files again past the cache and reload. Only before the app has
+      // rendered - later, vite:preloadError in main.tsx handles it. At most three
+      // tries in two minutes. Touches sessionStorage only, never progress.
+      (function () {
+        var KEY = 'flag-master-asset-retry'
+        var failed = []
+        window.addEventListener('error', function (e) {
+          var el = e.target
+          if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return
+          var url = el.src || el.href
+          if (!url || url.indexOf('/assets/') < 0) return
+          var root = document.getElementById('root')
+          if (root && root.firstChild) return
+          failed.push(url)
+          if (failed.length > 1) return
+          var n = 0
+          try {
+            var s = JSON.parse(sessionStorage.getItem(KEY) || '{}')
+            if (Date.now() - (s.at || 0) < 120000) n = s.n || 0
+            if (n >= 3) return
+            sessionStorage.setItem(KEY, JSON.stringify({ n: n + 1, at: Date.now() }))
+          } catch (_) {
+            return
+          }
+          setTimeout(function () {
+            Promise.all(failed.map(function (u) {
+              return fetch(u, { cache: 'reload' }).catch(function () {})
+            })).then(function () { location.reload() })
+          }, 1000 * (n + 1))
+        }, true)
+      })()
+    </script>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flag Learn - World Flags, Geography Quiz &amp; Trivia Games</title>
-    <meta name="description" content="Free geography quiz and trivia games: learn flags, capitals and US states, play World Trivia (fun facts about every country in twelve kinds of questions), a Daily Trivia of six questions, and Trivia Rooms for a quiz night or pub quiz with friends on one big screen. Plus World Conqueror, Border Chain, Road Trip, Daily Flagle, Daily Deduction, Daily Connections, Daily Rally, Map Locator, Higher or Lower, Blur Mode, Ultimate Mode, PvP battles, Constellations, map and capital speedruns with global leaderboards, and a Science wing: the periodic table, Elementle, Element Speedrun, compounds and physics formulas." />
-    <meta name="keywords" content="trivia, trivia quiz, trivia game, world trivia, geography trivia, country trivia, fun facts about countries, general knowledge quiz, quiz, online quiz, free quiz, quiz game, daily trivia, daily quiz, trivia of the day, multiplayer trivia, trivia with friends, quiz night, pub quiz, online pub quiz, quiz night game, party quiz, kahoot alternative, classroom quiz, quiz room code, host a quiz, family quiz game, team quiz, trivia battle, live quiz game, big screen quiz, flag quiz, geography game, geography quiz, learn flags, world flags, world capitals, capitals quiz, us state flags, map locator, interactive map quiz, find it on the map, spot the real flag, flag jigsaw, who am I country quiz, compass quiz, higher or lower countries, population quiz geography, country area quiz, constellations quiz, ultimate geography mode, multiplayer flag game, pvp flags online, educational game, daily flagle, flagle, daily connections, country connections game, daily deduction, guess the country game, country guessing game, daily country puzzle, paint the flag game, border guess game, highscore mode, flag speedrun, geography speedrun, timed flags quiz, global leaderboard geography, blur flag quiz, world conqueror, conquer the world map game, map conquest game, async multiplayer geography, border chain, name a bordering country, bordering countries quiz, live geography multiplayer, road trip geography game, drive around the world game, uncover the world map, daily rally, daily geography race" />
+    <meta name="description" content="Free geography quiz and trivia games: learn flags, capitals and US states, play World Trivia (fun facts about every country in twelve kinds of questions), a Daily Trivia of six questions, and Trivia Rooms for a quiz night or pub quiz with friends on one big screen. Plus Landmarks (guess the city from its famous sights) and Daily Landmarks, Daily Flagle (scratch the card to reveal the flag), World Conqueror, Border Chain, Road Trip, Daily Deduction, Daily Connections, Daily Rally, Map Locator, Higher or Lower, Blur Mode, Ultimate Mode, PvP battles, Constellations, map and capital speedruns with global leaderboards, and a Science wing: the periodic table, Elementle, Element Speedrun, compounds and physics formulas." />
+    <meta name="keywords" content="trivia, trivia quiz, trivia game, world trivia, geography trivia, country trivia, fun facts about countries, general knowledge quiz, quiz, online quiz, free quiz, quiz game, daily trivia, daily quiz, trivia of the day, multiplayer trivia, trivia with friends, quiz night, pub quiz, online pub quiz, quiz night game, party quiz, kahoot alternative, classroom quiz, quiz room code, host a quiz, family quiz game, team quiz, trivia battle, live quiz game, big screen quiz, flag quiz, geography game, geography quiz, learn flags, world flags, world capitals, capitals quiz, us state flags, map locator, interactive map quiz, find it on the map, spot the real flag, flag jigsaw, who am I country quiz, compass quiz, higher or lower countries, population quiz geography, country area quiz, constellations quiz, ultimate geography mode, multiplayer flag game, pvp flags online, educational game, daily flagle, flagle, daily connections, country connections game, daily deduction, guess the country game, country guessing game, daily country puzzle, paint the flag game, border guess game, highscore mode, flag speedrun, geography speedrun, timed flags quiz, global leaderboard geography, blur flag quiz, world conqueror, conquer the world map game, map conquest game, async multiplayer geography, border chain, name a bordering country, bordering countries quiz, live geography multiplayer, road trip geography game, drive around the world game, uncover the world map, daily rally, daily geography race, landmarks quiz, guess the city, guess the city from landmarks, famous landmarks quiz, city quiz, world cities quiz, daily landmarks, landmark of the day, scratch the flag, scratch card flag game, guess the flag, flag of the day, daily flag game, capital pinpoint, find the capital on the map, periodic table quiz, elementle, element quiz" />
     <meta name="author" content="David Zadzora" />
     <meta name="google-site-verification" content="ZT7XzGYSewUSELzo66ViMkRU9ba5Pbuc-CoSpko7vhE" />
     <meta property="og:title" content="Flag Learn — Geography Quiz, Trivia &amp; Flag Games" />
@@ -40,6 +75,8 @@
           "Daily Trivia - six questions, the same for everyone each day",
           "Trivia Rooms - multiplayer quiz night and trivia battles with a room code",
           "Flag, capital and US state quizzes with spaced repetition",
+          "Landmarks - guess the city from three of its sights, plus a timed Daily Landmarks",
+          "Daily Flagle - scratch the card and name the flag with as little uncovered as you can",
           "Daily geography puzzles and global leaderboards",
           "Science wing - periodic table, elements, compounds and physics formulas"
         ]

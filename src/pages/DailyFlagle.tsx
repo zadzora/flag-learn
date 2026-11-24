@@ -1,3 +1,4 @@
+import { usePageMeta } from "../utils/pageMeta"
 import { useEffect, useState, useMemo, useRef } from "react"
 import { Trophy, X, Check, MapPin, Share2, Volume2, VolumeX, Eye, EyeOff } from "lucide-react"
 import { StreakMark } from "../components/SupporterAccent"
@@ -73,6 +74,10 @@ function loadSave(date: string): FlagleSave {
 }
 
 export default function DailyFlagle() {
+    usePageMeta(
+        "Daily Flagle - scratch the card, guess the flag of the day | Flag Learn",
+        "Today's flag is hidden under a scratch card. Uncover as little as you can, name the country, and see how you rank against today's players.",
+    )
     const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "UTC" }) // Format: YYYY-MM-DD
 
     // --- THEME ---

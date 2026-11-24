@@ -1,3 +1,4 @@
+import { usePageMeta } from "../utils/pageMeta"
 import { useEffect, useRef, useState } from "react"
 import { ChevronRight, Eye, RotateCcw, Settings2, Trophy } from "lucide-react"
 import TopBar from "../components/TopBar"
@@ -42,6 +43,10 @@ const PRIMARY = "rounded-lg bg-slate-900 font-bold text-white hover:bg-slate-700
 const QUIET = "rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-[#3A4670]"
 
 export default function LandmarksGame() {
+    usePageMeta(
+        "Landmarks - guess the city from its famous sights | Flag Learn",
+        "A free city quiz: three sights of a city, the least famous first. Name the city in as few clues as you can - ten cities a round.",
+    )
     const [theme, setTheme] = useState<"light" | "dark">(() => {
         if (typeof window === "undefined") return "light"
         return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"

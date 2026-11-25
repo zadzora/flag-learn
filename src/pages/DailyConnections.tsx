@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router-dom"
 import { Check, Shuffle, X } from "lucide-react"
 import { StreakMark } from "../components/SupporterAccent"
 import {
-    buildDailyPuzzle, countryByCode, getTodayString, shiftDate,
+    auditPuzzle, buildDailyPuzzle, CONNECTIONS_V2_FROM, countryByCode, getTodayString, shiftDate,
     type ConnectionsPuzzle, type ConnectionsColor, type PuzzleGroup,
 } from "../utils/connectionsPuzzle"
 import {
@@ -44,16 +44,20 @@ type ConnectionsTestApi = {
     goto: (date: string) => void
     next: () => void
     prev: () => void
+    /** Jump to a random day of the current generator - never today, so nothing reaches the database. Returns the date. */
+    random: () => string
     /** Wipe the current test day and start it over. */
     reset: () => void
-    /** Jump straight to the solved end state. */
+    /** Jump straight to the solved end state. Never counted in the standings, even on today's date. */
     solve: () => void
-    /** Jump straight to the lost end state. */
+    /** Jump straight to the lost end state. Never counted in the standings, even on today's date. */
     fail: () => void
     /** Today's four groups and their members. */
     answers: () => { color: string; label: string; countries: string }[]
     /** console.table of the next N days, to eyeball puzzle quality in bulk. */
     preview: (days?: number) => PreviewRow[]
+    /** Builds the next N days and lists any board another four-tile set could be read from. Should be empty. */
+    audit: (days?: number) => { date: string; problem: string }[]
 }
 
 declare global {
@@ -79,6 +83,14 @@ const COLOR_CLASSES: Record<ConnectionsColor, string> = {
  */
 function isTestModeEnabled(): boolean {
     return import.meta.env.DEV
+}
+
+/** A random day within two years of the current generator's first day, never `today`. */
+function randomTestDate(today: string): string {
+    for (;;) {
+        const date = shiftDate(CONNECTIONS_V2_FROM, Math.floor(Math.random() * 730))
+        if (date !== today) return date
+    }
 }
 
 function readSave(storageKey: string, date: string): SavedGame | null {
@@ -247,6 +259,11 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
             goto: onGoToDate,
             next: () => onGoToDate(shiftDate(date, 1)),
             prev: () => onGoToDate(shiftDate(date, -1)),
+            random: () => {
+                const next = randomTestDate(today)
+                onGoToDate(next)
+                return next
+            },
             reset: () => {
                 setSolvedIds([])
                 setMistakes(0)
@@ -255,13 +272,17 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                 setStatsSubmitted(false)
                 setSelected([])
             },
+            // A shortcut is not a result: marked as already submitted so the
+            // standings effect never sends it, even on today's real date.
             solve: () => {
                 revealAll()
+                setStatsSubmitted(true)
                 setStatus("won")
             },
             fail: () => {
                 revealAll()
                 setMistakes(MAX_MISTAKES)
+                setStatsSubmitted(true)
                 setStatus("lost")
             },
             answers: () => puzzle.groups.map(group => ({
@@ -291,12 +312,28 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                 console.table(rows)
                 return rows
             },
+            audit: (days = 365) => {
+                const found: { date: string; problem: string }[] = []
+                for (let i = 0; i < days; i++) {
+                    const day = shiftDate(date, i)
+                    // Days before the new generator are frozen as they were dealt.
+                    if (day < CONNECTIONS_V2_FROM) continue
+                    try {
+                        for (const problem of auditPuzzle(buildDailyPuzzle(day))) found.push({ date: day, problem })
+                    } catch (e) {
+                        found.push({ date: day, problem: (e as Error).message })
+                    }
+                }
+                if (found.length) console.table(found)
+                else console.log(`${days} days from ${date}: every board has only its four groups.`)
+                return found
+            },
         }
 
         return () => {
             delete window.connectionsTest
         }
-    }, [testMode, puzzle, date, onGoToDate])
+    }, [testMode, puzzle, date, today, onGoToDate])
 
     // --- DERIVED ---
     const solvedGroups = useMemo(
@@ -435,6 +472,8 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                 <div className="flex items-baseline justify-between gap-3">
                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                         Find four groups of four countries that belong together.
+                        {/* Days from the old generator could have a whole continent as a group. */}
+                        {date >= CONNECTIONS_V2_FROM && " Always something more specific than a continent."}
                     </p>
                     <span className="shrink-0 text-xs tabular-nums text-slate-400 sm:hidden dark:text-slate-500">{date}</span>
                 </div>
@@ -463,7 +502,11 @@ function ConnectionsGame({ date, today, testMode, onGoToDate }: {
                                     </div>
                                     <p className="text-sm font-extrabold leading-tight">{group.label}</p>
                                     <p className="text-xs font-semibold leading-tight opacity-80">
-                                        {group.codes.map(code => countryByCode(code)?.name).join(", ")}
+                                        {group.codes.map((code, i) => {
+                                            const name = countryByCode(code)?.name ?? code
+                                            const detail = group.details?.[i]
+                                            return detail ? `${name} (${detail})` : name
+                                        }).join(", ")}
                                     </p>
                                 </motion.div>
                             ))}

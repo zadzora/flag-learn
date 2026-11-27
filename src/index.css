@@ -483,6 +483,56 @@
 }
 
 /*
+ * The Flag Screensaver's names (pages/FlagScreensaver.tsx): a country's name
+ * pops up where its flag hit the wall and fades as it drifts up; a corner's is
+ * bigger and stays longer. The pop-up is removed on `animationend`, so the
+ * reduced-motion version still animates - opacity only.
+ */
+@keyframes bounce-pop {
+    0% { opacity: 0; transform: translateY(8px) scale(0.7); }
+    12% { opacity: 1; transform: translateY(0) scale(1.08); }
+    24% { transform: translateY(0) scale(1); }
+    65% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-34px) scale(1); }
+}
+@keyframes bounce-pop-corner {
+    0% { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+    10% { opacity: 1; transform: scale(1.25) rotate(3deg); }
+    20% { transform: scale(0.96) rotate(-1deg); }
+    28% { transform: scale(1) rotate(0); }
+    75% { opacity: 1; transform: translateY(-6px) scale(1); }
+    100% { opacity: 0; transform: translateY(-40px) scale(1.04); }
+}
+@keyframes bounce-fade {
+    0%, 100% { opacity: 0; }
+    15%, 70% { opacity: 1; }
+}
+.bounce-pop { animation: bounce-pop 2.2s ease-out both; }
+.bounce-pop-corner { animation: bounce-pop-corner 4.2s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+    .bounce-pop { animation: bounce-fade 2.2s ease-out both; }
+    .bounce-pop-corner { animation: bounce-fade 4.2s ease-out both; }
+}
+
+/*
+ * The Flag Screensaver's animal (components/BouncePet.tsx): wide eyes that
+ * tremble and a bead of sweat while it runs from the flag, hearts rising over
+ * its head at a corner. Under reduced motion they simply show, still.
+ */
+.pet-heart { opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
+@keyframes pet-panic { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(0.7px, -0.4px); } 75% { transform: translate(-0.7px, 0.3px); } }
+@keyframes pet-sweat { 0% { transform: translate(0, -2px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(1px, 5px); opacity: 0; } }
+@keyframes pet-heart { 0% { opacity: 0; transform: translateY(4px) scale(0.4); } 25% { opacity: 1; transform: translateY(0) scale(1.15); } 100% { opacity: 0; transform: translateY(-16px) scale(0.9); } }
+@media (prefers-reduced-motion: no-preference) {
+    .pet-panic { animation: pet-panic 0.16s linear infinite; }
+    .pet-sweat { animation: pet-sweat 0.8s ease-in infinite; transform-box: fill-box; }
+    .pet-heart { animation: pet-heart 1.2s ease-out 2 both; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .pet-heart { opacity: 1; }
+}
+
+/*
  * The Christmas snow drifts on menu cards (components/SnowCap.tsx). White with a
  * blue-grey shade band for thickness; on the pale day page the outline and a soft
  * shadow are what keep white snow on a white card readable at all.

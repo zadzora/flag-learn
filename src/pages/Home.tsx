@@ -8,7 +8,7 @@ import { GuestDot } from "../components/TopBar"
 import { barHidden, hideBar, signInFromNudge, useGuestWithProgress } from "../utils/signInNudge"
 import {
     AtomIcon, BlurModeIcon, ExtrasIcon, BorderChainIcon, CapitalPinpointIcon, CapitalSpeedrunIcon, BorderGuessIcon, ConstellationsIcon, CountryWheelIcon, HighscoreIcon,
-    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, TriviaRoomsIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, WorldTriviaIcon, type ModeIcon,
+    HigherLowerIcon, MapLocatorIcon, PaintFlagIcon, PvpBattleIcon, ScreensaverIcon, TriviaRoomsIcon, UltimateIcon, UltimateSpeedrunIcon, WorldConquerorIcon, WorldTriviaIcon, type ModeIcon,
 } from "../components/ModeIcons"
 import worldData from "../../data/flags.json"
 import usData from "../../data/us_states.json"
@@ -79,6 +79,7 @@ const MORE_MODES: Entry[] = [
     { to: "/trivia", label: "World Trivia", detail: "Fun facts about every country, in twelve kinds of questions", icon: WorldTriviaIcon, badge: "New" },
     { to: "/landmarks", label: "Landmarks", detail: "Three famous sights of a city - name the city", icon: Landmark, badge: "New" },
     { to: "/road-trip", label: "Road Trip", detail: "Drive around the world map and uncover the flags beneath it", icon: Car, badge: "New" },
+    { to: "/screensaver", label: "Flag Screensaver", detail: "Nothing to do - watch a flag bounce round the screen and wait for the corner", icon: ScreensaverIcon, badge: "New" },
     { to: "/paint", label: "Paint the Flag", detail: "Color grayscale flags with the right colors", icon: PaintFlagIcon },
     { to: "/border-guess", label: "Border Guess", detail: "Identify countries by their highlighted border", icon: BorderGuessIcon },
     { to: "/higher-lower", label: "Higher or Lower", detail: "Population or area - which country is higher", icon: HigherLowerIcon },

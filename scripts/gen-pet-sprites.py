@@ -4,6 +4,7 @@ The supporters' companion animals, from graphic/support-animals.png.
     python scripts/gen-pet-sprites.py            # writes the sprites
     python scripts/gen-pet-sprites.py --debug    # also draws the rig over each animal (<temp>/pets-debug/)
     python scripts/gen-pet-sprites.py --winter   # the Christmas set, from graphic/support-animals-winter.png
+    python scripts/gen-pet-sprites.py --eyes     # only data/petEyes.json: where each animal's eyes are, both sets
 
 The winter set (hat and scarf) writes public/pets-winter-<cell>.webp,
 public/pets/<id>-winter-<frame>.webp and data/petSpritesWinter.json, and leaves
@@ -533,7 +534,52 @@ def to_image(arr, size):
     img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
     return img.resize((size, size), Image.LANCZOS)
 
+def eyes_of(src, rig):
+    """The eyes main() blinks: hand-placed in the rig, else found, else the fallback."""
+    return [{"cx": x, "cy": y, "w": w, "h": h} for x, y, w, h in rig["eyes"]] if "eyes" in rig else find_eyes(src) or rig.get("eyes_fallback", [])
+
+def fur_round(arr, e):
+    """The fur just outside an eye (as paint_blink reads it), as #rrggbb."""
+    cx, cy, w, h = e["cx"], e["cy"], e["w"], e["h"]
+    yy, xx = np.mgrid[0:arr.shape[0], 0:arr.shape[1]]
+    r = ((xx - cx) / (w / 2 + 5)) ** 2 + ((yy - cy) / (h / 2 + 5)) ** 2
+    ring = (r > 1.0) & (r < 1.6) & (arr[..., 3] > 200) & (arr[..., :3].sum(axis=2) > 150)
+    fur = np.median(arr[ring][:, :3], axis=0) if ring.any() else (240, 230, 210)
+    return "#" + "".join(f"{int(v):02x}" for v in fur)
+
+def write_eyes():
+    """
+    data/petEyes.json: every animal's eyes as shares of its square cell (the
+    same framing as the still cell and frame 0), with the fur colour round
+    each. The page draws over them - wide eyes when the Flag Screensaver's
+    flag comes down on the animal, happy closed ones at a corner. Images are
+    left alone.
+    """
+    plain = cut_animals()
+    winter = cut_animals(WINTER_SHEET, split=True)
+    sets = {"everyday": (plain, RIGS), "winter": (winter, winter_rigs(plain, winter))}
+    out = {}
+    for key, (animals, rigs) in sets.items():
+        out[key] = {}
+        for name in [nm for row in GRID for nm in row]:
+            src = animals[name]
+            rig = dict(rigs.get(name, {}))
+            if key == "winter" and "eyes" in rig and len(find_eyes(src)) == 2:
+                del rig["eyes"]
+            canvas, ox, oy = square(src)
+            side = canvas.shape[0]
+            r4 = lambda v: round(float(v), 4)
+            out[key][name] = [{"x": r4((e["cx"] + ox) / side), "y": r4((e["cy"] + oy) / side),
+                               "w": r4(e["w"] / side), "h": r4(e["h"] / side), "fur": fur_round(src, e)}
+                              for e in eyes_of(src, rig)]
+            print(f"  {key} {name}: {len(out[key][name])} eyes")
+    (ROOT / "data" / "petEyes.json").write_text(json.dumps(out, indent=1) + "\n", encoding="utf8")
+    print("Wrote data/petEyes.json")
+
 def main():
+    if "--eyes" in sys.argv:
+        write_eyes()
+        return
     debug = "--debug" in sys.argv
     winter = "--winter" in sys.argv
     if winter:
@@ -563,7 +609,7 @@ def main():
     for name, rig in rigs.items():
         src = animals[name]
         # Eyes the finder cannot see (inside a dark patch, or only one in profile) are given by hand.
-        eyes = [{"cx": x, "cy": y, "w": w, "h": h} for x, y, w, h in rig["eyes"]] if "eyes" in rig else find_eyes(src) or rig.get("eyes_fallback", [])
+        eyes = eyes_of(src, rig)
         if not eyes:
             print(f"  {name}: no eyes found, no blink")
         canvas, ox, oy = square(src)

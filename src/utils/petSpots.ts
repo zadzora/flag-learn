@@ -121,9 +121,10 @@ export const PET_PLACES: { id: string; title: string; how: string; pages: { labe
     {
         id: "other",
         title: "Elsewhere",
-        how: "On the roof of the Road Trip car, on the profile's supporter card, and on the support page.",
+        how: "On the roof of the Road Trip car, on the profile's supporter card, on the support page, and on the Flag Screensaver's floor, where it trots after the flag, runs in a panic (wide eyes, sweat) when the flag comes down on it, and is happy at a corner (closed eyes, hearts, hops).",
         pages: [
             { label: "Road Trip", to: "/road-trip" },
+            { label: "Flag Screensaver", to: "/screensaver" },
             { label: "Profile", to: "/profile" },
             { label: "Support", to: "/support" },
         ],

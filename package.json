@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test tests/cloudMerge.test.mjs tests/speedrunTotals.test.mjs tests/nameFilter.test.mjs tests/cityLandmarks.test.mjs tests/badgeStats.test.mjs tests/connections.test.mjs",
+    "test": "node --test tests/cloudMerge.test.mjs tests/speedrunTotals.test.mjs tests/nameFilter.test.mjs tests/cityLandmarks.test.mjs tests/badgeStats.test.mjs tests/connections.test.mjs tests/flagBounce.test.mjs tests/allFlags.test.mjs",
     "check:cities": "node scripts/check-cities.mjs",
     "check:trivia": "node scripts/check-trivia.mjs",
     "dev:emu": "node scripts/load-emulator-rules.mjs && vite --mode emulators --host",

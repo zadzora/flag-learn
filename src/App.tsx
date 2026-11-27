@@ -39,6 +39,7 @@ import SymbolSpeller from "./pages/SymbolSpeller"
 import ElementHigherLower from "./pages/ElementHigherLower"
 import ChemConnections from "./pages/ChemConnections"
 import RoadTrip from "./pages/RoadTrip"
+import FlagScreensaver from "./pages/FlagScreensaver"
 import TriviaGame from "./pages/TriviaGame"
 import TriviaRooms from "./pages/TriviaRooms"
 import TriviaRoom from "./pages/TriviaRoom"
@@ -49,6 +50,7 @@ import Support from "./pages/Support"
 import AchievementToasts from "./components/AchievementToasts"
 import ScrollMemory from "./components/ScrollMemory"
 import Snowfall from "./components/Snowfall"
+import IdleScreensaver from "./components/IdleScreensaver"
 
 /** Dev only: every supporter animal in every state (`/dev/pets`). Never part of a production build. */
 const PetGallery = import.meta.env.DEV ? lazy(() => import("./pages/PetGallery")) : null
@@ -114,6 +116,7 @@ export default function App() {
                 {/* Keyed: the same page in two modes must not share one mounted instance. */}
                 <Route path="/road-trip" element={<RoadTrip key="trip" />} />
                 <Route path="/daily-rally" element={<RoadTrip key="rally" mode="rally" />} />
+                <Route path="/screensaver" element={<FlagScreensaver />} />
 
                 {/* Science - no flags, no map, its own wing under /science. */}
                 <Route path="/science" element={<Science />} />
@@ -142,6 +145,7 @@ export default function App() {
             {/* Badges are earned on every page, so they are announced from outside the routes. */}
             <AchievementToasts />
             <Snowfall />
+            <IdleScreensaver />
             <Analytics />
         </BrowserRouter>
     )

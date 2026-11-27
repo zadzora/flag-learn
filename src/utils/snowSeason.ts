@@ -78,7 +78,8 @@ export function setSnowOn(on: boolean) {
  */
 export type SnowMode = "menu" | "game" | "none"
 
-const MENU_ROUTES = new Set(["/", "/science", "/profile", "/support", "/terms", "/privacy", "/extras", "/trivia/rooms"])
+// The Flag Screensaver is in here too: nothing on it needs keeping clear, and full snow suits it.
+const MENU_ROUTES = new Set(["/", "/science", "/profile", "/support", "/terms", "/privacy", "/extras", "/trivia/rooms", "/screensaver"])
 
 export function snowModeFor(pathname: string): SnowMode {
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname

@@ -15,6 +15,9 @@ import { useMyAccent } from "../utils/myAccent"
  * narrow to have margins it does not snow at all. Off under reduced motion,
  * paused while the tab is hidden. Drawn in code: no files, no requests.
  *
+ * Both are seen mostly in the top left and right corners (`fieldAt`), and each
+ * flake is soft, breathes in and out, and a few glint - the user's reference.
+ *
  * A supporter's menus get their own snow (the user's pick, a seasonal perk):
  * about a third of the flakes in their accent colour (utils/myAccent.ts),
  * glowing; flakes step aside from the mouse and drift back; a click anywhere
@@ -37,6 +40,54 @@ const GAME_CLEAR = 960
 const GAME_FADE = 120
 const GAME_MASK = `linear-gradient(90deg, #000 calc(50% - ${GAME_CLEAR / 2 + GAME_FADE}px), transparent calc(50% - ${GAME_CLEAR / 2}px), transparent calc(50% + ${GAME_CLEAR / 2}px), #000 calc(50% + ${GAME_CLEAR / 2 + GAME_FADE}px))`
 
+/**
+ * Where the snow shows (the user's reference, 2026-11-27: a winter game whose snow
+ * is seen in the top left and right corners and fades out towards the middle and
+ * the bottom). Every flake's alpha is multiplied by this field: 1 in a top corner,
+ * easing to `floor` beyond `rx` x `ry` of the screen. Menus keep a floor, so the
+ * snow that lands on the footer does not appear out of nowhere; a game's margins
+ * fade out completely towards the bottom.
+ */
+type Field = { rx: number; ry: number; floor: number }
+const MENU_FIELD: Field = { rx: 0.42, ry: 0.8, floor: 0.14 }
+const GAME_FIELD: Field = { rx: 0.5, ry: 0.75, floor: 0 }
+
+/** Flakes breathe in and out (`TWINKLE` of their alpha), and a few flash a four-point glint now and then (dark theme). */
+const TWINKLE = 0.45
+const GLINT_SHARE = 0.07
+
+function smoothstep(a: number, b: number, x: number): number {
+    const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+}
+
+function fieldAt(field: Field, x: number, y: number, w: number, h: number): number {
+    const dy = y / (h * field.ry)
+    const dl = x / (w * field.rx)
+    const dr = (w - x) / (w * field.rx)
+    const d = Math.sqrt(Math.min(dl, dr) ** 2 + dy * dy)
+    return field.floor + (1 - field.floor) * (1 - smoothstep(0.3, 1, d))
+}
+
+/** A soft flake: a bright heart in a halo, drawn once and stamped with drawImage (a gradient per flake per frame would cost). */
+let flakeSprite: HTMLCanvasElement | null = null
+function softFlake(): HTMLCanvasElement {
+    if (flakeSprite) return flakeSprite
+    const c = document.createElement("canvas")
+    c.width = c.height = 64
+    const g = c.getContext("2d")!
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+    grad.addColorStop(0, "rgba(255,255,255,1)")
+    grad.addColorStop(0.18, "rgba(244,248,255,0.95)")
+    grad.addColorStop(0.32, "rgba(228,238,255,0.5)")
+    grad.addColorStop(0.6, "rgba(215,228,255,0.14)")
+    grad.addColorStop(1, "rgba(215,228,255,0)")
+    g.fillStyle = grad
+    g.fillRect(0, 0, 64, 64)
+    flakeSprite = c
+    return c
+}
+
 /** Supporter snow: the share of flakes in their colour, how far the mouse reaches, and a snowball's puff. */
 const TINTED_SHARE = 0.3
 const PUSH_RADIUS = 110
@@ -44,8 +95,9 @@ const PUSH_FORCE = 420
 const BURST_FLAKES = 8
 
 /**
- * The drift: column width (px), how much snow a flake of radius r leaves (r² times this, in px²;
- * about six minutes to fill on a menu), and the steepest it stands (px of height per column).
+ * The drift: column width (px), how much snow a fully visible flake of radius r leaves (r² times
+ * this, in px²; scaled by how visible it was, so with the corner field the footer fills over
+ * three quarters of an hour or so), and the steepest it stands (px of height per column).
  */
 const PILE_COL = 3
 const PILE_GAIN = 6
@@ -70,11 +122,15 @@ function fitPile(w: number) {
     }
 }
 
-/** A flake lands: a small triangular heap round where it fell, up to the cap. */
-function depositSnow(x: number, r: number, cap: number) {
+/**
+ * A flake lands: a small triangular heap round where it fell, up to the cap. `seen` is how visible
+ * the flake was (`fieldAt`): a flake faded nearly out leaves nearly nothing, so the drift never
+ * grows from snow nobody saw fall.
+ */
+function depositSnow(x: number, r: number, seen: number, cap: number) {
     const c = Math.round(x / PILE_COL)
     const spread = Math.round(r * 2) + 1
-    const amount = (r * r * PILE_GAIN) / PILE_COL / ((spread + 1) * (spread + 1))
+    const amount = (r * r * PILE_GAIN * seen) / PILE_COL / ((spread + 1) * (spread + 1))
     for (let k = -spread; k <= spread; k++) {
         const i = c + k
         if (i >= 0 && i < pile.length) pile[i] = Math.min(cap * pileCap[i], pile[i] + amount * (spread + 1 - Math.abs(k)))
@@ -126,6 +182,9 @@ type Flake = {
     dx: number; dy: number
     /** Index into the accent stops, or -1 for plain snow. */
     tint: number
+    /** How fast it breathes in and out, and whether it is one of the few that glint. */
+    tw: number
+    glint: boolean
 }
 type Puff = { x: number; y: number; vx: number; vy: number; r: number; life: number; age: number; tint: number }
 
@@ -160,6 +219,8 @@ function makeFlake(cfg: Config, mode: SnowMode, w: number, h: number, fromTop: b
         dx: 0,
         dy: 0,
         tint: tints > 0 && Math.random() < TINTED_SHARE ? Math.floor(Math.random() * tints) : -1,
+        tw: 0.5 + Math.random() * 1.1,
+        glint: Math.random() < GLINT_SHARE,
     }
 }
 
@@ -209,6 +270,8 @@ function SnowCanvas({ mode, accentKey }: { mode: SnowMode; accentKey: string }) 
         const ctx = canvas?.getContext("2d")
         if (!canvas || !ctx) return
         const cfg = mode === "game" ? GAME : MENU
+        const field = mode === "game" ? GAME_FIELD : MENU_FIELD
+        const sprite = softFlake()
         const accent = accentKey ? accentKey.split(",") : null
         const tints = accent?.length ?? 0
         let flakes: Flake[] = []
@@ -252,11 +315,11 @@ function SnowCanvas({ mode, accentKey }: { mode: SnowMode; accentKey: string }) 
                 ctx.globalAlpha = 1
                 ctx.shadowBlur = 0
             } else if (dark) {
-                ctx.fillStyle = `rgba(235,241,255,${a})`
-                ctx.shadowBlur = glow ? 6 : 0
-                ctx.shadowColor = "rgba(235,241,255,0.8)"
-                ctx.fill()
-                ctx.shadowBlur = 0
+                // Soft, as in the reference: a heart in a halo, the near flakes' halo a little wider.
+                const d = r * (glow ? 7 : 6)
+                ctx.globalAlpha = Math.min(1, a)
+                ctx.drawImage(sprite, x - d / 2, y - d / 2, d, d)
+                ctx.globalAlpha = 1
             } else {
                 // Pure white vanishes on the pale day page: an icy blue flake with a white heart.
                 ctx.fillStyle = `rgba(150,172,212,${a})`
@@ -266,6 +329,26 @@ function SnowCanvas({ mode, accentKey }: { mode: SnowMode; accentKey: string }) 
                 ctx.fillStyle = `rgba(255,255,255,${a})`
                 ctx.fill()
             }
+        }
+
+        /** A four-point glint: two thin crossed diamonds. */
+        const glint = (x: number, y: number, len: number, a: number) => {
+            const n = len * 0.13
+            ctx.globalAlpha = Math.min(1, a)
+            ctx.fillStyle = "rgb(245,249,255)"
+            ctx.beginPath()
+            ctx.moveTo(x - len, y)
+            ctx.lineTo(x, y - n)
+            ctx.lineTo(x + len, y)
+            ctx.lineTo(x, y + n)
+            ctx.closePath()
+            ctx.moveTo(x, y - len)
+            ctx.lineTo(x + n, y)
+            ctx.lineTo(x, y + len)
+            ctx.lineTo(x - n, y)
+            ctx.closePath()
+            ctx.fill()
+            ctx.globalAlpha = 1
         }
 
         const tick = (now: number) => {
@@ -307,19 +390,28 @@ function SnowCanvas({ mode, accentKey }: { mode: SnowMode; accentKey: string }) 
                 if (f.y + f.dy > h + 10) Object.assign(f, makeFlake(cfg, mode, w, h, true, tints))
                 const x = f.x + f.dx + Math.sin(t * f.freq + f.phase) * f.sway
                 const y = f.y + f.dy
+                const seen = fieldAt(field, x, y, w, h)
                 if (floor > 0) {
                     const c = Math.round(x / PILE_COL)
                     const surface = c >= 0 && c < pile.length ? floor - pile[c] : -1
                     // Only a flake crossing the surface this frame lands; one already below it (scrolled past) falls on.
                     if (surface > 0 && y + f.r >= surface && before + f.r < surface) {
-                        depositSnow(x, f.r, pileMax)
+                        depositSnow(x, f.r, seen, pileMax)
                         settling = 90
                         pathsStale = true
                         Object.assign(f, makeFlake(cfg, mode, w, h, true, tints))
                         continue
                     }
                 }
-                dot(x, y, f.r, f.a, f.tint, cfg.glow && f.depth > 0.8, dark)
+                if (seen < 0.01) continue
+                const breath = 1 - TWINKLE * (0.5 + 0.5 * Math.sin(t * f.tw + f.phase * 1.7))
+                const a = f.a * seen * breath
+                dot(x, y, f.r, a, f.tint, cfg.glow && f.depth > 0.8, dark)
+                if (f.glint && dark && f.tint < 0) {
+                    // Flashes for a moment every few seconds, then is a plain flake again.
+                    const flash = Math.max(0, Math.sin(t * 0.8 + f.phase)) ** 10
+                    if (flash > 0.02) glint(x, y, f.r * (3 + 3 * flash), f.a * seen * flash)
+                }
             }
             if (settling > 0) {
                 settling--

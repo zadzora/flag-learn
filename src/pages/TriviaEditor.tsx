@@ -503,7 +503,7 @@ function CopyBox({ text }: { text: string }) {
 const POLL_MS = 3000
 
 export default function TriviaEditor() {
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")
         localStorage.setItem(THEME_KEY, theme)

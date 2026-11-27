@@ -60,7 +60,7 @@ const RESULT_OF: Record<string, string> = { "H to Kr": "periods 1 to 4", "Main t
 export default function ElementSpeedrun() {
     const navigate = useNavigate()
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        try { return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light" } catch { return "light" }
+        try { return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark" } catch { return "dark" }
     })
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")

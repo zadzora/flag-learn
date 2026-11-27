@@ -81,7 +81,7 @@ const QUIET = "rounded-lg border border-slate-200 bg-white font-semibold text-sl
 
 export default function ElementHigherLower() {
     const navigate = useNavigate()
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")
         localStorage.setItem(THEME_KEY, theme)

@@ -8,12 +8,14 @@ import { restoreCloudSave, startCloudSync } from './utils/cloudSave'
 import { installSupporterTest } from './utils/supporters'
 
 // Apply the saved theme before the first render. Pages toggle it themselves later,
-// but several never read it on load, so a fresh visit to them came up light.
+// but several never read it on load, so a fresh visit to them came up wrong.
+// Dark is the default: only a player who picked light gets light.
 function applySavedTheme() {
   try {
-    document.documentElement.classList.toggle('dark', localStorage.getItem('flag-master-theme') === 'dark')
+    document.documentElement.classList.toggle('dark', localStorage.getItem('flag-master-theme') !== 'light')
   } catch {
-    // Storage unavailable - light it is.
+    // Storage unavailable - dark it is.
+    document.documentElement.classList.add('dark')
   }
 }
 applySavedTheme()

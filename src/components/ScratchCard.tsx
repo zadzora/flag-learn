@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
-import { BRUSH, FRAME_ASPECT, MAX_SAVED_NUMBERS, countMarked, decodeStroke, encodePoint, gridFromStrokes, markSegment, savedLength, type Pt, type SavedStroke } from "../utils/flagleScratch"
+import { useCallback, useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react"
+import ScratchHintIcon from "./ScratchHintIcon"
+import { BRUSH, FRAME_ASPECT, GRID_W, MAX_SAVED_NUMBERS, countMarked, decodeStroke, encodePoint, gridFromStrokes, markSegment, savedLength, type Pt, type SavedStroke } from "../utils/flagleScratch"
 import { cutStroke, paintFoil, spawnFlakes, stepFlakes, type Flake } from "../utils/flagleFoil"
 import { scratchSpeed, scratchStart, scratchStop, scratchTap } from "../utils/scratchSound"
 
@@ -21,11 +22,29 @@ type Props = {
 }
 
 type Store = { grid: Uint8Array; marked: number; strokes: SavedStroke[]; numbers: number }
-type Press = { id: number; last: Pt; lastT: number; open: boolean; moved: boolean; sound: boolean }
+/** `fresh`: whether the press uncovered anything - a click on bare flag makes no sound. */
+type Press = { id: number; last: Pt; lastT: number; open: boolean; moved: boolean; sound: boolean; fresh: boolean }
 
 /** Moves shorter than this (card widths) are not recorded; the line still follows the pointer. */
 const MIN_STEP = BRUSH * 0.35
 const COMMIT_MS = 500
+/** Grid cells a fully fresh stroke clears per card width of travel. */
+const FRESH_PER_WIDTH = 2 * BRUSH * GRID_W * GRID_W
+
+/** The "scratch here" hint: shown after this long with nothing scratched and nothing pressed... */
+const HINT_IDLE_MS = 5000
+/** ...and again this long after it went, for as long as the card stays untouched. */
+const HINT_AGAIN_MS = 3000
+const HINT_FADE_MS = 350
+const HINT_SCRATCH_MS = 1500
+/** One stroke there and back. */
+const HINT_STROKE_MS = 600
+/**
+ * Where the icon touches the card, as a share of its box: the point that moves
+ * along the path, and what it tilts round - the coin's edge in `ScratchHintIcon`.
+ */
+const HINT_TIP: Pt = [5.5 / 68.8, 50.4 / 56.4]
+const HINT_ASPECT = 68.8 / 56.4
 
 /**
  * Today's flag under a scratch-off foil. A drag scratches a line, a click
@@ -38,6 +57,7 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
     const foilRef = useRef<HTMLCanvasElement | null>(null)
     const flakeRef = useRef<HTMLCanvasElement | null>(null)
     const ringRef = useRef<HTMLDivElement | null>(null)
+    const hintRef = useRef<HTMLDivElement | null>(null)
     const storeRef = useRef<Store | null>(null)
     const pressRef = useRef<Press | null>(null)
     const flakesRef = useRef<Flake[]>([])
@@ -136,20 +156,95 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
         flakeLoopRef.current = requestAnimationFrame(tick)
     }
 
+    const hintFlake = useEffectEvent((p: Pt) => flakesAt(p, 1))
+
+    // Nothing scratched yet and nothing pressed for a while: show where to start.
+    // Written straight to the DOM - a state update per frame would re-render the card.
+    useEffect(() => {
+        const el = hintRef.current
+        if (!active || !size || !el || store().marked > 0) return
+        const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+        const boxW = Math.round(Math.max(56, Math.min(96, size.w * 0.2)))
+        const boxH = Math.round(boxW / HINT_ASPECT)
+        const amp = size.w * 0.16
+        let timer = 0, frame = 0
+        const hide = () => {
+            cancelAnimationFrame(frame)
+            el.style.opacity = "0"
+        }
+        const play = () => {
+            if (store().marked > 0) return
+            const start = performance.now()
+            let lastFlake = 0
+            const tick = (now: number) => {
+                const t = now - start
+                const total = HINT_FADE_MS * 2 + HINT_SCRATCH_MS
+                if (store().marked > 0 || pressRef.current) return hide()
+                if (t >= total) {
+                    hide()
+                    timer = window.setTimeout(play, HINT_AGAIN_MS)
+                    return
+                }
+                const fadeIn = Math.min(1, t / HINT_FADE_MS)
+                const fadeOut = Math.min(1, (total - t) / HINT_FADE_MS)
+                const s = Math.max(0, Math.min(HINT_SCRATCH_MS, t - HINT_FADE_MS))
+                // A diagonal wipe from the centre, starting and ending still.
+                const swing = still ? 0 : Math.sin((s / HINT_STROKE_MS) * Math.PI * 2) * Math.sin((s / HINT_SCRATCH_MS) * Math.PI)
+                const x = size.w / 2 + amp * swing
+                const y = size.h / 2 - amp * 0.3 * swing
+                // Drops onto the card, presses while it scratches, lifts off.
+                const pressing = s > 0 && s < HINT_SCRATCH_MS
+                const scale = (0.82 + 0.18 * fadeIn) * (pressing ? 0.94 : 1)
+                const lift = (1 - fadeIn) * 10
+                const tilt = still ? 0 : 6 * swing
+                el.style.opacity = String(Math.min(fadeIn, fadeOut))
+                el.style.transform = `translate(${x - HINT_TIP[0] * boxW}px, ${y - HINT_TIP[1] * boxH - lift}px) rotate(${tilt}deg) scale(${scale})`
+                if (!still && pressing && now - lastFlake > 70) {
+                    lastFlake = now
+                    hintFlake([x / size.w, y / size.h])
+                }
+                frame = requestAnimationFrame(tick)
+            }
+            frame = requestAnimationFrame(tick)
+        }
+        el.style.width = `${boxW}px`
+        el.style.height = `${boxH}px`
+        el.style.transformOrigin = `${HINT_TIP[0] * 100}% ${HINT_TIP[1] * 100}%`
+        // Typing a guess or pressing anywhere counts as doing something: the wait starts over.
+        const restart = () => {
+            clearTimeout(timer)
+            hide()
+            if (store().marked === 0) timer = window.setTimeout(play, HINT_IDLE_MS)
+        }
+        restart()
+        window.addEventListener("keydown", restart)
+        window.addEventListener("pointerdown", restart)
+        return () => {
+            clearTimeout(timer)
+            hide()
+            window.removeEventListener("keydown", restart)
+            window.removeEventListener("pointerdown", restart)
+        }
+    }, [active, size, store])
+
     function cut(pts: Pt[]) {
         const ctx = foilRef.current?.getContext("2d")
         if (ctx && size) cutStroke(ctx, size.w, size.h, pts, BRUSH * size.w)
     }
 
-    /** Records one piece of scratch: only the pieces that uncover something new are saved. */
-    function record(from: Pt, to: Pt, startsPress: boolean, press: Press) {
+    /**
+     * Records one piece of scratch: only the pieces that uncover something new
+     * are saved. Returns the grid cells it uncovered.
+     */
+    function record(from: Pt, to: Pt, startsPress: boolean, press: Press): number {
         const s = store()
         const added = markSegment(s.grid, from, to)
         s.marked += added
         if (added === 0) {
             press.open = false
-            return
+            return 0
         }
+        press.fresh = true
         const room = s.numbers < MAX_SAVED_NUMBERS
         if (press.open && room) {
             s.strokes[s.strokes.length - 1].push(...encodePoint(to))
@@ -161,6 +256,7 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
         }
         press.open = room
         reportShare()
+        return added
     }
 
     function moveRing(e: React.PointerEvent) {
@@ -177,11 +273,11 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
         const p = cardPoint(e)
-        const press: Press = { id: e.pointerId, last: p, lastT: performance.now(), open: false, moved: false, sound: false }
+        const press: Press = { id: e.pointerId, last: p, lastT: performance.now(), open: false, moved: false, sound: false, fresh: false }
         pressRef.current = press
-        record(p, p, true, press)
         cut([p])
-        flakesAt(p, 6)
+        // Pressing on flag already bare scratches nothing: no flakes, no sound.
+        if (record(p, p, true, press) > 0) flakesAt(p, 6)
     }
 
     function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -198,10 +294,19 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
             scratchStart()
             press.sound = true
         }
-        scratchSpeed(dist / Math.max(1, now - press.lastT) * 1000)
-        record(press.last, p, false, press)
+        const added = record(press.last, p, false, press)
+        // Still cut: the grid is coarser than the brush, and a pass over a cleared
+        // patch tidies the slivers its edge left. Invisible otherwise.
         cut([press.last, p])
-        flakesAt(p, Math.min(5, 1 + Math.round(dist / MIN_STEP)))
+        // Over flag already bare there is no foil to scratch: no flakes and no
+        // sound - the scrape loop fades by itself when no speed arrives. Along the
+        // edge of a cleared patch both scale with the share that is new.
+        if (added > 0) {
+            const fresh = Math.min(1, added / (FRESH_PER_WIDTH * dist))
+            scratchSpeed((dist / Math.max(1, now - press.lastT)) * 1000 * Math.max(0.35, fresh))
+            const flakes = Math.round(Math.min(5, 1 + Math.round(dist / MIN_STEP)) * fresh)
+            if (flakes > 0) flakesAt(p, flakes)
+        }
         press.last = p
         press.lastT = now
         if (now - lastCommitRef.current > COMMIT_MS) commit()
@@ -212,7 +317,7 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
         if (!press || press.id !== e.pointerId) return
         pressRef.current = null
         if (press.sound) scratchStop()
-        else scratchTap()
+        else if (press.fresh) scratchTap()
         commit()
         reportShare()
     }
@@ -250,6 +355,9 @@ export default function ScratchCard({ image, seed, initialStrokes, active, uncov
                     style={{ width: BRUSH * size.w * 2, height: BRUSH * size.w * 2 }}
                 />
             )}
+            <div ref={hintRef} aria-hidden className="pointer-events-none absolute left-0 top-0 opacity-0 drop-shadow-[0_2px_4px_rgba(15,23,42,0.45)]">
+                <ScratchHintIcon className="block h-full w-full" />
+            </div>
             {children}
         </div>
     )

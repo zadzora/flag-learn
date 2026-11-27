@@ -211,7 +211,7 @@ export default function RoadTrip({ mode = "trip" }: { mode?: "trip" | "rally" })
     const rallyMode = mode === "rally"
     const [today] = useState(getTodayString)
     const [theme, setTheme] = useState<"light" | "dark">(
-        () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light",
+        () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark",
     )
     const [ready, setReady] = useState(false)
     const [failed, setFailed] = useState(false)

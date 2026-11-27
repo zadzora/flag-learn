@@ -55,8 +55,8 @@ function normalizePlayerName(raw: string): string {
 export default function Highscore() {
     const navigate = useNavigate()
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
+        return "dark"
     })
     const [gameMode, setGameMode] = useState<GameMode>("world")
     // Rows as stored, sorted; `leaderboards` lends old uid-less rows the

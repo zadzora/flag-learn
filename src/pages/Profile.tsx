@@ -77,7 +77,7 @@ function Bar({ share, tone = "bg-blue-500 dark:bg-blue-400" }: { share: number; 
 }
 
 export default function Profile() {
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         const root = document.documentElement
         if (theme === "dark") root.classList.add("dark")

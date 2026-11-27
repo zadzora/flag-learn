@@ -10,7 +10,7 @@ import { AutoHeight, IntroCard, QuestionCard } from "../components/TriviaQuiz"
 import { AnswerFact, Leaderboard, Podium, PresenterQuestion } from "../components/TriviaRoomParts"
 import { ensureSignedIn } from "../../lib/firebase"
 import { REGIONS, TYPE_INFO, dealQuiz, loadBank, questionById, type Dealt, type Loaded } from "../utils/trivia"
-import { fmt, type Outcome } from "../utils/triviaPlay"
+import { fmt, readMsFor, type Outcome } from "../utils/triviaPlay"
 import { QuizSeed } from "../utils/triviaShuffle"
 import { isMuted, playDrumroll, playFanfare, playWhoosh, setMuted } from "../utils/triviaSound"
 import { bumpCounterOnce } from "../utils/profileStore"
@@ -53,7 +53,7 @@ export default function TriviaRoom() {
     usePageMeta(`Trivia Room ${code} | Flag Learn`)
     const navigate = useNavigate()
     const reduce = useReducedMotion() ?? false
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")
         localStorage.setItem(THEME_KEY, theme)
@@ -124,7 +124,8 @@ export default function TriviaRoom() {
         if (s.phase === "intro") due = s.at + INTRO_MS
         else if (s.phase === "question") {
             const dealt = quiz[s.index]
-            const limit = (dealt ? TYPE_INFO[dealt.q.type].seconds : 20) * 1000
+            // The question is read alone first (readMsFor), then answered against its own clock.
+            const limit = (dealt ? readMsFor(dealt.q) + TYPE_INFO[dealt.q.type].seconds * 1000 : 20_000)
             const ids = activePlayers(room).map(p => p.uid)
             const everyone = ids.length > 0 && ids.every(id => room.answers?.[s.index]?.[id])
             due = everyone ? serverNow() + 900 : s.at + limit + ANSWER_GRACE_MS
@@ -152,8 +153,10 @@ export default function TriviaRoom() {
         if (!uid || !step) return
         const index = step.index
         setAnsweredHere(a => ({ ...a, [index]: true }))
-        submitAnswer(code, index, uid, { points: o.points, share: o.share, ms: serverNow() - step.at }).catch(() => setLate(index))
-    }, [uid, step, code])
+        // Time spent answering, from when the answers came in.
+        const read = quiz[index] ? readMsFor(quiz[index]!.q) : 0
+        submitAnswer(code, index, uid, { points: o.points, share: o.share, ms: Math.max(0, serverNow() - step.at - read) }).catch(() => setLate(index))
+    }, [uid, step, code, quiz])
 
     // Kept up here: a join that loses a name race briefly seats the player, which unmounts the join form.
     const [joinError, setJoinError] = useState("")

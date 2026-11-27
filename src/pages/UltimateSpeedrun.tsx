@@ -120,7 +120,7 @@ export default function UltimateSpeedrun() {
     const inputRef = useRef<HTMLInputElement>(null)
 
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        try { return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light" } catch { return "light" }
+        try { return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark" } catch { return "dark" }
     })
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")

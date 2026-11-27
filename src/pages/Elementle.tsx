@@ -115,8 +115,8 @@ export default function Elementle() {
     const answer = useMemo(() => answerForDate(todayStr), [todayStr])
 
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
+        return "dark"
     })
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")

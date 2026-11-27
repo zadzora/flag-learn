@@ -73,8 +73,8 @@ const ALL_COUNTRY_KEYS_LIST = [...ALL_COUNTRY_KEYS]
 export default function WordWheelGame() {
     const navigate = useNavigate()
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
+        return "dark"
     })
 
     const [initialized, setInitialized] = useState(false)

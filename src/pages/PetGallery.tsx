@@ -33,7 +33,7 @@ function State({ name, children }: { name: string; children: ReactNode }) {
 }
 
 export default function PetGallery() {
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")
         localStorage.setItem(THEME_KEY, theme)

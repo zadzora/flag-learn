@@ -37,7 +37,7 @@ export default function TriviaRooms() {
         "Host a free quiz night: open a trivia room, share the code and play on one big screen while everyone answers on their phone - or battle friends live.",
     )
     const navigate = useNavigate()
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")
         localStorage.setItem(THEME_KEY, theme)

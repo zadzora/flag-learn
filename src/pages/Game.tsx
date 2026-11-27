@@ -139,8 +139,8 @@ export default function Game({ deck }: { deck?: string | null }) {
     const [lastPracticePool, setLastPracticePool] = useState<Flag[]>([])
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
-        return 'light'
+        if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'dark'
+        return 'dark'
     })
 
     const [isPracticeMode, setIsPracticeMode] = useState(false)

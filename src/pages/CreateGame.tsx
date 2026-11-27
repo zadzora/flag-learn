@@ -20,8 +20,8 @@ export default function CreateGame() {
     const [isBlurMode, setIsBlurMode] = useState(false)
     const [nickname, setNickname] = useState("")
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "dark"
+        return "dark"
     })
 
     // A fresh load of this page must still honour the saved theme.

@@ -228,8 +228,8 @@ function HowToBuild() {
 
 export default function AtomBuilder() {
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     const [settings, setSettings] = useState<BuilderSettings>(readSettings)
     const [best, setBest] = useState(() => readBest(readSettings()))

@@ -75,8 +75,8 @@ export default function UltimateGame() {
     const [position, setPosition] = useState({ coordinates: [0, 0] as [number, number], zoom: 1 })
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light'
-        return 'light'
+        if (typeof window !== 'undefined') return (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'dark'
+        return 'dark'
     })
 
     useEffect(() => {

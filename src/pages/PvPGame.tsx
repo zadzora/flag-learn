@@ -61,8 +61,8 @@ export default function PvPGame() {
 
     // THEME STATE
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') return (localStorage.getItem("flag-master-theme") as 'light' | 'dark') || 'light'
-        return 'light'
+        if (typeof window !== 'undefined') return (localStorage.getItem("flag-master-theme") as 'light' | 'dark') || 'dark'
+        return 'dark'
     })
 
     const [input, setInput] = useState("")

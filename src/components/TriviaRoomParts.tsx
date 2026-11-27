@@ -5,7 +5,7 @@ import { Crown, Lightbulb, Smartphone, Star, WifiOff } from "lucide-react"
 import TriviaPicture from "./TriviaPicture"
 import { Chip, Face, LevelDots, Opt, RunningTotal } from "./TriviaQuiz"
 import { CATEGORY_LABEL, TYPE_INFO, countryFlag, type Dealt } from "../utils/trivia"
-import { answerText, fmt, optionsOf } from "../utils/triviaPlay"
+import { answerText, fmt, optionsOf, readMsFor } from "../utils/triviaPlay"
 import { useQuizCoin, useQuizShuffle } from "../utils/triviaShuffle"
 import { useRoomClock } from "../utils/useRoomClock"
 import { finaleTimeline, type Standing } from "../utils/triviaRooms"
@@ -19,7 +19,11 @@ import { finaleTimeline, type Standing } from "../utils/triviaRooms"
 export function PresenterQuestion({ dealt, at, answered, seated, reveal = false }: { dealt: Dealt; at: number; answered: number; seated: number; reveal?: boolean }) {
     const { q, double } = dealt
     const limit = TYPE_INFO[q.type].seconds * 1000
-    const clock = useRoomClock(at, limit)
+    // The question alone first, as on every phone; then the options and the clock.
+    const readMs = readMsFor(q)
+    const readLeft = useRoomClock(at, readMs)
+    const reading = readLeft > 0 && !reveal
+    const clock = Math.min(limit, useRoomClock(at, readMs + limit))
     const left = reveal ? 0 : clock
     const order = useQuizShuffle()
     const coin = useQuizCoin()
@@ -42,6 +46,17 @@ export function PresenterQuestion({ dealt, at, answered, seated, reveal = false 
             <h2 className="!text-[clamp(1.5rem,3.4vw,2.4rem)] font-extrabold !leading-tight">
                 {q.q} {ask && <span className="whitespace-nowrap text-blue-600 dark:text-blue-400">{ask.charAt(0).toUpperCase() + ask.slice(1)}</span>}
             </h2>
+            {reading ? (
+                <div className="flex items-center gap-4">
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden>
+                        <div
+                            className="h-full rounded-full bg-slate-400 dark:bg-slate-500"
+                            style={{ width: `${(1 - readLeft / readMs) * 100}%`, transition: "width 100ms linear" }}
+                        />
+                    </div>
+                    <span className="text-lg font-bold text-slate-500 dark:text-slate-400">Read the question</span>
+                </div>
+            ) : (
             <div className="flex items-center gap-4">
                 <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden>
                     <div
@@ -51,7 +66,8 @@ export function PresenterQuestion({ dealt, at, answered, seated, reveal = false 
                 </div>
                 <span className={`w-12 text-right text-3xl font-extrabold tabular-nums ${left <= 3000 ? "text-rose-500" : ""}`}>{seconds}</span>
             </div>
-            {options.length > 0 ? (
+            )}
+            {reading ? null : options.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3 text-lg sm:grid-cols-2">
                     {options.map((o, i) => (
                         <Opt key={o} swatch={i} disabled state={!reveal ? "idle" : right(o) ? "ok" : "dim"}>

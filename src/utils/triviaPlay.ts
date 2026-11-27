@@ -21,6 +21,22 @@ export function optionsOf(q: Extract<Loaded, { type: "choice" | "multi" }>): str
 /** Questions answered with clues revealed one by one: naming it late is still right, only worth less. */
 export const isClueType = (q: Loaded) => q.type === "clues" || q.type === "city"
 
+/**
+ * How long a question is shown alone before its answers come in and its clock
+ * starts, the way Kahoot does it: reading the question must not cost points.
+ * Scaled by the question's length (about 3 s for a typical one), plus a moment
+ * for a picture. Clue questions get none - their question is only "Who am I?",
+ * the clues are what is read, and they already arrive on their own clock.
+ * A room adds it to its clock, so it must depend on the question alone.
+ */
+export function readMsFor(q: Loaded): number {
+    if (isClueType(q)) return 0
+    const ms = 1000 + q.q.length * 30 + (q.image ? 500 : 0)
+    return Math.round(Math.min(READ_MAX_MS, Math.max(READ_MIN_MS, ms)) / 100) * 100
+}
+const READ_MIN_MS = 2000
+const READ_MAX_MS = 5000
+
 /** Fully right - a "Who am I?" or "Which city?" named after a few clues counts too, it is only worth less. */
 export const isRight = (p: { q: Loaded; share: number }) => p.share >= 1 || (isClueType(p.q) && p.share > 0)
 

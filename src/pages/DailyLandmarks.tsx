@@ -286,8 +286,8 @@ function DailyLandmarksGame({ todayStr, city, picks, test, banner }: {
     const saveKey = test ? TEST_SAVE_KEY : STORAGE_KEY
 
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
+        return "dark"
     })
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")

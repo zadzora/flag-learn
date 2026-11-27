@@ -60,7 +60,7 @@ const LABEL = "text-xs font-bold uppercase tracking-wider text-slate-400 dark:te
 
 export default function BorderChain() {
     const [theme, setTheme] = useState<'light' | 'dark'>(
-        () => (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light',
+        () => (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'dark',
     )
 
     const [uid, setUid] = useState<string | null>(null)

@@ -407,7 +407,7 @@ export default function CapitalMapGame({ mode = "learn" }: { mode?: "learn" | "s
     const navigate = useNavigate()
     const [init] = useState(() => initialState(isSpeedrunMode))
 
-    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light")
+    const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark")
     const [screen, setScreen] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
     const [showGrid, setShowGrid] = useState(loadGrid)
     const [showKnown, setShowKnown] = useState(loadKnown)

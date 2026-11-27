@@ -114,8 +114,8 @@ export default function FormulasGame() {
     const [practiceResult, setPracticeResult] = useState<{ time: string; mistakes: number; count: number } | null>(null)
 
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     const [lang, setLang] = useState<ElementLang>(elementLang)
 

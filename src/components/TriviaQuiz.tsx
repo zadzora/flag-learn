@@ -21,7 +21,7 @@ import {
     multiShare, numberShare, pointsFor, questionValue, shuffle, timeFactor, typedCorrect,
     type Dealt, type Loaded, type PinViewName, type QuestionType,
 } from "../utils/trivia"
-import { answerText, countryOf, fmt, isClueType, isRight, optionsOf, placeIsAnswer, placeOf, type Outcome, type Played } from "../utils/triviaPlay"
+import { answerText, countryOf, fmt, isClueType, isRight, optionsOf, placeIsAnswer, placeOf, readMsFor, type Outcome, type Played } from "../utils/triviaPlay"
 import { useQuizCoin, useQuizShuffle } from "../utils/triviaShuffle"
 import SnowCap from "./SnowCap"
 import { CityInput, ClueCard } from "./LandmarkUi"
@@ -994,8 +994,11 @@ function CityCluesInput({ q, locked, revealed, onSubmit }: InputProps<"city">) {
 // --- One question, with its clock --------------------------------------------
 
 /**
- * A question with its clock. `alreadyElapsed` is for a room: a player who opens
- * the page mid-question starts with the time everybody else has already used.
+ * A question with its clock. It opens on the question alone for `readMsFor(q)`
+ * (Kahoot's way: reading must not cost points); then the answers come in and
+ * the clock starts. `alreadyElapsed` is for a room: a player who opens the page
+ * mid-question starts with the time everybody else has already used, reading
+ * included.
  */
 export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: {
     dealt: Dealt
@@ -1017,8 +1020,12 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
     const inRoom = reveal !== undefined
     const [answered, setAnswered] = useState(false)
     const [elapsed, setElapsed] = useState(0)
-    const [startedAt] = useState(() => performance.now() - alreadyElapsed)
+    const [readMs] = useState(() => readMsFor(q))
+    /** When the answers come in and the clock starts. */
+    const [startedAt] = useState(() => performance.now() - alreadyElapsed + readMs)
     const startRef = useRef(startedAt)
+    const [reading, setReading] = useState(() => alreadyElapsed < readMs)
+    const [readLeft] = useState(() => Math.max(0, readMs - alreadyElapsed))
     const doneRef = useRef(false)
     /** A room's right/wrong sound, held until the reveal. */
     const heldSound = useRef<boolean | null>(null)
@@ -1047,11 +1054,23 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
     }, [reveal])
 
     useEffect(() => {
+        if (!reading) return
+        const id = setTimeout(() => setReading(false), Math.max(0, startRef.current - performance.now()))
+        return () => clearTimeout(id)
+    }, [reading])
+    /** Solo only: a fast reader may bring the answers in early, and the clock starts then. A room's clock is everybody's. */
+    const skipReading = () => {
+        startRef.current = performance.now()
+        setReading(false)
+    }
+
+    useEffect(() => {
         // Once a room has closed the question there is nothing left to time - and nothing may be sent.
         if (reveal) return
         const id = setInterval(() => {
             if (doneRef.current) return clearInterval(id)
-            const ms = performance.now() - startRef.current
+            // The clock stands at zero while the question is still being read.
+            const ms = Math.max(0, performance.now() - startRef.current)
             setElapsed(ms)
             if (ms >= limit) finish(0, false)
         }, 100)
@@ -1059,8 +1078,10 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
     }, [limit, finish, reveal])
 
     const left = reveal && !answered ? 0 : Math.max(0, limit - elapsed)
+    // A room that closed the question early shows its solution even mid-read.
+    const showAnswers = !reading || !!reveal
     // The last three seconds count down out loud.
-    const countdown = !locked && left > 0 && left <= 3000 ? Math.ceil(left / 1000) : null
+    const countdown = !locked && showAnswers && left > 0 && left <= 3000 ? Math.ceil(left / 1000) : null
     useEffect(() => { if (countdown) playTick() }, [countdown])
     const submit = (share: number, detail?: string) => finish(share, true, detail)
     const ask =
@@ -1085,6 +1106,29 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
                 {q.q} {ask && <span className="whitespace-nowrap text-base font-bold text-blue-600 dark:text-blue-400">{ask.charAt(0).toUpperCase() + ask.slice(1)}</span>}
             </h2>
 
+            {!showAnswers ? (
+                <div className="flex items-center gap-3">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden>
+                        <motion.div
+                            className="h-full rounded-full bg-slate-400 dark:bg-slate-500"
+                            initial={{ width: `${(1 - readLeft / Math.max(1, readMs)) * 100}%` }}
+                            animate={{ width: "100%" }}
+                            transition={{ duration: readLeft / 1000, ease: "linear" }}
+                        />
+                    </div>
+                    {inRoom ? (
+                        <span className="shrink-0 text-[13px] font-semibold text-slate-500 dark:text-slate-400">Answers coming…</span>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={skipReading}
+                            className="!min-h-0 shrink-0 rounded-full px-2.5 py-1 text-[13px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                        >
+                            Show answers
+                        </button>
+                    )}
+                </div>
+            ) : (
             <div className="flex items-center gap-3">
                 <div className={`h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 ${countdown ? "animate-pulse" : ""}`} aria-hidden>
                     <div
@@ -1108,7 +1152,10 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
                     )}
                 </AnimatePresence>
             </div>
+            )}
 
+            {showAnswers && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex flex-col gap-4">
             {q.type === "choice" && <ChoiceInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "multi" && <MultiInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "order" && <OrderInput q={q} locked={locked} revealed={revealed} onSubmit={submit} descending={descending} />}
@@ -1121,6 +1168,8 @@ export function QuestionCard({ dealt, onAnswered, alreadyElapsed = 0, reveal }: 
             {q.type === "compass" && <CompassInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "clues" && <CluesInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
             {q.type === "city" && <CityCluesInput q={q} locked={locked} revealed={revealed} onSubmit={submit} />}
+            </motion.div>
+            )}
         </div>
     )
 }

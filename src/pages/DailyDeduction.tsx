@@ -125,8 +125,8 @@ export default function DailyDeduction() {
 
     // --- THEME ---
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
+        return "dark"
     })
 
     useEffect(() => {

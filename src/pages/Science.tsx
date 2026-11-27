@@ -336,8 +336,8 @@ function SectionHead({ title, aside }: { title: string; aside: string }) {
 
 export default function Science() {
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     const [learn] = useState(buildLearn)
     const [games] = useState(buildGames)

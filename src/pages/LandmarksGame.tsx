@@ -48,8 +48,8 @@ export default function LandmarksGame() {
         "A free city quiz: three sights of a city, the least famous first. Name the city in as few clues as you can - ten cities a round.",
     )
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark")

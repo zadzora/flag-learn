@@ -95,8 +95,8 @@ function PackCard({ pack, progress }: Row) {
 
 export default function Extras() {
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     const [rows] = useState(readRows)
 

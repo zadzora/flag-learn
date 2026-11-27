@@ -59,8 +59,8 @@ const BADGE = "rounded-[5px] px-1.5 py-0.5 font-bold"
 
 export default function ElementDetective() {
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window === "undefined") return "light"
-        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+        if (typeof window === "undefined") return "dark"
+        return (localStorage.getItem(THEME_KEY) as "light" | "dark") || "dark"
     })
     const [settings, setSettings] = useState<DetectiveSettings>(readSettings)
     const [best, setBest] = useState(() => readBest(readSettings()))

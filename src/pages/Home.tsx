@@ -335,8 +335,8 @@ function EntryList({ items, streaks }: { items: Entry[]; streaks: Record<string,
 
 export default function Home() {
     const [theme, setTheme] = useState<"light" | "dark">(() => {
-        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "light"
-        return "light"
+        if (typeof window !== "undefined") return (localStorage.getItem("flag-master-theme") as "light" | "dark") || "dark"
+        return "dark"
     })
 
     useEffect(() => {
